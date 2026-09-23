@@ -15,6 +15,9 @@ backend/
 ├── .env.example          # File mẫu cấu hình biến môi trường
 ├── CHANGELOG.md          # Nhật ký thay đổi tính năng Backend
 ├── main.py               # File chạy chính FastAPI & định nghĩa các API routes
+├── schemas.py            # Pydantic Schemas định nghĩa & validate dữ liệu đầu vào
+├── tests/
+│   └── test_get_put.py   # Bộ Unit Test tự động cho các API (GET & PUT)
 ├── README.md             # Tài liệu hướng dẫn sử dụng Backend
 └── requirements.txt      # Danh sách thư viện Python cần cài đặt
 ```
@@ -57,6 +60,13 @@ uvicorn main:app --reload
 ```
 * Server chạy tại: `http://127.0.0.1:8000`
 * Xem tài liệu API trực quan & test trực tiếp (Swagger UI): `http://127.0.0.1:8000/docs`
+
+### 5. Chạy Kiểm thử tự động (Unit Test)
+Tại thư mục `backend/`, chạy lệnh:
+```bash
+pytest -v
+```
+*(Thực thi 15 unit test: trường hợp đúng, sai định dạng, kiểm thử biên, ngoại lệ null và trùng lặp CSDL).*
 
 ---
 
@@ -108,3 +118,79 @@ uvicorn main:app --reload
   ]
 }
 ```
+
+---
+
+### 2. Cập nhật thông tin thực tập sinh
+* **URL:** `/api/interns/{id}`
+* **Method:** `PUT`
+* **URL Params:** `id=[integer]` (Bắt buộc)
+* **Request Body (JSON):**
+```json
+{
+  "full_name": "Nguyễn Văn A",
+  "email": "vana_update@example.com",
+  "phone": "0912345678",
+  "university": "Đại học Thái Nguyên",
+  "major": "Công nghệ thông tin",
+  "status": "Đang thực tập",
+  "start_date": "2026-09-01",
+  "end_date": "2026-12-01"
+}
+```
+
+> **Quy tắc Validate phía Server:**
+> - `full_name`: Bắt buộc, tối đa 50 ký tự, không được để trống hoặc chỉ chứa khoảng trắng, chỉ chứa chữ cái tiếng Việt.
+> - `email`: Bắt buộc, tối đa 100 ký tự, đúng định dạng email, không được trùng với thực tập sinh khác trong database.
+> - `phone`: Không bắt buộc nhập; nếu nhập thì phải đúng 10 số và không được trùng với thực tập sinh khác trong database.
+> - `start_date`, `end_date`: Nếu có cả hai ngày thì ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.
+
+#### Response mẫu:
+
+* **Thành công (HTTP 200 OK):**
+```json
+{
+  "status_code": 200,
+  "message": "Cập nhật thông tin thực tập sinh thành công",
+  "data": {
+    "id": 1,
+    "full_name": "Nguyễn Văn A",
+    "email": "vana_update@example.com",
+    "phone": "0912345678",
+    "university": "Đại học Thái Nguyên",
+    "major": "Công nghệ thông tin",
+    "status": "Đang thực tập",
+    "start_date": "2026-09-01",
+    "end_date": "2026-12-01",
+    "created_at": "2026-09-22T23:00:00"
+  }
+}
+```
+
+* **Trùng email với thực tập sinh khác (HTTP 400 Bad Request):**
+```json
+{
+  "detail": "Email này đã được sử dụng"
+}
+```
+
+* **Không tìm thấy thực tập sinh (HTTP 404 Not Found):**
+```json
+{
+  "detail": "Không tìm thấy thực tập sinh ID: 99"
+}
+```
+
+* **Dữ liệu không hợp lệ / Thiếu trường bắt buộc (HTTP 422 Unprocessable Entity):**
+```json
+{
+  "detail": [
+    {
+      "type": "value_error",
+      "loc": ["body", "full_name"],
+      "msg": "Value error, Họ tên không được để trống hoặc chỉ chứa khoảng trắng"
+    }
+  ]
+}
+```
+
