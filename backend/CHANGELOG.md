@@ -4,9 +4,35 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.3.0] - 2026-09-25
+
+### Đã hoàn thành
+- **Cấu trúc Model dạng Package (`backend/database/models/`)**:
+  - Tách `models.py` thành thư mục package `models/` chuẩn modular architecture:
+    - `models/phong_ban.py` (`PhongBan`)
+    - `models/truong_dai_hoc.py` (`TruongDaiHoc`)
+    - `models/chuong_trinh.py` (`ChuongTrinhThucTap`)
+    - `models/nguoi_dung.py` (`NguoiDung`)
+    - `models/ho_so.py` (`HoSoThucTap`)
+    - `models/tai_lieu.py` (`TaiLieuHoSo`)
+    - `models/__init__.py` xuất khẩu toàn bộ models.
+- **Tài liệu hồ sơ**:
+  - Bổ sung bảng `tai_lieu_ho_so` vào CSDL và nạp dữ liệu mẫu vào `script/database/init_db.sql`.
+  - Schema `DocumentStatusUpdate`: Kiểm tra nghiêm ngặt `trang_thai_duyet` chỉ chấp nhận các giá trị `ChoDuyet`, `DaDuyet`, `TuChoi`, tự động cắt khoảng trắng thừa.
+  - Endpoint `GET /api/v1/documents/{ho_so_id}`: Lấy danh sách tài liệu theo mã hồ sơ; trả về 404 nếu hồ sơ không tồn tại, trả về mảng rỗng nếu chưa có tài liệu.
+  - Endpoint `PATCH /api/v1/documents/{id}/status`: Cập nhật trạng thái duyệt của tài liệu; trả về 404 nếu mã tài liệu không tồn tại.
+- **Kiểm thử tự động (Unit Test)**:
+  - Xây dựng file test `tests/test_documents.py` gồm **21 test cases** bao phủ toàn diện:
+    - Case thành công: Duyệt `DaDuyet`, từ chối `TuChoi`, đưa về `ChoDuyet`, xử lý khoảng trắng.
+    - Case biên & logic: Danh sách rỗng, ID bằng 0, ID số âm, ID số thực (float).
+    - Case lỗi & ngoại lệ: Không tìm thấy (404), sai kiểu dữ liệu chữ/số (422), giá trị ngoài danh mục (422), chuỗi rỗng/chỉ dấu cách (422), thiếu trường/field rỗng/null (422).
+  - Toàn bộ 35/35 test cases của hệ thống đều **PASS 100%**.
+
+---
+
 ## [1.2.0] - 2026-09-25
 
-### Đã thay đổi & Cải tiến (Changed & Refactored)
+### Đã thay đổi & Cải tiến
 - **Tái cấu trúc CSDL & Models (Database & ORM Models)**:
   - Chuyển đổi từ bảng phẳng đơn lẻ `interns` sang mô hình quan hệ chuẩn hóa 16 bảng theo thiết kế hệ thống (`DATABASE_DESIGN.md`).
   - Cập nhật `database/models.py`:

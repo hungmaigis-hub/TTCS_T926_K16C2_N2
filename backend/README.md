@@ -10,7 +10,14 @@ Hệ thống Backend xây dựng bằng **FastAPI** và **SQLAlchemy**, kết n�
 backend/
 ├── database/
 │   ├── session.py        # Cấu hình kết nối MySQL & cấp phát session (get_db, Base)
-│   ├── models.py         # SQLAlchemy Models (NguoiDung, HoSoThucTap, Truong,...)
+│   ├── models/           # Package ORM Models (tách file theo thực thể)
+│   │   ├── __init__.py
+│   │   ├── phong_ban.py      # Model PhongBan
+│   │   ├── truong_dai_hoc.py # Model TruongDaiHoc
+│   │   ├── chuong_trinh.py   # Model ChuongTrinhThucTap
+│   │   ├── nguoi_dung.py     # Model NguoiDung
+│   │   ├── ho_so.py          # Model HoSoThucTap
+│   │   └── tai_lieu.py       # Model TaiLieuHoSo
 │   └── DATABASE_DESIGN.md # Tài liệu tham chiếu thiết kế CSDL
 ├── .env                  # Biến môi trường cá nhân (không push lên Git)
 ├── .env.example          # File mẫu cấu hình biến môi trường
@@ -18,7 +25,8 @@ backend/
 ├── main.py               # File chạy chính FastAPI & định nghĩa các API routes
 ├── schemas.py            # Pydantic Schemas định nghĩa & validate dữ liệu đầu vào
 ├── tests/
-│   └── test_get_put.py   # Bộ Unit Test tự động cho các API (GET & PUT)
+│   ├── test_get_put.py   # Bộ Unit Test API thông tin thực tập sinh (GET & PUT)
+│   └── test_documents.py # Bộ Unit Test API tài liệu hồ sơ (GET & PATCH)
 ├── README.md             # Tài liệu hướng dẫn sử dụng Backend
 └── requirements.txt      # Danh sách thư viện Python cần cài đặt
 ```
@@ -52,7 +60,7 @@ pip install -r requirements.txt
 ```bash
 python script/init_db.py
 ```
-*(Script sẽ tạo các bảng `phong_ban`, `truong_dai_hoc`, `chuong_trinh_thuc_tap`, `nguoi_dung`, `ho_so_thuc_tap` và nạp sẵn dữ liệu test).*
+*(Script sẽ tạo các bảng `phong_ban`, `truong_dai_hoc`, `chuong_trinh_thuc_tap`, `nguoi_dung`, `ho_so_thuc_tap`, `tai_lieu_ho_so` và nạp sẵn dữ liệu test).*
 
 ### 4. Khởi chạy Server
 Tại thư mục `backend/`, chạy lệnh:
@@ -64,86 +72,41 @@ uvicorn main:app --reload
 
 ---
 
-## 🧪 Hướng dẫn Test thủ công (Không tự động / Manual Testing)
+## 🧪 Hướng dẫn Test thủ công (Manual Testing)
 
 Bạn có thể test trực tiếp các API mà không cần chạy code tự động bằng 3 cách sau:
 
-### Cách 1: Test trực quan trên Trình duyệt bằng Swagger UI (Khuyên dùng - Nhanh nhất)
+### Cách 1: Test trực quan trên Trình duyệt bằng Swagger UI (Khuyên dùng)
 1. Bật server bằng lệnh `uvicorn main:app --reload`.
 2. Mở trình duyệt và truy cập: **`http://127.0.0.1:8000/docs`**
-3. **Test API GET (Lấy chi tiết thực tập sinh):**
-   - Bấm vào mục **`GET /api/v1/interns/{id}`**.
-   - Bấm nút **`Try it out`** ở góc phải.
-   - Nhập `id`: `1` (hoặc `2`).
-   - Bấm **`Execute`** và xem kết quả HTTP 200 ở khung bên dưới.
-   - Thử nhập `id`: `9999` để kiểm tra phản hồi lỗi `404 Not Found`.
-4. **Test API PUT (Cập nhật hồ sơ thực tập sinh):**
-   - Bấm vào mục **`PUT /api/v1/interns/{id}`**.
-   - Bấm nút **`Try it out`**.
-   - Nhập `id`: `1`.
-   - Trong ô **Request body**, dán JSON cập nhật mẫu:
-     ```json
-     {
-       "ho_ten": "Nguyễn Văn A Cập Nhật",
-       "email": "vana@example.com",
-       "so_dien_thoai": "0912345678",
-       "chuyen_nganh": "Công nghệ thông tin",
-       "ma_truong": 1,
-       "trang_thai_thuc_tap": "DangThucTap"
-     }
-     ```
-   - Bấm **`Execute`** và kiểm tra kết quả phản hồi 200.
-   - Thử đổi `email` thành `thib@example.com` (email của user 2) để test lỗi trùng lặp `400 Bad Request`.
+3. **Test API Documents:**
+   - **`GET /api/v1/documents/{ho_so_id}`**: Bấm `Try it out` -> Nhập `ho_so_id = 1` -> Bấm `Execute` để xem danh sách tài liệu. Thử `ho_so_id = 99999` để kiểm tra lỗi 404.
+   - **`PATCH /api/v1/documents/{id}/status`**: Bấm `Try it out` -> Nhập `id = 1` -> Dán body `{"trang_thai_duyet": "DaDuyet"}` -> Bấm `Execute`. Thử truyền `"KhongHopLe"` để kiểm tra lỗi 422.
 
 ---
 
-### Cách 2: Test bằng Postman hoặc Thunder Client (VS Code)
+### Cách 2: Test bằng lệnh cURL trong Terminal
 
-#### 1. Test GET:
-* **Method:** `GET`
-* **URL:** `http://localhost:8000/api/v1/interns/1`
-* Bấm **Send**.
-
-#### 2. Test PUT:
-* **Method:** `PUT`
-* **URL:** `http://localhost:8000/api/v1/interns/1`
-* **Headers:** Thêm `Content-Type: application/json`
-* **Body** (chọn `raw` -> `JSON`):
-  ```json
-  {
-    "ho_ten": "Nguyễn Văn A",
-    "email": "vana@example.com",
-    "so_dien_thoai": "0912345678",
-    "chuyen_nganh": "Kỹ thuật phần mềm",
-    "ma_truong": 2,
-    "trang_thai_thuc_tap": "DangThucTap"
-  }
-  ```
-* Bấm **Send**.
-
----
-
-### Cách 3: Test bằng lệnh cURL trong Terminal
-
-#### 1. Lệnh gọi GET:
+#### 1. Lấy danh sách tài liệu theo hồ sơ:
 ```bash
-curl -X GET "http://127.0.0.1:8000/api/v1/interns/1" -H "accept: application/json"
+curl -X GET "http://127.0.0.1:8000/api/v1/documents/1" -H "accept: application/json"
 ```
 
-#### 2. Lệnh gọi PUT:
+#### 2. Cập nhật trạng thái duyệt tài liệu:
 ```bash
-curl -X PUT "http://127.0.0.1:8000/api/v1/interns/1" \
+curl -X PATCH "http://127.0.0.1:8000/api/v1/documents/1/status" \
   -H "Content-Type: application/json" \
-  -d "{\"ho_ten\": \"Nguyễn Văn A\", \"email\": \"vana@example.com\", \"so_dien_thoai\": \"0912345678\", \"chuyen_nganh\": \"Công nghệ phần mềm\", \"ma_truong\": 1, \"trang_thai_thuc_tap\": \"DangThucTap\"}"
+  -d "{\"trang_thai_duyet\": \"DaDuyet\"}"
 ```
 
 ---
 
-## 🤖 Chạy Kiểm thử tự động (Unit Test với Pytest)
-Khi cần chạy kiểm thử toàn bộ 14 test case tự động:
+## 🤖 Chạy Toàn bộ Kiểm thử tự động (Pytest)
+Tại thư mục `backend/`, chạy lệnh:
 ```bash
-pytest backend/tests/test_get_put.py -v
+pytest -v
 ```
+*(Thực thi trọn bộ 35 unit test: bao gồm đầy đủ test biên, case đúng, case sai giá trị, case ngoại lệ null và ID không tồn tại).*
 
 ---
 
@@ -153,32 +116,6 @@ pytest backend/tests/test_get_put.py -v
 * **URL:** `/api/v1/interns/{id}`
 * **Method:** `GET`
 * **URL Params:** `id=[integer]` (Mã hồ sơ thực tập)
-
-#### Response mẫu (HTTP 200 OK):
-```json
-{
-  "status_code": 200,
-  "message": "Thông tin thực tập sinh",
-  "data": {
-    "ma_ho_so": 1,
-    "ma_nguoi_dung": 1,
-    "ho_ten": "Nguyễn Văn A",
-    "email": "vana@example.com",
-    "so_dien_thoai": "0912345678",
-    "chuyen_nganh": "Công nghệ thông tin",
-    "ma_truong": 1,
-    "ten_truong": "Đại học Thái Nguyên",
-    "ma_chuong_trinh": 1,
-    "ten_chuong_trinh": "Thực tập sinh Khóa Mùa Thu 2026",
-    "ngay_bat_dau": "2026-09-01",
-    "ngay_ket_thuc": "2026-12-30",
-    "ma_mentor": 3,
-    "ten_mentor": "Nguyễn Hướng Dẫn",
-    "trang_thai_xet_duyet": "DaDuyet",
-    "trang_thai_thuc_tap": "DangThucTap"
-  }
-}
-```
 
 ---
 
@@ -198,8 +135,49 @@ pytest backend/tests/test_get_put.py -v
 }
 ```
 
+---
+
+### 3. Lấy danh sách tài liệu theo mã hồ sơ thực tập
+* **URL:** `/api/v1/documents/{ho_so_id}`
+* **Method:** `GET`
+* **URL Params:** `ho_so_id=[integer]` (Mã hồ sơ thực tập)
+
+#### Response mẫu (HTTP 200 OK):
+```json
+{
+  "status_code": 200,
+  "message": "Danh sách tài liệu của hồ sơ thực tập",
+  "data": [
+    {
+      "ma_tai_lieu": 1,
+      "ma_ho_so": 1,
+      "loai_tai_lieu": "CV",
+      "duong_dan_file": "uploads/cv_nguyen_van_a.pdf",
+      "trang_thai_duyet": "ChoDuyet"
+    },
+    {
+      "ma_tai_lieu": 2,
+      "ma_ho_so": 1,
+      "loai_tai_lieu": "DonXinThucTap",
+      "duong_dan_file": "uploads/don_xin_nguyen_van_a.pdf",
+      "trang_thai_duyet": "DaDuyet"
+    }
+  ]
+}
+```
+
+---
+
+### 4. Cập nhật trạng thái duyệt tài liệu
+* **URL:** `/api/v1/documents/{id}/status`
+* **Method:** `PATCH`
+* **URL Params:** `id=[integer]` (Mã tài liệu)
+* **Request Body (JSON):**
+```json
+{
+  "trang_thai_duyet": "DaDuyet"
+}
+```
+
 > **Quy tắc Validate:**
-> - `ho_ten`: Bắt buộc, tối đa 100 ký tự, không được để trống hoặc chỉ chứa khoảng trắng, chỉ chứa chữ cái tiếng Việt.
-> - `email`: Bắt buộc, đúng cú pháp email, không được trùng với tài khoản khác trong hệ thống.
-> - `so_dien_thoai`: Tùy chọn; nếu nhập phải đúng 10 số (bắt đầu bằng `0` hoặc `+84`), không được trùng với tài khoản khác.
-> - `ma_truong`: Tùy chọn; nếu nhập phải tồn tại trong bảng `truong_dai_hoc`.
+> - `trang_thai_duyet`: Bắt buộc, chỉ nhận một trong 3 giá trị: `"ChoDuyet"`, `"DaDuyet"`, `"TuChoi"`. Nếu truyền bất kỳ giá trị nào khác, rỗng hoặc `null` sẽ tự động trả về `HTTP 422 Unprocessable Entity`.
