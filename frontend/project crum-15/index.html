@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý hồ sơ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h2>Danh sách hồ sơ</h2>
+
+        <!-- YÊU CẦU 1.1: Bảng HTML thêm cột "Thao tác" chứa nút "Sửa" -->
+        <table class="data-table" id="profileTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Họ và tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-id="1">
+                    <td class="col-id">1</td>
+                    <td class="col-name">Nguyễn Văn A</td>
+                    <td class="col-email">nguyenvana@gmail.com</td>
+                    <td class="col-phone">0901234567</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-edit" data-id="1">Sửa</button>
+                    </td>
+                </tr>
+                <tr data-id="2">
+                    <td class="col-id">2</td>
+                    <td class="col-name">Trần Thị B</td>
+                    <td class="col-email">tranthib@gmail.com</td>
+                    <td class="col-phone">0987654321</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-edit" data-id="2">Sửa</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- YÊU CẦU 1.2: Modal Form "Cập nhật hồ sơ" (Tái sử dụng CSS form) -->
+    <div class="modal" id="editModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Cập nhật hồ sơ</h3>
+                    <button type="button" class="btn-close" id="btnCloseModal">&times;</button>
+                </div>
+                
+                <form id="editProfileForm" novalidate>
+                    <div class="modal-body">
+                        <!-- Input ẩn lưu ID hồ sơ -->
+                        <input type="hidden" id="profileId" name="id">
+
+                        <div class="form-group">
+                            <label for="fullName">Họ và tên:</label>
+                            <input type="text" id="fullName" name="fullName" class="form-control" placeholder="Nhập họ và tên">
+                            <span class="error-text" id="error-fullName"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Nhập email">
+                            <span class="error-text" id="error-email"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Số điện thoại:</label>
+                            <input type="tel" id="phone" name="phone" class="form-control" placeholder="Nhập số điện thoại">
+                            <span class="error-text" id="error-phone"></span>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="btnCancel">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nạp 2 file JS tương ứng với 2 sự kiện -->
+    <script src="edit-handler.js"></script>
+    <script src="submit-handler.js"></script>
+</body>
+</html>
