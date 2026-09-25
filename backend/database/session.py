@@ -8,30 +8,32 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-# lấy thông tin từ .env
+# Lấy thông tin từ .env
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 
-# tạo chuỗi kết nối
+# Tạo chuỗi kết nối
 DATABASE_URL = (
     f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
 )
 
-# tạo engine
+# Tạo engine
 engine = create_engine(
     DATABASE_URL, 
-    echo=False,# echo=True để hiển thị SQL
-    pool_pre_ping=True # kiểm tra kết nối trước khi sử dụng
-    ) 
-# tạo session
+    echo=False,         # echo=True để hiển thị SQL
+    pool_pre_ping=True  # kiểm tra kết nối trước khi sử dụng
+) 
+
+# Tạo session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-# tạo base
+
+# Tạo base
 Base = declarative_base()
 
-# tạo dependency để sử dụng session
+# Tạo dependency để sử dụng session
 def get_db():
     db = SessionLocal()
     try:

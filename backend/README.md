@@ -9,8 +9,9 @@ Hệ thống Backend xây dựng bằng **FastAPI** và **SQLAlchemy**, kết n�
 ```text
 backend/
 ├── database/
-│   ├── database.py       # Cấu hình kết nối MySQL & cấp phát session (get_db)
-│   └── models.py         # SQLAlchemy Model (bảng interns & hàm to_dict)
+│   ├── session.py        # Cấu hình kết nối MySQL & cấp phát session (get_db, Base)
+│   ├── models.py         # SQLAlchemy Models (NguoiDung, HoSoThucTap, Truong,...)
+│   └── DATABASE_DESIGN.md # Tài liệu tham chiếu thiết kế CSDL
 ├── .env                  # Biến môi trường cá nhân (không push lên Git)
 ├── .env.example          # File mẫu cấu hình biến môi trường
 ├── CHANGELOG.md          # Nhật ký thay đổi tính năng Backend
@@ -24,7 +25,7 @@ backend/
 
 ---
 
-## 🚀 Hướng dẫn cài đặt & Khởi chạy (Dành cho thành viên nhóm)
+## 🚀 Hướng dẫn cài đặt & Khởi chạy
 
 ### 1. Cài đặt thư viện
 Mở terminal tại thư mục `backend/` và chạy lệnh:
@@ -37,7 +38,7 @@ pip install -r requirements.txt
    ```bash
    cp .env.example .env
    ```
-2. Mở file `.env` và điền thông tin kết nối MySQL của bạn (nếu mật khẩu khác mặc định):
+2. Mở file `.env` và điền thông tin kết nối MySQL của bạn:
    ```env
    DB_HOST=localhost
    DB_PORT=3306
@@ -46,151 +47,159 @@ pip install -r requirements.txt
    DB_NAME=intern_management
    ```
 
-### 3. Khởi tạo Cơ sở dữ liệu (Database)
-Nếu máy bạn chưa có CSDL và bảng `interns`, đứng từ thư mục gốc của dự án và chạy:
+### 3. Khởi tạo Cơ sở dữ liệu (Database & Seed Data)
+Đứng từ thư mục gốc của dự án (`ttcs/`) và chạy script tạo bảng & nạp dữ liệu mẫu:
 ```bash
 python script/init_db.py
 ```
-*(Script sẽ tự động tạo database `intern_management`, bảng `interns` và nạp sẵn 3 thực tập sinh mẫu).*
+*(Script sẽ tạo các bảng `phong_ban`, `truong_dai_hoc`, `chuong_trinh_thuc_tap`, `nguoi_dung`, `ho_so_thuc_tap` và nạp sẵn dữ liệu test).*
 
 ### 4. Khởi chạy Server
 Tại thư mục `backend/`, chạy lệnh:
 ```bash
 uvicorn main:app --reload
 ```
-* Server chạy tại: `http://127.0.0.1:8000`
-* Xem tài liệu API trực quan & test trực tiếp (Swagger UI): `http://127.0.0.1:8000/docs`
-
-### 5. Chạy Kiểm thử tự động (Unit Test)
-Tại thư mục `backend/`, chạy lệnh:
-```bash
-pytest -v
-```
-*(Thực thi 15 unit test: trường hợp đúng, sai định dạng, kiểm thử biên, ngoại lệ null và trùng lặp CSDL).*
+* **Server chạy tại:** `http://127.0.0.1:8000`
+* **Trang tài liệu tương tác (Swagger UI):** `http://127.0.0.1:8000/docs`
 
 ---
 
-## 📡 Tài liệu API (API Documentation)
+## 🧪 Hướng dẫn Test thủ công (Không tự động / Manual Testing)
+
+Bạn có thể test trực tiếp các API mà không cần chạy code tự động bằng 3 cách sau:
+
+### Cách 1: Test trực quan trên Trình duyệt bằng Swagger UI (Khuyên dùng - Nhanh nhất)
+1. Bật server bằng lệnh `uvicorn main:app --reload`.
+2. Mở trình duyệt và truy cập: **`http://127.0.0.1:8000/docs`**
+3. **Test API GET (Lấy chi tiết thực tập sinh):**
+   - Bấm vào mục **`GET /api/v1/interns/{id}`**.
+   - Bấm nút **`Try it out`** ở góc phải.
+   - Nhập `id`: `1` (hoặc `2`).
+   - Bấm **`Execute`** và xem kết quả HTTP 200 ở khung bên dưới.
+   - Thử nhập `id`: `9999` để kiểm tra phản hồi lỗi `404 Not Found`.
+4. **Test API PUT (Cập nhật hồ sơ thực tập sinh):**
+   - Bấm vào mục **`PUT /api/v1/interns/{id}`**.
+   - Bấm nút **`Try it out`**.
+   - Nhập `id`: `1`.
+   - Trong ô **Request body**, dán JSON cập nhật mẫu:
+     ```json
+     {
+       "ho_ten": "Nguyễn Văn A Cập Nhật",
+       "email": "vana@example.com",
+       "so_dien_thoai": "0912345678",
+       "chuyen_nganh": "Công nghệ thông tin",
+       "ma_truong": 1,
+       "trang_thai_thuc_tap": "DangThucTap"
+     }
+     ```
+   - Bấm **`Execute`** và kiểm tra kết quả phản hồi 200.
+   - Thử đổi `email` thành `thib@example.com` (email của user 2) để test lỗi trùng lặp `400 Bad Request`.
+
+---
+
+### Cách 2: Test bằng Postman hoặc Thunder Client (VS Code)
+
+#### 1. Test GET:
+* **Method:** `GET`
+* **URL:** `http://localhost:8000/api/v1/interns/1`
+* Bấm **Send**.
+
+#### 2. Test PUT:
+* **Method:** `PUT`
+* **URL:** `http://localhost:8000/api/v1/interns/1`
+* **Headers:** Thêm `Content-Type: application/json`
+* **Body** (chọn `raw` -> `JSON`):
+  ```json
+  {
+    "ho_ten": "Nguyễn Văn A",
+    "email": "vana@example.com",
+    "so_dien_thoai": "0912345678",
+    "chuyen_nganh": "Kỹ thuật phần mềm",
+    "ma_truong": 2,
+    "trang_thai_thuc_tap": "DangThucTap"
+  }
+  ```
+* Bấm **Send**.
+
+---
+
+### Cách 3: Test bằng lệnh cURL trong Terminal
+
+#### 1. Lệnh gọi GET:
+```bash
+curl -X GET "http://127.0.0.1:8000/api/v1/interns/1" -H "accept: application/json"
+```
+
+#### 2. Lệnh gọi PUT:
+```bash
+curl -X PUT "http://127.0.0.1:8000/api/v1/interns/1" \
+  -H "Content-Type: application/json" \
+  -d "{\"ho_ten\": \"Nguyễn Văn A\", \"email\": \"vana@example.com\", \"so_dien_thoai\": \"0912345678\", \"chuyen_nganh\": \"Công nghệ phần mềm\", \"ma_truong\": 1, \"trang_thai_thuc_tap\": \"DangThucTap\"}"
+```
+
+---
+
+## 🤖 Chạy Kiểm thử tự động (Unit Test với Pytest)
+Khi cần chạy kiểm thử toàn bộ 14 test case tự động:
+```bash
+pytest backend/tests/test_get_put.py -v
+```
+
+---
+
+## 📡 Tài liệu API (API Specification)
 
 ### 1. Lấy thông tin chi tiết một thực tập sinh
-* **URL:** `/api/interns/{id}`
+* **URL:** `/api/v1/interns/{id}`
 * **Method:** `GET`
-* **URL Params:** `id=[integer]` (Bắt buộc)
+* **URL Params:** `id=[integer]` (Mã hồ sơ thực tập)
 
-#### Response mẫu:
-
-* **Thành công (HTTP 200 OK):**
+#### Response mẫu (HTTP 200 OK):
 ```json
 {
   "status_code": 200,
   "message": "Thông tin thực tập sinh",
   "data": {
-    "id": 1,
-    "full_name": "Nguyễn Văn A",
+    "ma_ho_so": 1,
+    "ma_nguoi_dung": 1,
+    "ho_ten": "Nguyễn Văn A",
     "email": "vana@example.com",
-    "phone": "0912345678",
-    "university": "Đại học Thái Nguyên",
-    "major": "Công nghệ thông tin",
-    "status": "Đang thực tập",
-    "start_date": "2026-09-01",
-    "end_date": "2026-12-01",
-    "created_at": "2026-09-22T23:00:00"
+    "so_dien_thoai": "0912345678",
+    "chuyen_nganh": "Công nghệ thông tin",
+    "ma_truong": 1,
+    "ten_truong": "Đại học Thái Nguyên",
+    "ma_chuong_trinh": 1,
+    "ten_chuong_trinh": "Thực tập sinh Khóa Mùa Thu 2026",
+    "ngay_bat_dau": "2026-09-01",
+    "ngay_ket_thuc": "2026-12-30",
+    "ma_mentor": 3,
+    "ten_mentor": "Nguyễn Hướng Dẫn",
+    "trang_thai_xet_duyet": "DaDuyet",
+    "trang_thai_thuc_tap": "DangThucTap"
   }
-}
-```
-
-* **Không tìm thấy (HTTP 404 Not Found):**
-```json
-{
-  "detail": "Không tìm thấy thực tập sinh ID: 99"
-}
-```
-
-* **ID sai định dạng (HTTP 422 Unprocessable Entity):**
-```json
-{
-  "detail": [
-    {
-      "loc": ["path", "id"],
-      "msg": "value is not a valid integer",
-      "type": "type_error.integer"
-    }
-  ]
 }
 ```
 
 ---
 
 ### 2. Cập nhật thông tin thực tập sinh
-* **URL:** `/api/interns/{id}`
+* **URL:** `/api/v1/interns/{id}`
 * **Method:** `PUT`
-* **URL Params:** `id=[integer]` (Bắt buộc)
+* **URL Params:** `id=[integer]` (Mã hồ sơ thực tập)
 * **Request Body (JSON):**
 ```json
 {
-  "full_name": "Nguyễn Văn A",
-  "email": "vana_update@example.com",
-  "phone": "0912345678",
-  "university": "Đại học Thái Nguyên",
-  "major": "Công nghệ thông tin",
-  "status": "Đang thực tập",
-  "start_date": "2026-09-01",
-  "end_date": "2026-12-01"
+  "ho_ten": "Nguyễn Văn A",
+  "email": "vana@example.com",
+  "so_dien_thoai": "0912345678",
+  "chuyen_nganh": "Kỹ thuật phần mềm",
+  "ma_truong": 1,
+  "trang_thai_thuc_tap": "DangThucTap"
 }
 ```
 
-> **Quy tắc Validate phía Server:**
-> - `full_name`: Bắt buộc, tối đa 50 ký tự, không được để trống hoặc chỉ chứa khoảng trắng, chỉ chứa chữ cái tiếng Việt.
-> - `email`: Bắt buộc, tối đa 100 ký tự, đúng định dạng email, không được trùng với thực tập sinh khác trong database.
-> - `phone`: Không bắt buộc nhập; nếu nhập thì phải đúng 10 số và không được trùng với thực tập sinh khác trong database.
-> - `start_date`, `end_date`: Nếu có cả hai ngày thì ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.
-
-#### Response mẫu:
-
-* **Thành công (HTTP 200 OK):**
-```json
-{
-  "status_code": 200,
-  "message": "Cập nhật thông tin thực tập sinh thành công",
-  "data": {
-    "id": 1,
-    "full_name": "Nguyễn Văn A",
-    "email": "vana_update@example.com",
-    "phone": "0912345678",
-    "university": "Đại học Thái Nguyên",
-    "major": "Công nghệ thông tin",
-    "status": "Đang thực tập",
-    "start_date": "2026-09-01",
-    "end_date": "2026-12-01",
-    "created_at": "2026-09-22T23:00:00"
-  }
-}
-```
-
-* **Trùng email với thực tập sinh khác (HTTP 400 Bad Request):**
-```json
-{
-  "detail": "Email này đã được sử dụng"
-}
-```
-
-* **Không tìm thấy thực tập sinh (HTTP 404 Not Found):**
-```json
-{
-  "detail": "Không tìm thấy thực tập sinh ID: 99"
-}
-```
-
-* **Dữ liệu không hợp lệ / Thiếu trường bắt buộc (HTTP 422 Unprocessable Entity):**
-```json
-{
-  "detail": [
-    {
-      "type": "value_error",
-      "loc": ["body", "full_name"],
-      "msg": "Value error, Họ tên không được để trống hoặc chỉ chứa khoảng trắng"
-    }
-  ]
-}
-```
-
+> **Quy tắc Validate:**
+> - `ho_ten`: Bắt buộc, tối đa 100 ký tự, không được để trống hoặc chỉ chứa khoảng trắng, chỉ chứa chữ cái tiếng Việt.
+> - `email`: Bắt buộc, đúng cú pháp email, không được trùng với tài khoản khác trong hệ thống.
+> - `so_dien_thoai`: Tùy chọn; nếu nhập phải đúng 10 số (bắt đầu bằng `0` hoặc `+84`), không được trùng với tài khoản khác.
+> - `ma_truong`: Tùy chọn; nếu nhập phải tồn tại trong bảng `truong_dai_hoc`.
