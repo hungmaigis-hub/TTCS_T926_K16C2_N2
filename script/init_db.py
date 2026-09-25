@@ -1,4 +1,6 @@
+import sys
 import os
+sys.stdout.reconfigure(encoding='utf-8')
 from pathlib import Path
 from dotenv import load_dotenv
 import pymysql

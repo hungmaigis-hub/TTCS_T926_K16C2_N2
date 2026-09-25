@@ -3,74 +3,96 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from schemas import InternUpdate
 
-#thư mục database
-from database.database import get_db
-from database.models import Intern
+# Thư mục database & models
+from database.session import get_db
+from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc
 
-# khởi tạo
-app = FastAPI(title="Internship ictu API")
+# Khởi tạo ứng dụng FastAPI
+app = FastAPI(title="Internship Management API", version="1.0.0")
 
-# cấu hình cors
+# Cấu hình CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# viết api get thông tin thực tập sinh 
-@app.get("/api/interns/{id}")
+
+# api get
+@app.get("/api/v1/interns/{id}")
 def get_intern_detail(id: int, db: Session = Depends(get_db)):
-    intern = db.query(Intern).filter(Intern.id == id).first()
-    if not intern:
+    """
+    Lấy thông tin chi tiết hồ sơ thực tập sinh theo mã hồ sơ (ID).
+    Trả về dữ liệu tổng hợp từ hồ sơ, tài khoản người dùng, trường học và chương trình.
+    """
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == id).first()
+    if not ho_so:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy thực tập sinh ID: {id}")
+    
     return {
         "status_code": 200,
         "message": "Thông tin thực tập sinh",
-        "data": intern.to_dict()
+        "data": ho_so.to_dict()
     }
 
-# viết api cập nhật thông tin thực tập sinh
-@app.put("/api/interns/{id}")
+
+# api put
+@app.put("/api/v1/interns/{id}")
 def update_intern(id: int, intern_data: InternUpdate, db: Session = Depends(get_db)):
-    
-    # Kiểm tra thuc tap sinh có tồn tại trong CSDL không
-    intern = db.query(Intern).filter(Intern.id == id).first()
-    if not intern:
+    """
+    Cập nhật thông tin hồ sơ thực tập sinh theo mã hồ sơ (ID).
+    Đồng bộ cập nhật thông tin người dùng (họ tên, email, sđt) và thông tin hồ sơ (chuyên ngành, trường, trạng thái).
+    """
+    # 1. Kiểm tra hồ sơ thực tập sinh có tồn tại trong CSDL không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == id).first()
+    if not ho_so:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy thực tập sinh ID: {id}")
     
-    # Kiểm tra trùng lặp email
-    existing_email = db.query(Intern).filter(
-        Intern.email == intern_data.email,
-        Intern.id != id
+    user = ho_so.thuc_tap_sinh
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy tài khoản người dùng liên kết với hồ sơ ID: {id}")
+
+    # 2. Kiểm tra trùng lặp email với người dùng khác
+    existing_email = db.query(NguoiDung).filter(
+        NguoiDung.email == intern_data.email,
+        NguoiDung.ma_nguoi_dung != user.ma_nguoi_dung
     ).first()
     if existing_email:
         raise HTTPException(status_code=400, detail="Email này đã được sử dụng")
-    # Kiểm tra sdt
-    if intern_data.phone:
-        existing_phone = db.query(Intern).filter(
-            Intern.phone == intern_data.phone,
-            Intern.id != id
+
+    # 3. Kiểm tra trùng lặp số điện thoại với người dùng khác
+    if intern_data.so_dien_thoai:
+        existing_phone = db.query(NguoiDung).filter(
+            NguoiDung.so_dien_thoai == intern_data.so_dien_thoai,
+            NguoiDung.ma_nguoi_dung != user.ma_nguoi_dung
         ).first()
         if existing_phone:
             raise HTTPException(status_code=400, detail="Số điện thoại này đã được sử dụng")
-    
-    # Cập nhật các trường thông tin mới
-    intern.full_name = intern_data.full_name
-    intern.email = intern_data.email
-    intern.phone = intern_data.phone
-    intern.university = intern_data.university
-    intern.major = intern_data.major
-    intern.status = intern_data.status
-    intern.start_date = intern_data.start_date
-    intern.end_date = intern_data.end_date
 
-    # Lưu thay đổi vào Database
+    # 4. Kiểm tra mã trường đại học nếu có gửi lên
+    if intern_data.ma_truong:
+        truong = db.query(TruongDaiHoc).filter(TruongDaiHoc.ma_truong == intern_data.ma_truong).first()
+        if not truong:
+            raise HTTPException(status_code=400, detail="Mã trường đại học không tồn tại trong hệ thống")
+
+    # 5. Cập nhật thông tin vào bảng NGUOI_DUNG
+    user.ho_ten = intern_data.ho_ten
+    user.email = intern_data.email
+    user.so_dien_thoai = intern_data.so_dien_thoai
+
+    # 6. Cập nhật thông tin vào bảng HO_SO_THUC_TAP
+    ho_so.chuyen_nganh = intern_data.chuyen_nganh
+    ho_so.ma_truong = intern_data.ma_truong
+    if intern_data.trang_thai_thuc_tap:
+        ho_so.trang_thai_thuc_tap = intern_data.trang_thai_thuc_tap
+
+    # 7. Lưu thay đổi vào CSDL
     db.commit()
-    db.refresh(intern)
+    db.refresh(ho_so)
 
-    # Trả về phản hồi
+    # 8. Trả về phản hồi thành công
     return {
         "status_code": 200,
         "message": "Cập nhật thông tin thực tập sinh thành công",
-        "data": intern.to_dict()
+        "data": ho_so.to_dict()
     }
