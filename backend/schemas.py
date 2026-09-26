@@ -81,6 +81,7 @@ class InternResponse(BaseModel):
 class DocumentStatusUpdate(BaseModel):
     """Schema cập nhật trạng thái duyệt tài liệu (PATCH)"""
     trang_thai_duyet: str = Field(..., description="Trạng thái duyệt: ChoDuyet, DaDuyet, TuChoi")
+    ghi_chu: Optional[str] = Field(default=None, max_length=500, description="Ghi chú hoặc lý do phê duyệt / từ chối gửi tới thực tập sinh")
 
     @field_validator('trang_thai_duyet')
     def validate_trang_thai_duyet(cls, value: str):
@@ -92,6 +93,13 @@ class DocumentStatusUpdate(BaseModel):
         if cleaned not in valid_statuses:
             raise ValueError(f"Trạng thái duyệt không hợp lệ. Chỉ chấp nhận một trong các giá trị: {', '.join(valid_statuses)}")
         return cleaned
+
+    @field_validator('ghi_chu')
+    def validate_ghi_chu(cls, value: Optional[str]):
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned if cleaned else None
 
 
 class DocumentItem(BaseModel):

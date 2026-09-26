@@ -9,26 +9,30 @@ Hệ thống Backend xây dựng bằng **FastAPI** và **SQLAlchemy**, kết n�
 ```text
 backend/
 ├── database/
-│   ├── session.py        # Cấu hình kết nối MySQL & cấp phát session (get_db, Base)
-│   ├── models/           # Package ORM Models (tách file theo thực thể)
+│   ├── session.py              # Cấu hình kết nối MySQL & cấp phát session (get_db, Base)
+│   ├── models/                 # Package ORM Models (tách file theo thực thể)
 │   │   ├── __init__.py
-│   │   ├── phong_ban.py      # Model PhongBan
-│   │   ├── truong_dai_hoc.py # Model TruongDaiHoc
-│   │   ├── chuong_trinh.py   # Model ChuongTrinhThucTap
-│   │   ├── nguoi_dung.py     # Model NguoiDung
-│   │   ├── ho_so.py          # Model HoSoThucTap
-│   │   └── tai_lieu.py       # Model TaiLieuHoSo
-│   └── DATABASE_DESIGN.md # Tài liệu tham chiếu thiết kế CSDL
-├── .env                  # Biến môi trường cá nhân (không push lên Git)
-├── .env.example          # File mẫu cấu hình biến môi trường
-├── CHANGELOG.md          # Nhật ký thay đổi tính năng Backend
-├── main.py               # File chạy chính FastAPI & định nghĩa các API routes
-├── schemas.py            # Pydantic Schemas định nghĩa & validate dữ liệu đầu vào
+│   │   ├── phong_ban.py        # Model PhongBan
+│   │   ├── truong_dai_hoc.py   # Model TruongDaiHoc
+│   │   ├── chuong_trinh.py     # Model ChuongTrinhThucTap
+│   │   ├── nguoi_dung.py       # Model NguoiDung
+│   │   ├── ho_so.py            # Model HoSoThucTap
+│   │   └── tai_lieu.py         # Model TaiLieuHoSo
+│   └── DATABASE_DESIGN.md       # Tài liệu tham chiếu thiết kế CSDL
+├── services/
+│   ├── __init__.py
+│   └── email_service.py        # Dịch vụ gửi email thông báo kết quả duyệt (SMTP/Mock)
+├── .env                        # Biến môi trường cá nhân (không push lên Git)
+├── .env.example                # File mẫu cấu hình biến môi trường
+├── CHANGELOG.md                # Nhật ký thay đổi tính năng Backend
+├── main.py                     # File chạy chính FastAPI & định nghĩa các API routes
+├── schemas.py                  # Pydantic Schemas định nghĩa & validate dữ liệu đầu vào
 ├── tests/
-│   ├── test_get_put.py   # Bộ Unit Test API thông tin thực tập sinh (GET & PUT)
-│   └── test_documents.py # Bộ Unit Test API tài liệu hồ sơ (GET & PATCH)
-├── README.md             # Tài liệu hướng dẫn sử dụng Backend
-└── requirements.txt      # Danh sách thư viện Python cần cài đặt
+│   ├── test_get_put.py         # Bộ Unit Test API thông tin thực tập sinh (GET & PUT)
+│   ├── test_documents.py       # Bộ Unit Test API tài liệu hồ sơ (GET & PATCH)
+│   └── test_email_notification.py # Bộ Unit Test gửi email trong nền sau khi duyệt
+├── README.md                   # Tài liệu hướng dẫn sử dụng Backend
+└── requirements.txt            # Danh sách thư viện Python cần cài đặt
 ```
 
 ---
@@ -46,13 +50,24 @@ pip install -r requirements.txt
    ```bash
    cp .env.example .env
    ```
-2. Mở file `.env` và điền thông tin kết nối MySQL của bạn:
+2. Mở file `.env` và điền thông tin kết nối MySQL & Email của bạn:
    ```env
+   # Database MySQL
    DB_HOST=localhost
    DB_PORT=3306
    DB_USER=root
    DB_PASSWORD=your_password_here
    DB_NAME=intern_management
+
+   # Cấu hình Gửi Email (SMTP)
+   # Nếu để MAIL_ENABLED=false, hệ thống sẽ chạy ở chế độ mô phỏng (log console), an toàn cho Dev & Test
+   MAIL_ENABLED=false
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASSWORD=your_app_password
+   SMTP_FROM_EMAIL=no-reply@internship.local
+   SMTP_FROM_NAME=Hệ thống Quản lý Thực tập sinh
    ```
 
 ### 3. Khởi tạo Cơ sở dữ liệu (Database & Seed Data)

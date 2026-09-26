@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from schemas import InternUpdate, DocumentStatusUpdate
@@ -6,6 +6,9 @@ from schemas import InternUpdate, DocumentStatusUpdate
 # Thư mục database & models
 from database.session import get_db
 from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo
+
+# Dịch vụ gửi email thông báo
+from services.email_service import send_document_approval_email
 
 # Khởi tạo ứng dụng FastAPI
 app = FastAPI(title="Internship Management API", version="1.0.0")
@@ -120,9 +123,15 @@ def get_documents_by_internship_profile(ho_so_id: int, db: Session = Depends(get
 
 # api patch document status
 @app.patch("/api/v1/documents/{id}/status")
-def update_document_status(id: int, status_data: DocumentStatusUpdate, db: Session = Depends(get_db)):
+def update_document_status(
+    id: int,
+    status_data: DocumentStatusUpdate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     """
     Cập nhật trạng thái duyệt tài liệu (ChoDuyet, DaDuyet, TuChoi) theo mã tài liệu (ID).
+    Tự động gửi email thông báo kết quả cho thực tập sinh thông qua BackgroundTasks.
     """
     # 1. Tìm tài liệu theo mã ID
     tai_lieu = db.query(TaiLieuHoSo).filter(TaiLieuHoSo.ma_tai_lieu == id).first()
@@ -133,6 +142,19 @@ def update_document_status(id: int, status_data: DocumentStatusUpdate, db: Sessi
     tai_lieu.trang_thai_duyet = status_data.trang_thai_duyet
     db.commit()
     db.refresh(tai_lieu)
+
+    # 3. Kích hoạt BackgroundTasks gửi email thông báo kết quả duyệt cho thực tập sinh
+    ho_so = tai_lieu.ho_so
+    if ho_so and ho_so.thuc_tap_sinh and ho_so.thuc_tap_sinh.email:
+        intern = ho_so.thuc_tap_sinh
+        background_tasks.add_task(
+            send_document_approval_email,
+            to_email=intern.email,
+            intern_name=intern.ho_ten or "Thực tập sinh",
+            document_type=tai_lieu.loai_tai_lieu,
+            status=tai_lieu.trang_thai_duyet,
+            note=status_data.ghi_chu
+        )
 
     return {
         "status_code": 200,
