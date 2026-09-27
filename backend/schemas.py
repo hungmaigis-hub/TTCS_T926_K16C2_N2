@@ -4,6 +4,69 @@ from datetime import date
 import re
 
 # ==============================================================
+# SCHEMA CHO REQUEST TẠO MỚI HỒ SƠ THỰC TẬP SINH (POST)
+# ==============================================================
+class InternCreate(BaseModel):
+    # Thông tin tài khoản sinh viên (bảng NGUOI_DUNG)
+    ho_ten: str = Field(..., min_length=1, max_length=100, description="Họ và tên sinh viên")
+    email: str = Field(..., min_length=1, max_length=100, description="Địa chỉ email")
+    so_dien_thoai: Optional[str] = Field(default=None, description="Số điện thoại liên lạc")
+    
+    # Thông tin hồ sơ thực tập (bảng HO_SO_THUC_TAP)
+    chuyen_nganh: Optional[str] = Field(default=None, max_length=100, description="Chuyên ngành đào tạo")
+    ma_truong: Optional[int] = Field(default=None, description="Mã trường đại học")
+    ma_chuong_trinh: Optional[int] = Field(default=None, description="Mã chương trình thực tập")
+    ma_mentor: Optional[int] = Field(default=None, description="Mã mentor hướng dẫn")
+    trang_thai_xet_duyet: Optional[str] = Field(default="ChoDuyet", description="Trạng thái duyệt: ChoDuyet, DaDuyet, TuChoi")
+    trang_thai_thuc_tap: Optional[str] = Field(default="DangThucTap", description="Trạng thái thực tập: DangThucTap, HoanThanh, ThoiHoc")
+
+    @field_validator('ho_ten')
+    def validate_ho_ten(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Họ tên không được để trống hoặc chỉ chứa khoảng trắng")
+        if not re.match(r"^[a-zA-Z\s\u00C0-\u1EF9]+$", cleaned):
+            raise ValueError("Họ tên không hợp lệ (chỉ được chứa chữ cái)")
+        return cleaned
+
+    @field_validator('email')
+    def validate_email(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Email không được để trống hoặc chỉ chứa khoảng trắng")
+        if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", cleaned):
+            raise ValueError("Email không đúng định dạng hợp lệ")
+        return cleaned
+
+    @field_validator('so_dien_thoai')
+    def validate_so_dien_thoai(cls, value: Optional[str]):
+        if not value or not value.strip():
+            return None
+        cleaned = value.strip()
+        if not re.match(r"^(0|\+84)[0-9]{9}$|^[0-9]{10}$", cleaned):
+            raise ValueError("Số điện thoại không hợp lệ (phải gồm 10 chữ số)")
+        return cleaned
+
+    @field_validator('trang_thai_xet_duyet')
+    def validate_trang_thai_xet_duyet(cls, value: Optional[str]):
+        if not value:
+            return "ChoDuyet"
+        cleaned = value.strip()
+        if cleaned not in ["ChoDuyet", "DaDuyet", "TuChoi"]:
+            raise ValueError("Trạng thái xét duyệt chỉ chấp nhận: 'ChoDuyet', 'DaDuyet', 'TuChoi'")
+        return cleaned
+
+    @field_validator('trang_thai_thuc_tap')
+    def validate_trang_thai_thuc_tap(cls, value: Optional[str]):
+        if not value:
+            return "DangThucTap"
+        cleaned = value.strip()
+        if cleaned not in ["DangThucTap", "HoanThanh", "ThoiHoc"]:
+            raise ValueError("Trạng thái thực tập chỉ chấp nhận: 'DangThucTap', 'HoanThanh', 'ThoiHoc'")
+        return cleaned
+
+
+# ==============================================================
 # SCHEMA CHO REQUEST CẬP NHẬT THÔNG TIN HỒ SƠ THỰC TẬP SINH (PUT)
 # ==============================================================
 class InternUpdate(BaseModel):

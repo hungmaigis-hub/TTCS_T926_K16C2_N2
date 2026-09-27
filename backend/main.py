@@ -1,11 +1,11 @@
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from schemas import InternUpdate, DocumentStatusUpdate
+from schemas import InternCreate, InternUpdate, DocumentStatusUpdate
 
 # Thư mục database & models
 from database.session import get_db
-from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo
+from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo, ChuongTrinhThucTap
 
 # Dịch vụ gửi email thông báo
 from services.email_service import send_document_approval_email
@@ -20,6 +20,81 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# api post create intern
+@app.post("/api/v1/interns", status_code=201)
+def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
+    """
+    Tạo mới hồ sơ thực tập sinh:
+    1. Kiểm tra tính hợp lệ và không trùng lặp của email, số điện thoại.
+    2. Kiểm tra tồn tại của các khóa ngoại: trường đại học, chương trình, mentor.
+    3. Tạo tài khoản người dùng NguoiDung (vai_tro='ThucTapSinh').
+    4. Tạo bản ghi hồ sơ thực tập HoSoThucTap trong cùng một transaction.
+    """
+    # 1. Kiểm tra trùng email
+    exist_email = db.query(NguoiDung).filter(NguoiDung.email == intern_data.email).first()
+    if exist_email:
+        raise HTTPException(status_code=400, detail="Email này đã được sử dụng trong hệ thống")
+
+    # 2. Kiểm tra trùng số điện thoại (nếu có cung cấp)
+    if intern_data.so_dien_thoai:
+        exist_phone = db.query(NguoiDung).filter(NguoiDung.so_dien_thoai == intern_data.so_dien_thoai).first()
+        if exist_phone:
+            raise HTTPException(status_code=400, detail="Số điện thoại này đã được sử dụng trong hệ thống")
+
+    # 3. Kiểm tra khóa ngoại ma_truong
+    if intern_data.ma_truong:
+        truong = db.query(TruongDaiHoc).filter(TruongDaiHoc.ma_truong == intern_data.ma_truong).first()
+        if not truong:
+            raise HTTPException(status_code=400, detail="Mã trường đại học không tồn tại trong hệ thống")
+
+    # 4. Kiểm tra khóa ngoại ma_chuong_trinh
+    if intern_data.ma_chuong_trinh:
+        chuong_trinh = db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh == intern_data.ma_chuong_trinh).first()
+        if not chuong_trinh:
+            raise HTTPException(status_code=400, detail="Mã chương trình thực tập không tồn tại trong hệ thống")
+
+    # 5. Kiểm tra khóa ngoại ma_mentor
+    if intern_data.ma_mentor:
+        mentor = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == intern_data.ma_mentor).first()
+        if not mentor:
+            raise HTTPException(status_code=400, detail="Mã người hướng dẫn (mentor) không tồn tại trong hệ thống")
+
+    try:
+        # 6. Tạo người dùng mới với vai trò ThucTapSinh
+        new_user = NguoiDung(
+            ho_ten=intern_data.ho_ten,
+            email=intern_data.email,
+            so_dien_thoai=intern_data.so_dien_thoai,
+            vai_tro="ThucTapSinh",
+            trang_thai="HoatDong"
+        )
+        db.add(new_user)
+        db.flush()  # Lấy new_user.ma_nguoi_dung tự tăng mà chưa commit
+
+        # 7. Tạo hồ sơ thực tập liên kết
+        new_ho_so = HoSoThucTap(
+            ma_nguoi_dung=new_user.ma_nguoi_dung,
+            ma_truong=intern_data.ma_truong,
+            ma_chuong_trinh=intern_data.ma_chuong_trinh,
+            ma_mentor=intern_data.ma_mentor,
+            chuyen_nganh=intern_data.chuyen_nganh,
+            trang_thai_xet_duyet=intern_data.trang_thai_xet_duyet or "ChoDuyet",
+            trang_thai_thuc_tap=intern_data.trang_thai_thuc_tap or "DangThucTap"
+        )
+        db.add(new_ho_so)
+        db.commit()
+        db.refresh(new_ho_so)
+
+        return {
+            "status_code": 201,
+            "message": "Tạo hồ sơ thực tập sinh thành công",
+            "data": new_ho_so.to_dict()
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Lỗi hệ thống khi tạo hồ sơ: {str(e)}")
+
 
 # api get intern detail
 @app.get("/api/v1/interns/{id}")

@@ -8,23 +8,26 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-# Lấy thông tin từ .env
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_NAME = os.getenv("DB_NAME")
+# Lấy thông tin từ .env (có fallback mặc định an toàn)
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "3306")
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_NAME = os.getenv("DB_NAME", "intern_management")
 
-# Tạo chuỗi kết nối
-DATABASE_URL = (
+# Tạo chuỗi kết nối (hỗ trợ override DATABASE_URL cho môi trường test/sqlite)
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
     f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
 )
 
 # Tạo engine
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 engine = create_engine(
     DATABASE_URL, 
     echo=False,         # echo=True để hiển thị SQL
-    pool_pre_ping=True  # kiểm tra kết nối trước khi sử dụng
+    pool_pre_ping=True, # kiểm tra kết nối trước khi sử dụng
+    connect_args=connect_args
 ) 
 
 # Tạo session

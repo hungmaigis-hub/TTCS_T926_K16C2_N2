@@ -96,12 +96,25 @@ async function handleLuuHoSo() {
   }
 
   if (maHoSoHienTai) {
+    let trangThaiThucTap = "DangThucTap";
+    if (trangThai === "Đã hoàn thành") {
+      trangThaiThucTap = "HoanThanh";
+    } else if (trangThai === "Tạm dừng") {
+      trangThaiThucTap = "ThoiHoc";
+    }
+
+    let maTruong = 1;
+    if (truongDaiHoc && truongDaiHoc.toLowerCase().includes("bách khoa")) {
+      maTruong = 2;
+    }
+
     const payloadPut = {
       ho_ten: hoTen,
       email: email,
       so_dien_thoai: soDienThoai || null,
       chuyen_nganh: chuyenNganh || null,
-      trang_thai_thuc_tap: "DangThucTap",
+      ma_truong: maTruong,
+      trang_thai_thuc_tap: trangThaiThucTap,
     };
 
     try {
@@ -120,8 +133,8 @@ async function handleLuuHoSo() {
         hienThongBaoLoi(ketQua.detail || "Không thể cập nhật hồ sơ qua API!");
       }
     } catch (err) {
-      hienThongBaoThanhCong(
-        `Đã cập nhật thành công hồ sơ #${maHoSoHienTai} (${hoTen})!`,
+      hienThongBaoLoi(
+        "Không thể kết nối đến máy chủ Backend (http://127.0.0.1:8000). Vui lòng kiểm tra lại server!",
       );
     } finally {
       if (nutLuu) {
@@ -132,16 +145,30 @@ async function handleLuuHoSo() {
     return;
   }
 
+  let trangThaiThucTap = "DangThucTap";
+  let trangThaiXetDuyet = "ChoDuyet";
+  if (trangThai === "Đã hoàn thành") {
+    trangThaiThucTap = "HoanThanh";
+  } else if (trangThai === "Tạm dừng") {
+    trangThaiThucTap = "ThoiHoc";
+  } else if (trangThai === "Chờ duyệt") {
+    trangThaiXetDuyet = "ChoDuyet";
+  }
+
+  let maTruong = 1;
+  if (truongDaiHoc && truongDaiHoc.toLowerCase().includes("bách khoa")) {
+    maTruong = 2;
+  }
+
   const duLieuPost = {
-    full_name: hoTen,
+    ho_ten: hoTen,
     email: email,
-    phone: soDienThoai || null,
-    status: trangThai,
-    university: truongDaiHoc || null,
-    major: chuyenNganh || null,
-    start_date: ngayBatDau || null,
-    end_date: ngayKetThuc || null,
-    notes: ghiChu || null,
+    so_dien_thoai: soDienThoai || null,
+    chuyen_nganh: chuyenNganh || null,
+    ma_truong: maTruong,
+    ma_chuong_trinh: 1,
+    trang_thai_xet_duyet: trangThaiXetDuyet,
+    trang_thai_thuc_tap: trangThaiThucTap,
   };
 
   try {
@@ -154,9 +181,10 @@ async function handleLuuHoSo() {
     const ketQua = await phanHoi.json();
 
     if (phanHoi.ok) {
+      const maHoSoTaoMoi = ketQua.data?.ma_ho_so;
       hienThongBaoThanhCong(
         ketQua.message ||
-          `Đã thêm mới thành công hồ sơ của sinh viên ${hoTen}!`,
+          `Đã thêm mới thành công hồ sơ của sinh viên ${hoTen} (Mã hồ sơ: #${maHoSoTaoMoi || ""}) vào CSDL Backend!`,
       );
       form?.reset();
     } else {
@@ -169,10 +197,9 @@ async function handleLuuHoSo() {
       hienThongBaoLoi(loiChiTiet);
     }
   } catch (loiKetNoi) {
-    hienThongBaoThanhCong(
-      `Đã lưu thành công hồ sơ của sinh viên ${hoTen} vào hệ thống quản lý thực tập!`,
+    hienThongBaoLoi(
+      "Không thể kết nối đến máy chủ Backend (http://127.0.0.1:8000). Vui lòng đảm bảo server FastAPI đang chạy!",
     );
-    form?.reset();
   } finally {
     if (nutLuu) {
       nutLuu.innerHTML = originalContent;
