@@ -176,3 +176,12 @@ class DocumentListResponse(BaseModel):
     status_code: int = 200
     message: str
     data: List[DocumentItem]
+
+
+# ==============================================================
+# SCHEMA CHO RESPONSE UPLOAD TÀI LIỆU (POST)
+# ==============================================================
+class DocumentUploadResponse(BaseModel):
+    status_code: int = 201
+    message: str
+    data: DocumentItem

@@ -1,4 +1,4 @@
-const duongDanApiUpload = "http://127.0.0.1:8000/api/upload";
+const duongDanApiUpload = "http://127.0.0.1:8000/api/v1/documents/upload";
 
 const tepInput = document.getElementById("tepDinhKem");
 const vungKeoTha = document.getElementById("vungKeoTha");
@@ -94,9 +94,13 @@ async function xuLyTaiLen() {
   nutGuiTep.innerHTML = `<span class="inline-block w-4 h-4 rounded-full border-2 border-on-primary border-t-transparent animate-spin"></span> <span>Đang tải lên và quét bảo mật...</span>`;
   nutGuiTep.disabled = true;
 
+  const thamSoUrl = new URLSearchParams(window.location.search);
+  const maHoSo = thamSoUrl.get("id") || 1;
+
   const duLieuForm = new FormData();
   duLieuForm.append("file", file);
-  duLieuForm.append("type", loaiTaiLieu);
+  duLieuForm.append("ma_ho_so", maHoSo);
+  duLieuForm.append("loai_tai_lieu", loaiTaiLieu);
 
   try {
     const phanHoi = await fetch(duongDanApiUpload, {

@@ -1,7 +1,16 @@
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+import os
+import uuid
+from pathlib import Path
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from schemas import InternCreate, InternUpdate, DocumentStatusUpdate
+from schemas import (
+    InternCreate,
+    InternUpdate,
+    DocumentStatusUpdate,
+    DocumentUploadResponse,
+)
 
 # Thư mục database & models
 from database.session import get_db
@@ -20,6 +29,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Cấu hình thư mục uploads và mount static files
+UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+# Danh mục định dạng file cho phép và kích thước tối đa (10MB)
+ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg"}
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
 # api post create intern
 @app.post("/api/v1/interns", status_code=201)
@@ -173,6 +191,75 @@ def update_intern(id: int, intern_data: InternUpdate, db: Session = Depends(get_
         "status_code": 200,
         "message": "Cập nhật thông tin thực tập sinh thành công",
         "data": ho_so.to_dict()
+    }
+
+
+# api post upload document
+@app.post("/api/v1/documents/upload", status_code=201)
+async def upload_document(
+    ma_ho_so: int = Form(..., description="Mã hồ sơ thực tập"),
+    loai_tai_lieu: str = Form(..., description="Loại tài liệu: CV, DonXinThucTap, GiayGioiThieu..."),
+    file: UploadFile = File(..., description="File tài liệu cần tải lên"),
+    db: Session = Depends(get_db)
+):
+    """
+    Tải lên tài liệu đính kèm cho hồ sơ thực tập (UploadFile).
+    Lưu file an toàn vào thư mục uploads/ và ghi nhận bản ghi vào bảng tai_lieu_ho_so.
+    """
+    # 1. Validate loại tài liệu
+    cleaned_loai = loai_tai_lieu.strip() if loai_tai_lieu else ""
+    if not cleaned_loai:
+        raise HTTPException(status_code=422, detail="Loại tài liệu không được để trống hoặc chỉ chứa khoảng trắng")
+
+    # 2. Kiểm tra hồ sơ thực tập có tồn tại không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ thực tập ID: {ma_ho_so}")
+
+    # 3. Validate tệp tải lên
+    if not file.filename:
+        raise HTTPException(status_code=422, detail="Tên tệp không hợp lệ")
+
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Định dạng tệp '{file_ext}' không được hỗ trợ. Chỉ chấp nhận các định dạng: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+        )
+
+    # Đọc nội dung file để kiểm tra kích thước tối đa
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail="Dung lượng tệp vượt quá giới hạn cho phép (tối đa 10MB)"
+        )
+
+    # 4. Tạo tên file ngẫu nhiên an toàn (UUID)
+    unique_suffix = uuid.uuid4().hex[:8]
+    safe_filename = f"{ma_ho_so}_{cleaned_loai}_{unique_suffix}{file_ext}"
+    saved_path = UPLOAD_DIR / safe_filename
+
+    # 5. Lưu tệp lên server
+    with open(saved_path, "wb") as buffer:
+        buffer.write(content)
+
+    # 6. Ghi nhận thông tin tài liệu vào CSDL
+    relative_path = f"uploads/{safe_filename}"
+    new_doc = TaiLieuHoSo(
+        ma_ho_so=ma_ho_so,
+        loai_tai_lieu=cleaned_loai,
+        duong_dan_file=relative_path,
+        trang_thai_duyet="ChoDuyet"
+    )
+    db.add(new_doc)
+    db.commit()
+    db.refresh(new_doc)
+
+    return {
+        "status_code": 201,
+        "message": "Tải lên tài liệu thành công",
+        "data": new_doc.to_dict()
     }
 
 
