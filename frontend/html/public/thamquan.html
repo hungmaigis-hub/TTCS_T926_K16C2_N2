@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Trường Đại Học Công Nghệ Thông Tin và Truyền Thông Thái Nguyên - Tour 360°
+    </title>
+    <link rel="icon" href="../../image/ictu_logo.png" type="image/png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="../../js/lib/tour.js"></script>
+    <script src="../../image/tour/du_lieu_tour_74.js"></script>
+    <link rel="stylesheet" href="../../css/thamquan.css" />
+  </head>
+  <body
+    class="bg-slate-950 text-white overflow-hidden w-screen h-screen relative select-none"
+  >
+    <div id="khung-toan-canh-360"></div>
+    <div
+      id="lop-hotspot-krpano"
+      class="absolute inset-0 z-10 pointer-events-none overflow-hidden opacity-0 transition-opacity duration-700"
+    ></div>
+
+    <div
+      id="hieu-ung-di-chuyen"
+      class="fixed inset-0 z-40 bg-slate-950/75 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center"
+    >
+      <div
+        class="flex items-center space-x-3 bg-slate-900/90 border border-sky-500/50 px-6 py-3 rounded-full shadow-2xl"
+      >
+        <span
+          class="inline-block w-3 h-3 rounded-full bg-sky-400 animate-ping"
+        ></span>
+        <i class="fa-solid fa-person-walking text-sky-400 text-lg"></i>
+        <span
+          class="text-xs md:text-sm font-bold text-sky-200 uppercase tracking-wider"
+          >Đang di chuyển đến phân khu...</span
+        >
+      </div>
+    </div>
+
+    <div
+      id="man-hinh-khoi-tao-tour"
+      class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center transition-opacity duration-700 pointer-events-auto"
+    >
+      <div class="flex flex-col items-center text-center px-4 max-w-sm">
+        <div class="relative w-24 h-24 mb-6 flex items-center justify-center">
+          <div
+            class="absolute inset-0 rounded-full border-4 border-sky-500/20"
+          ></div>
+          <div
+            class="absolute inset-0 rounded-full border-4 border-sky-400 border-t-transparent animate-spin"
+          ></div>
+          <img
+            src="../../image/ictu_logo.png"
+            alt="ICTU"
+            class="w-14 h-14 rounded-full object-cover shadow-2xl p-1 bg-white/10 backdrop-blur-md"
+          />
+        </div>
+        <h1
+          class="text-base md:text-lg font-black text-white uppercase tracking-wider mb-2"
+        >
+          Trường Đại Học CNTT & TT
+        </h1>
+        <p class="text-xs text-sky-400 font-semibold mb-4">
+          Tour Tham Quan Thực Tế Ảo 360° • Toàn Cảnh ICTU
+        </p>
+        <div
+          class="w-56 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50 mb-3 shadow-inner"
+        >
+          <div
+            id="thanh-tien-trinh-loading"
+            class="h-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 rounded-full w-0 transition-all duration-300"
+          ></div>
+        </div>
+        <span
+          id="nhan-phan-tram-loading"
+          class="text-[11px] font-mono text-slate-400 tracking-wider"
+        >
+          Đang khởi tạo chuyến tham quan...
+        </span>
+      </div>
+    </div>
+
+    <header
+      class="absolute top-4 left-4 z-20 pointer-events-auto flex items-center space-x-2.5 flex-wrap gap-y-2 opacity-0 transition-opacity duration-700"
+    >
+      <div
+        class="flex items-center space-x-3 bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-2xl px-4 py-2 shadow-2xl"
+      >
+        <a
+          href="index.html"
+          class="flex items-center space-x-2 text-slate-300 hover:text-white transition group mr-2 border-r border-slate-700 pr-3"
+        >
+          <i
+            class="fa-solid fa-arrow-left text-sm group-hover:-translate-x-1 transition"
+          ></i>
+          <span class="text-xs font-semibold uppercase tracking-wider"
+            >Trang Chủ</span
+          >
+        </a>
+        <img
+          src="../../image/image.png"
+          alt="ICTU Internship"
+          class="h-7 object-contain"
+        />
+        <div class="hidden sm:block">
+          <span class="text-xs font-bold uppercase tracking-wider text-sky-400">
+            ICTU Campus</span
+          >
+        </div>
+      </div>
+
+      <button
+        id="nut-chuyen-nhanh-flycam"
+        onclick="chuyenNhanhFlycamHoacSanTruong()"
+        title="Chuyển đổi góc nhìn Flycam trên cao / Sân trường"
+        class="flex items-center space-x-2 bg-slate-900/85 hover:bg-slate-800 text-sky-400 border border-sky-500/40 font-bold px-3.5 py-2 rounded-2xl shadow-2xl transition transform hover:scale-105 text-xs"
+      >
+        <i class="fa-solid fa-plane-up text-sky-400"></i>
+        <span id="nhan-chuyen-nhanh-flycam">Góc nhìn Flycam</span>
+      </button>
+
+      <button
+        id="nut-quay-lai-lich-su"
+        onclick="quayLaiCanhTruoc()"
+        title="Quay lại phân khu trước"
+        class="hidden flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-3.5 py-2 rounded-2xl shadow-2xl transition transform hover:scale-105 text-xs border border-amber-300/40"
+      >
+        <i class="fa-solid fa-arrow-rotate-left"></i>
+        <span
+          id="nhan-quay-lai-lich-su"
+          class="truncate max-w-[130px] md:max-w-[180px]"
+          >Quay lại</span
+        >
+      </button>
+
+      <button
+        id="nut-ra-ngoai-nhanh"
+        onclick="raNgoaiPhanKhuHienTai()"
+        title="Lối ra ngoài sảnh hoặc sân trường"
+        class="hidden flex items-center space-x-2 bg-slate-900/85 hover:bg-slate-800 text-emerald-400 border border-emerald-500/50 font-bold px-3.5 py-2 rounded-2xl shadow-2xl transition transform hover:scale-105 text-xs"
+      >
+        <i class="fa-solid fa-door-open text-emerald-400"></i>
+        <span
+          id="nhan-ra-ngoai-nhanh"
+          class="truncate max-w-[130px] md:max-w-[180px]"
+          >Lối ra ngoài</span
+        >
+      </button>
+    </header>
+
+    <div
+      class="absolute top-4 right-4 z-20 pointer-events-auto flex items-center space-x-3 opacity-0 transition-opacity duration-700"
+      id="lop-logo-ictu-phai"
+    >
+      <a
+        href="index.html"
+        title="Trường Đại học Công nghệ Thông tin và Truyền thông Thái Nguyên"
+      >
+        <img
+          src="../../image/ictu_logo.png"
+          alt="ICTU Logo"
+          class="w-12 h-12 rounded-full shadow-2xl border-2 border-white/80 bg-white/20 backdrop-blur-md hover:scale-105 transition transform"
+        />
+      </a>
+    </div>
+
+    <div
+      id="lop-dieu-khien-duoi"
+      class="absolute bottom-4 left-4 right-4 z-20 flex flex-col items-center pointer-events-none transition-all duration-700 opacity-0"
+    >
+      <div
+        class="mb-2 text-center pointer-events-auto flex items-center justify-center"
+      >
+        <div
+          class="px-3.5 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-700/60 shadow-xl flex items-center space-x-2 text-xs md:text-sm"
+        >
+          <span
+            id="nhan-nhom-canh-label"
+            class="font-bold text-sky-400 border-r border-slate-700 pr-2"
+            >Khuôn viên</span
+          >
+          <span
+            id="ten-canh-hien-tai-label"
+            class="font-semibold text-white/95 tracking-wide"
+          >
+            Sân trường
+          </span>
+        </div>
+      </div>
+
+      <div
+        class="panoee-thanh-dieu-khien pointer-events-auto flex items-center space-x-1.5 md:space-x-3 px-4 py-2 rounded-2xl shadow-2xl"
+      >
+        <button
+          onclick="chuyenCanhTruoc()"
+          title="Cảnh trước"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition"
+        >
+          <i class="fa-solid fa-chevron-left text-xs"></i>
+        </button>
+
+        <button
+          onclick="moThuVienCanh()"
+          title="Tất cả 74 phân khu"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition"
+        >
+          <i class="fa-solid fa-grip text-sm"></i>
+        </button>
+
+        <div class="h-4 w-px bg-white/20"></div>
+
+        <button
+          onclick="raNgoaiPhanKhuHienTai()"
+          id="nut-toolbar-ra-ngoai"
+          title="Lối ra ngoài sảnh / khuôn viên"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-emerald-400 hover:text-emerald-300 hover:bg-white/10 transition"
+        >
+          <i class="fa-solid fa-door-open text-xs"></i>
+        </button>
+
+        <button
+          onclick="veCanhMacDinh()"
+          title="Về Sân trường chính"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition"
+        >
+          <i class="fa-solid fa-house text-xs"></i>
+        </button>
+
+        <button
+          onclick="chayLaiIntroFlycam()"
+          title="Bay toàn cảnh từ trên cao (Flycam 360°)"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-sky-400 hover:text-sky-300 hover:bg-white/10 transition"
+        >
+          <i class="fa-solid fa-cloud-sun text-xs"></i>
+        </button>
+
+        <button
+          id="nut-tu-dong-quay"
+          onclick="chuyenCheDoTuQuay()"
+          title="Tự động quay 360"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition"
+        >
+          <i class="fa-solid fa-play text-xs"></i>
+        </button>
+
+        <button
+          onclick="anHienGiaoDien()"
+          title="Ẩn/Hiện giao diện"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition"
+        >
+          <i class="fa-regular fa-eye text-xs"></i>
+        </button>
+
+        <button
+          onclick="chuyenCheDoVR()"
+          title="Chế độ kính VR"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition"
+        >
+          <i class="fa-solid fa-vr-cardboard text-xs"></i>
+        </button>
+
+        <button
+          onclick="chuyenToanManHinh()"
+          title="Toàn màn hình"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition"
+        >
+          <i class="fa-solid fa-expand text-xs"></i>
+        </button>
+
+        <div class="h-4 w-px bg-white/20"></div>
+
+        <button
+          onclick="thuGonThanhDieuKhien()"
+          title="Thu gọn thanh điều khiển"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition"
+        >
+          <i class="fa-solid fa-chevron-down text-xs"></i>
+        </button>
+
+        <button
+          onclick="chuyenCanhTiep()"
+          title="Cảnh tiếp theo"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 transition"
+        >
+          <i class="fa-solid fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+    </div>
+
+    <button
+      id="nut-hien-lai-thanh-dieu-khien"
+      onclick="hienLaiThanhDieuKhien()"
+      class="hidden fixed bottom-4 right-4 z-30 w-10 h-10 rounded-full panoee-thanh-dieu-khien text-white flex items-center justify-center shadow-2xl hover:scale-105 transition"
+    >
+      <i class="fa-solid fa-chevron-up text-sm"></i>
+    </button>
+
+    <div
+      id="modal-danh-sach-canh"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-200"
+    >
+      <div
+        class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col p-6 shadow-2xl relative transform scale-95 transition-transform duration-200"
+        id="hop-modal-danh-sach"
+      >
+        <div
+          class="flex items-center justify-between pb-4 border-b border-slate-800"
+        >
+          <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-grip text-sky-400 text-lg"></i>
+            <div>
+              <h3 class="text-base md:text-lg font-bold text-white">
+                Danh Sách Toàn Bộ Phân Khu Khuôn Viên (74 Điểm)
+              </h3>
+              <p class="text-xs text-slate-400">
+                Chọn bất kỳ địa điểm nào để chuyển góc nhìn 360° tức thì
+              </p>
+            </div>
+          </div>
+          <button
+            onclick="dongThuVienCanh()"
+            class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition"
+          >
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <div class="py-3">
+          <div class="relative">
+            <i
+              class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+            ></i>
+            <input
+              type="text"
+              id="o-tim-kiem-canh"
+              oninput="timKiemCanh(this.value)"
+              placeholder="Tìm kiếm nhanh phân khu (C1, C6, Thư viện, Lab, Sân bóng, Hội trường...)"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs placeholder-slate-400 focus:outline-none focus:border-sky-500"
+            />
+          </div>
+        </div>
+
+        <div
+          id="luoi-canh-container"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto pr-1 flex-1 max-h-[55vh]"
+        ></div>
+      </div>
+    </div>
+
+    <script src="../../js/thamquan.js"></script>
+  </body>
+</html>

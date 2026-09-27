@@ -1,0 +1,811 @@
+<!doctype html>
+
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Xét Duyệt Hồ Sơ Thực Tập Sinh - ICTU Internship</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/common.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/tailwind.config.js"></script>
+  </head>
+  <body
+    class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex"
+  >
+    <aside
+      class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 h-screen sticky top-0 self-start z-20 shadow-[1px_0_12px_rgba(0,0,0,0.02)]"
+    >
+      <div class="h-20 px-6 border-b border-slate-100 flex items-center gap-3">
+        <a href="them_ho_so.html" class="flex items-center gap-3">
+          <img
+            src="../../image/ictu_logo.png"
+            alt="ICTU Internship Logo"
+            class="h-10 w-auto object-contain"
+          />
+          <div>
+            <span class="text-sm font-bold text-slate-900 block leading-tight"
+              >ICTU INTERN</span
+            >
+            <span
+              class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block"
+              >Cổng Quản Trị</span
+            >
+          </div>
+        </a>
+      </div>
+      <div
+        class="p-4 mx-3 my-3 rounded-2xl bg-gradient-to-br from-ictu-50/70 to-slate-50 border border-slate-200/80 flex items-center gap-3.5"
+      >
+        <div class="relative shrink-0">
+          <div
+            class="w-11 h-11 rounded-full bg-gradient-to-tr from-ictu-600 to-sky-400 flex items-center justify-center text-white font-bold text-base shadow-sm ring-2 ring-white"
+          >
+            AD
+          </div>
+          <span
+            class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white"
+          ></span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h4 class="text-sm font-bold text-slate-900 truncate">
+              Ban Đào Tạo &amp; QLTT
+            </h4>
+            <span
+              class="material-symbols-outlined text-[15px] text-ictu-600 fill"
+              >verified</span
+            >
+          </div>
+          <p class="text-xs text-slate-500 truncate">admin@ictu.edu.vn</p>
+          <span
+            class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-ictu-100 text-ictu-700"
+            >Quản trị viên</span
+          >
+        </div>
+      </div>
+      <div class="px-3 flex-1 overflow-y-auto space-y-1">
+        <p
+          class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+        >
+          Hệ Thống Quản Lý
+        </p>
+
+        <a
+          href="dashboard.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >dashboard</span
+          >
+          <span>Tổng quan hệ thống</span>
+        </a>
+
+        <a
+          href="them_ho_so.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >person_add</span
+          >
+          <span>Thêm hồ sơ thực tập</span>
+        </a>
+
+        <a
+          href="xet_duyet_ho_so.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-ictu-50 text-ictu-700 shadow-sm border border-ictu-100 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-ictu-600 fill"
+              >how_to_reg</span
+            >
+            <span>Xét duyệt hồ sơ</span>
+          </div>
+          <span
+            class="text-[10px] bg-ictu-600 text-white font-bold px-2 py-0.5 rounded-full"
+            >Active</span
+          >
+        </a>
+
+        <a
+          href="lich_thuc_tap.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >calendar_month</span
+          >
+          <span>Lịch thực tập</span>
+        </a>
+
+        <a
+          href="danh_gia.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+              >rate_review</span
+            >
+            <span>Báo cáo &amp; Đánh giá</span>
+          </div>
+          <span
+            class="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-md"
+            >Mới</span
+          >
+        </a>
+
+        <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
+          <p
+            class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+          >
+            Cổng Thực Tập Sinh
+          </p>
+          <a
+            href="../sinhvien/dashboard.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >space_dashboard</span
+            >
+            <span>Tổng quan sinh viên</span>
+          </a>
+          <a
+            href="../sinhvien/tai_tai_lieu.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >upload_file</span
+            >
+            <span>1. Nộp tài liệu &amp; CV</span>
+          </a>
+          <a
+            href="../sinhvien/hop_dong.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >history_edu</span
+            >
+            <span>2. Ký kết hợp đồng</span>
+          </a>
+          <a
+            href="../sinhvien/nhiem_vu.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >checklist</span
+            >
+            <span>3. Nhiệm vụ &amp; Tiến độ</span>
+          </a>
+          <a
+            href="../public/thamquan.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >360</span
+            >
+            <span>Tham quan thực tế ảo</span>
+          </a>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Máy chủ: ICTU Cloud
+          </span>
+          <a
+            href="../public/index.html"
+            class="text-slate-400 hover:text-rose-600 transition-colors p-1"
+            title="Đăng xuất"
+          >
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0">
+      <div class="flex flex-col w-full">
+        <header
+          class="bg-surface-container-lowest px-gutter py-space-sm flex flex-col md:flex-row md:items-center justify-between gap-space-sm shadow-sm sticky top-0 z-10"
+        >
+          <div
+            class="flex items-center gap-space-sm text-body-sm text-on-surface-variant"
+          >
+            <a
+              class="hover:text-primary transition-colors flex items-center gap-1 font-label-md"
+              href="#"
+            >
+              <span class="material-symbols-outlined text-[18px]">home</span>
+              <span>Trang chủ</span>
+            </a>
+            <span
+              class="material-symbols-outlined text-[14px] text-outline-variant"
+              >chevron_right</span
+            >
+            <a
+              class="hover:text-primary transition-colors font-label-md"
+              href="#"
+              >Quản lý thực tập sinh</a
+            >
+            <span
+              class="material-symbols-outlined text-[14px] text-outline-variant"
+              >chevron_right</span
+            >
+            <span
+              class="text-primary font-label-md bg-surface-container-high px-2 py-0.5 rounded-full"
+              >Xét duyệt hồ sơ</span
+            >
+          </div>
+          <div
+            class="flex items-center gap-space-md justify-between md:justify-end"
+          >
+            <div class="relative w-64 hidden sm:block">
+              <span
+                class="material-symbols-outlined absolute left-3 top-2.5 text-[18px] text-outline"
+                >search</span
+              >
+              <input
+                class="w-full bg-surface-container-low pl-9 pr-3 py-1.5 rounded-lg text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container"
+                placeholder="Tìm kiếm nhanh..."
+                type="text"
+              />
+            </div>
+
+            <div class="flex items-center gap-space-sm">
+              <button
+                class="relative p-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                title="Thông báo hệ thống"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[20px]"
+                  >notifications</span
+                >
+                <span
+                  class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"
+                ></span>
+              </button>
+              <button
+                class="p-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-colors"
+                title="Tải lại dữ liệu từ API"
+                type="button"
+                onclick="taiDanhSachHoSo()"
+              >
+                <span class="material-symbols-outlined text-[20px]">sync</span>
+              </button>
+              <span
+                id="trangThaiKetNoiApi"
+                class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200"
+              >
+                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                <span>Kiểm tra API...</span>
+              </span>
+            </div>
+
+            <div
+              class="flex items-center gap-space-xs pl-2 border-l border-surface-container-high"
+            >
+              <div
+                class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-md"
+              >
+                QL
+              </div>
+              <div class="hidden xl:flex flex-col text-left">
+                <span
+                  class="text-label-sm text-on-surface leading-tight font-semibold"
+                  >Admin QLTT</span
+                >
+                <span class="text-[10px] text-on-surface-variant leading-none"
+                  >Hội đồng thẩm định</span
+                >
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="p-gutter flex flex-col gap-space-lg">
+          <div
+            class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-md"
+          >
+            <div class="flex flex-col gap-space-xs max-w-3xl">
+              <div
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-primary w-fit text-label-sm font-semibold"
+              >
+                <span class="material-symbols-outlined text-[15px]"
+                  >verified_user</span
+                >
+                <span>Cổng Xét Duyệt Đợt Tuyển &amp; Thực Tập 2024 - 2025</span>
+              </div>
+              <h1
+                class="font-headline-lg text-headline-lg text-on-surface tracking-tight"
+              >
+                Xét Duyệt Hồ Sơ Ứng Tuyển
+              </h1>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Quản lý tiếp nhận, thẩm định chất lượng CV và ra quyết định phê
+                duyệt hoặc từ chối sinh viên đăng ký thực tập doanh nghiệp.
+              </p>
+            </div>
+
+            <div
+              class="grid grid-cols-2 sm:grid-cols-4 gap-space-xs bg-surface-container-lowest p-2 rounded-xl shadow-sm self-start lg:self-auto"
+            >
+              <div
+                class="px-3 py-2 flex flex-col items-center justify-center text-center"
+              >
+                <span
+                  class="font-label-sm text-label-sm text-on-surface-variant"
+                  >Tổng hồ sơ</span
+                >
+                <span
+                  class="font-headline-sm text-headline-sm text-primary font-bold"
+                  id="demTongHoSo"
+                  >0</span
+                >
+              </div>
+              <div
+                class="px-3 py-2 flex flex-col items-center justify-center text-center bg-surface-container-low rounded-lg"
+              >
+                <span class="font-label-sm text-label-sm text-amber-700"
+                  >Chờ duyệt</span
+                >
+                <span
+                  class="font-headline-sm text-headline-sm text-amber-800 font-bold"
+                  id="demChoDuyet"
+                  >5</span
+                >
+              </div>
+              <div
+                class="px-3 py-2 flex flex-col items-center justify-center text-center"
+              >
+                <span class="font-label-sm text-label-sm text-secondary"
+                  >Đã duyệt</span
+                >
+                <span
+                  class="font-headline-sm text-headline-sm text-secondary font-bold"
+                  id="demDaDuyet"
+                  >6</span
+                >
+              </div>
+              <div
+                class="px-3 py-2 flex flex-col items-center justify-center text-center"
+              >
+                <span class="font-label-sm text-label-sm text-error"
+                  >Từ chối</span
+                >
+                <span
+                  class="font-headline-sm text-headline-sm text-error font-bold"
+                  id="demTuChoi"
+                  >1</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="hidden transition-all duration-300"
+            id="hopThongBaoTrangThai"
+          ></div>
+
+          <div
+            class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col lg:flex-row gap-space-md lg:items-center lg:justify-between"
+          >
+            <div class="relative flex-1 max-w-md">
+              <span
+                class="material-symbols-outlined absolute left-3.5 top-2.5 text-outline text-[20px]"
+                >search</span
+              >
+              <input
+                class="w-full bg-surface-container-low text-on-surface placeholder:text-outline rounded-lg pl-10 pr-4 py-2 text-body-md focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container transition-all"
+                id="timKiemUngVien"
+                placeholder="Tìm kiếm họ tên ứng viên, mã sinh viên..."
+                type="text"
+              />
+            </div>
+
+            <div class="flex flex-wrap items-center gap-space-xs">
+              <div
+                class="inline-flex p-1 bg-surface-container-low rounded-lg gap-1"
+              >
+                <button
+                  class="bo-nut-loc px-3 py-1.5 rounded-md text-label-sm font-semibold bg-primary text-on-primary shadow-sm transition-all flex items-center gap-1.5"
+                  onclick="locDanhSach('tat-ca', this)"
+                  type="button"
+                >
+                  <span>Tất cả</span>
+                  <span
+                    class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-primary text-[10px]"
+                    >12</span
+                  >
+                </button>
+                <button
+                  class="bo-nut-loc px-3 py-1.5 rounded-md text-label-sm font-semibold text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5"
+                  onclick="locDanhSach('cho-duyet', this)"
+                  type="button"
+                >
+                  <span>Chờ duyệt</span>
+                  <span
+                    class="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold"
+                    >5</span
+                  >
+                </button>
+                <button
+                  class="bo-nut-loc px-3 py-1.5 rounded-md text-label-sm font-semibold text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5"
+                  onclick="locDanhSach('da-duyet', this)"
+                  type="button"
+                >
+                  <span>Đã duyệt</span>
+                  <span
+                    class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-secondary text-[10px]"
+                    >6</span
+                  >
+                </button>
+                <button
+                  class="bo-nut-loc px-3 py-1.5 rounded-md text-label-sm font-semibold text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-1.5"
+                  onclick="locDanhSach('tu-choi', this)"
+                  type="button"
+                >
+                  <span>Bị từ chối</span>
+                  <span
+                    class="px-1.5 py-0.2 rounded-full bg-error-container text-on-error-container text-[10px]"
+                    >1</span
+                  >
+                </button>
+              </div>
+
+              <div class="flex items-center gap-space-xs ml-auto">
+                <button
+                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-colors font-label-sm"
+                  onclick="xuatDanhSachExcel()"
+                  type="button"
+                >
+                  <span
+                    class="material-symbols-outlined text-[18px] text-secondary"
+                    >file_download</span
+                  >
+                  <span>Xuất danh sách Excel</span>
+                </button>
+                <button
+                  class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-colors font-label-sm shadow-sm"
+                  onclick="duyetHangLoat()"
+                  type="button"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >done_all</span
+                  >
+                  <span>Duyệt nhanh hàng loạt</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col"
+          >
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr
+                    class="bg-surface-container-low text-on-surface-variant text-label-md uppercase tracking-wider"
+                  >
+                    <th class="py-3 px-4 font-semibold" scope="col">
+                      Mã hồ sơ
+                    </th>
+                    <th class="py-3 px-4 font-semibold" scope="col">
+                      Họ và tên
+                    </th>
+                    <th class="py-3 px-4 font-semibold" scope="col">
+                      Trường đại học
+                    </th>
+                    <th class="py-3 px-4 font-semibold" scope="col">
+                      Vị trí ứng tuyển
+                    </th>
+                    <th class="py-3 px-4 font-semibold text-center" scope="col">
+                      Trạng thái
+                    </th>
+                    <th class="py-3 px-4 font-semibold text-center" scope="col">
+                      Thao tác
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  class="text-body-md text-on-surface"
+                  id="danhSachUngVien"
+                >
+                  <tr>
+                    <td colspan="6" class="py-12 text-center text-slate-400">
+                      <div class="inline-flex items-center gap-2.5">
+                        <span
+                          class="inline-block w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin"
+                        ></span>
+                        <span class="text-sm font-medium"
+                          >Đang kết nối API Backend và tải danh sách hồ
+                          sơ...</span
+                        >
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div
+              class="px-4 py-3 bg-surface-container-low/50 flex flex-col sm:flex-row items-center justify-between gap-space-sm text-body-sm text-on-surface-variant"
+            >
+              <div>
+                <span
+                  >Hiển thị <strong class="text-on-surface">1 - 3</strong> của
+                  <strong class="text-on-surface">12</strong> hồ sơ</span
+                >
+              </div>
+              <div class="flex items-center gap-1">
+                <button
+                  class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container-high disabled:opacity-40"
+                  disabled=""
+                  type="button"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >chevron_left</span
+                  >
+                </button>
+                <button
+                  class="w-8 h-8 rounded-lg bg-primary text-on-primary font-label-sm flex items-center justify-center shadow-sm"
+                  type="button"
+                >
+                  1
+                </button>
+                <button
+                  class="w-8 h-8 rounded-lg bg-surface-container-low text-on-surface font-label-sm flex items-center justify-center hover:bg-surface-container-high"
+                  type="button"
+                >
+                  2
+                </button>
+                <button
+                  class="w-8 h-8 rounded-lg bg-surface-container-low text-on-surface font-label-sm flex items-center justify-center hover:bg-surface-container-high"
+                  type="button"
+                >
+                  3
+                </button>
+                <span class="px-1 text-outline">...</span>
+                <button
+                  class="w-8 h-8 rounded-lg bg-surface-container-low text-on-surface font-label-sm flex items-center justify-center hover:bg-surface-container-high"
+                  type="button"
+                >
+                  4
+                </button>
+                <button
+                  class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface hover:bg-surface-container-high"
+                  type="button"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >chevron_right</span
+                  >
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden transition-opacity"
+          id="hopThoaiTuChoi"
+        >
+          <div
+            class="bg-surface-container-lowest rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all border border-outline-variant/30 animate-in fade-in zoom-in-95"
+          >
+            <div
+              class="p-space-md bg-surface-container-low flex items-center justify-between"
+            >
+              <div class="flex items-center gap-2.5">
+                <div
+                  class="w-9 h-9 rounded-full bg-error-container text-on-error-container flex items-center justify-center"
+                >
+                  <span class="material-symbols-outlined text-[22px]"
+                    >warning</span
+                  >
+                </div>
+                <div>
+                  <h3
+                    class="font-headline-sm text-headline-sm text-on-surface font-bold"
+                  >
+                    Lý do từ chối hồ sơ
+                  </h3>
+                  <span
+                    class="font-body-sm text-body-sm text-on-surface-variant"
+                    >Thông tin phản hồi sẽ gửi tự động đến ứng viên</span
+                  >
+                </div>
+              </div>
+              <button
+                class="p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                onclick="dongHopThoaiTuChoi()"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <div class="p-space-md flex flex-col gap-space-sm">
+              <div
+                class="p-3 rounded-lg bg-error-container/40 text-on-error-container text-body-sm font-medium flex items-start gap-2"
+              >
+                <span
+                  class="material-symbols-outlined text-[18px] shrink-0 text-error"
+                  >info</span
+                >
+                <p id="moTaUngVienTuChoi">
+                  Bạn đang từ chối hồ sơ của ứng viên: Nguyễn Văn An (Mã:
+                  ICTU-2024-8842)
+                </p>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label
+                  class="font-label-md text-label-md text-on-surface"
+                  for="lyDoTuChoi"
+                >
+                  Lý do từ chối &amp; Hướng dẫn bổ sung hồ sơ
+                  <span class="text-error">*</span>
+                </label>
+                <textarea
+                  class="w-full bg-surface-container-low text-on-surface placeholder:text-outline rounded-lg p-3 text-body-md focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-error transition-all"
+                  id="lyDoTuChoi"
+                  placeholder="Nhập lý do không đạt yêu cầu (ví dụ: Thiếu bảng điểm HK gần nhất, CV chưa theo mẫu quy chuẩn ICTU, chưa đủ chứng chỉ kỹ năng...)"
+                  rows="4"
+                ></textarea>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <span
+                  class="font-label-sm text-label-sm text-on-surface-variant"
+                  >Chọn nhanh lý do mẫu:</span
+                >
+                <div class="flex flex-wrap gap-1.5">
+                  <button
+                    class="px-2.5 py-1 rounded-md bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-label-sm transition-colors"
+                    onclick="
+                      ganLyDoNhanh(
+                        'Chưa đủ điều kiện số tín chỉ tích lũy chuyên ngành theo quy chế thực tập ICTU.',
+                      )
+                    "
+                    type="button"
+                  >
+                    + Chưa đủ điều kiện số tín chỉ
+                  </button>
+                  <button
+                    class="px-2.5 py-1 rounded-md bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-label-sm transition-colors"
+                    onclick="
+                      ganLyDoNhanh(
+                        'CV chưa đạt chuẩn ICTU, yêu cầu cập nhật lại theo biểu mẫu đợt thực tập 2024.',
+                      )
+                    "
+                    type="button"
+                  >
+                    + CV chưa đạt chuẩn ICTU
+                  </button>
+                  <button
+                    class="px-2.5 py-1 rounded-md bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-label-sm transition-colors"
+                    onclick="
+                      ganLyDoNhanh(
+                        'Trùng lịch học chính khóa với khung thời gian yêu cầu full-time từ doanh nghiệp tiếp nhận.',
+                      )
+                    "
+                    type="button"
+                  >
+                    + Trùng lịch học chính khóa
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="p-space-md bg-surface-container-low flex items-center justify-end gap-space-xs"
+            >
+              <button
+                class="px-4 py-2 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high transition-colors font-label-md border border-slate-300"
+                id="nutHuyTuChoi"
+                onclick="dongHopThoaiTuChoi()"
+                type="button"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors font-label-md shadow-sm flex items-center gap-1.5"
+                id="nutXacNhanTuChoi"
+                onclick="xacNhanTuChoiHoSo()"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[18px]">block</span>
+                <span>Xác nhận từ chối</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden transition-opacity"
+          id="hopThoaiTaiLieu"
+        >
+          <div
+            class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all border border-slate-200 animate-in fade-in zoom-in-95"
+          >
+            <div
+              class="p-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0"
+                >
+                  <span class="material-symbols-outlined text-[22px]"
+                    >folder_open</span
+                  >
+                </div>
+                <div>
+                  <h3
+                    class="font-bold text-slate-900 text-base"
+                    id="tieuDeTaiLieuHoSo"
+                  >
+                    Hồ Sơ &amp; Tài Liệu Đính Kèm
+                  </h3>
+                  <span class="text-xs text-slate-500" id="moTaTaiLieuHoSo"
+                    >Dữ liệu đồng bộ trực tiếp từ API Backend</span
+                  >
+                </div>
+              </div>
+              <button
+                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+                onclick="dongHopThoaiTaiLieu()"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <div class="p-6 space-y-4">
+              <div id="danhSachTaiLieuContainer" class="space-y-3">
+                <div class="py-8 text-center text-slate-400">
+                  <span
+                    class="inline-block w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin"
+                  ></span>
+                  <p class="mt-2 text-xs">
+                    Đang tải danh sách tài liệu từ API...
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2"
+            >
+              <button
+                class="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 hover:bg-slate-300 font-semibold text-xs transition-colors"
+                onclick="dongHopThoaiTaiLieu()"
+                type="button"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script src="../../js/xet_duyet_ho_so.js"></script>
+    </main>
+  </body>
+</html>
