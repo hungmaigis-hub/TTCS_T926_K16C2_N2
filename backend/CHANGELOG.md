@@ -4,13 +4,41 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.5.0] - 2026-09-27
+
+### Đã hoàn thành (Added)
+- **Model Chương trình thực tập (`backend/database/models/chuong_trinh.py`)**:
+  - Tích hợp phương thức `to_dict()` tự động tổng hợp dữ liệu chương trình sang JSON, liên kết lấy kèm tên phòng ban (`ten_phong_ban`).
+  - Thiết lập đầy đủ quan hệ ORM hai chiều với `PhongBan` (`phong_ban`) và `HoSoThucTap` (`ho_so`).
+- **Validation & Schemas (`schemas.py`)**:
+  - Xây dựng schema `ProgramCreate`:
+    - Ràng buộc bắt buộc `ma_phong_ban` (số nguyên dương `gt=0`) và `ten_chuong_trinh` (chuỗi từ 1 đến 150 ký tự, tự động strip khoảng trắng thừa).
+    - Hỗ trợ các trường tùy chọn: `mo_ta`, `ngay_bat_dau`, `ngay_ket_thuc`.
+    - Tự động validate logic thời gian: `ngay_ket_thuc >= ngay_bat_dau`.
+  - Xây dựng schema `ProgramDetailData` và `ProgramResponse` định hình dữ liệu trả về cho API.
+- **API Endpoint (`POST /api/v1/programs`)**:
+  - Viết endpoint `POST /api/v1/programs` tạo mới chương trình thực tập liên kết phòng ban.
+  - Kiểm tra tồn tại của mã phòng ban (`ma_phong_ban`) trong CSDL, trả về mã lỗi HTTP 400 nếu không tìm thấy.
+  - Kiểm tra chống trùng lặp tên chương trình trong cùng một phòng ban, trả về HTTP 400 nếu đã tồn tại.
+  - Tự động gán thời gian mặc định (bắt đầu hôm nay, kết thúc sau 90 ngày) khi client không truyền.
+  - Trả về mã HTTP 201 Created cùng dữ liệu chi tiết của chương trình vừa tạo.
+- **Kiểm thử tự động (Unit Test)**:
+  - Tạo file `tests/test_programs.py` gồm **14 test cases** bao phủ toàn diện:
+    - Case thành công: Tạo đầy đủ trường (201), tạo chỉ với trường bắt buộc (201), tự động cắt khoảng trắng thừa (201), workshop 1 ngày cùng ngày bắt đầu & kết thúc (201).
+    - Case nghiệp vụ CSDL: Phòng ban không tồn tại (400), trùng tên chương trình trong cùng phòng ban (400).
+    - Case validate đầu vào: Ngày kết thúc trước ngày bắt đầu (422), tên rỗng/chỉ chứa khoảng trắng (422), thiếu trường bắt buộc (422), sai kiểu dữ liệu mã phòng ban (422).
+  - Tự động dọn dẹp dữ liệu test bằng fixture sau mỗi lần chạy.
+  - Nâng tổng số test cases của toàn hệ thống lên **61/61 PASS 100%**.
+
+---
+
 ## [1.4.0] - 2026-09-26
 
 ### Đã hoàn thành (Added & Enhanced)
 - **Tích hợp gửi Email tự động trong nền (`fastapi.BackgroundTasks`)**:
   - Tích hợp `fastapi.BackgroundTasks` vào endpoint duyệt tài liệu `PATCH /api/v1/documents/{id}/status`.
   - Tự động kích hoạt tác vụ gửi email thông báo kết quả duyệt cho thực tập sinh ngay sau khi trạng thái duyệt được lưu vào CSDL mà không làm nghẽn luồng xử lý chính của HTTP response.
-- **Module Dịch vụ Email chuyên nghiệp (`backend/services/email_service.py`)**:
+- **Module Dịch vụ Email (`backend/services/email_service.py`)**:
   - Xây dựng module dịch vụ email sử dụng thư viện chuẩn `smtplib` và `email.mime.text` (MIMEText/Header) hỗ trợ bảo mật kết nối TLS.
   - Định dạng nội dung email dạng văn bản thuần túy (plain text) ngắn gọn, súc tích, chuyên nghiệp, thông báo rõ ràng tên thực tập sinh, tên tài liệu tiếng Việt, kết quả xét duyệt và ghi chú/lý do từ chối (nếu có).
   - Hỗ trợ cơ chế giả lập gửi email thông minh (`MAIL_ENABLED=false` hoặc môi trường dev/test) với danh sách `sent_emails_history` giúp chạy test nhanh chóng và an toàn mà không cần kết nối mạng SMTP bên ngoài.
@@ -20,7 +48,7 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 - **Cấu hình & Biến môi trường**:
   - Bổ sung cấu hình SMTP vào `.env.example` và `.env`: `MAIL_ENABLED`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`.
 - **Kiểm thử tự động (Unit Test)**:
-  - Xây dựng bộ test mới `tests/test_email_notification.py` gồm **12 test cases** bao phủ toàn diện:
+  - Xây dựng bộ test mới `tests/test_email_notification.py` gồm **12 test cases**:
     - Gửi email phê duyệt `DaDuyet`, từ chối `TuChoi` kèm ghi chú, hoàn trạng thái `ChoDuyet`.
     - Kiểm tra xử lý chuỗi ghi chú (strip, rỗng, vượt quá 500 ký tự trả về 422).
     - Kiểm tra trường hợp tài liệu không tồn tại (404 không kích hoạt gửi email).

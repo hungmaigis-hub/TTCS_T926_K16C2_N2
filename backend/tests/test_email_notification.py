@@ -30,6 +30,21 @@ def clear_email_history():
 # KIỂM THỬ TÍCH HỢP FASTAPI BACKGROUNDTASKS VỚI API DUYỆT TÀI LIỆU
 # ==============================================================================
 
+from database.session import SessionLocal
+from database.models import HoSoThucTap
+
+def _get_target_email_for_doc_1() -> str:
+    """Lấy email thực tế của thực tập sinh sở hữu tài liệu 1 từ CSDL"""
+    db = SessionLocal()
+    try:
+        ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == 1).first()
+        if ho_so and ho_so.thuc_tap_sinh and ho_so.thuc_tap_sinh.email:
+            return ho_so.thuc_tap_sinh.email
+        return "vana@example.com"
+    finally:
+        db.close()
+
+
 def test_patch_document_status_triggers_email_daduyet():
     """Kiểm tra khi duyệt tài liệu DaDuyet: API trả về 200 và tự động gửi email thông báo phê duyệt"""
     payload = {
@@ -45,8 +60,9 @@ def test_patch_document_status_triggers_email_daduyet():
     assert len(sent_emails_history) >= 1
     latest_email = sent_emails_history[-1]
     
-    # Tài liệu 1 thuộc hồ sơ 1 (Nguyễn Văn A - vana@example.com)
-    assert latest_email["to_email"] == "vana@example.com"
+    # Tài liệu 1 thuộc hồ sơ 1
+    assert latest_email["to_email"] == _get_target_email_for_doc_1()
+
     assert "PHÊ DUYỆT" in latest_email["subject"]
     assert "Nguyễn Văn A" in latest_email["content"]
     assert "Hồ sơ năng lực (CV)" in latest_email["content"]
@@ -67,7 +83,7 @@ def test_patch_document_status_triggers_email_tuchoi_with_note():
 
     assert len(sent_emails_history) >= 1
     latest_email = sent_emails_history[-1]
-    assert latest_email["to_email"] == "vana@example.com"
+    assert latest_email["to_email"] == _get_target_email_for_doc_1()
     assert "TỪ CHỐI" in latest_email["subject"]
     assert "BỊ TỪ CHỐI" in latest_email["content"]
     assert reason in latest_email["content"]
@@ -84,7 +100,7 @@ def test_patch_document_status_triggers_email_choduyet():
 
     assert len(sent_emails_history) >= 1
     latest_email = sent_emails_history[-1]
-    assert latest_email["to_email"] == "vana@example.com"
+    assert latest_email["to_email"] == _get_target_email_for_doc_1()
     assert "CHỜ DUYỆT" in latest_email["subject"].upper()
     assert "CHỜ DUYỆT" in latest_email["content"]
 
