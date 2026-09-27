@@ -1,0 +1,826 @@
+<!doctype html>
+
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Hợp Đồng Thực Tập Điện Tử - ICTU Internship</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/common.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/tailwind.config.js"></script>
+  </head>
+  <body
+    class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex"
+  >
+    <aside
+      class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 h-screen sticky top-0 self-start z-20 shadow-[1px_0_12px_rgba(0,0,0,0.02)]"
+    >
+      <div class="h-20 px-6 border-b border-slate-100 flex items-center gap-3">
+        <a href="dashboard.html" class="flex items-center gap-3">
+          <img
+            src="../../image/ictu_logo.png"
+            alt="ICTU Internship Logo"
+            class="h-10 w-auto object-contain"
+          />
+          <div>
+            <span class="text-sm font-bold text-slate-900 block leading-tight"
+              >ICTU INTERN</span
+            >
+            <span
+              class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider block"
+              >Cổng Sinh Viên</span
+            >
+          </div>
+        </a>
+      </div>
+      <div
+        class="p-4 mx-3 my-3 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-slate-50 border border-emerald-100 flex items-center gap-3.5"
+      >
+        <div class="relative shrink-0">
+          <div
+            class="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-bold text-base shadow-sm ring-2 ring-white"
+          >
+            NA
+          </div>
+          <span
+            class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white"
+          ></span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h4 class="text-sm font-bold text-slate-900 truncate">
+              Nguyễn Văn An
+            </h4>
+            <span
+              class="material-symbols-outlined text-[15px] text-emerald-600 fill"
+              >verified</span
+            >
+          </div>
+          <p class="text-xs text-slate-500 truncate">DTC2051060124 - K19</p>
+          <span
+            class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800"
+            >Thực tập sinh</span
+          >
+        </div>
+      </div>
+      <div class="px-3 flex-1 overflow-y-auto space-y-1">
+        <p
+          class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+        >
+          Cổng Thực Tập Sinh
+        </p>
+
+        <a
+          href="dashboard.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >space_dashboard</span
+          >
+          <span>Tổng quan thực tập</span>
+        </a>
+
+        <a
+          href="tai_tai_lieu.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >upload_file</span
+          >
+          <span>Nộp tài liệu &amp; CV</span>
+        </a>
+
+        <a
+          href="hop_dong.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-800 shadow-sm border border-emerald-200 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-emerald-600 fill"
+              >history_edu</span
+            >
+            <span>Hợp đồng thực tập</span>
+          </div>
+          <span
+            class="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full"
+            >Active</span
+          >
+        </a>
+
+        <a
+          href="nhiem_vu.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >checklist</span
+          >
+          <span>Nhiệm vụ &amp; Tiến độ</span>
+        </a>
+
+        <a
+          href="javascript:void(0)"
+          data-coming-soon="Lịch làm việc &amp; Chấm công sinh viên"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
+              >calendar_month</span
+            >
+            <span>Lịch &amp; Điểm danh</span>
+          </div>
+          <span
+            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-[12px]">lock</span>
+            Sắp có
+          </span>
+        </a>
+
+        <a
+          href="javascript:void(0)"
+          data-coming-soon="Báo cáo tuần &amp; Nhật ký thực tập"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
+              >edit_note</span
+            >
+            <span>Báo cáo tuần</span>
+          </div>
+          <span
+            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-[12px]">lock</span>
+            Sắp có
+          </span>
+        </a>
+
+        <a
+          href="javascript:void(0)"
+          data-coming-soon="Kết quả đánh giá &amp; Điểm số thực tập"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
+              >rate_review</span
+            >
+            <span>Đánh giá &amp; Điểm</span>
+          </div>
+          <span
+            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-[12px]">lock</span>
+            Sắp có
+          </span>
+        </a>
+
+        <a
+          href="../public/thamquan.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >360</span
+          >
+          <span>Tham quan trường ICTU</span>
+        </a>
+
+        <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
+          <p
+            class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+          >
+            Dành Cho Quản Trị
+          </p>
+          <a
+            href="../quanly/them_ho_so.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >admin_panel_settings</span
+            >
+            <span>Cổng Quản trị viên</span>
+          </a>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Học kỳ 2024 - 2025
+          </span>
+          <a
+            href="../public/index.html"
+            class="text-slate-400 hover:text-rose-600 transition-colors p-1"
+            title="Đăng xuất"
+          >
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0">
+      <div class="flex flex-col w-full">
+        <div class="px-6 lg:px-10 py-8 bg-surface space-y-8">
+          <header
+            class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6"
+          >
+            <div class="space-y-2">
+              <nav
+                aria-label="Breadcrumb"
+                class="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md"
+              >
+                <a
+                  class="hover:text-primary transition-colors flex items-center gap-1"
+                  href="dashboard.html"
+                >
+                  <span class="material-symbols-outlined text-base">home</span>
+                  <span>Trang chủ</span>
+                </a>
+                <span class="material-symbols-outlined text-xs"
+                  >chevron_right</span
+                >
+                <a
+                  class="hover:text-primary transition-colors"
+                  href="hop_dong.html"
+                  >Quản lý thực tập sinh</a
+                >
+                <span class="material-symbols-outlined text-xs"
+                  >chevron_right</span
+                >
+                <span class="text-primary font-semibold"
+                  >Hợp đồng thực tập</span
+                >
+              </nav>
+              <div class="flex flex-wrap items-center gap-3">
+                <h1 class="font-headline-lg text-headline-lg text-on-surface">
+                  Hợp Đồng Tiếp Nhận Thực Tập Sinh
+                </h1>
+                <span
+                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm"
+                >
+                  <span
+                    class="w-2 h-2 rounded-full bg-primary animate-pulse"
+                  ></span>
+                  Lưu chuyển điện tử
+                </span>
+              </div>
+              <p
+                class="text-on-surface-variant font-body-md text-body-md max-w-3xl"
+              >
+                Văn bản thỏa thuận pháp lý tiếp nhận đào tạo và thực tập giữa
+                Doanh nghiệp đối tác và Thực tập sinh Trường ĐH CNTT &amp;
+                Truyền thông (ICTU).
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 shrink-0">
+              <div
+                class="px-3.5 py-2 rounded-xl bg-surface-container-lowest shadow-sm flex items-center gap-2 text-on-surface-variant font-code text-code"
+              >
+                <span class="material-symbols-outlined text-primary text-base"
+                  >tag</span
+                >
+                <span>ICTU-CONTRACT-2024/098</span>
+              </div>
+              <button
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-surface-container-lowest text-on-surface shadow-sm hover:bg-surface-container transition-colors font-label-lg text-label-lg"
+                onclick="window.print()"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-base">print</span>
+                <span>In hợp đồng</span>
+              </button>
+              <button
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg shadow-sm hover:opacity-95 transition-opacity"
+                onclick="
+                  alert(
+                    'Đang kết xuất tệp hợp đồng PDF bảo mật SHA-256 từ cổng ICTU...',
+                  )
+                "
+                type="button"
+              >
+                <span class="material-symbols-outlined text-base"
+                  >download</span
+                >
+                <span>Tải file PDF</span>
+              </button>
+            </div>
+          </header>
+
+          <div
+            class="relative max-w-4xl mx-auto w-full bg-surface-container-lowest shadow-xl rounded-lg p-8 sm:p-12 md:p-16 overflow-hidden"
+          >
+            <div
+              class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-[0.04]"
+            >
+              <div
+                class="w-96 h-96 rounded-full bg-primary flex items-center justify-center text-white"
+              >
+                <span class="material-symbols-outlined text-[240px]"
+                  >school</span
+                >
+              </div>
+            </div>
+            <div
+              class="pointer-events-none select-none absolute -right-24 top-60 rotate-45 text-surface-container-highest uppercase font-display-lg text-display-lg opacity-40 font-bold"
+            >
+              BẢN GỐC ĐIỆN TỬ - ICTU INTERNSHIP
+            </div>
+
+            <div class="relative z-10 text-center mb-8">
+              <p
+                class="font-headline-sm text-headline-sm uppercase text-on-surface tracking-wider"
+              >
+                CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+              </p>
+              <p
+                class="font-headline-sm text-headline-sm text-on-surface-variant font-medium tracking-wide mt-1"
+              >
+                Độc lập - Tự do - Hạnh phúc
+              </p>
+              <div class="w-36 h-0.5 bg-outline-variant mx-auto my-3"></div>
+              <p
+                class="font-body-sm text-body-sm italic text-on-surface-variant"
+              >
+                Thái Nguyên, ngày 15 tháng 10 năm 2024
+              </p>
+            </div>
+
+            <div class="relative z-10 text-center mb-8 pb-4">
+              <h2
+                class="font-headline-lg text-headline-lg uppercase text-on-surface tracking-normal"
+              >
+                HỢP ĐỒNG ĐÀO TẠO &amp; TIẾP NHẬN THỰC TẬP SINH
+              </h2>
+              <p class="font-code text-code text-on-surface-variant mt-1.5">
+                Số: 88/2024/HĐTT-ICTU-TECH
+              </p>
+            </div>
+
+            <div
+              class="relative z-10 space-y-3 font-body-md text-body-md text-on-surface text-justify leading-relaxed mb-8"
+            >
+              <p>
+                - Căn cứ Bộ luật Lao động và các quy định hiện hành của Bộ Giáo
+                dục &amp; Đào tạo về đào tạo gắn kết thực tế doanh nghiệp;
+              </p>
+              <p>
+                - Căn cứ Thỏa thuận hợp tác liên kết đào tạo &amp; cung ứng nhân
+                lực số 14/MOU-ICTU giữa Trường Đại học Công nghệ Thông tin &amp;
+                Truyền thông (Đại học Thái Nguyên) và Tập đoàn Công nghệ &amp;
+                Giải pháp Số TechCorp Việt Nam;
+              </p>
+              <p>
+                - Căn cứ nguyện vọng thực tập, năng lực chuyên môn và hồ sơ tiếp
+                nhận thực tập của Sinh viên.
+              </p>
+              <p class="italic text-on-surface-variant">
+                Hôm nay, ngày 15 tháng 10 năm 2024, hai bên thống nhất ký kết
+                Hợp đồng thực tập với các nội dung sau:
+              </p>
+            </div>
+
+            <div
+              class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-10"
+            >
+              <div
+                class="p-6 rounded-xl bg-surface-container-low flex flex-col justify-between space-y-4"
+              >
+                <div>
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="material-symbols-outlined text-primary text-xl"
+                      >domain</span
+                    >
+                    <h3
+                      class="font-headline-sm text-headline-sm text-primary uppercase"
+                    >
+                      BÊN A: ĐƠN VỊ TIẾP NHẬN THỰC TẬP
+                    </h3>
+                  </div>
+                  <div
+                    class="space-y-2.5 font-body-md text-body-md text-on-surface"
+                  >
+                    <p>
+                      <strong class="font-semibold">Doanh nghiệp:</strong> TẬP
+                      ĐOÀN CÔNG NGHỆ &amp; GIẢI PHÁP SỐ TECHCORP VIỆT NAM
+                    </p>
+                    <p>
+                      <strong class="font-semibold">Địa chỉ:</strong> Tầng 12,
+                      Tòa nhà Tháp Đôi ICT, KCN Công nghệ cao, Thái Nguyên
+                    </p>
+                    <p>
+                      <strong class="font-semibold">Người đại diện:</strong> Ông
+                      Trần Đình Trọng
+                    </p>
+                    <p>
+                      <strong class="font-semibold">Chức vụ:</strong> Giám đốc
+                      Kỹ thuật &amp; Phát triển Nhân lực
+                    </p>
+                    <p>
+                      <strong class="font-semibold">Mã số thuế:</strong>
+                      <span class="font-code text-code">0108999888</span>
+                    </p>
+                    <p>
+                      <strong class="font-semibold">Hotline:</strong> (+84) 208
+                      3999 888
+                    </p>
+                  </div>
+                </div>
+                <span
+                  class="inline-flex self-start items-center gap-1 px-2.5 py-1 rounded-md bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm"
+                >
+                  <span class="material-symbols-outlined text-xs"
+                    >verified</span
+                  >
+                  Đối tác doanh nghiệp cấp 1
+                </span>
+              </div>
+
+              <div
+                class="p-6 rounded-xl bg-surface-container-low flex flex-col justify-between space-y-4"
+              >
+                <div>
+                  <div class="flex items-center gap-2 mb-3">
+                    <span
+                      class="material-symbols-outlined text-tertiary text-xl"
+                      >badge</span
+                    >
+                    <h3
+                      class="font-headline-sm text-headline-sm text-tertiary uppercase"
+                    >
+                      BÊN B: SINH VIÊN THỰC TẬP
+                    </h3>
+                  </div>
+                  <div
+                    class="space-y-2.5 font-body-md text-body-md text-on-surface"
+                  >
+                    <p>
+                      <strong class="font-semibold">Họ và tên:</strong> NGUYỄN
+                      VĂN AN
+                    </p>
+                    <p>
+                      <strong class="font-semibold">Mã sinh viên:</strong>
+                      <span class="font-code text-code font-bold text-primary"
+                        >DTC2051060124</span
+                      >
+                    </p>
+                    <p>
+                      <strong class="font-semibold">Lớp sinh hoạt:</strong> K19
+                      Kỹ thuật Phần mềm
+                    </p>
+                    <p>
+                      <strong class="font-semibold">Cơ sở đào tạo:</strong>
+                      Trường ĐH CNTT &amp; Truyền thông - ĐH Thái Nguyên
+                    </p>
+                    <p>
+                      <strong class="font-semibold">Số CCCD:</strong>
+                      <span class="font-code text-code">019203004812</span>
+                      (Cấp: 10/05/2021)
+                    </p>
+                    <p>
+                      <strong class="font-semibold">Liên hệ:</strong> 0912345678
+                      - an.nguyen@ictu.edu.vn
+                    </p>
+                  </div>
+                </div>
+                <span
+                  class="inline-flex self-start items-center gap-1 px-2.5 py-1 rounded-md bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm"
+                >
+                  <span class="material-symbols-outlined text-xs">school</span>
+                  Sinh viên năm cuối hệ chính quy
+                </span>
+              </div>
+            </div>
+
+            <div
+              class="relative z-10 space-y-6 font-body-md text-body-md text-on-surface text-justify leading-relaxed"
+            >
+              <section class="space-y-2">
+                <h4
+                  class="font-headline-sm text-headline-sm text-on-surface font-bold text-primary flex items-center gap-2"
+                >
+                  <span>ĐIỀU 1.</span> MỤC TIÊU VÀ NỘI DUNG THỰC TẬP
+                </h4>
+                <p>
+                  1.1. Bên A đồng ý tiếp nhận Bên B tham gia chương trình thực
+                  tập chuyên môn tại doanh nghiệp với vị trí:
+                  <strong class="font-semibold text-on-surface"
+                    >Thực tập sinh Kỹ sư Fullstack Web &amp; Cloud
+                    Architecture</strong
+                  >.
+                </p>
+                <p>
+                  1.2. Bên A phân công đội ngũ kỹ sư dày dạn kinh nghiệm trực
+                  tiếp hướng dẫn Bên B nắm vững quy trình DevOps chuẩn quốc tế,
+                  quy trình phát triển Agile/Scrum, thiết kế kiến trúc
+                  Microservices và tham gia các phân hệ thực tiễn thuộc dự án
+                  ICTU Smart Campus.
+                </p>
+              </section>
+              <section class="space-y-2">
+                <h4
+                  class="font-headline-sm text-headline-sm text-on-surface font-bold text-primary flex items-center gap-2"
+                >
+                  <span>ĐIỀU 2.</span> THỜI GIAN VÀ ĐỊA ĐIỂM THỰC TẬP
+                </h4>
+                <p>
+                  2.1.
+                  <strong class="font-semibold">Thời hạn hợp đồng:</strong> 03
+                  tháng, bắt đầu từ ngày
+                  <strong class="font-semibold">01/11/2024</strong> đến hết ngày
+                  <strong class="font-semibold">31/01/2025</strong>.
+                </p>
+                <p>
+                  2.2.
+                  <strong class="font-semibold">Chế độ làm việc:</strong> Toàn
+                  thời gian từ Thứ Hai đến Thứ Sáu (Khung giờ chuẩn: 08h00 -
+                  17h30, nghỉ trưa 12h00 - 13h30). Áp dụng chính sách Hybrid làm
+                  việc từ xa tối đa 01 ngày/tuần theo phê duyệt của Mentor phụ
+                  trách.
+                </p>
+                <p>
+                  2.3.
+                  <strong class="font-semibold">Địa điểm làm việc:</strong>
+                  Trung tâm Đổi mới Sáng tạo &amp; Nghiên cứu Phát triển R&amp;D
+                  TechCorp, Tòa nhà Tháp Đôi ICT, Thái Nguyên.
+                </p>
+              </section>
+              <section class="space-y-2">
+                <h4
+                  class="font-headline-sm text-headline-sm text-on-surface font-bold text-primary flex items-center gap-2"
+                >
+                  <span>ĐIỀU 3.</span> QUYỀN LỢI VÀ TRÁCH NHIỆM CỦA CÁC BÊN
+                </h4>
+                <div class="space-y-2 pl-2">
+                  <p>
+                    <strong class="font-semibold"
+                      >3.1. Quyền lợi và hỗ trợ dành cho Bên B:</strong
+                    >
+                  </p>
+                  <ul class="list-disc pl-6 space-y-1">
+                    <li>
+                      Mức hỗ trợ phụ cấp đào tạo thực tập sinh:
+                      <strong class="font-semibold text-secondary"
+                        >6.500.000 VNĐ / tháng</strong
+                      >
+                      (Chi trả định kỳ vào ngày 05 hàng tháng qua tài khoản ngân
+                      hàng).
+                    </li>
+                    <li>
+                      Được trang bị máy trạm trọn gói cấu hình cao (Apple
+                      Silicon / Linux Dev Station), thẻ ra vào tòa nhà R&amp;D
+                      và tài khoản điện toán đám mây nội bộ.
+                    </li>
+                    <li>
+                      Được cấp Chứng nhận hoàn thành kỳ thực tập chuyên sâu ICTU
+                      - TechCorp và cơ hội chuyển tiếp lên nhân viên chính thức
+                      nếu đạt kết quả xuất sắc.
+                    </li>
+                  </ul>
+                  <p>
+                    <strong class="font-semibold"
+                      >3.2. Trách nhiệm của Bên B:</strong
+                    >
+                  </p>
+                  <ul class="list-disc pl-6 space-y-1">
+                    <li>
+                      Nghiêm chỉnh chấp hành Thỏa thuận bảo mật thông tin (NDA),
+                      quyền sở hữu trí tuệ của doanh nghiệp và quy tắc ứng xử an
+                      toàn dữ liệu.
+                    </li>
+                    <li>
+                      Tham gia đầy đủ thời lượng thực tập, tuân thủ nội quy lao
+                      động; lập báo cáo tiến độ tuần trên Cổng quản lý thông tin
+                      thực tập ICTU đúng hạn.
+                    </li>
+                  </ul>
+                  <p>
+                    <strong class="font-semibold"
+                      >3.3. Trách nhiệm của Bên A:</strong
+                    >
+                  </p>
+                  <ul class="list-disc pl-6 space-y-1">
+                    <li>
+                      Cử 01 Kỹ sư Cấp cao phụ trách hướng dẫn (Mentor 1:1) theo
+                      dõi sát sao, định hướng kỹ thuật và đánh giá năng lực minh
+                      bạch.
+                    </li>
+                    <li>
+                      Phối hợp cùng Ban Đào tạo &amp; Quản lý Thực tập Trường ĐH
+                      CNTT &amp; Truyền thông thực hiện nghiệm thu học phần tín
+                      chỉ cuối khóa.
+                    </li>
+                  </ul>
+                </div>
+              </section>
+              <section class="space-y-2">
+                <h4
+                  class="font-headline-sm text-headline-sm text-on-surface font-bold text-primary flex items-center gap-2"
+                >
+                  <span>ĐIỀU 4.</span> ĐIỀU KHOẢN THI HÀNH &amp; PHÁP LÝ KÝ KẾT
+                </h4>
+                <p>
+                  4.1. Hợp đồng được lập dưới hình thức chứng thực điện tử theo
+                  quy định của Luật Giao dịch điện tử Việt Nam, lưu trữ toàn vẹn
+                  trên hệ thống CSDL Quản lý Thực tập ICTU và máy chủ lưu trữ
+                  TechCorp.
+                </p>
+                <p>
+                  4.2. Hai bên cam kết thực hiện đúng và đầy đủ các điều khoản
+                  đã thỏa thuận. Hợp đồng có hiệu lực pháp lý chính thức kể từ
+                  thời điểm cả hai bên hoàn tất xác thực chữ ký điện tử.
+                </p>
+              </section>
+            </div>
+
+            <div
+              class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 pt-8"
+            >
+              <div
+                class="text-center p-6 rounded-xl bg-surface-container flex flex-col items-center justify-between min-h-[260px]"
+              >
+                <div>
+                  <p
+                    class="font-label-lg text-label-lg uppercase font-bold text-on-surface"
+                  >
+                    ĐẠI DIỆN BÊN A (DOANH NGHIỆP)
+                  </p>
+                  <p
+                    class="font-body-sm text-body-sm text-on-surface-variant italic"
+                  >
+                    Giám đốc Kỹ thuật &amp; Phát triển Nhân lực
+                  </p>
+                </div>
+
+                <div
+                  class="my-4 px-4 py-3 rounded-lg bg-surface-container-lowest shadow-sm flex items-center gap-3"
+                >
+                  <div
+                    class="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-on-secondary shrink-0 shadow"
+                  >
+                    <span class="material-symbols-outlined text-2xl"
+                      >verified_user</span
+                    >
+                  </div>
+                  <div class="text-left font-body-sm text-body-sm">
+                    <p class="font-bold text-secondary flex items-center gap-1">
+                      <span>ĐÃ KÝ DUYỆT SỐ BỞI TECHCORP</span>
+                      <span class="material-symbols-outlined text-xs"
+                        >check_circle</span
+                      >
+                    </p>
+                    <p class="font-code text-code text-on-surface-variant">
+                      Signer: Tran Dinh Trong
+                    </p>
+                    <p
+                      class="font-code text-code text-on-surface-variant text-[10px]"
+                    >
+                      Cert ID: VNPT-CA-88192-2024
+                    </p>
+                  </div>
+                </div>
+                <p
+                  class="font-headline-sm text-headline-sm text-on-surface font-bold"
+                >
+                  Trần Đình Trọng
+                </p>
+              </div>
+
+              <div
+                class="text-center p-6 rounded-xl bg-surface-container flex flex-col items-center justify-between min-h-[260px]"
+              >
+                <div>
+                  <p
+                    class="font-label-lg text-label-lg uppercase font-bold text-on-surface"
+                  >
+                    ĐẠI DIỆN BÊN B (SINH VIÊN)
+                  </p>
+                  <p
+                    class="font-body-sm text-body-sm text-on-surface-variant italic"
+                  >
+                    Thực tập sinh cam kết ký kết
+                  </p>
+                </div>
+
+                <div class="my-4 w-full max-w-[280px]" id="chuKySinhVien">
+                  <div
+                    class="p-4 rounded-lg bg-surface-container-lowest text-on-surface-variant flex flex-col items-center justify-center gap-1 text-center"
+                  >
+                    <span
+                      class="material-symbols-outlined text-2xl text-outline"
+                      >draw</span
+                    >
+                    <span
+                      class="font-label-sm text-label-sm uppercase font-semibold"
+                      >Chờ xác nhận chữ ký điện tử</span
+                    >
+                    <span class="font-body-sm text-body-sm text-outline"
+                      >Tích ô cam kết bên dưới để ký</span
+                    >
+                  </div>
+                </div>
+                <p
+                  class="font-headline-sm text-headline-sm text-on-surface font-bold"
+                >
+                  Nguyễn Văn An
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="max-w-4xl mx-auto w-full bg-surface-container-lowest shadow-md rounded-xl p-6 sm:p-8 space-y-6"
+          >
+            <div
+              class="rounded-xl bg-surface-container-high p-4 flex items-start gap-3.5 transition-all duration-300"
+              id="hopThongBao"
+            >
+              <span
+                class="material-symbols-outlined text-primary text-xl shrink-0 mt-0.5"
+                >info</span
+              >
+              <div class="space-y-1">
+                <p
+                  class="font-label-lg text-label-lg text-on-surface font-bold"
+                >
+                  Thông báo quy trình tiếp nhận
+                </p>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                  Vui lòng đọc kỹ các điều khoản và bấm xác nhận ký số điện tử
+                  để hoàn tất thủ tục thực tập hợp lệ.
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="flex items-start gap-3.5 p-4 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer"
+              onclick="toggleAgreementCheckbox()"
+            >
+              <input
+                class="mt-1 w-5 h-5 rounded cursor-pointer accent-primary shrink-0"
+                id="hopDongCamKet"
+                onchange="handleCheckboxChange(event)"
+                onclick="event.stopPropagation()"
+                type="checkbox"
+              />
+              <label
+                class="font-body-md text-body-md text-on-surface cursor-pointer select-none"
+                for="hopDongCamKet"
+              >
+                Tôi đã đọc, hiểu rõ toàn bộ nội dung bản hợp đồng và cam kết
+                tuân thủ nghiêm ngặt mọi điều khoản quy định ở trên.
+              </label>
+            </div>
+
+            <div
+              class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2"
+            >
+              <div
+                class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm"
+              >
+                <span class="material-symbols-outlined text-secondary text-base"
+                  >lock</span
+                >
+                <span>Chứng chỉ mã hóa bảo mật ICTU Core Security 256-bit</span>
+              </div>
+              <button
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-label-lg text-label-lg text-on-surface-variant bg-surface-container-highest cursor-not-allowed transition-all duration-200"
+                disabled=""
+                id="nutXacNhanHopDong"
+                onclick="thucHienKyHopDong()"
+                type="button"
+              >
+                <span class="material-symbols-outlined text-lg"
+                  >history_edu</span
+                >
+                <span>Xác nhận ký hợp đồng điện tử</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <script src="../../js/hop_dong.js"></script>
+      </div>
+    </main>
+  </body>
+</html>

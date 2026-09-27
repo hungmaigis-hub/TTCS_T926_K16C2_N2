@@ -1,0 +1,58 @@
+[
+  {
+    "id": "cong_chinh",
+    "title": "Cổng Chính ICTU",
+    "description": "Cổng chào biểu tượng và khuôn viên phía trước trường",
+    "preview": "../image/tour/cong_chinh_preview.webp",
+    "thumb": "../image/tour/cong_chinh_thumb.webp"
+  },
+  {
+    "id": "quang_truong",
+    "title": "Quảng Trường Trung Tâm",
+    "description": "Quảng trường sự kiện trung tâm và đài phun nước ICTU",
+    "preview": "../image/tour/quang_truong_preview.webp",
+    "thumb": "../image/tour/quang_truong_thumb.webp"
+  },
+  {
+    "id": "thu_vien",
+    "title": "Thư Viện Phúc Giang",
+    "description": "Trung tâm thông tin số và không gian tự học đa năng",
+    "preview": "../image/tour/thu_vien_preview.webp",
+    "thumb": "../image/tour/thu_vien_thumb.webp"
+  },
+  {
+    "id": "lab_samsung",
+    "title": "Phòng Lab Samsung",
+    "description": "Phòng thí nghiệm nghiên cứu công nghệ cao do Samsung tài trợ",
+    "preview": "../image/tour/lab_samsung_preview.webp",
+    "thumb": "../image/tour/lab_samsung_thumb.webp"
+  },
+  {
+    "id": "lab_sic",
+    "title": "Trung Tâm SIC Lab",
+    "description": "Không gian sáng tạo công nghệ và nghiên cứu vi mạch bán dẫn",
+    "preview": "../image/tour/lab_sic_preview.webp",
+    "thumb": "../image/tour/lab_sic_thumb.webp"
+  },
+  {
+    "id": "toa_nha_c6",
+    "title": "Giảng Đường C6",
+    "description": "Tổ hợp giảng đường hiện đại và phòng hội thảo quốc tế",
+    "preview": "../image/tour/toa_nha_c6_preview.webp",
+    "thumb": "../image/tour/toa_nha_c6_thumb.webp"
+  },
+  {
+    "id": "san_bong",
+    "title": "Sân Bóng Đá & Thể Thao",
+    "description": "Khu liên hợp thể thao tiêu chuẩn cỏ nhân tạo cho sinh viên",
+    "preview": "../image/tour/san_bong_preview.webp",
+    "thumb": "../image/tour/san_bong_thumb.webp"
+  },
+  {
+    "id": "toan_canh",
+    "title": "Toàn Cảnh Flycam ICTU",
+    "description": "Góc nhìn toàn cảnh 360 độ từ trên cao toàn bộ khuôn viên trường",
+    "preview": "../image/tour/toan_canh_preview.webp",
+    "thumb": "../image/tour/toan_canh_thumb.webp"
+  }
+]

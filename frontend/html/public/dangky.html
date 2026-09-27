@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ICTU Internship Portal</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&amp;family=Inter:wght@400;600&amp;family=JetBrains+Mono:wght@400&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/common.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/tailwind.config.js"></script>
+  </head>
+  <body
+    class="bg-surface text-on-surface min-h-screen flex flex-col font-body-md text-body-md"
+  >
+    <header
+      class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+    >
+      <div class="h-16 w-full px-gutter flex items-center justify-between">
+        <div class="flex items-center gap-space-md">
+          <img
+            alt="ICTU Internship Logo"
+            class="h-8 w-auto object-contain"
+            src="../../image/ictu_logo.png"
+          />
+          <div class="flex flex-col">
+            <span
+              class="font-headline-sm text-headline-sm text-primary leading-tight tracking-tight"
+              >ICTU Internship</span
+            ><span
+              class="font-label-sm text-label-sm text-on-surface-variant hidden sm:inline-block"
+              >Cổng Quản Lý Thực Tập ICTU</span
+            >
+          </div>
+        </div>
+        <div class="flex items-center gap-space-lg">
+          <nav
+            class="hidden md:flex items-center gap-space-md"
+            data-active-classes="text-primary font-label-lg font-bold"
+          >
+            <a
+              class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors"
+              data-path="login"
+              href="dangnhap.html"
+              >Đăng nhập</a
+            ><a
+              aria-current="page"
+              class="transition-colors text-primary font-label-lg font-bold"
+              data-path="register"
+              href="#"
+              >Đăng ký thực tập sinh</a
+            ><a
+              class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors"
+              data-path="forgot-password"
+              href="#"
+              >Quên mật khẩu</a
+            >
+          </nav>
+          <div
+            class="flex items-center gap-space-sm bg-surface-container-low px-space-sm py-space-xs rounded-lg"
+          >
+            <span
+              class="font-label-md text-label-md text-primary font-bold cursor-pointer"
+              >VIE</span
+            ><span class="text-outline-variant font-label-sm">|</span
+            ><span
+              class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface cursor-pointer transition-colors"
+              >ENG</span
+            >
+          </div>
+          <a
+            class="hidden sm:inline-block font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+            href="#"
+            >Hỗ trợ &amp; Hướng dẫn</a
+          >
+          <div
+            class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"
+          >
+            <span class="material-symbols-outlined text-on-primary text-[18px]"
+              >person</span
+            >
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="w-full pt-16 bg-surface flex-1 flex flex-col justify-center">
+      <div class="flex flex-col w-full">
+        <div
+          class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12"
+        >
+          <div
+            class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start"
+          >
+            <div class="lg:col-span-5 flex flex-col space-y-6">
+              <div
+                class="inline-flex items-center gap-2 self-start px-3 py-1.5 rounded-full bg-surface-container-high text-primary shadow-sm"
+              >
+                <span class="flex h-2 w-2 rounded-full bg-secondary"></span>
+                <span
+                  class="font-label-md text-label-md font-semibold tracking-wide"
+                  >Cổng Đăng Ký Kỳ Mùa Thu 2026</span
+                >
+              </div>
+
+              <div class="space-y-3">
+                <h1
+                  class="font-headline-lg text-headline-lg text-on-surface tracking-tight leading-snug"
+                >
+                  Khởi đầu sự nghiệp vững chắc cùng
+                  <span class="text-primary">ICTU Internship</span>
+                </h1>
+                <p class="font-body-lg text-body-lg text-on-surface-variant">
+                  Nền tảng kết nối liền mạch giữa sinh viên tài năng, giảng viên
+                  hướng dẫn và các tập đoàn hàng đầu trên cả nước.
+                </p>
+              </div>
+
+              <div class="space-y-4 pt-2">
+                <div
+                  class="p-5 rounded-xl bg-surface-container-lowest shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-0.5"
+                >
+                  <div
+                    class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0"
+                  >
+                    <span class="material-symbols-outlined text-[26px]"
+                      >hub</span
+                    >
+                  </div>
+                  <div class="space-y-1">
+                    <h3
+                      class="font-headline-sm text-headline-sm text-on-surface"
+                    >
+                      Tìm kiếm cơ hội thực tập
+                    </h3>
+                    <p
+                      class="font-body-md text-body-md text-on-surface-variant leading-relaxed"
+                    >
+                      Matching tự động với các dự án thực tế phù hợp với chuyên
+                      ngành, điểm GPA và định hướng phát triển bản thân.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  class="p-5 rounded-xl bg-surface-container-lowest shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-0.5"
+                >
+                  <div
+                    class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0"
+                  >
+                    <span class="material-symbols-outlined text-[26px]"
+                      >assignment_turned_in</span
+                    >
+                  </div>
+                  <div class="space-y-1">
+                    <h3
+                      class="font-headline-sm text-headline-sm text-on-surface"
+                    >
+                      Báo cáo &amp; Đánh giá trực tuyến
+                    </h3>
+                    <p
+                      class="font-body-md text-body-md text-on-surface-variant leading-relaxed"
+                    >
+                      Nộp nhật ký tuần/tháng tức thời, nhận phản hồi trực tiếp
+                      kèm bảng tiêu chí năng lực từ Mentor doanh nghiệp.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  class="p-5 rounded-xl bg-surface-container-lowest shadow-sm flex items-start gap-4 transition-transform hover:-translate-y-0.5"
+                >
+                  <div
+                    class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0"
+                  >
+                    <span class="material-symbols-outlined text-[26px]"
+                      >workspace_premium</span
+                    >
+                  </div>
+                  <div class="space-y-1">
+                    <h3
+                      class="font-headline-sm text-headline-sm text-on-surface"
+                    >
+                      Chứng nhận thực tập số
+                    </h3>
+                    <p
+                      class="font-body-md text-body-md text-on-surface-variant leading-relaxed"
+                    >
+                      Cấp chứng chỉ điện tử có mã định danh xác thực bằng mật
+                      mã, dễ dàng nhúng vào hồ sơ LinkedIn và CV xin việc.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="grid grid-cols-3 gap-3 p-4 rounded-xl bg-surface-container-low shadow-sm"
+              >
+                <div class="text-center">
+                  <p class="font-display-lg text-primary text-2xl font-bold">
+                    15,000+
+                  </p>
+                  <p
+                    class="font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    Sinh viên tham gia
+                  </p>
+                </div>
+                <div class="text-center">
+                  <p class="font-display-lg text-primary text-2xl font-bold">
+                    480+
+                  </p>
+                  <p
+                    class="font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    Đối tác doanh nghiệp
+                  </p>
+                </div>
+                <div class="text-center">
+                  <p class="font-display-lg text-secondary text-2xl font-bold">
+                    96.8%
+                  </p>
+                  <p
+                    class="font-label-sm text-label-sm text-on-surface-variant"
+                  >
+                    Tỷ lệ có việc làm
+                  </p>
+                </div>
+              </div>
+
+              <div
+                class="p-5 rounded-xl bg-surface-container-lowest shadow-sm flex flex-col space-y-4"
+              >
+                <div class="flex items-center gap-3">
+                  <img
+                    alt="Lê Hoàng Bảo Ngọc avatar"
+                    class="w-12 h-12 rounded-full object-cover shadow-sm"
+                    data-alt="Portrait photograph of a smiling Vietnamese female university intern wearing modern business casual attire in a sunny high-tech modern enterprise software office, cinematic lighting, corporate professional editorial style."
+                    src="../../image/ictu_logo.png"
+                  />
+                  <div>
+                    <p class="font-label-lg text-label-lg text-on-surface">
+                      Lê Hoàng Bảo Ngọc
+                    </p>
+                    <p
+                      class="font-body-sm text-body-sm text-on-surface-variant"
+                    >
+                      Thực tập sinh Kỹ sư Frontend tại TechCorp Vietnam
+                    </p>
+                  </div>
+                </div>
+                <div class="relative pl-3">
+                  <div
+                    class="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-full"
+                  ></div>
+                  <p class="font-body-md text-body-md text-on-surface italic">
+                    “ICTU Internship giúp việc báo cáo công việc và chấm điểm
+                    thực tập của mình trở nên chuyên nghiệp và nhanh gọn hơn rất
+                    nhiều! Mentor có thể duyệt tiến độ ngay sau cuộc họp hàng
+                    tuần.”
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="lg:col-span-7 bg-surface-container-lowest rounded-2xl shadow-xl p-6 sm:p-8 md:p-10 flex flex-col space-y-6"
+            >
+              <div class="space-y-1">
+                <div class="flex items-center justify-between">
+                  <h2
+                    class="font-headline-lg text-headline-lg text-on-surface font-bold"
+                  >
+                    Tạo tài khoản mới
+                  </h2>
+                  <span
+                    class="font-label-sm text-label-sm bg-surface-container text-primary font-semibold px-2.5 py-1 rounded-md"
+                    >Bước 1 / 2</span
+                  >
+                </div>
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                  Tham gia cộng đồng quản lý thực tập thông minh dành cho chuyên
+                  gia tương lai.
+                </p>
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-1.5"
+                >
+                  <span
+                    class="material-symbols-outlined text-[16px] text-primary"
+                    >badge</span
+                  >
+                  Chọn vai trò tài khoản của bạn:
+                </label>
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-3 gap-3"
+                  id="roleContainer"
+                >
+                  <button
+                    class="role-card text-left p-3.5 rounded-xl bg-surface-container-high shadow-sm flex flex-col justify-between transition-all"
+                    id="role-intern"
+                    onclick="selectRole('intern')"
+                    type="button"
+                  >
+                    <div class="flex items-center justify-between w-full mb-2">
+                      <span
+                        class="material-symbols-outlined text-primary text-[24px]"
+                        >school</span
+                      >
+                      <span
+                        class="role-radio flex h-4 w-4 rounded-full bg-primary items-center justify-center text-white"
+                      >
+                        <span class="material-symbols-outlined text-[12px]"
+                          >check</span
+                        >
+                      </span>
+                    </div>
+                    <div>
+                      <p
+                        class="font-label-lg text-label-lg text-primary font-bold"
+                      >
+                        Thực tập sinh
+                      </p>
+                      <p
+                        class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 line-clamp-2"
+                      >
+                        Sinh viên tìm kiếm cơ hội &amp; nộp báo cáo định kỳ
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    class="role-card text-left p-3.5 rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between transition-all opacity-85 hover:opacity-100"
+                    id="role-mentor"
+                    onclick="selectRole('mentor')"
+                    type="button"
+                  >
+                    <div class="flex items-center justify-between w-full mb-2">
+                      <span
+                        class="material-symbols-outlined text-on-surface-variant text-[24px]"
+                        >business_center</span
+                      >
+                      <span
+                        class="role-radio flex h-4 w-4 rounded-full bg-surface-dim items-center justify-center"
+                      ></span>
+                    </div>
+                    <div>
+                      <p
+                        class="font-label-lg text-label-lg text-on-surface font-bold"
+                      >
+                        Mentor Doanh Nghiệp
+                      </p>
+                      <p
+                        class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 line-clamp-2"
+                      >
+                        Đăng tuyển dụng &amp; hướng dẫn, đánh giá sinh viên
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    class="role-card text-left p-3.5 rounded-xl bg-surface-container-low shadow-sm flex flex-col justify-between transition-all opacity-85 hover:opacity-100"
+                    id="role-university"
+                    onclick="selectRole('university')"
+                    type="button"
+                  >
+                    <div class="flex items-center justify-between w-full mb-2">
+                      <span
+                        class="material-symbols-outlined text-on-surface-variant text-[24px]"
+                        >account_balance</span
+                      >
+                      <span
+                        class="role-radio flex h-4 w-4 rounded-full bg-surface-dim items-center justify-center"
+                      ></span>
+                    </div>
+                    <div>
+                      <p
+                        class="font-label-lg text-label-lg text-on-surface font-bold"
+                      >
+                        Khoa / Nhà trường
+                      </p>
+                      <p
+                        class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 line-clamp-2"
+                      >
+                        Quản trị đoàn thực tập, phân công &amp; lưu trữ điểm
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <form
+                class="space-y-4 pt-1"
+                onsubmit="
+                  event.preventDefault();
+                  handleRegistrationSubmit();
+                "
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="space-y-1">
+                    <label
+                      class="font-label-md text-label-md text-on-surface font-semibold"
+                      for="fullName"
+                    >
+                      Họ và tên đầy đủ <span class="text-error">*</span>
+                    </label>
+                    <div class="relative">
+                      <span
+                        class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]"
+                        >person</span
+                      >
+                      <input
+                        class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest shadow-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md"
+                        id="fullName"
+                        placeholder="Nguyễn Văn An"
+                        required=""
+                        type="text"
+                      />
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <label
+                      class="font-label-md text-label-md text-on-surface font-semibold"
+                      for="email"
+                    >
+                      Email học tập / công việc
+                      <span class="text-error">*</span>
+                    </label>
+                    <div class="relative">
+                      <span
+                        class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]"
+                        >mail</span
+                      >
+                      <input
+                        class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest shadow-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md"
+                        id="email"
+                        placeholder="an.nguyen@edu.vn"
+                        required=""
+                        type="email"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <label
+                    class="font-label-md text-label-md text-on-surface font-semibold"
+                    for="institution"
+                  >
+                    Trường Đại học / Viện Đào tạo
+                    <span class="text-error">*</span>
+                  </label>
+                  <div class="relative">
+                    <span
+                      class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]"
+                      >account_balance</span
+                    >
+                    <select
+                      class="w-full h-10 pl-9 pr-8 rounded-lg bg-surface-container-lowest shadow-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md appearance-none"
+                      id="institution"
+                      required=""
+                    >
+                      <option disabled="" selected="" value="">
+                        Chọn trường Đại học bạn đang theo học...
+                      </option>
+                      <option value="vnuhcm">
+                        Đại học Quốc gia TP.HCM (VNU-HCM)
+                      </option>
+                      <option value="hust">Đại học Bách Khoa Hà Nội</option>
+                      <option value="fpt">Trường Đại học FPT</option>
+                      <option value="neu">
+                        Đại học Kinh tế Quốc dân (NEU)
+                      </option>
+                      <option value="uit">
+                        Đại học Công nghệ Thông tin - ĐHQG-HCM
+                      </option>
+                      <option value="other">
+                        Trường Đại học / Học viện khác
+                      </option>
+                    </select>
+                    <span
+                      class="material-symbols-outlined absolute right-3 top-2.5 text-on-surface-variant text-[20px] pointer-events-none"
+                      >expand_more</span
+                    >
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="space-y-1">
+                    <label
+                      class="font-label-md text-label-md text-on-surface font-semibold"
+                      for="major"
+                    >
+                      Chuyên ngành đào tạo <span class="text-error">*</span>
+                    </label>
+                    <div class="relative">
+                      <span
+                        class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]"
+                        >computer</span
+                      >
+                      <input
+                        class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest shadow-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md"
+                        id="major"
+                        placeholder="Công nghệ thông tin, Kinh tế đối ngoại..."
+                        required=""
+                        type="text"
+                      />
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <label
+                      class="font-label-md text-label-md text-on-surface font-semibold"
+                      for="cohort"
+                    >
+                      Niên khóa <span class="text-error">*</span>
+                    </label>
+                    <div class="relative">
+                      <span
+                        class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]"
+                        >event_repeat</span
+                      >
+                      <select
+                        class="w-full h-10 pl-9 pr-8 rounded-lg bg-surface-container-lowest shadow-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md appearance-none"
+                        id="cohort"
+                        required=""
+                      >
+                        <option disabled="" selected="" value="">
+                          Chọn niên khóa...
+                        </option>
+                        <option value="2021-2025">
+                          Khóa 2021 - 2025 (Năm 4)
+                        </option>
+                        <option value="2022-2026">
+                          Khóa 2022 - 2026 (Năm 3)
+                        </option>
+                        <option value="2023-2027">
+                          Khóa 2023 - 2027 (Năm 2)
+                        </option>
+                        <option value="master">Cao học / Văn bằng 2</option>
+                      </select>
+                      <span
+                        class="material-symbols-outlined absolute right-3 top-2.5 text-on-surface-variant text-[20px] pointer-events-none"
+                        >expand_more</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="space-y-1">
+                    <label
+                      class="font-label-md text-label-md text-on-surface font-semibold"
+                      for="password"
+                    >
+                      Mật khẩu đăng nhập <span class="text-error">*</span>
+                    </label>
+                    <div class="relative">
+                      <span
+                        class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]"
+                        >lock</span
+                      >
+                      <input
+                        class="w-full h-10 pl-9 pr-10 rounded-lg bg-surface-container-lowest shadow-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md"
+                        id="password"
+                        oninput="assessPasswordStrength(this.value)"
+                        placeholder="Ít nhất 8 ký tự"
+                        required=""
+                        type="password"
+                      />
+                      <button
+                        class="absolute right-2.5 top-2.5 text-on-surface-variant hover:text-on-surface"
+                        onclick="togglePasswordVisibility('password', this)"
+                        type="button"
+                      >
+                        <span class="material-symbols-outlined text-[18px]"
+                          >visibility</span
+                        >
+                      </button>
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <label
+                      class="font-label-md text-label-md text-on-surface font-semibold"
+                      for="confirmPassword"
+                    >
+                      Xác nhận mật khẩu <span class="text-error">*</span>
+                    </label>
+                    <div class="relative">
+                      <span
+                        class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]"
+                        >lock_reset</span
+                      >
+                      <input
+                        class="w-full h-10 pl-9 pr-10 rounded-lg bg-surface-container-lowest shadow-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md"
+                        id="confirmPassword"
+                        placeholder="Nhập lại mật khẩu"
+                        required=""
+                        type="password"
+                      />
+                      <button
+                        class="absolute right-2.5 top-2.5 text-on-surface-variant hover:text-on-surface"
+                        onclick="
+                          togglePasswordVisibility('confirmPassword', this)
+                        "
+                        type="button"
+                      >
+                        <span class="material-symbols-outlined text-[18px]"
+                          >visibility</span
+                        >
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="space-y-1.5 p-3 rounded-lg bg-surface-container-low"
+                >
+                  <div class="flex items-center justify-between text-xs">
+                    <span
+                      class="font-label-sm text-label-sm text-on-surface-variant font-medium"
+                      >Độ mạnh mật khẩu:</span
+                    >
+                    <span
+                      class="font-label-sm text-label-sm font-bold text-on-surface-variant"
+                      id="strengthText"
+                      >Chưa nhập</span
+                    >
+                  </div>
+                  <div
+                    class="w-full h-1.5 bg-surface-dim rounded-full overflow-hidden flex gap-1"
+                  >
+                    <div
+                      class="h-full w-1/3 bg-transparent rounded-full transition-all"
+                      id="bar-1"
+                    ></div>
+                    <div
+                      class="h-full w-1/3 bg-transparent rounded-full transition-all"
+                      id="bar-2"
+                    ></div>
+                    <div
+                      class="h-full w-1/3 bg-transparent rounded-full transition-all"
+                      id="bar-3"
+                    ></div>
+                  </div>
+                  <p class="font-body-sm text-body-sm text-on-surface-variant">
+                    Khuyến nghị: Chứa chữ hoa, chữ số và ký tự đặc biệt (@, #,
+                    !).
+                  </p>
+                </div>
+
+                <div class="flex items-start gap-3 pt-1">
+                  <div class="flex items-center h-5">
+                    <input
+                      class="h-4 w-4 rounded bg-surface-container-lowest text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer"
+                      id="termsCheck"
+                      required=""
+                      type="checkbox"
+                    />
+                  </div>
+                  <label
+                    class="font-body-sm text-body-sm text-on-surface-variant cursor-pointer select-none"
+                    for="termsCheck"
+                    >Tôi xác nhận thông tin cung cấp là chính xác và đồng ý với
+                    <a
+                      class="text-primary font-semibold hover:underline"
+                      href="#"
+                      >Điều khoản dịch vụ</a
+                    >
+                    cùng
+                    <a
+                      class="text-primary font-semibold hover:underline"
+                      href="#"
+                      >Chính sách bảo mật dữ liệu thực tập sinh</a
+                    >
+                    của hệ thống ICTU Internship.</label
+                  >
+                </div>
+
+                <div class="pt-2">
+                  <button
+                    class="w-full h-12 rounded-xl bg-gradient-to-r from-primary via-primary-container to-surface-tint text-on-primary font-label-lg text-label-lg font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group"
+                    type="submit"
+                  >
+                    <span class="">Hoàn tất Đăng Ký Tài Khoản</span>
+                    <span
+                      class="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-1"
+                      >arrow_forward</span
+                    >
+                  </button>
+                </div>
+              </form>
+
+              <div class="pt-2 text-center">
+                <p class="font-body-md text-body-md text-on-surface-variant">
+                  Đã có tài khoản ICTU Internship?
+                  <a
+                    class="font-label-lg text-label-lg text-primary font-bold hover:underline ml-1"
+                    href="#"
+                    >Đăng nhập ngay</a
+                  >
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script src="../../js/dangky.js"></script>
+      </div>
+    </main>
+    <footer
+      class="w-full bg-surface-container-low py-space-md shadow-[0_-1px_8px_rgba(0,0,0,0.02)]"
+    >
+      <div
+        class="w-full px-gutter flex flex-col sm:flex-row items-center justify-between gap-space-sm text-center sm:text-left"
+      >
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+          © 2026 ICTU Internship Management System - Trường Đại học CNTT &amp;
+          Truyền thông. Bảo mật &amp; Điều khoản sử dụng.
+        </p>
+        <div
+          class="flex items-center gap-space-md font-label-sm text-label-sm text-on-surface-variant"
+        >
+          <a class="hover:text-primary transition-colors" href="#"
+            >Quy định thực tập</a
+          ><span class="text-outline-variant">•</span
+          ><a class="hover:text-primary transition-colors" href="#"
+            >Chính sách bảo mật</a
+          ><span class="text-outline-variant">•</span
+          ><a class="hover:text-primary transition-colors" href="#"
+            >Đầu mối tiếp nhận</a
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,861 @@
+<!doctype html>
+
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Nhiệm Vụ &amp; Tiến Độ Thực Tập - ICTU Internship</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/common.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/tailwind.config.js"></script>
+  </head>
+  <body
+    class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex"
+  >
+    <aside
+      class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 h-screen sticky top-0 self-start z-20 shadow-[1px_0_12px_rgba(0,0,0,0.02)]"
+    >
+      <div class="h-20 px-6 border-b border-slate-100 flex items-center gap-3">
+        <a href="dashboard.html" class="flex items-center gap-3">
+          <img
+            src="../../image/ictu_logo.png"
+            alt="ICTU Internship Logo"
+            class="h-10 w-auto object-contain"
+          />
+          <div>
+            <span class="text-sm font-bold text-slate-900 block leading-tight"
+              >ICTU INTERN</span
+            >
+            <span
+              class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider block"
+              >Cổng Sinh Viên</span
+            >
+          </div>
+        </a>
+      </div>
+      <div
+        class="p-4 mx-3 my-3 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-slate-50 border border-emerald-100 flex items-center gap-3.5"
+      >
+        <div class="relative shrink-0">
+          <div
+            class="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-bold text-base shadow-sm ring-2 ring-white"
+          >
+            NA
+          </div>
+          <span
+            class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white"
+          ></span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h4 class="text-sm font-bold text-slate-900 truncate">
+              Nguyễn Văn An
+            </h4>
+            <span
+              class="material-symbols-outlined text-[15px] text-emerald-600 fill"
+              >verified</span
+            >
+          </div>
+          <p class="text-xs text-slate-500 truncate">DTC2051060124 - K19</p>
+          <span
+            class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800"
+            >Thực tập sinh</span
+          >
+        </div>
+      </div>
+      <div class="px-3 flex-1 overflow-y-auto space-y-1">
+        <p
+          class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+        >
+          Cổng Thực Tập Sinh
+        </p>
+
+        <a
+          href="dashboard.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >space_dashboard</span
+          >
+          <span>Tổng quan thực tập</span>
+        </a>
+
+        <a
+          href="tai_tai_lieu.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >upload_file</span
+          >
+          <span>Nộp tài liệu &amp; CV</span>
+        </a>
+
+        <a
+          href="hop_dong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >history_edu</span
+          >
+          <span>Hợp đồng thực tập</span>
+        </a>
+
+        <a
+          href="nhiem_vu.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-800 shadow-sm border border-emerald-200 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-emerald-600 fill"
+              >checklist</span
+            >
+            <span>Nhiệm vụ &amp; Tiến độ</span>
+          </div>
+          <span
+            class="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full"
+            >Active</span
+          >
+        </a>
+
+        <a
+          href="javascript:void(0)"
+          data-coming-soon="Lịch làm việc &amp; Chấm công sinh viên"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
+              >calendar_month</span
+            >
+            <span>Lịch &amp; Điểm danh</span>
+          </div>
+          <span
+            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-[12px]">lock</span>
+            Sắp có
+          </span>
+        </a>
+
+        <a
+          href="javascript:void(0)"
+          data-coming-soon="Báo cáo tuần &amp; Nhật ký thực tập"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
+              >edit_note</span
+            >
+            <span>Báo cáo tuần</span>
+          </div>
+          <span
+            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-[12px]">lock</span>
+            Sắp có
+          </span>
+        </a>
+
+        <a
+          href="javascript:void(0)"
+          data-coming-soon="Kết quả đánh giá &amp; Điểm số thực tập"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
+              >rate_review</span
+            >
+            <span>Đánh giá &amp; Điểm</span>
+          </div>
+          <span
+            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-[12px]">lock</span>
+            Sắp có
+          </span>
+        </a>
+
+        <a
+          href="../public/thamquan.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >360</span
+          >
+          <span>Tham quan trường ICTU</span>
+        </a>
+
+        <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
+          <p
+            class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+          >
+            Dành Cho Quản Trị
+          </p>
+          <a
+            href="../quanly/them_ho_so.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >admin_panel_settings</span
+            >
+            <span>Cổng Quản trị viên</span>
+          </a>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Học kỳ 2024 - 2025
+          </span>
+          <a
+            href="../public/index.html"
+            class="text-slate-400 hover:text-rose-600 transition-colors p-1"
+            title="Đăng xuất"
+          >
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0">
+      <div class="flex flex-col w-full">
+        <header
+          class="w-full bg-white/95 backdrop-blur-sm border-b border-slate-200 px-6 py-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-10"
+        >
+          <nav
+            aria-label="Breadcrumb"
+            class="flex items-center gap-2 font-body-sm text-on-surface-variant flex-wrap"
+          >
+            <a
+              class="hover:text-primary transition-colors flex items-center gap-1 font-label-md"
+              href="dashboard.html"
+            >
+              <span class="material-symbols-outlined text-[17px]">home</span>
+              <span>Trang chủ</span>
+            </a>
+            <span class="text-outline-variant font-label-sm">/</span>
+            <a
+              class="hover:text-primary transition-colors font-label-md"
+              href="nhiem_vu.html"
+              >Quản lý thực tập sinh</a
+            >
+            <span class="text-outline-variant font-label-sm">/</span>
+            <span
+              class="text-on-surface font-label-md text-primary font-semibold"
+              >Nhiệm vụ &amp; Tiến độ</span
+            >
+          </nav>
+
+          <div class="flex items-center gap-3">
+            <div class="relative min-w-[240px] md:min-w-[280px]">
+              <span
+                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-outline"
+                >search</span
+              >
+              <input
+                class="w-full bg-surface-container-low text-on-surface text-body-sm pl-9 pr-4 py-2 rounded-lg outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container transition-all"
+                placeholder="Tìm nhanh nhiệm vụ, tag, mentor..."
+                type="text"
+              />
+            </div>
+
+            <button
+              class="relative p-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors"
+              title="Thông báo công việc"
+              type="button"
+              onclick="
+                thongBaoDangCapNhat('Thông báo công việc &amp; deadline')
+              "
+            >
+              <span class="material-symbols-outlined text-[20px]"
+                >notifications</span
+              >
+              <span
+                class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"
+              ></span>
+            </button>
+
+            <button
+              class="flex items-center gap-1.5 bg-primary-container hover:bg-primary text-on-primary px-3.5 py-2 rounded-lg font-label-lg shadow-sm transition-all"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[18px]"
+                >add_task</span
+              >
+              <span class="hidden sm:inline">Thêm nhiệm vụ</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="p-6 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
+          <div
+            class="rounded-xl bg-surface-container-low p-4 shadow-sm flex items-start gap-3.5 transition-all"
+            id="hopThongBao"
+          >
+            <div
+              class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm mt-0.5"
+            >
+              <span class="material-symbols-outlined text-[20px]">info</span>
+            </div>
+            <div class="flex-1 text-body-sm text-on-surface">
+              <div class="flex items-center justify-between">
+                <span class="font-label-lg text-primary text-body-md font-bold"
+                  >Lưu ý cập nhật chỉ số hàng tuần</span
+                >
+                <span class="font-label-sm text-outline">Định kỳ thứ 6</span>
+              </div>
+              <p class="text-on-surface-variant mt-1 leading-relaxed">
+                Sinh viên lưu ý: Cập nhật chỉ số tiến độ trước
+                <strong>17:00 Thứ Sáu hàng tuần</strong> để Mentor doanh nghiệp
+                và Giảng viên hướng dẫn đánh giá giữa kỳ.
+              </p>
+            </div>
+            <button
+              class="text-outline hover:text-on-surface p-1 rounded-md transition-colors"
+              onclick="
+                document.getElementById('hopThongBao').classList.add('hidden')
+              "
+              title="Đóng thông báo"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <h1 class="font-headline-lg text-on-surface">
+                Danh Sách Nhiệm Vụ &amp; Cập Nhật Tiến Độ
+              </h1>
+              <p class="font-body-md text-on-surface-variant mt-1">
+                Theo dõi, cập nhật tiến độ công việc hàng ngày và báo cáo cho
+                Mentor hướng dẫn tại doanh nghiệp.
+              </p>
+            </div>
+
+            <div
+              class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-5"
+            >
+              <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-surface-container-high text-primary flex items-center justify-center"
+                  >
+                    <span class="material-symbols-outlined text-[24px]"
+                      >trending_up</span
+                    >
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h2 class="font-headline-sm text-on-surface">
+                        Tiến Độ Kỳ Thực Tập
+                      </h2>
+                      <span
+                        class="font-label-sm px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-bold"
+                        >Kỳ 2024 - 2025</span
+                      >
+                    </div>
+                    <p class="font-body-sm text-on-surface-variant">
+                      Thời gian thực tế: Tuần 6 / 10 tuần tổng thể
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-baseline gap-1 self-start sm:self-auto">
+                  <span class="font-headline-lg text-primary font-extrabold"
+                    >65%</span
+                  >
+                  <span class="font-label-md text-outline">hoàn thành</span>
+                </div>
+              </div>
+
+              <div
+                class="w-full bg-surface-container rounded-full h-3.5 overflow-hidden p-0.5 shadow-inner"
+              >
+                <div
+                  class="bg-primary-container h-full rounded-full transition-all duration-700"
+                  style="width: 65%"
+                ></div>
+              </div>
+
+              <div
+                class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2"
+              >
+                <div
+                  class="bg-surface-container-low p-3.5 rounded-xl flex flex-col justify-between"
+                >
+                  <span
+                    class="font-label-sm text-on-surface-variant flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-[16px]"
+                      >list_alt</span
+                    >
+                    Tổng nhiệm vụ
+                  </span>
+                  <span class="font-headline-sm text-on-surface font-bold mt-1"
+                    >8 việc</span
+                  >
+                </div>
+                <div
+                  class="bg-surface-container-low p-3.5 rounded-xl flex flex-col justify-between"
+                >
+                  <span
+                    class="font-label-sm text-secondary flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-[16px]"
+                      >check_circle</span
+                    >
+                    Đã hoàn thành
+                  </span>
+                  <span class="font-headline-sm text-secondary font-bold mt-1"
+                    >4 việc</span
+                  >
+                </div>
+                <div
+                  class="bg-surface-container-low p-3.5 rounded-xl flex flex-col justify-between"
+                >
+                  <span
+                    class="font-label-sm text-primary flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-[16px]"
+                      >pending</span
+                    >
+                    Đang tiến hành
+                  </span>
+                  <span class="font-headline-sm text-primary font-bold mt-1"
+                    >3 việc</span
+                  >
+                </div>
+                <div
+                  class="bg-surface-container-low p-3.5 rounded-xl flex flex-col justify-between"
+                >
+                  <span
+                    class="font-label-sm text-outline flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-[16px]"
+                      >schedule</span
+                    >
+                    Chưa bắt đầu
+                  </span>
+                  <span
+                    class="font-headline-sm text-on-surface-variant font-bold mt-1"
+                    >1 việc</span
+                  >
+                </div>
+                <div
+                  class="bg-surface-container-low p-3.5 rounded-xl flex flex-col justify-between col-span-2 sm:col-span-1"
+                >
+                  <span
+                    class="font-label-sm text-tertiary flex items-center gap-1"
+                  >
+                    <span class="material-symbols-outlined text-[16px]"
+                      >hourglass_top</span
+                    >
+                    Thời gian còn lại
+                  </span>
+                  <span class="font-headline-sm text-tertiary font-bold mt-1"
+                    >24 ngày</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-5" id="danhSachNhiemVu">
+            <div class="flex items-center justify-between">
+              <h3
+                class="font-headline-sm text-on-surface flex items-center gap-2"
+              >
+                <span>Công Việc Cần Thực Hiện</span>
+                <span
+                  class="font-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-bold"
+                  >3 mục hiển thị</span
+                >
+              </h3>
+              <div class="flex items-center gap-2">
+                <span class="font-label-md text-outline">Lọc theo:</span>
+                <select
+                  class="bg-surface-container-lowest text-on-surface font-label-md px-3 py-1.5 rounded-lg outline-none shadow-sm cursor-pointer"
+                >
+                  <option>Tất cả trạng thái</option>
+                  <option>Đang thực hiện</option>
+                  <option>Chưa bắt đầu</option>
+                  <option>Đã hoàn thành</option>
+                </select>
+              </div>
+            </div>
+
+            <article
+              class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4"
+            >
+              <div
+                class="flex flex-col sm:flex-row sm:items-start justify-between gap-3"
+              >
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <span
+                      class="font-label-sm px-2.5 py-1 rounded-full bg-surface-container-high text-primary font-bold uppercase tracking-wider"
+                      >Frontend Web</span
+                    >
+                    <span
+                      class="trang-thai-chu font-label-sm px-2.5 py-1 rounded-full bg-surface-container-low text-primary font-medium"
+                      >Trạng thái: Đang thực hiện</span
+                    >
+                  </div>
+                  <h4 class="font-headline-sm text-on-surface pt-1">
+                    Thiết kế &amp; Xây dựng Giao diện Trang Quản trị Dashboard
+                    Sinh viên
+                  </h4>
+                </div>
+
+                <div
+                  class="flex items-center gap-1.5 font-label-md text-primary bg-surface-container-low px-3 py-1.5 rounded-lg shrink-0"
+                >
+                  <span class="material-symbols-outlined text-[17px]"
+                    >event</span
+                  >
+                  <span>Hạn chót: 18/11/2024 (còn 5 ngày)</span>
+                </div>
+              </div>
+
+              <p class="font-body-md text-on-surface-variant leading-relaxed">
+                Hoàn thiện cắt HTML/Tailwind CSS cho các trang Quản lý hồ sơ,
+                Hợp đồng điện tử và Tải lên tài liệu. Đảm bảo chuẩn responsive
+                trên Desktop và Mobile.
+              </p>
+
+              <div class="bg-surface-container-low p-4 rounded-xl space-y-2">
+                <div class="flex items-center justify-between">
+                  <label
+                    class="font-label-md text-on-surface-variant flex items-center gap-1.5"
+                  >
+                    <span
+                      class="material-symbols-outlined text-[18px] text-primary"
+                      >linear_scale</span
+                    >
+                    <span>Điều chỉnh thanh trượt tiến độ công việc:</span>
+                  </label>
+                  <span
+                    class="chi-so-tien-do font-headline-lg text-primary font-extrabold"
+                    >60%</span
+                  >
+                </div>
+                <div class="relative flex items-center">
+                  <input
+                    class="thanh-tien-do w-full h-2.5 bg-surface-container rounded-lg appearance-none cursor-pointer accent-primary"
+                    max="100"
+                    min="0"
+                    type="range"
+                    value="60"
+                  />
+                </div>
+                <div
+                  class="flex justify-between font-label-sm text-outline px-0.5"
+                >
+                  <span>0% (Bắt đầu)</span>
+                  <span>50% (Đang test)</span>
+                  <span>100% (Hoàn thiện)</span>
+                </div>
+              </div>
+
+              <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2"
+              >
+                <div class="flex items-center gap-2.5">
+                  <img
+                    class="w-9 h-9 rounded-full object-cover shadow-sm"
+                    data-alt="Professional Vietnamese tech lead mentor smiling warmly in a sleek modern software engineering lab with dual monitor setup, wearing a navy polo shirt with institutional lanyard"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDELT7G4C11C9OSYUcIsrjmsPjWxnaIbS18QamgGNQGKBvtw5sh23TYibFfZkYuw7RbpghaL3My0k5z-4AmK7UTjVqWXWtTSGU9cQ2V7tbs_hnirjAbqrq63uU-1lcpopOJlltXm3b9gCd1TQAaEqmaGW874WzmDHKTFMA83N4pn12yoQ0PkgtEqGWEe-JL15ukfK93M5G0hFgUjpRCGxkI8YZGzdAf4iM1R9NLY7ud7QNZrI3m6VMPQ"
+                  />
+                  <div>
+                    <p class="font-label-sm text-outline">Mentor hướng dẫn:</p>
+                    <p class="font-label-md text-on-surface font-bold">
+                      ThS. Nguyễn Văn Tuấn (FPT Software)
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <button
+                    class="flex items-center gap-1.5 bg-surface-container text-on-surface-variant hover:text-primary font-label-lg px-3.5 py-2 rounded-lg transition-colors"
+                    title="Đính kèm tài liệu bàn giao"
+                    type="button"
+                  >
+                    <span class="material-symbols-outlined text-[18px]"
+                      >attachment</span
+                    >
+                    <span>Link Git / Tài liệu</span>
+                  </button>
+                  <button
+                    class="nut-luu-tien-do flex items-center gap-2 bg-primary-container hover:bg-primary text-on-primary font-label-lg px-4 py-2 rounded-lg shadow-sm transition-all"
+                    type="button"
+                  >
+                    <span class="material-symbols-outlined text-[18px]"
+                      >save</span
+                    >
+                    <span>Lưu tiến độ</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4"
+            >
+              <div
+                class="flex flex-col sm:flex-row sm:items-start justify-between gap-3"
+              >
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <span
+                      class="font-label-sm px-2.5 py-1 rounded-full bg-surface-container-high text-tertiary font-bold uppercase tracking-wider"
+                      >Backend API</span
+                    >
+                    <span
+                      class="trang-thai-chu font-label-sm px-2.5 py-1 rounded-full bg-surface-container-low text-tertiary font-medium"
+                      >Trạng thái: Đang thực hiện</span
+                    >
+                  </div>
+                  <h4 class="font-headline-sm text-on-surface pt-1">
+                    Tích hợp RESTful API &amp; Cơ chế Xác thực JWT cho Cổng Tiếp
+                    Nhận
+                  </h4>
+                </div>
+
+                <div
+                  class="flex items-center gap-1.5 font-label-md text-tertiary bg-surface-container-low px-3 py-1.5 rounded-lg shrink-0"
+                >
+                  <span class="material-symbols-outlined text-[17px]"
+                    >event</span
+                  >
+                  <span>Hạn chót: 25/11/2024 (còn 12 ngày)</span>
+                </div>
+              </div>
+
+              <p class="font-body-md text-on-surface-variant leading-relaxed">
+                Viết Controller xử lý luồng nộp hồ sơ, mã hóa mật khẩu, cấp phát
+                Token phiên đăng nhập và kết nối cơ sở dữ liệu PostgreSQL trường
+                ICTU.
+              </p>
+
+              <div class="bg-surface-container-low p-4 rounded-xl space-y-2">
+                <div class="flex items-center justify-between">
+                  <label
+                    class="font-label-md text-on-surface-variant flex items-center gap-1.5"
+                  >
+                    <span
+                      class="material-symbols-outlined text-[18px] text-tertiary"
+                      >linear_scale</span
+                    >
+                    <span>Điều chỉnh thanh trượt tiến độ công việc:</span>
+                  </label>
+                  <span
+                    class="chi-so-tien-do font-headline-lg text-tertiary font-extrabold"
+                    >25%</span
+                  >
+                </div>
+                <div class="relative flex items-center">
+                  <input
+                    class="thanh-tien-do w-full h-2.5 bg-surface-container rounded-lg appearance-none cursor-pointer accent-tertiary"
+                    max="100"
+                    min="0"
+                    type="range"
+                    value="25"
+                  />
+                </div>
+                <div
+                  class="flex justify-between font-label-sm text-outline px-0.5"
+                >
+                  <span>0% (Bắt đầu)</span>
+                  <span>50% (Đang test)</span>
+                  <span>100% (Hoàn thiện)</span>
+                </div>
+              </div>
+
+              <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2"
+              >
+                <div class="flex items-center gap-2.5">
+                  <img
+                    class="w-9 h-9 rounded-full object-cover shadow-sm"
+                    data-alt="Focused Vietnamese female software architect mentor reviewing code metrics in a tech startup conference room, wearing round modern eyeglasses and smart corporate blazer"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBse1KskJRtrUFNuBE8ytVuC4DDlGryrH8kIQVK9-cEn18AhL2hiheAgHaPkiCkZKmAYzk2zzjW4frDdDbESdUVwAha6cAle9iYmMqPlhlCPj3-IxrxR4noMFSQ1MuMpz5CiQsfW9mFbXOSvtMxIzRPckR2lZNef1KUGrJcsP_oANILDCpsbKDUtwdFqh659K42d6QGiDc_raQ7iJDhApZ-jjDsatlMgHFRkEI5fumMlkJyTLIrHvye2Q"
+                  />
+                  <div>
+                    <p class="font-label-sm text-outline">Mentor hướng dẫn:</p>
+                    <p class="font-label-md text-on-surface font-bold">
+                      KTS. Trần Hải Yến (Viettel Solutions)
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <button
+                    class="flex items-center gap-1.5 bg-surface-container text-on-surface-variant hover:text-tertiary font-label-lg px-3.5 py-2 rounded-lg transition-colors"
+                    title="Đính kèm Swagger / Postman"
+                    type="button"
+                  >
+                    <span class="material-symbols-outlined text-[18px]"
+                      >attachment</span
+                    >
+                    <span>Link Git / API Doc</span>
+                  </button>
+                  <button
+                    class="nut-luu-tien-do flex items-center gap-2 bg-primary-container hover:bg-primary text-on-primary font-label-lg px-4 py-2 rounded-lg shadow-sm transition-all"
+                    type="button"
+                  >
+                    <span class="material-symbols-outlined text-[18px]"
+                      >save</span
+                    >
+                    <span>Lưu tiến độ</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <article
+              class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm hover:shadow-md transition-all space-y-4"
+            >
+              <div
+                class="flex flex-col sm:flex-row sm:items-start justify-between gap-3"
+              >
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <span
+                      class="font-label-sm px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-bold uppercase tracking-wider"
+                      >Tài liệu &amp; Báo cáo</span
+                    >
+                    <span
+                      class="trang-thai-chu font-label-sm px-2.5 py-1 rounded-full bg-surface-container-low text-outline font-medium"
+                      >Trạng thái: Chưa bắt đầu</span
+                    >
+                  </div>
+                  <h4 class="font-headline-sm text-on-surface pt-1">
+                    Viết Tài liệu Bàn giao Kỹ thuật &amp; Báo cáo Tổng kết Thực
+                    tập
+                  </h4>
+                </div>
+
+                <div
+                  class="flex items-center gap-1.5 font-label-md text-outline bg-surface-container-low px-3 py-1.5 rounded-lg shrink-0"
+                >
+                  <span class="material-symbols-outlined text-[17px]"
+                    >event</span
+                  >
+                  <span>Hạn chót: 15/12/2024 (còn 32 ngày)</span>
+                </div>
+              </div>
+
+              <p class="font-body-md text-on-surface-variant leading-relaxed">
+                Tổng hợp toàn bộ kiến trúc hệ thống, sơ đồ quan hệ thực thể ERD,
+                hướng dẫn triển khai Docker và hoàn thành báo cáo thực tập theo
+                mẫu của Khoa CNTT - ICTU.
+              </p>
+
+              <div class="bg-surface-container-low p-4 rounded-xl space-y-2">
+                <div class="flex items-center justify-between">
+                  <label
+                    class="font-label-md text-on-surface-variant flex items-center gap-1.5"
+                  >
+                    <span
+                      class="material-symbols-outlined text-[18px] text-outline"
+                      >linear_scale</span
+                    >
+                    <span>Điều chỉnh thanh trượt tiến độ công việc:</span>
+                  </label>
+                  <span
+                    class="chi-so-tien-do font-headline-lg text-outline font-extrabold"
+                    >0%</span
+                  >
+                </div>
+                <div class="relative flex items-center">
+                  <input
+                    class="thanh-tien-do w-full h-2.5 bg-surface-container rounded-lg appearance-none cursor-pointer accent-outline"
+                    max="100"
+                    min="0"
+                    type="range"
+                    value="0"
+                  />
+                </div>
+                <div
+                  class="flex justify-between font-label-sm text-outline px-0.5"
+                >
+                  <span>0% (Bắt đầu)</span>
+                  <span>50% (Đang viết)</span>
+                  <span>100% (Hoàn thiện)</span>
+                </div>
+              </div>
+
+              <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2"
+              >
+                <div class="flex items-center gap-2.5">
+                  <img
+                    class="w-9 h-9 rounded-full object-cover shadow-sm"
+                    data-alt="Distinguished senior university IT professor holding technical syllabus in a university computing lab corridor, bright natural sunlight, thoughtful and academic expression"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeD1Mys0IFSYm9XTZtmX-PuTVGEPCGR6NByv_YiO_FMg-bVAZfPU6hBRIuhDNXi_kwcQaSKl3T6mee3TutUk7FGoVEqOYCwynfeD4vSFSbczj7RzTy-xj8aunccJ3p0A5AMn14JtsKkQt-StxBUBCIsU930PzwMti1u7QFcSXxhgQLH5_XbwD3fUg73yyRl_9JnOmdxVWfgP_RE-wAHQxk_shaO1gcBArtJmRlDjMGq75NSjQek4l8ow"
+                  />
+                  <div>
+                    <p class="font-label-sm text-outline">
+                      Giảng viên phản biện:
+                    </p>
+                    <p class="font-label-md text-on-surface font-bold">
+                      TS. Lê Quốc Trung (Khoa CNTT - ICTU)
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <button
+                    class="flex items-center gap-1.5 bg-surface-container text-on-surface-variant hover:text-primary font-label-lg px-3.5 py-2 rounded-lg transition-colors"
+                    title="Mẫu báo cáo khoa CNTT"
+                    type="button"
+                  >
+                    <span class="material-symbols-outlined text-[18px]"
+                      >attachment</span
+                    >
+                    <span>Tải mẫu báo cáo</span>
+                  </button>
+                  <button
+                    class="nut-luu-tien-do flex items-center gap-2 bg-primary-container hover:bg-primary text-on-primary font-label-lg px-4 py-2 rounded-lg shadow-sm transition-all"
+                    type="button"
+                  >
+                    <span class="material-symbols-outlined text-[18px]"
+                      >save</span
+                    >
+                    <span>Lưu tiến độ</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+        <script src="../../js/nhiem_vu.js"></script>
+      </div>
+    </main>
+  </body>
+</html>

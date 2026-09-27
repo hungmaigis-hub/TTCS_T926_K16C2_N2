@@ -1,0 +1,820 @@
+<!doctype html>
+
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Phiếu Đánh Giá Kết Quả Thực Tập - ICTU Internship</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/common.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/tailwind.config.js"></script>
+  </head>
+  <body
+    class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex"
+  >
+    <aside
+      class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 h-screen sticky top-0 self-start z-20 shadow-[1px_0_12px_rgba(0,0,0,0.02)]"
+    >
+      <div class="h-20 px-6 border-b border-slate-100 flex items-center gap-3">
+        <a href="them_ho_so.html" class="flex items-center gap-3">
+          <img
+            src="../../image/ictu_logo.png"
+            alt="ICTU Internship Logo"
+            class="h-10 w-auto object-contain"
+          />
+          <div>
+            <span class="text-sm font-bold text-slate-900 block leading-tight"
+              >ICTU INTERN</span
+            >
+            <span
+              class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block"
+              >Cổng Quản Trị</span
+            >
+          </div>
+        </a>
+      </div>
+      <div
+        class="p-4 mx-3 my-3 rounded-2xl bg-gradient-to-br from-ictu-50/70 to-slate-50 border border-slate-200/80 flex items-center gap-3.5"
+      >
+        <div class="relative shrink-0">
+          <div
+            class="w-11 h-11 rounded-full bg-gradient-to-tr from-ictu-600 to-sky-400 flex items-center justify-center text-white font-bold text-base shadow-sm ring-2 ring-white"
+          >
+            AD
+          </div>
+          <span
+            class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white"
+          ></span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h4 class="text-sm font-bold text-slate-900 truncate">
+              Ban Đào Tạo &amp; QLTT
+            </h4>
+            <span
+              class="material-symbols-outlined text-[15px] text-ictu-600 fill"
+              >verified</span
+            >
+          </div>
+          <p class="text-xs text-slate-500 truncate">admin@ictu.edu.vn</p>
+          <span
+            class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-ictu-100 text-ictu-700"
+            >Quản trị viên</span
+          >
+        </div>
+      </div>
+      <div class="px-3 flex-1 overflow-y-auto space-y-1">
+        <p
+          class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+        >
+          Hệ Thống Quản Lý
+        </p>
+
+        <a
+          href="dashboard.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >dashboard</span
+          >
+          <span>Tổng quan hệ thống</span>
+        </a>
+
+        <a
+          href="them_ho_so.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >person_add</span
+          >
+          <span>Thêm hồ sơ thực tập</span>
+        </a>
+
+        <a
+          href="xet_duyet_ho_so.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+              >how_to_reg</span
+            >
+            <span>Xét duyệt hồ sơ</span>
+          </div>
+          <span
+            class="text-[11px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-md"
+            >5 chờ</span
+          >
+        </a>
+
+        <a
+          href="lich_thuc_tap.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >calendar_month</span
+          >
+          <span>Lịch thực tập</span>
+        </a>
+
+        <a
+          href="danh_gia.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-ictu-50 text-ictu-700 shadow-sm border border-ictu-100 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-ictu-600 fill"
+              >rate_review</span
+            >
+            <span>Báo cáo &amp; Đánh giá</span>
+          </div>
+          <span
+            class="text-[10px] bg-ictu-600 text-white font-bold px-2 py-0.5 rounded-full"
+            >Active</span
+          >
+        </a>
+
+        <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
+          <p
+            class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+          >
+            Cổng Thực Tập Sinh
+          </p>
+          <a
+            href="../sinhvien/dashboard.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >space_dashboard</span
+            >
+            <span>Tổng quan sinh viên</span>
+          </a>
+          <a
+            href="../sinhvien/tai_tai_lieu.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >upload_file</span
+            >
+            <span>1. Nộp tài liệu &amp; CV</span>
+          </a>
+          <a
+            href="../sinhvien/hop_dong.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >history_edu</span
+            >
+            <span>2. Ký kết hợp đồng</span>
+          </a>
+          <a
+            href="../sinhvien/nhiem_vu.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >checklist</span
+            >
+            <span>3. Nhiệm vụ &amp; Tiến độ</span>
+          </a>
+          <a
+            href="../public/thamquan.html"
+            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[19px] text-slate-400"
+              >360</span
+            >
+            <span>Tham quan thực tế ảo</span>
+          </a>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Máy chủ: ICTU Cloud
+          </span>
+          <a
+            href="../public/index.html"
+            class="text-slate-400 hover:text-rose-600 transition-colors p-1"
+            title="Đăng xuất"
+          >
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0 bg-slate-50">
+      <header
+        class="bg-white/95 backdrop-blur-sm border-b border-slate-200 px-8 py-5 sticky top-0 z-10 shadow-sm"
+      >
+        <div
+          class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
+          <div>
+            <nav
+              class="flex items-center gap-2 text-xs text-slate-500 font-medium mb-1"
+            >
+              <a
+                class="hover:text-ictu-600 transition-colors flex items-center gap-1"
+                href="#"
+              >
+                <span class="material-symbols-outlined text-[16px]">home</span>
+                Trang chủ
+              </a>
+              <span class="text-slate-300">/</span>
+              <a class="hover:text-ictu-600 transition-colors" href="#"
+                >Quản lý thực tập</a
+              >
+              <span class="text-slate-300">/</span>
+              <span class="text-ictu-600 font-semibold">Phiếu đánh giá</span>
+            </nav>
+            <div class="flex items-center gap-3">
+              <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+                Phiếu Đánh Giá Kết Quả Kỳ Thực Tập
+              </h1>
+              <span
+                class="bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+              >
+                Học kỳ 2024 - 2025
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2.5 self-start sm:self-auto">
+            <button
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm transition-colors"
+              onclick="window.print()"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[18px] text-slate-500"
+                >print</span
+              >
+              In phiếu
+            </button>
+            <button
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-ictu-50 hover:bg-ictu-100 text-ictu-700 border border-ictu-200 text-xs font-semibold shadow-sm transition-colors"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[18px]"
+                >picture_as_pdf</span
+              >
+              Xuất PDF
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="p-8 max-w-7xl mx-auto w-full space-y-6">
+        <div
+          class="w-full bg-white rounded-xl border border-slate-200 p-4 shadow-sm transition-all duration-300"
+          id="hopThongBao"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <div
+                class="w-9 h-9 rounded-lg bg-ictu-50 border border-ictu-100 text-ictu-600 flex items-center justify-center shrink-0 mt-0.5"
+              >
+                <span class="material-symbols-outlined text-[20px]">info</span>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-bold text-slate-800"
+                    >Quy định tính điểm thực tập tốt nghiệp</span
+                  >
+                  <span
+                    class="text-[11px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded"
+                    >Thang 10.0</span
+                  >
+                </div>
+                <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                  Điểm đánh giá bao gồm:
+                  <strong>60% Điểm chuyên môn kỹ thuật</strong> và
+                  <strong>40% Điểm tác phong, thái độ &amp; kỷ luật</strong>.
+                  Điểm tổng kết từ <strong>8.5</strong> trở lên được xếp loại
+                  Xuất sắc và ưu tiên xét tuyển dụng chính thức.
+                </p>
+              </div>
+            </div>
+            <button
+              class="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              onclick="
+                document.getElementById('hopThongBao').classList.add('hidden')
+              "
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div
+            class="lg:col-span-8 bg-white rounded-xl border border-slate-200 shadow-sm p-6"
+            id="bieuMauDanhGia"
+          >
+            <div
+              class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5"
+            >
+              <div>
+                <h2 class="text-base font-bold text-slate-900">
+                  Chi Tiết Đánh Giá Từ Mentor Doanh Nghiệp
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Vui lòng rà soát và cho điểm chính xác theo tiến độ thực tập
+                  thực tế
+                </p>
+              </div>
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 text-xs font-medium"
+              >
+                <span
+                  class="material-symbols-outlined text-[16px] text-emerald-600"
+                  >verified</span
+                >
+                ThS. Nguyễn Văn Tuấn (TechCorp)
+              </span>
+            </div>
+            <form class="space-y-5" onsubmit="event.preventDefault()">
+              <div>
+                <label
+                  class="block text-xs font-semibold text-slate-700 mb-1.5"
+                  for="thucTapSinh"
+                >
+                  Sinh viên thực tập cần đánh giá
+                  <span class="text-rose-500">*</span>
+                </label>
+                <div class="relative">
+                  <select
+                    class="w-full h-11 bg-white border border-slate-300 rounded-lg px-3.5 pr-10 text-sm text-slate-800 font-medium focus:border-ictu-600 focus:ring-1 focus:ring-ictu-600 outline-none appearance-none cursor-pointer transition-colors shadow-sm"
+                    id="thucTapSinh"
+                    onchange="capNhatSinhVien()"
+                  >
+                    <option selected="" value="DTC2051060124">
+                      Nguyễn Văn An - DTC2051060124 (K19 Kỹ thuật Phần mềm)
+                    </option>
+                    <option value="DTC2051060188">
+                      Trần Thị Mai Anh - DTC2051060188 (K19 Khoa học Máy tính)
+                    </option>
+                    <option value="DTC2051060045">
+                      Hoàng Minh Đức - DTC2051060045 (K19 Mạng máy tính &amp;
+                      ATTT)
+                    </option>
+                    <option value="DTC2051060312">
+                      Lê Thu Trang - DTC2051060312 (K19 Hệ thống Thông tin)
+                    </option>
+                  </select>
+                  <span
+                    class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[20px]"
+                  >
+                    expand_more
+                  </span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div
+                  class="bg-slate-50/80 border border-slate-200/90 rounded-xl p-4 flex flex-col justify-between"
+                >
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <label
+                        class="text-xs font-bold text-slate-800 flex items-center gap-1.5"
+                        for="diemKyNang"
+                      >
+                        <span
+                          class="material-symbols-outlined text-ictu-600 text-[18px]"
+                          >terminal</span
+                        >
+                        1. Điểm Chuyên môn
+                      </label>
+                      <span
+                        class="text-[11px] font-semibold text-ictu-700 bg-ictu-100 px-2 py-0.5 rounded"
+                        >Hệ số 60%</span
+                      >
+                    </div>
+                    <p class="text-[11px] text-slate-500 mb-3">
+                      Chất lượng code, khả năng giải quyết vấn đề và nắm bắt
+                      công nghệ.
+                    </p>
+                  </div>
+                  <div class="relative">
+                    <input
+                      class="w-full h-11 bg-white border border-slate-300 rounded-lg px-3.5 pr-12 text-slate-900 font-mono text-base font-bold focus:border-ictu-600 focus:ring-1 focus:ring-ictu-600 outline-none shadow-sm transition-colors"
+                      id="diemKyNang"
+                      max="10"
+                      min="0"
+                      oninput="tinhDiemTrungBinh()"
+                      placeholder="8.5"
+                      step="0.1"
+                      type="number"
+                      value="8.5"
+                    />
+                    <span
+                      class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400"
+                      >/ 10</span
+                    >
+                  </div>
+                </div>
+
+                <div
+                  class="bg-slate-50/80 border border-slate-200/90 rounded-xl p-4 flex flex-col justify-between"
+                >
+                  <div>
+                    <div class="flex items-center justify-between mb-1">
+                      <label
+                        class="text-xs font-bold text-slate-800 flex items-center gap-1.5"
+                        for="diemThaiDo"
+                      >
+                        <span
+                          class="material-symbols-outlined text-emerald-600 text-[18px]"
+                          >psychology</span
+                        >
+                        2. Thái độ &amp; Kỷ luật
+                      </label>
+                      <span
+                        class="text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded"
+                        >Hệ số 40%</span
+                      >
+                    </div>
+                    <p class="text-[11px] text-slate-500 mb-3">
+                      Chuyên cần, báo cáo tiến độ, kỷ luật giờ giấc và giao tiếp
+                      đội nhóm.
+                    </p>
+                  </div>
+                  <div class="relative">
+                    <input
+                      class="w-full h-11 bg-white border border-slate-300 rounded-lg px-3.5 pr-12 text-slate-900 font-mono text-base font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none shadow-sm transition-colors"
+                      id="diemThaiDo"
+                      max="10"
+                      min="0"
+                      oninput="tinhDiemTrungBinh()"
+                      placeholder="9.0"
+                      step="0.1"
+                      type="number"
+                      value="9.0"
+                    />
+                    <span
+                      class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400"
+                      >/ 10</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="bg-gradient-to-r from-ictu-50/80 via-blue-50/50 to-indigo-50/60 border border-ictu-200/80 rounded-xl p-4 flex items-center justify-between"
+                id="khungDiemTrungBinh"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-lg bg-ictu-600 text-white flex items-center justify-center font-bold shadow-sm"
+                  >
+                    <span class="material-symbols-outlined text-[22px]"
+                      >star</span
+                    >
+                  </div>
+                  <div>
+                    <span
+                      class="text-xs font-semibold text-slate-500 uppercase tracking-wider block"
+                      >Điểm trung bình tổng kết:</span
+                    >
+                    <div class="flex items-baseline gap-1.5">
+                      <span
+                        class="text-2xl font-bold text-ictu-600 font-mono"
+                        id="hienThiDiemTrungBinh"
+                        >8.7</span
+                      >
+                      <span class="text-sm font-semibold text-slate-400"
+                        >/ 10.0</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span
+                    class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-sm"
+                    id="hienThiXepLoai"
+                  >
+                    Xếp loại: Xuất sắc
+                  </span>
+                  <p class="text-[11px] text-slate-500 mt-1">
+                    Đủ điều kiện bảo vệ khóa luận
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  class="block text-xs font-semibold text-slate-700 mb-1.5"
+                  for="nhanXet"
+                >
+                  Nhận xét chi tiết quá trình thực tập
+                  <span class="text-rose-500">*</span>
+                </label>
+                <textarea
+                  class="w-full bg-white border border-slate-300 rounded-lg p-3.5 text-xs text-slate-800 leading-relaxed focus:border-ictu-600 focus:ring-1 focus:ring-ictu-600 outline-none shadow-sm transition-colors"
+                  id="nhanXet"
+                  placeholder="Nhận xét chi tiết quá trình thực tập..."
+                  rows="4"
+                >
+Sinh viên nắm vững kiến thức thực tế, hoàn thành xuất sắc các module backend &amp; frontend được giao, có tinh thần cầu tiến và hòa nhập nhanh với văn hóa doanh nghiệp. Luôn chủ động trao đổi khi gặp bài toán phức tạp và hoàn thành các task sprint đúng hạn cam kết.</textarea>
+              </div>
+
+              <div
+                class="p-3.5 bg-slate-50 rounded-lg border border-slate-200/80 flex items-center gap-3"
+              >
+                <input
+                  checked=""
+                  class="w-4 h-4 text-ictu-600 rounded border-slate-300 focus:ring-ictu-600 cursor-pointer"
+                  id="deXuatTuyenDung"
+                  type="checkbox"
+                />
+                <label
+                  class="text-xs font-medium text-slate-800 cursor-pointer select-none"
+                  for="deXuatTuyenDung"
+                >
+                  Đề xuất tuyển dụng trở thành nhân viên chính thức sau khi tốt
+                  nghiệp.
+                </label>
+              </div>
+
+              <div class="flex items-center justify-end gap-3 pt-2">
+                <button
+                  class="px-5 py-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold transition-colors"
+                  onclick="resetFormDanhGia()"
+                  type="button"
+                >
+                  Hủy thay đổi
+                </button>
+                <button
+                  class="px-6 py-2.5 rounded-lg bg-ictu-600 hover:bg-ictu-700 text-white text-xs font-semibold shadow-sm hover:shadow transition-all flex items-center gap-2"
+                  id="nutLuuDanhGia"
+                  onclick="xuLyLuuDanhGia()"
+                  type="button"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >cloud_upload</span
+                  >
+                  Lưu kết quả đánh giá
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div
+            class="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-5"
+          >
+            <div
+              class="flex items-center justify-between border-b border-slate-100 pb-3"
+            >
+              <span
+                class="text-xs font-bold uppercase tracking-wider text-slate-400"
+                >Hồ Sơ Sinh Viên</span
+              >
+              <span
+                class="bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[11px] font-bold px-2 py-0.5 rounded-full"
+              >
+                Đang thực tập
+              </span>
+            </div>
+
+            <div class="flex items-center gap-3.5">
+              <div class="relative shrink-0">
+                <img
+                  alt="Ảnh chân dung sinh viên"
+                  class="w-14 h-14 rounded-full object-cover border border-slate-200 shadow-sm"
+                  id="anhDaiDien"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFHcFI1PYiwR0Vkh3FIoBnfezzC7ru2gbzOYeD9yiH0fJb2aT7q503hp25pukUkqlMRd-geOJJ0EChKdATcuMfUUQihCOVPIq8TlRkPZEYiYueXX6F6EXtN1uVgVo5hiF8Mp7peN7el-UYzDlTE5em7UBSxqGG6aFhGM7k3atXe9G_r4kBk9O36sdu5NBbblGAHGIH5nwCPiG1sIpEcH5R1Kl7WK9kITLYnx5RfbVVXd2x8wWXI3icXA"
+                />
+                <span
+                  class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 ring-2 ring-white"
+                ></span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3
+                  class="text-sm font-bold text-slate-900 truncate"
+                  id="theHoTen"
+                >
+                  Nguyễn Văn An
+                </h3>
+                <p
+                  class="text-xs font-mono font-semibold text-ictu-600 mt-0.5"
+                  id="theMaSV"
+                >
+                  DTC2051060124
+                </p>
+                <p class="text-xs text-slate-500 truncate" id="theLop">
+                  K19 Kỹ thuật Phần mềm
+                </p>
+              </div>
+            </div>
+
+            <div class="space-y-2 text-xs">
+              <div
+                class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100"
+              >
+                <span class="text-slate-500">Vị trí:</span>
+                <span
+                  class="font-semibold text-slate-800 text-right"
+                  id="theViTri"
+                  >Fullstack Web</span
+                >
+              </div>
+              <div
+                class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100"
+              >
+                <span class="text-slate-500">Đơn vị thực tập:</span>
+                <span class="font-semibold text-slate-800 text-right"
+                  >TechCorp</span
+                >
+              </div>
+              <div
+                class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100"
+              >
+                <span class="text-slate-500">Tỷ lệ điểm danh:</span>
+                <span class="font-bold text-emerald-600 text-right"
+                  >58/60 buổi (96.6%)</span
+                >
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100">
+              <div class="flex items-center justify-between text-xs mb-1.5">
+                <span class="font-semibold text-slate-700"
+                  >Tiến độ hoàn thành dự án</span
+                >
+                <span
+                  class="font-mono font-bold text-ictu-600"
+                  id="phanTramTienDo"
+                  >85%</span
+                >
+              </div>
+              <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  class="h-full bg-ictu-600 rounded-full transition-all duration-300"
+                  id="thanhTienDo"
+                  style="width: 85%"
+                ></div>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1.5">
+                Dự án: Hệ thống Quản trị Doanh nghiệp ERP
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-bold text-slate-900">
+                Danh Sách Sinh Viên Đã Chấm Điểm Gần Đây
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Dữ liệu đánh giá trực tiếp đợt 1 năm học 2024 - 2025
+              </p>
+            </div>
+            <span
+              class="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md"
+            >
+              Đã chấm: 3 hồ sơ
+            </span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr
+                  class="bg-slate-50 border-y border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]"
+                >
+                  <th class="py-3 px-4">Mã SV</th>
+                  <th class="py-3 px-4">Họ và tên</th>
+                  <th class="py-3 px-4">Vị trí</th>
+                  <th class="py-3 px-4 text-center">Điểm CM</th>
+                  <th class="py-3 px-4 text-center">Điểm TĐ</th>
+                  <th class="py-3 px-4 text-center">ĐTB</th>
+                  <th class="py-3 px-4 text-center">Đề xuất tuyển dụng</th>
+                  <th class="py-3 px-4 text-center">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 font-mono font-semibold text-ictu-600">
+                    DTC2051060012
+                  </td>
+                  <td class="py-3 px-4 font-semibold text-slate-900">
+                    Phạm Thùy Linh
+                  </td>
+                  <td class="py-3 px-4 text-slate-600">Frontend Developer</td>
+                  <td class="py-3 px-4 font-mono text-center font-bold">9.0</td>
+                  <td class="py-3 px-4 font-mono text-center font-bold">9.5</td>
+                  <td
+                    class="py-3 px-4 font-mono text-center font-bold text-ictu-600 text-sm"
+                  >
+                    9.2
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <span
+                      class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold text-[11px]"
+                    >
+                      <span class="material-symbols-outlined text-[13px]"
+                        >check</span
+                      >
+                      Có đề xuất
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <span
+                      class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full font-medium text-[11px] inline-block"
+                    >
+                      Đã gửi Khoa
+                    </span>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 font-mono font-semibold text-ictu-600">
+                    DTC2051060087
+                  </td>
+                  <td class="py-3 px-4 font-semibold text-slate-900">
+                    Vũ Quốc Huy
+                  </td>
+                  <td class="py-3 px-4 text-slate-600">
+                    DevOps &amp; Cloud Engineer
+                  </td>
+                  <td class="py-3 px-4 font-mono text-center font-bold">8.0</td>
+                  <td class="py-3 px-4 font-mono text-center font-bold">8.5</td>
+                  <td
+                    class="py-3 px-4 font-mono text-center font-bold text-ictu-600 text-sm"
+                  >
+                    8.2
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <span
+                      class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold text-[11px]"
+                    >
+                      <span class="material-symbols-outlined text-[13px]"
+                        >check</span
+                      >
+                      Có đề xuất
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <span
+                      class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full font-medium text-[11px] inline-block"
+                    >
+                      Đã gửi Khoa
+                    </span>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 font-mono font-semibold text-ictu-600">
+                    DTC2051060155
+                  </td>
+                  <td class="py-3 px-4 font-semibold text-slate-900">
+                    Đinh Hữu Thắng
+                  </td>
+                  <td class="py-3 px-4 text-slate-600">QA/QC Tester</td>
+                  <td class="py-3 px-4 font-mono text-center font-bold">7.5</td>
+                  <td class="py-3 px-4 font-mono text-center font-bold">8.0</td>
+                  <td
+                    class="py-3 px-4 font-mono text-center font-bold text-ictu-600 text-sm"
+                  >
+                    7.7
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <span class="text-slate-500 text-[11px]">Xem xét thêm</span>
+                  </td>
+                  <td class="py-3 px-4 text-center">
+                    <span
+                      class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full font-medium text-[11px] inline-block"
+                    >
+                      Đã gửi Khoa
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="../../js/danh_gia.js"></script>
+  </body>
+</html>
