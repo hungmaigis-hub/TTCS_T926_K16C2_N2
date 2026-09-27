@@ -49,20 +49,22 @@ class InternCreate(BaseModel):
 
     @field_validator('trang_thai_xet_duyet')
     def validate_trang_thai_xet_duyet(cls, value: Optional[str]):
-        if not value:
+        if value is None:
             return "ChoDuyet"
         cleaned = value.strip()
-        if cleaned not in ["ChoDuyet", "DaDuyet", "TuChoi"]:
-            raise ValueError("Trạng thái xét duyệt chỉ chấp nhận: 'ChoDuyet', 'DaDuyet', 'TuChoi'")
+        valid = ["ChoDuyet", "DaDuyet", "TuChoi"]
+        if cleaned not in valid:
+            raise ValueError(f"Trạng thái xét duyệt không hợp lệ. Chỉ chấp nhận: {', '.join(valid)}")
         return cleaned
 
     @field_validator('trang_thai_thuc_tap')
     def validate_trang_thai_thuc_tap(cls, value: Optional[str]):
-        if not value:
+        if value is None:
             return "DangThucTap"
         cleaned = value.strip()
-        if cleaned not in ["DangThucTap", "HoanThanh", "ThoiHoc"]:
-            raise ValueError("Trạng thái thực tập chỉ chấp nhận: 'DangThucTap', 'HoanThanh', 'ThoiHoc'")
+        valid = ["DangThucTap", "HoanThanh", "ThoiHoc"]
+        if cleaned not in valid:
+            raise ValueError(f"Trạng thái thực tập không hợp lệ. Chỉ chấp nhận: {', '.join(valid)}")
         return cleaned
 
 
@@ -147,6 +149,48 @@ class InternApprovalUpdate(BaseModel):
 
 
 # ==============================================================
+# SCHEMA CHO REQUEST XÁC NHẬN KÝ HỢP ĐỒNG (PATCH)
+# ==============================================================
+class ContractConfirmRequest(BaseModel):
+    """Schema cho request xác nhận ký hợp đồng điện tử (PATCH)"""
+    trang_thai: Optional[str] = Field(default="DaXacNhan", description="Trạng thái hợp đồng: DaXacNhan hoặc ChuaXacNhan")
+    trang_thai_thuc_tap: Optional[str] = Field(default="DangThucTap", description="Trạng thái thực tập: ChuaThucTap, DangThucTap, HoanThanh, ThoiHoc")
+    ngay_ky: Optional[date] = Field(default=None, description="Ngày ký (mặc định hôm nay nếu để trống)")
+    ghi_chu: Optional[str] = Field(default=None, max_length=500, description="Ghi chú xác nhận / mã OTP chữ ký")
+
+    @field_validator('trang_thai')
+    def validate_trang_thai(cls, value: Optional[str]):
+        if value is None:
+            return "DaXacNhan"
+        cleaned = value.strip()
+        if not cleaned:
+            return "DaXacNhan"
+        valid_statuses = ["ChuaXacNhan", "DaXacNhan"]
+        if cleaned not in valid_statuses:
+            raise ValueError(f"Trạng thái hợp đồng không hợp lệ. Chỉ chấp nhận: {', '.join(valid_statuses)}")
+        return cleaned
+
+    @field_validator('trang_thai_thuc_tap')
+    def validate_trang_thai_thuc_tap(cls, value: Optional[str]):
+        if value is None:
+            return "DangThucTap"
+        cleaned = value.strip()
+        if not cleaned:
+            return "DangThucTap"
+        valid_statuses = ["ChuaThucTap", "DangThucTap", "HoanThanh", "ThoiHoc"]
+        if cleaned not in valid_statuses:
+            raise ValueError(f"Trạng thái thực tập không hợp lệ. Chỉ chấp nhận: {', '.join(valid_statuses)}")
+        return cleaned
+
+    @field_validator('ghi_chu')
+    def validate_ghi_chu(cls, value: Optional[str]):
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned if cleaned else None
+
+
+# ==============================================================
 # SCHEMA CHO RESPONSE CHI TIẾT THỰC TẬP SINH (GET)
 # ==============================================================
 class InternDetailData(BaseModel):
@@ -169,6 +213,12 @@ class InternDetailData(BaseModel):
 
 class InternResponse(BaseModel):
     status_code: int = 200
+    message: str
+    data: Optional[InternDetailData] = None
+
+
+class InternCreateResponse(BaseModel):
+    status_code: int = 201
     message: str
     data: Optional[InternDetailData] = None
 
@@ -213,10 +263,8 @@ class DocumentListResponse(BaseModel):
     data: List[DocumentItem]
 
 
-# ==============================================================
-# SCHEMA CHO RESPONSE UPLOAD TÀI LIỆU (POST)
-# ==============================================================
 class DocumentUploadResponse(BaseModel):
     status_code: int = 201
     message: str
     data: DocumentItem
+

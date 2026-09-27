@@ -4,6 +4,110 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.8.0] - 2026-09-27
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model SQLAlchemy Hợp đồng thực tập (`HopDong`)**:
+  - Xây dựng model `backend/database/models/hop_dong.py` theo đúng đặc tả thiết kế CSDL (bảng `hop_dong`: `ma_hop_dong`, `ma_ho_so`, `duong_dan_file`, `ngay_tai_len`, `ngay_ky`, `trang_thai`).
+  - Thiết lập quan hệ 2 chiều giữa `HopDong` và `HoSoThucTap`.
+- **Endpoint Xác nhận Ký Hợp đồng & Kích hoạt Thực tập (`PATCH /api/v1/contracts/{id}/confirm`)**:
+  - Xây dựng endpoint chuẩn `PATCH /api/v1/contracts/{id}/confirm` trả về `HTTP 200 OK`.
+  - Hỗ trợ payload tùy chọn qua schema `ContractConfirmRequest` (cho phép truyền body rỗng hoặc tùy chỉnh `trang_thai`, `trang_thai_thuc_tap`, `ngay_ky`, `ghi_chu`).
+  - Giao dịch nguyên tử (Atomic Database Transaction): cập nhật đồng thời trạng thái hợp đồng thành `"DaXacNhan"`, cập nhật ngày ký `ngay_ky` và chuyển trạng thái hồ sơ `trang_thai_thuc_tap` thành `"DangThucTap"`.
+  - Validate whitelist nghiêm ngặt trạng thái hợp đồng và trạng thái thực tập, tự động chuẩn hóa strip khoảng trắng thừa.
+  - Trả về `HTTP 404 Not Found` nếu không tìm thấy mã hợp đồng hoặc hồ sơ liên kết.
+  - Trả về `HTTP 422 Unprocessable Entity` khi dữ liệu validate không hợp lệ.
+- **Tự động gửi Email thông báo qua BackgroundTasks**:
+  - Tích hợp hàm `send_contract_confirmed_email` trong `services/email_service.py`.
+  - Gửi email thông báo ký kết thành công và chào mừng sinh viên chính thức bắt đầu kỳ thực tập với vai trò "Đang thực tập".
+- **Tích hợp Giao diện Frontend (`frontend/js/hop_dong.js`)**:
+  - Đồng bộ hàm `thucHienKyHopDong` với API `PATCH /api/v1/contracts/{id}/confirm`, hiển thị trực quan thông tin ký số và trạng thái thực tập từ server.
+- **Kiểm thử tự động (Unit Test)**:
+  - Xây dựng file test mới `tests/test_contract_confirm.py` gồm **11 test cases** kiểm thử toàn diện:
+    - Xác nhận hợp đồng với payload mặc định, không truyền body, truyền ngày ký tùy chọn & mã OTP (200).
+    - Kiểm tra tính nguyên tử (atomic commit) trên cả hai bảng CSDL.
+    - Kiểm tra email thông báo được ghi nhận qua BackgroundTasks.
+    - Bắt lỗi 404 không tìm thấy hợp đồng, 422 trạng thái sai, ghi chú quá dài, ID sai kiểu dữ liệu.
+  - Nâng tổng số test cases của toàn hệ thống lên **96/96 PASS 100%**.
+
+---
+
+## [1.7.0] - 2026-09-27
+
+### Đã hoàn thành (Added & Enhanced)
+- **Endpoint Cập nhật trạng thái xét duyệt hồ sơ thực tập sinh (`PATCH /api/v1/interns/{id}/approval`)**:
+  - Xây dựng endpoint chuẩn `PATCH /api/v1/interns/{id}/approval` trả về `HTTP 200 OK` để xét duyệt hồ sơ thực tập sinh.
+  - Hỗ trợ linh hoạt cả hai tên trường `trang_thai_duyet` (theo yêu cầu nghiệp vụ) và `trang_thai_xet_duyet` (tên cột CSDL) thông qua helper `approval_data.get_status()`.
+  - Validate whitelist nghiêm ngặt trạng thái duyệt: chỉ chấp nhận `"ChoDuyet"`, `"DaDuyet"`, `"TuChoi"`. Tự động chuẩn hóa strip khoảng trắng thừa đầu cuối.
+  - Hỗ trợ trường `ghi_chu` tùy chọn (tối đa 500 ký tự) cho lý do từ chối hoặc nhận xét đánh giá.
+  - Trả về `HTTP 404 Not Found` nếu không tìm thấy mã hồ sơ thực tập sinh trong hệ thống.
+  - Trả về `HTTP 422 Unprocessable Entity` khi thiếu trạng thái, trạng thái ngoài whitelist, hoặc ghi chú vượt quá giới hạn độ dài.
+- **Tự động gửi Email thông báo qua BackgroundTasks**:
+  - Khi cập nhật thành công, endpoint tự động kích hoạt `BackgroundTasks` gọi `send_profile_approval_email` gửi thư thông báo kết quả (Chúc mừng nếu Đã duyệt / Nêu lý do từ chối nếu Bị từ chối) tới địa chỉ email của thực tập sinh.
+  - Quá trình gửi email diễn ra hoàn toàn bất đồng bộ trong nền, không làm chậm độ trễ phản hồi của API.
+- **Tích hợp Frontend (`frontend/js/xet_duyet_ho_so.js`)**:
+  - Cập nhật hai hàm `duyetHoSo` và `xacNhanTuChoiHoSo` kết nối trực tiếp vào endpoint `PATCH /api/v1/interns/{id}/approval` thay vì gọi tạm API tài liệu.
+- **Kiểm thử tự động (Unit Test)**:
+  - Xây dựng file test mới `tests/test_intern_approval.py` gồm **11 test cases** bao phủ:
+    - Duyệt hồ sơ thành công `DaDuyet`, từ chối `TuChoi`, đổi lại `ChoDuyet` (200).
+    - Duyệt qua alias field `trang_thai_duyet` (200).
+    - Tự động strip khoảng trắng đầu cuối (200).
+    - Kiểm tra email được gửi tới đúng thực tập sinh với tiêu đề và nội dung phù hợp.
+    - Bắt lỗi không tìm thấy ID (404), trạng thái không hợp lệ (422), rỗng (422), thiếu trường (422), ghi chú quá 500 ký tự (422), sai kiểu dữ liệu ID (422).
+  - Nâng tổng số test cases của toàn hệ thống lên **85/85 PASS 100%**.
+
+---
+
+## [1.6.0] - 2026-09-27
+
+### Đã hoàn thành (Added & Enhanced)
+- **Endpoint Tải lên tài liệu đính kèm (`POST /api/v1/documents/upload`)**:
+  - Xây dựng endpoint chuẩn `POST /api/v1/documents/upload` trả về `HTTP 201 Created` xử lý form upload đa phần (`multipart/form-data`) bằng `UploadFile`, `File` và `Form`.
+  - Kiểm tra tồn tại của hồ sơ thực tập sinh `ma_ho_so` trước khi ghi file (trả về `HTTP 404 Not Found` nếu không tìm thấy).
+  - Xác thực nghiêm ngặt loại tài liệu `loai_tai_lieu` không được rỗng hay chứa khoảng trắng thừa (`HTTP 422`).
+  - Bảo mật tệp tin: giới hạn định dạng cho phép (.pdf, .doc, .docx, .xls, .xlsx, .png, .jpg, .jpeg), chặn file thực thi nguy hiểm (.exe, .sh, .bat...), kiểm tra dung lượng tối đa 10MB (trả về `HTTP 400 Bad Request` khi vi phạm).
+  - Tự động sinh tên file ngẫu nhiên an toàn kết hợp mã hồ sơ, loại tài liệu và mã băm UUID (`{ma_ho_so}_{loai_tai_lieu}_{uuid}{ext}`) chống ghi đè và chống tấn công Path Traversal.
+  - Lưu trữ file thực tế vào thư mục `backend/uploads/` trên máy chủ và ghi nhận đường dẫn tương đối vào bảng `tai_lieu_ho_so` với trạng thái mặc định `ChoDuyet`.
+- **Phục vụ tệp tĩnh (Static Files Serving)**:
+  - Mount thư mục `uploads/` vào route `/uploads` qua `fastapi.staticfiles.StaticFiles`, hỗ trợ xem trực tuyến và tải về tài liệu trực tiếp từ URL.
+- **Mở rộng Schema & Phụ thuộc**:
+  - Bổ sung schema `DocumentUploadResponse` vào `schemas.py`.
+  - Khai báo bổ sung `python-multipart>=0.0.9` vào `requirements.txt`.
+- **Kiểm thử tự động (Unit Test)**:
+  - Xây dựng file test mới `tests/test_upload_document.py` gồm **11 test cases** bao phủ:
+    - Upload thành công file PDF, ảnh PNG, Word DOCX (201).
+    - Phục vụ tệp tĩnh qua endpoint `/uploads/<filename>` (200).
+    - Bắt lỗi mã hồ sơ không tồn tại (404), đuôi file nguy hiểm .exe, .sh (400), vượt quá 10MB (400), thiếu tham số / file (422).
+  - Nâng tổng số test cases của toàn hệ thống lên **74/74 PASS 100%**.
+
+---
+
+## [1.5.0] - 2026-09-27
+
+### Đã hoàn thành (Added & Enhanced)
+- **Endpoint Tạo mới hồ sơ thực tập sinh (`POST /api/v1/interns`)**:
+  - Xây dựng endpoint chuẩn RESTful `POST /api/v1/interns` trả về `HTTP 201 Created`.
+  - Thực hiện lưu trữ đồng thời cả tài khoản người dùng (`NguoiDung` vai trò `ThucTapSinh`) và bản ghi hồ sơ (`HoSoThucTap`) trong cùng một Database Transaction nguyên tử (Atomic).
+  - Tự động kiểm tra trùng lặp email và số điện thoại với các tài khoản đã có trong hệ thống (trả về `HTTP 400 Bad Request`).
+  - Kiểm tra tính tồn tại và toàn vẹn của các khóa ngoại: mã trường đại học `ma_truong`, mã chương trình thực tập `ma_chuong_trinh`, mã người hướng dẫn `ma_mentor` (trả về `HTTP 400 Bad Request` nếu không tồn tại).
+- **Mở rộng Schema (`schemas.py`)**:
+  - Xây dựng schema `InternCreate` và `InternCreateResponse` bằng Pydantic v2:
+    - Validate nghiêm ngặt họ tên tiếng Việt (không để trống, chỉ chứa chữ cái và khoảng trắng).
+    - Validate cú pháp email chuẩn RFC.
+    - Validate số điện thoại định dạng 10 chữ số (hoặc đầu số quốc tế `+84`).
+    - Validate danh mục trạng thái xét duyệt (`ChoDuyet`, `DaDuyet`, `TuChoi`) và trạng thái thực tập (`DangThucTap`, `HoanThanh`, `ThoiHoc`).
+- **Môi trường & Kiểm thử tự động (Unit Test)**:
+  - Cải tiến `backend/database/session.py` với giá trị cấu hình mặc định an toàn cho biến môi trường CSDL.
+  - Tích hợp cơ chế SQLite Test Database fallback tự động trong `tests/conftest.py` giúp toàn bộ bộ test có thể chạy độc lập, tốc độ cao mà không bắt buộc phải bật MySQL Server cục bộ.
+  - Xây dựng bộ test mới `tests/test_create_intern.py` gồm **16 test cases** bao phủ đầy đủ:
+    - Tạo thành công đầy đủ trường và tối thiểu trường bắt buộc (201).
+    - Tự động cắt khoảng trắng thừa (201).
+    - Bắt lỗi validate schema, thiếu trường, sai format tên, email, sđt, trạng thái (422).
+    - Bắt lỗi trùng email, trùng số điện thoại, khóa ngoại không tồn tại (400).
+  - Nâng tổng số test cases của toàn hệ thống lên **63/63 PASS 100%**.
+
+---
+
 ## [1.4.0] - 2026-09-26
 
 ### Đã hoàn thành (Added & Enhanced)

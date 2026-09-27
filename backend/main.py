@@ -1,6 +1,8 @@
 import os
 import uuid
+from datetime import date
 from pathlib import Path
+from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -9,16 +11,21 @@ from schemas import (
     InternCreate,
     InternUpdate,
     InternApprovalUpdate,
+    ContractConfirmRequest,
     DocumentStatusUpdate,
     DocumentUploadResponse,
 )
 
 # Thư mục database & models
 from database.session import get_db
-from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo, ChuongTrinhThucTap
+from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo, ChuongTrinhThucTap, HopDong
 
 # Dịch vụ gửi email thông báo
-from services.email_service import send_document_approval_email, send_profile_approval_email
+from services.email_service import (
+    send_document_approval_email,
+    send_profile_approval_email,
+    send_contract_confirmed_email,
+)
 
 # Khởi tạo ứng dụng FastAPI
 app = FastAPI(title="Internship Management API", version="1.0.0")
@@ -44,43 +51,40 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 @app.post("/api/v1/interns", status_code=201)
 def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
     """
-    Tạo mới hồ sơ thực tập sinh:
-    1. Kiểm tra tính hợp lệ và không trùng lặp của email, số điện thoại.
-    2. Kiểm tra tồn tại của các khóa ngoại: trường đại học, chương trình, mentor.
-    3. Tạo tài khoản người dùng NguoiDung (vai_tro='ThucTapSinh').
-    4. Tạo bản ghi hồ sơ thực tập HoSoThucTap trong cùng một transaction.
+    Tạo mới hồ sơ thực tập sinh (kèm tài khoản sinh viên, trường đại học, chuyên ngành, chương trình).
+    Thực hiện kiểm tra trùng lặp email/SĐT, kiểm tra khóa ngoại và lưu trữ trong cùng một Database Transaction.
     """
-    # 1. Kiểm tra trùng email
-    exist_email = db.query(NguoiDung).filter(NguoiDung.email == intern_data.email).first()
-    if exist_email:
-        raise HTTPException(status_code=400, detail="Email này đã được sử dụng trong hệ thống")
+    # 1. Kiểm tra trùng lặp email với người dùng đã có
+    existing_email = db.query(NguoiDung).filter(NguoiDung.email == intern_data.email).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email này đã được sử dụng")
 
-    # 2. Kiểm tra trùng số điện thoại (nếu có cung cấp)
+    # 2. Kiểm tra trùng lặp số điện thoại nếu có gửi lên
     if intern_data.so_dien_thoai:
-        exist_phone = db.query(NguoiDung).filter(NguoiDung.so_dien_thoai == intern_data.so_dien_thoai).first()
-        if exist_phone:
-            raise HTTPException(status_code=400, detail="Số điện thoại này đã được sử dụng trong hệ thống")
+        existing_phone = db.query(NguoiDung).filter(NguoiDung.so_dien_thoai == intern_data.so_dien_thoai).first()
+        if existing_phone:
+            raise HTTPException(status_code=400, detail="Số điện thoại này đã được sử dụng")
 
-    # 3. Kiểm tra khóa ngoại ma_truong
+    # 3. Kiểm tra mã trường đại học nếu có gửi lên
     if intern_data.ma_truong:
         truong = db.query(TruongDaiHoc).filter(TruongDaiHoc.ma_truong == intern_data.ma_truong).first()
         if not truong:
             raise HTTPException(status_code=400, detail="Mã trường đại học không tồn tại trong hệ thống")
 
-    # 4. Kiểm tra khóa ngoại ma_chuong_trinh
+    # 4. Kiểm tra mã chương trình thực tập nếu có gửi lên
     if intern_data.ma_chuong_trinh:
         chuong_trinh = db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh == intern_data.ma_chuong_trinh).first()
         if not chuong_trinh:
             raise HTTPException(status_code=400, detail="Mã chương trình thực tập không tồn tại trong hệ thống")
 
-    # 5. Kiểm tra khóa ngoại ma_mentor
+    # 5. Kiểm tra mã mentor nếu có gửi lên
     if intern_data.ma_mentor:
         mentor = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == intern_data.ma_mentor).first()
         if not mentor:
             raise HTTPException(status_code=400, detail="Mã người hướng dẫn (mentor) không tồn tại trong hệ thống")
 
     try:
-        # 6. Tạo người dùng mới với vai trò ThucTapSinh
+        # 6. Khởi tạo tài khoản người dùng cho thực tập sinh (bảng NGUOI_DUNG)
         new_user = NguoiDung(
             ho_ten=intern_data.ho_ten,
             email=intern_data.email,
@@ -89,9 +93,9 @@ def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
             trang_thai="HoatDong"
         )
         db.add(new_user)
-        db.flush()  # Lấy new_user.ma_nguoi_dung tự tăng mà chưa commit
+        db.flush()  # Sinh mã new_user.ma_nguoi_dung cho khóa ngoại
 
-        # 7. Tạo hồ sơ thực tập liên kết
+        # 7. Khởi tạo hồ sơ thực tập sinh (bảng HO_SO_THUC_TAP)
         new_ho_so = HoSoThucTap(
             ma_nguoi_dung=new_user.ma_nguoi_dung,
             ma_truong=intern_data.ma_truong,
@@ -105,6 +109,7 @@ def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_ho_so)
 
+        # 8. Trả về phản hồi thành công HTTP 201 Created
         return {
             "status_code": 201,
             "message": "Tạo hồ sơ thực tập sinh thành công",
@@ -112,8 +117,7 @@ def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
         }
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Lỗi hệ thống khi tạo hồ sơ: {str(e)}")
-
+        raise e
 
 # api get intern detail
 @app.get("/api/v1/interns/{id}")
@@ -246,6 +250,69 @@ def update_intern_approval_status(
     }
 
 
+# api patch confirm contract
+@app.patch("/api/v1/contracts/{id}/confirm", status_code=200)
+def confirm_contract(
+    id: int,
+    confirm_data: Optional[ContractConfirmRequest] = None,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db)
+):
+    """
+    Xác nhận ký hợp đồng thực tập điện tử và kích hoạt trạng thái thực tập:
+    1. Cập nhật bảng hop_dong: trang_thai = 'DaXacNhan', ngay_ky = ngay_ky hoặc hôm nay.
+    2. Cập nhật bảng ho_so_thuc_tap: trang_thai_thuc_tap = 'DangThucTap'.
+    3. Tự động gửi email thông báo xác nhận thành công tới thực tập sinh qua BackgroundTasks.
+    """
+    if confirm_data is None:
+        confirm_data = ContractConfirmRequest()
+
+    # 1. Tìm bản ghi hợp đồng
+    hop_dong = db.query(HopDong).filter(HopDong.ma_hop_dong == id).first()
+    if not hop_dong:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy hợp đồng ID: {id}")
+
+    # 2. Tìm hồ sơ thực tập sinh liên kết
+    ho_so = hop_dong.ho_so or db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == hop_dong.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ thực tập liên kết với hợp đồng ID: {id}")
+
+    # 3. Cập nhật thông tin hợp đồng
+    target_status = confirm_data.trang_thai or "DaXacNhan"
+    sign_date = confirm_data.ngay_ky or date.today()
+
+    hop_dong.trang_thai = target_status
+    hop_dong.ngay_ky = sign_date
+
+    # 4. Cập nhật trạng thái thực tập trong hồ sơ
+    target_internship_status = confirm_data.trang_thai_thuc_tap or "DangThucTap"
+    ho_so.trang_thai_thuc_tap = target_internship_status
+
+    # 5. Lưu vào CSDL trong một transaction nguyên tử
+    db.commit()
+    db.refresh(hop_dong)
+    db.refresh(ho_so)
+
+    # 6. Gửi email thông báo qua BackgroundTasks nếu sinh viên có email
+    intern = ho_so.thuc_tap_sinh
+    if intern and intern.email:
+        background_tasks.add_task(
+            send_contract_confirmed_email,
+            to_email=intern.email,
+            intern_name=intern.ho_ten or "Thực tập sinh",
+            contract_id=hop_dong.ma_hop_dong,
+            sign_date=sign_date.isoformat(),
+            internship_status=target_internship_status,
+            note=confirm_data.ghi_chu
+        )
+
+    return {
+        "status_code": 200,
+        "message": "Xác nhận ký hợp đồng và cập nhật trạng thái thực tập thành công",
+        "data": hop_dong.to_dict()
+    }
+
+
 # api post upload document
 @app.post("/api/v1/documents/upload", status_code=201)
 async def upload_document(
@@ -279,39 +346,38 @@ async def upload_document(
             detail=f"Định dạng tệp '{file_ext}' không được hỗ trợ. Chỉ chấp nhận các định dạng: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
         )
 
-    # Đọc nội dung file để kiểm tra kích thước tối đa
-    content = await file.read()
-    if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=400,
-            detail="Dung lượng tệp vượt quá giới hạn cho phép (tối đa 10MB)"
-        )
+    # 4. Đọc nội dung file & kiểm tra dung lượng tối đa 10MB
+    file_bytes = await file.read()
+    if len(file_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="Dung lượng tệp vượt quá giới hạn cho phép (tối đa 10MB)")
 
-    # 4. Tạo tên file ngẫu nhiên an toàn (UUID)
-    unique_suffix = uuid.uuid4().hex[:8]
-    safe_filename = f"{ma_ho_so}_{cleaned_loai}_{unique_suffix}{file_ext}"
-    saved_path = UPLOAD_DIR / safe_filename
+    # 5. Lưu tệp an toàn vào thư mục uploads/
+    safe_token = uuid.uuid4().hex[:8]
+    safe_filename = f"{ma_ho_so}_{cleaned_loai}_{safe_token}{file_ext}"
+    dest_path = UPLOAD_DIR / safe_filename
 
-    # 5. Lưu tệp lên server
-    with open(saved_path, "wb") as buffer:
-        buffer.write(content)
+    try:
+        with open(dest_path, "wb") as f:
+            f.write(file_bytes)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi khi lưu tệp trên máy chủ: {str(e)}")
 
-    # 6. Ghi nhận thông tin tài liệu vào CSDL
+    # 6. Ghi bản ghi vào bảng tai_lieu_ho_so
     relative_path = f"uploads/{safe_filename}"
-    new_doc = TaiLieuHoSo(
+    tai_lieu = TaiLieuHoSo(
         ma_ho_so=ma_ho_so,
         loai_tai_lieu=cleaned_loai,
         duong_dan_file=relative_path,
         trang_thai_duyet="ChoDuyet"
     )
-    db.add(new_doc)
+    db.add(tai_lieu)
     db.commit()
-    db.refresh(new_doc)
+    db.refresh(tai_lieu)
 
     return {
         "status_code": 201,
         "message": "Tải lên tài liệu thành công",
-        "data": new_doc.to_dict()
+        "data": tai_lieu.to_dict()
     }
 
 

@@ -11,7 +11,7 @@ if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
 from database.session import Base, get_db, engine as prod_engine
-from database.models import PhongBan, TruongDaiHoc, ChuongTrinhThucTap, NguoiDung, HoSoThucTap, TaiLieuHoSo
+from database.models import PhongBan, TruongDaiHoc, ChuongTrinhThucTap, NguoiDung, HoSoThucTap, TaiLieuHoSo, HopDong
 from main import app
 
 @pytest.fixture(autouse=True)
@@ -64,13 +64,17 @@ def reseed_sqlite_db():
         u3 = NguoiDung(ma_nguoi_dung=3, ma_phong_ban=1, ho_ten="Nguyễn Hướng Dẫn", email="mentor@example.com", so_dien_thoai="0905123456", vai_tro="Mentor", trang_thai="HoatDong")
         session.add_all([u1, u2, u3])
 
-        hs1 = HoSoThucTap(ma_ho_so=1, ma_nguoi_dung=1, ma_truong=1, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Công nghệ thông tin", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="DangThucTap")
+        hs1 = HoSoThucTap(ma_ho_so=1, ma_nguoi_dung=1, ma_truong=1, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Công nghệ thông tin", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="ChuaThucTap")
         hs2 = HoSoThucTap(ma_ho_so=2, ma_nguoi_dung=2, ma_truong=2, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Khoa học máy tính", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="DangThucTap")
         session.add_all([hs1, hs2])
 
         tl1 = TaiLieuHoSo(ma_tai_lieu=1, ma_ho_so=1, loai_tai_lieu="CV", duong_dan_file="uploads/cv_nguyen_van_a.pdf", trang_thai_duyet="ChoDuyet")
         tl2 = TaiLieuHoSo(ma_tai_lieu=2, ma_ho_so=1, loai_tai_lieu="DonXinThucTap", duong_dan_file="uploads/don_xin_nguyen_van_a.pdf", trang_thai_duyet="DaDuyet")
         session.add_all([tl1, tl2])
+
+        hd1 = HopDong(ma_hop_dong=1, ma_ho_so=1, duong_dan_file="uploads/hop_dong_nguyen_van_a.pdf", ngay_tai_len=date(2026, 9, 20), ngay_ky=None, trang_thai="ChuaXacNhan")
+        hd2 = HopDong(ma_hop_dong=2, ma_ho_so=2, duong_dan_file="uploads/hop_dong_tran_thi_b.pdf", ngay_tai_len=date(2026, 9, 20), ngay_ky=date(2026, 9, 25), trang_thai="DaXacNhan")
+        session.add_all([hd1, hd2])
 
         session.commit()
     finally:

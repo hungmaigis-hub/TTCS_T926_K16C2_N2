@@ -4,6 +4,7 @@ from database.models.chuong_trinh import ChuongTrinhThucTap
 from database.models.nguoi_dung import NguoiDung
 from database.models.ho_so import HoSoThucTap
 from database.models.tai_lieu import TaiLieuHoSo
+from database.models.hop_dong import HopDong
 
 __all__ = [
     "PhongBan",
@@ -12,4 +13,5 @@ __all__ = [
     "NguoiDung",
     "HoSoThucTap",
     "TaiLieuHoSo",
+    "HopDong",
 ]
