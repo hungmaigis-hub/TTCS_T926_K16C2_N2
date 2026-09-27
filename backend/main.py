@@ -1,11 +1,12 @@
+from datetime import date, timedelta
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from schemas import InternUpdate, DocumentStatusUpdate
+from schemas import InternUpdate, DocumentStatusUpdate, ProgramCreate, ProgramResponse
 
 # Thư mục database & models
 from database.session import get_db
-from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo
+from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo, PhongBan, ChuongTrinhThucTap
 
 # Dịch vụ gửi email thông báo
 from services.email_service import send_document_approval_email
@@ -161,3 +162,54 @@ def update_document_status(
         "message": "Cập nhật trạng thái duyệt tài liệu thành công",
         "data": tai_lieu.to_dict()
     }
+
+
+# ==============================================================
+# API QUẢN LÝ CHƯƠNG TRÌNH THỰC TẬP (PROGRAMS)
+# ==============================================================
+
+# api post create program
+@app.post("/api/v1/programs", status_code=201, response_model=ProgramResponse)
+def create_program(program_data: ProgramCreate, db: Session = Depends(get_db)):
+    """
+    Tạo mới một chương trình thực tập.
+    Liên kết với phòng ban (ma_phong_ban), lưu tên chương trình, mô tả và thời gian diễn ra.
+    """
+    # 1. Kiểm tra phòng ban có tồn tại trong hệ thống không
+    phong_ban = db.query(PhongBan).filter(PhongBan.ma_phong_ban == program_data.ma_phong_ban).first()
+    if not phong_ban:
+        raise HTTPException(status_code=400, detail="Mã phòng ban không tồn tại trong hệ thống")
+
+    # 2. Kiểm tra trùng lặp tên chương trình trong cùng phòng ban
+    existing_program = db.query(ChuongTrinhThucTap).filter(
+        ChuongTrinhThucTap.ma_phong_ban == program_data.ma_phong_ban,
+        ChuongTrinhThucTap.ten_chuong_trinh == program_data.ten_chuong_trinh
+    ).first()
+    if existing_program:
+        raise HTTPException(status_code=400, detail="Tên chương trình thực tập này đã tồn tại trong phòng ban")
+
+    # 3. Tính toán ngày bắt đầu và kết thúc (mặc định hôm nay và 3 tháng sau nếu không gửi)
+    start_date = program_data.ngay_bat_dau or date.today()
+    end_date = program_data.ngay_ket_thuc or (start_date + timedelta(days=90))
+
+    # 4. Khởi tạo đối tượng chương trình thực tập
+    new_program = ChuongTrinhThucTap(
+        ma_phong_ban=program_data.ma_phong_ban,
+        ten_chuong_trinh=program_data.ten_chuong_trinh,
+        mo_ta=program_data.mo_ta,
+        ngay_bat_dau=start_date,
+        ngay_ket_thuc=end_date
+    )
+
+    # 5. Lưu vào cơ sở dữ liệu
+    db.add(new_program)
+    db.commit()
+    db.refresh(new_program)
+
+    # 6. Trả về phản hồi thành công (HTTP 201 Created)
+    return {
+        "status_code": 201,
+        "message": "Tạo chương trình thực tập thành công",
+        "data": new_program.to_dict()
+    }
+

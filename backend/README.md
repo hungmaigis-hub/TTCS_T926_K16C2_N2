@@ -30,10 +30,12 @@ backend/
 ├── tests/
 │   ├── test_get_put.py         # Bộ Unit Test API thông tin thực tập sinh (GET & PUT)
 │   ├── test_documents.py       # Bộ Unit Test API tài liệu hồ sơ (GET & PATCH)
-│   └── test_email_notification.py # Bộ Unit Test gửi email trong nền sau khi duyệt
+│   ├── test_email_notification.py # Bộ Unit Test gửi email trong nền sau khi duyệt
+│   └── test_programs.py        # Bộ Unit Test API tạo chương trình thực tập (POST)
 ├── README.md                   # Tài liệu hướng dẫn sử dụng Backend
 └── requirements.txt            # Danh sách thư viện Python cần cài đặt
 ```
+
 
 ---
 
@@ -190,9 +192,49 @@ pytest -v
 * **Request Body (JSON):**
 ```json
 {
-  "trang_thai_duyet": "DaDuyet"
+  "trang_thai_duyet": "DaDuyet",
+  "ghi_chu": "Tài liệu hợp lệ"
 }
 ```
 
 > **Quy tắc Validate:**
 > - `trang_thai_duyet`: Bắt buộc, chỉ nhận một trong 3 giá trị: `"ChoDuyet"`, `"DaDuyet"`, `"TuChoi"`. Nếu truyền bất kỳ giá trị nào khác, rỗng hoặc `null` sẽ tự động trả về `HTTP 422 Unprocessable Entity`.
+> - `ghi_chu`: Tùy chọn, tối đa 500 ký tự.
+
+---
+
+### 5. Tạo mới chương trình thực tập
+* **URL:** `/api/v1/programs`
+* **Method:** `POST`
+* **Request Body (JSON):**
+```json
+{
+  "ma_phong_ban": 1,
+  "ten_chuong_trinh": "Chương trình Kỹ sư AI 2026",
+  "mo_ta": "Đào tạo chuyên sâu AI và Machine Learning",
+  "ngay_bat_dau": "2026-10-01",
+  "ngay_ket_thuc": "2026-12-31"
+}
+```
+
+> **Quy tắc Validate:**
+> - `ma_phong_ban`: Bắt buộc, số nguyên dương > 0. Nếu mã phòng ban không tồn tại trong hệ thống sẽ trả về `HTTP 400 Bad Request`.
+> - `ten_chuong_trinh`: Bắt buộc, chuỗi từ 1 đến 150 ký tự, không được để trống hoặc chỉ chứa khoảng trắng. Nếu trùng tên trong cùng phòng ban sẽ trả về `HTTP 400 Bad Request`.
+> - `mo_ta`: Tùy chọn, chuỗi văn bản mô tả nội dung.
+> - `ngay_bat_dau`, `ngay_ket_thuc`: Tùy chọn. Nếu không truyền, hệ thống tự động gán ngày bắt đầu là hôm nay và ngày kết thúc sau 90 ngày. Nếu truyền thì bắt buộc `ngay_ket_thuc >= ngay_bat_dau`, vi phạm sẽ trả về `HTTP 422 Unprocessable Entity`.
+* **Phản hồi thành công (HTTP 201 Created):**
+```json
+{
+  "status_code": 201,
+  "message": "Tạo chương trình thực tập thành công",
+  "data": {
+    "ma_chuong_trinh": 2,
+    "ma_phong_ban": 1,
+    "ten_phong_ban": "Trung tâm Phần mềm",
+    "ten_chuong_trinh": "Chương trình Kỹ sư AI 2026",
+    "ngay_bat_dau": "2026-10-01",
+    "ngay_ket_thuc": "2026-12-31",
+    "mo_ta": "Đào tạo chuyên sâu AI và Machine Learning"
+  }
+}
+```

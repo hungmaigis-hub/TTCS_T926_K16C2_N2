@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional, List
 from datetime import date
 import re
@@ -113,3 +113,52 @@ class DocumentListResponse(BaseModel):
     status_code: int = 200
     message: str
     data: List[DocumentItem]
+
+
+# ==============================================================
+# SCHEMAS CHO CHƯƠNG TRÌNH THỰC TẬP (PROGRAMS API)
+# ==============================================================
+class ProgramCreate(BaseModel):
+    """Schema tạo mới chương trình thực tập (POST)"""
+    ma_phong_ban: int = Field(..., gt=0, description="Mã phòng ban quản lý chương trình")
+    ten_chuong_trinh: str = Field(..., min_length=1, max_length=150, description="Tên chương trình thực tập")
+    mo_ta: Optional[str] = Field(default=None, description="Mô tả nội dung chương trình")
+    ngay_bat_dau: Optional[date] = Field(default=None, description="Ngày bắt đầu (tùy chọn, mặc định hôm nay)")
+    ngay_ket_thuc: Optional[date] = Field(default=None, description="Ngày kết thúc (tùy chọn, mặc định sau 3 tháng)")
+
+    @field_validator('ten_chuong_trinh')
+    def validate_ten_chuong_trinh(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Tên chương trình thực tập không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+    @field_validator('mo_ta')
+    def validate_mo_ta(cls, value: Optional[str]):
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned if cleaned else None
+
+    @model_validator(mode='after')
+    def validate_dates(self):
+        if self.ngay_bat_dau and self.ngay_ket_thuc:
+            if self.ngay_ket_thuc < self.ngay_bat_dau:
+                raise ValueError("Ngày kết thúc phải diễn ra sau hoặc cùng ngày với ngày bắt đầu")
+        return self
+
+
+class ProgramDetailData(BaseModel):
+    ma_chuong_trinh: int
+    ma_phong_ban: int
+    ten_phong_ban: Optional[str] = None
+    ten_chuong_trinh: str
+    ngay_bat_dau: Optional[str] = None
+    ngay_ket_thuc: Optional[str] = None
+    mo_ta: Optional[str] = None
+
+class ProgramResponse(BaseModel):
+    status_code: int = 201
+    message: str
+    data: Optional[ProgramDetailData] = None
+
