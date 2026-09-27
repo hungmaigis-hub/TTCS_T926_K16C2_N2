@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from schemas import (
     InternCreate,
     InternUpdate,
+    InternApprovalUpdate,
     DocumentStatusUpdate,
     DocumentUploadResponse,
 )
@@ -17,7 +18,7 @@ from database.session import get_db
 from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo, ChuongTrinhThucTap
 
 # Dịch vụ gửi email thông báo
-from services.email_service import send_document_approval_email
+from services.email_service import send_document_approval_email, send_profile_approval_email
 
 # Khởi tạo ứng dụng FastAPI
 app = FastAPI(title="Internship Management API", version="1.0.0")
@@ -190,6 +191,57 @@ def update_intern(id: int, intern_data: InternUpdate, db: Session = Depends(get_
     return {
         "status_code": 200,
         "message": "Cập nhật thông tin thực tập sinh thành công",
+        "data": ho_so.to_dict()
+    }
+
+
+# api patch intern approval
+@app.patch("/api/v1/interns/{id}/approval", status_code=200)
+def update_intern_approval_status(
+    id: int,
+    approval_data: InternApprovalUpdate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """
+    Cập nhật trường trang_thai_xet_duyet trong ho_so_thuc_tap.
+    Hỗ trợ alias trang_thai_duyet hoặc trang_thai_xet_duyet (ChoDuyet, DaDuyet, TuChoi)
+    kèm ghi chú lý do / nhận xét tùy chọn.
+    Tự động gửi email thông báo kết quả phê duyệt cho thực tập sinh qua BackgroundTasks.
+    """
+    # 1. Tìm hồ sơ thực tập theo ID
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == id).first()
+    if not ho_so:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy thực tập sinh ID: {id}")
+
+    # 2. Lấy trạng thái duyệt hợp lệ
+    try:
+        new_status = approval_data.get_status()
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
+
+    # 3. Cập nhật trường trạng thái xét duyệt
+    ho_so.trang_thai_xet_duyet = new_status
+    db.commit()
+    db.refresh(ho_so)
+
+    # 4. Gửi email thông báo qua BackgroundTasks nếu thực tập sinh có email
+    intern = ho_so.thuc_tap_sinh
+    if intern and intern.email:
+        prog_name = ho_so.chuong_trinh.ten_chuong_trinh if ho_so.chuong_trinh else None
+        background_tasks.add_task(
+            send_profile_approval_email,
+            to_email=intern.email,
+            intern_name=intern.ho_ten or "Thực tập sinh",
+            program_name=prog_name,
+            status=new_status,
+            note=approval_data.ghi_chu
+        )
+
+    # 5. Trả về kết quả
+    return {
+        "status_code": 200,
+        "message": "Cập nhật trạng thái xét duyệt hồ sơ thành công",
         "data": ho_so.to_dict()
     }
 

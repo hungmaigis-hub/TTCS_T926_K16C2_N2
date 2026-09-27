@@ -112,6 +112,41 @@ class InternUpdate(BaseModel):
 
 
 # ==============================================================
+# SCHEMA CHO REQUEST CẬP NHẬT TRẠNG THÁI DUYỆT HỒ SƠ (PATCH)
+# ==============================================================
+class InternApprovalUpdate(BaseModel):
+    """Schema cập nhật trạng thái xét duyệt hồ sơ thực tập sinh (PATCH)"""
+    trang_thai_xet_duyet: Optional[str] = Field(default=None, description="Trạng thái: ChoDuyet, DaDuyet, TuChoi")
+    trang_thai_duyet: Optional[str] = Field(default=None, description="Alias cho trang_thai_xet_duyet")
+    ghi_chu: Optional[str] = Field(default=None, max_length=500, description="Ghi chú / nhận xét hoặc lý do từ chối")
+
+    @field_validator('trang_thai_xet_duyet', 'trang_thai_duyet')
+    def validate_status(cls, value: Optional[str]):
+        if value is None:
+            return None
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Trạng thái xét duyệt không được để trống hoặc chỉ chứa khoảng trắng")
+        valid_statuses = ["ChoDuyet", "DaDuyet", "TuChoi"]
+        if cleaned not in valid_statuses:
+            raise ValueError(f"Trạng thái không hợp lệ. Chỉ chấp nhận một trong các giá trị: {', '.join(valid_statuses)}")
+        return cleaned
+
+    @field_validator('ghi_chu')
+    def validate_ghi_chu(cls, value: Optional[str]):
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned if cleaned else None
+
+    def get_status(self) -> str:
+        status = self.trang_thai_xet_duyet or self.trang_thai_duyet
+        if not status:
+            raise ValueError("Vui lòng cung cấp 'trang_thai_duyet' hoặc 'trang_thai_xet_duyet'")
+        return status
+
+
+# ==============================================================
 # SCHEMA CHO RESPONSE CHI TIẾT THỰC TẬP SINH (GET)
 # ==============================================================
 class InternDetailData(BaseModel):
