@@ -114,7 +114,7 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 - **Tích hợp gửi Email tự động trong nền (`fastapi.BackgroundTasks`)**:
   - Tích hợp `fastapi.BackgroundTasks` vào endpoint duyệt tài liệu `PATCH /api/v1/documents/{id}/status`.
   - Tự động kích hoạt tác vụ gửi email thông báo kết quả duyệt cho thực tập sinh ngay sau khi trạng thái duyệt được lưu vào CSDL mà không làm nghẽn luồng xử lý chính của HTTP response.
-- **Module Dịch vụ Email chuyên nghiệp (`backend/services/email_service.py`)**:
+- **Module Dịch vụ Email (`backend/services/email_service.py`)**:
   - Xây dựng module dịch vụ email sử dụng thư viện chuẩn `smtplib` và `email.mime.text` (MIMEText/Header) hỗ trợ bảo mật kết nối TLS.
   - Định dạng nội dung email dạng văn bản thuần túy (plain text) ngắn gọn, súc tích, chuyên nghiệp, thông báo rõ ràng tên thực tập sinh, tên tài liệu tiếng Việt, kết quả xét duyệt và ghi chú/lý do từ chối (nếu có).
   - Hỗ trợ cơ chế giả lập gửi email thông minh (`MAIL_ENABLED=false` hoặc môi trường dev/test) với danh sách `sent_emails_history` giúp chạy test nhanh chóng và an toàn mà không cần kết nối mạng SMTP bên ngoài.
@@ -124,7 +124,7 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 - **Cấu hình & Biến môi trường**:
   - Bổ sung cấu hình SMTP vào `.env.example` và `.env`: `MAIL_ENABLED`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`.
 - **Kiểm thử tự động (Unit Test)**:
-  - Xây dựng bộ test mới `tests/test_email_notification.py` gồm **12 test cases** bao phủ toàn diện:
+  - Xây dựng bộ test mới `tests/test_email_notification.py` gồm **12 test cases**:
     - Gửi email phê duyệt `DaDuyet`, từ chối `TuChoi` kèm ghi chú, hoàn trạng thái `ChoDuyet`.
     - Kiểm tra xử lý chuỗi ghi chú (strip, rỗng, vượt quá 500 ký tự trả về 422).
     - Kiểm tra trường hợp tài liệu không tồn tại (404 không kích hoạt gửi email).
