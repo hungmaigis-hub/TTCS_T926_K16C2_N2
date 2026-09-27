@@ -59,6 +59,16 @@ CREATE TABLE IF NOT EXISTS ho_so_thuc_tap (
     FOREIGN KEY (ma_mentor) REFERENCES nguoi_dung(ma_nguoi_dung) ON DELETE SET NULL
 );
 
+-- 6. BẢNG TÀI LIỆU HỒ SƠ
+CREATE TABLE IF NOT EXISTS tai_lieu_ho_so (
+    ma_tai_lieu INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    loai_tai_lieu VARCHAR(50) NOT NULL COMMENT 'CV, DonXinThucTap, GiayGioiThieu',
+    duong_dan_file VARCHAR(255) NOT NULL,
+    trang_thai_duyet VARCHAR(50) DEFAULT 'ChoDuyet' COMMENT 'ChoDuyet, DaDuyet, TuChoi',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API
 INSERT INTO phong_ban (ma_phong_ban, ten_phong_ban, mo_ta) 
 VALUES (1, 'Trung tâm Phần mềm', 'Phòng kỹ thuật & phát triển hệ thống')
@@ -86,3 +96,9 @@ VALUES
 (1, 1, 1, 1, 3, 'Công nghệ thông tin', 'DaDuyet', 'DangThucTap'),
 (2, 2, 2, 1, 3, 'Khoa học máy tính', 'DaDuyet', 'DangThucTap')
 ON DUPLICATE KEY UPDATE chuyen_nganh = VALUES(chuyen_nganh);
+
+INSERT INTO tai_lieu_ho_so (ma_tai_lieu, ma_ho_so, loai_tai_lieu, duong_dan_file, trang_thai_duyet)
+VALUES
+(1, 1, 'CV', 'uploads/cv_nguyen_van_a.pdf', 'ChoDuyet'),
+(2, 1, 'DonXinThucTap', 'uploads/don_xin_nguyen_van_a.pdf', 'DaDuyet')
+ON DUPLICATE KEY UPDATE loai_tai_lieu = VALUES(loai_tai_lieu), trang_thai_duyet = VALUES(trang_thai_duyet);

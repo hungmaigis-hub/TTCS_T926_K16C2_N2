@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
+from typing import Optional, List
 from datetime import date
 import re
 
@@ -73,3 +73,43 @@ class InternResponse(BaseModel):
     status_code: int = 200
     message: str
     data: Optional[InternDetailData] = None
+
+
+# ==============================================================
+# SCHEMAS CHO TÀI LIỆU HỒ SƠ (DOCUMENTS API)
+# ==============================================================
+class DocumentStatusUpdate(BaseModel):
+    """Schema cập nhật trạng thái duyệt tài liệu (PATCH)"""
+    trang_thai_duyet: str = Field(..., description="Trạng thái duyệt: ChoDuyet, DaDuyet, TuChoi")
+    ghi_chu: Optional[str] = Field(default=None, max_length=500, description="Ghi chú hoặc lý do phê duyệt / từ chối gửi tới thực tập sinh")
+
+    @field_validator('trang_thai_duyet')
+    def validate_trang_thai_duyet(cls, value: str):
+        if not value or not value.strip():
+            raise ValueError("Trạng thái duyệt không được để trống hoặc chỉ chứa khoảng trắng")
+        
+        valid_statuses = ["ChoDuyet", "DaDuyet", "TuChoi"]
+        cleaned = value.strip()
+        if cleaned not in valid_statuses:
+            raise ValueError(f"Trạng thái duyệt không hợp lệ. Chỉ chấp nhận một trong các giá trị: {', '.join(valid_statuses)}")
+        return cleaned
+
+    @field_validator('ghi_chu')
+    def validate_ghi_chu(cls, value: Optional[str]):
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned if cleaned else None
+
+
+class DocumentItem(BaseModel):
+    ma_tai_lieu: int
+    ma_ho_so: int
+    loai_tai_lieu: str
+    duong_dan_file: str
+    trang_thai_duyet: str
+
+class DocumentListResponse(BaseModel):
+    status_code: int = 200
+    message: str
+    data: List[DocumentItem]

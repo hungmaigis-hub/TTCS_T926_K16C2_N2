@@ -4,9 +4,61 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.4.0] - 2026-09-26
+
+### Đã hoàn thành (Added & Enhanced)
+- **Tích hợp gửi Email tự động trong nền (`fastapi.BackgroundTasks`)**:
+  - Tích hợp `fastapi.BackgroundTasks` vào endpoint duyệt tài liệu `PATCH /api/v1/documents/{id}/status`.
+  - Tự động kích hoạt tác vụ gửi email thông báo kết quả duyệt cho thực tập sinh ngay sau khi trạng thái duyệt được lưu vào CSDL mà không làm nghẽn luồng xử lý chính của HTTP response.
+- **Module Dịch vụ Email chuyên nghiệp (`backend/services/email_service.py`)**:
+  - Xây dựng module dịch vụ email sử dụng thư viện chuẩn `smtplib` và `email.mime.text` (MIMEText/Header) hỗ trợ bảo mật kết nối TLS.
+  - Định dạng nội dung email dạng văn bản thuần túy (plain text) ngắn gọn, súc tích, chuyên nghiệp, thông báo rõ ràng tên thực tập sinh, tên tài liệu tiếng Việt, kết quả xét duyệt và ghi chú/lý do từ chối (nếu có).
+  - Hỗ trợ cơ chế giả lập gửi email thông minh (`MAIL_ENABLED=false` hoặc môi trường dev/test) với danh sách `sent_emails_history` giúp chạy test nhanh chóng và an toàn mà không cần kết nối mạng SMTP bên ngoài.
+  - Định nghĩa sẵn hàm `send_profile_approval_email` hỗ trợ mở rộng cho các luồng duyệt hồ sơ tuyển dụng.
+- **Mở rộng Schema (`schemas.py`)**:
+  - Cập nhật `DocumentStatusUpdate`: bổ sung trường tùy chọn `ghi_chu: Optional[str]` tối đa 500 ký tự (cho phép người duyệt gửi kèm nhận xét hoặc lý do từ chối), tự động strip khoảng trắng thừa.
+- **Cấu hình & Biến môi trường**:
+  - Bổ sung cấu hình SMTP vào `.env.example` và `.env`: `MAIL_ENABLED`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`.
+- **Kiểm thử tự động (Unit Test)**:
+  - Xây dựng bộ test mới `tests/test_email_notification.py` gồm **12 test cases** bao phủ toàn diện:
+    - Gửi email phê duyệt `DaDuyet`, từ chối `TuChoi` kèm ghi chú, hoàn trạng thái `ChoDuyet`.
+    - Kiểm tra xử lý chuỗi ghi chú (strip, rỗng, vượt quá 500 ký tự trả về 422).
+    - Kiểm tra trường hợp tài liệu không tồn tại (404 không kích hoạt gửi email).
+    - Kiểm tra trực tiếp các hàm trong dịch vụ email và mock quy trình kết nối SMTP với TLS.
+    - Kiểm tra bắt ngoại lệ Exception khi mất mạng hay lỗi SMTP mà không làm sập server.
+  - Nâng tổng số test cases của toàn hệ thống lên **47/47 PASS 100%**.
+
+---
+
+## [1.3.0] - 2026-09-25
+
+### Đã hoàn thành
+- **Cấu trúc Model dạng Package (`backend/database/models/`)**:
+  - Tách `models.py` thành thư mục package `models/` chuẩn modular architecture:
+    - `models/phong_ban.py` (`PhongBan`)
+    - `models/truong_dai_hoc.py` (`TruongDaiHoc`)
+    - `models/chuong_trinh.py` (`ChuongTrinhThucTap`)
+    - `models/nguoi_dung.py` (`NguoiDung`)
+    - `models/ho_so.py` (`HoSoThucTap`)
+    - `models/tai_lieu.py` (`TaiLieuHoSo`)
+    - `models/__init__.py` xuất khẩu toàn bộ models.
+- **Tài liệu hồ sơ**:
+  - Bổ sung bảng `tai_lieu_ho_so` vào CSDL và nạp dữ liệu mẫu vào `script/database/init_db.sql`.
+  - Schema `DocumentStatusUpdate`: Kiểm tra nghiêm ngặt `trang_thai_duyet` chỉ chấp nhận các giá trị `ChoDuyet`, `DaDuyet`, `TuChoi`, tự động cắt khoảng trắng thừa.
+  - Endpoint `GET /api/v1/documents/{ho_so_id}`: Lấy danh sách tài liệu theo mã hồ sơ; trả về 404 nếu hồ sơ không tồn tại, trả về mảng rỗng nếu chưa có tài liệu.
+  - Endpoint `PATCH /api/v1/documents/{id}/status`: Cập nhật trạng thái duyệt của tài liệu; trả về 404 nếu mã tài liệu không tồn tại.
+- **Kiểm thử tự động (Unit Test)**:
+  - Xây dựng file test `tests/test_documents.py` gồm **21 test cases** bao phủ toàn diện:
+    - Case thành công: Duyệt `DaDuyet`, từ chối `TuChoi`, đưa về `ChoDuyet`, xử lý khoảng trắng.
+    - Case biên & logic: Danh sách rỗng, ID bằng 0, ID số âm, ID số thực (float).
+    - Case lỗi & ngoại lệ: Không tìm thấy (404), sai kiểu dữ liệu chữ/số (422), giá trị ngoài danh mục (422), chuỗi rỗng/chỉ dấu cách (422), thiếu trường/field rỗng/null (422).
+  - Toàn bộ 35/35 test cases của hệ thống đều **PASS 100%**.
+
+---
+
 ## [1.2.0] - 2026-09-25
 
-### Đã thay đổi & Cải tiến (Changed & Refactored)
+### Đã thay đổi & Cải tiến
 - **Tái cấu trúc CSDL & Models (Database & ORM Models)**:
   - Chuyển đổi từ bảng phẳng đơn lẻ `interns` sang mô hình quan hệ chuẩn hóa 16 bảng theo thiết kế hệ thống (`DATABASE_DESIGN.md`).
   - Cập nhật `database/models.py`:
