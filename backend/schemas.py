@@ -314,3 +314,32 @@ class ProgramResponse(BaseModel):
     status_code: int = 201
     message: str
     data: Optional[ProgramDetailData] = None
+
+# ==============================================================
+# SCHEMAS CHO LỊCH TRÌNH VÀ NHIỆM VỤ (MY-SCHEDULE API)
+# ==============================================================
+
+class TaskItemResponse(BaseModel):
+    ma_nhiem_vu: int
+    ma_ho_so: int
+    ten_nhiem_vu: str
+    mo_ta: Optional[str] = None
+    han_hoan_thanh: Optional[str] = None
+    tien_do_phantram: int = 0
+    trang_thai: str = "Moi"
+
+
+class MyScheduleData(BaseModel):
+    ma_ho_so: int
+    ho_ten: Optional[str] = None
+    ten_chuong_trinh: Optional[str] = None
+    ngay_bat_dau: Optional[str] = None
+    ngay_ket_thuc: Optional[str] = None
+    trang_thai_thuc_tap: Optional[str] = None
+    danh_sach_nhiem_vu: List[TaskItemResponse] = []
+
+
+class MyScheduleResponse(BaseModel):
+    status_code: int = 200
+    message: str
+    data: Optional[MyScheduleData] = None

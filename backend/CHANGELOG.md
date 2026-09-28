@@ -4,6 +4,25 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.9.0] - 2026-09-28
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model SQLAlchemy Nhiệm vụ (`NhiemVu`)**:
+  - Xây dựng model `backend/database/models/nhiem_vu.py` theo đúng thiết kế CSDL (bảng `nhiem_vu`: `ma_nhiem_vu`, `ma_ho_so`, `ten_nhiem_vu`, `mo_ta`, `han_hoan_thanh`, `tien_do_phantram`, `trang_thai`).
+  - Thiết lập quan hệ hai chiều giữa `HoSoThucTap` và `NhiemVu` (`danh_sach_nhiem_vu`).
+- **Endpoint Truy vấn Lịch trình & Nhiệm vụ cá nhân (`GET /api/v1/interns/my-schedule`)**:
+  - Xây dựng endpoint chuẩn `GET /api/v1/interns/my-schedule` trả về `HTTP 200 OK` tổng hợp thời gian bắt đầu, kết thúc (từ `ChuongTrinhThucTap`) và danh sách nhiệm vụ cá nhân kèm tiến độ.
+  - Xử lý thứ tự định tuyến (Route Precedence) chuẩn xác trước route `{id}` để tránh xung đột.
+  - Bắt lỗi `HTTP 404 Not Found` khi không tìm thấy hồ sơ thực tập sinh và `HTTP 422 Unprocessable Entity` khi thiếu hoặc sai kiểu tham số `ho_so_id`.
+- **Đồng bộ Cơ sở dữ liệu & Seed Data**:
+  - Bổ sung bảng `hop_dong`, `nhiem_vu` và dữ liệu mẫu vào `script/database/init_db.sql`.
+  - Tự động đồng bộ tạo bảng còn thiếu khi khởi động ứng dụng FastAPI (`Base.metadata.create_all(bind=engine)`).
+- **Kiểm thử tự động (Unit Test)**:
+  - Xây dựng file test `tests/test_my_schedule.py` gồm **4 test cases** kiểm thử toàn diện.
+  - Nâng tổng số test cases của toàn hệ thống lên **114/114 PASS 100%**.
+
+---
+
 ## [1.8.0] - 2026-09-27
 
 ### Đã hoàn thành (Added & Enhanced)

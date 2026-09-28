@@ -3,10 +3,11 @@ import uuid
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+
 from schemas import (
     InternCreate,
     InternUpdate,
@@ -16,11 +17,18 @@ from schemas import (
     DocumentUploadResponse,
     ProgramCreate,
     ProgramResponse,
+    MyScheduleResponse,
 )
 
 # Thư mục database & models
-from database.session import get_db
-from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo, PhongBan, ChuongTrinhThucTap, HopDong
+from database.session import get_db, Base, engine
+from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo, PhongBan, ChuongTrinhThucTap, HopDong, NhiemVu
+
+# Tự động tạo các bảng CSDL còn thiếu theo model nếu chưa tồn tại
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception:
+    pass
 
 # Dịch vụ gửi email thông báo
 from services.email_service import (
@@ -120,6 +128,54 @@ def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
     except Exception as e:
         db.rollback()
         raise e
+
+# ==============================================================
+# API TRUY VẤN LỊCH TRÌNH VÀ NHIỆM VỤ CÁ NHÂN (MY-SCHEDULE)
+# ==============================================================
+
+@app.get("/api/v1/interns/my-schedule", response_model=MyScheduleResponse)
+def get_my_schedule(
+    ho_so_id: int = Query(..., description="Mã hồ sơ thực tập của sinh viên"),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy thông tin lịch trình và nhiệm vụ cá nhân của thực tập sinh:
+    - Ngày bắt đầu và ngày kết thúc (từ chương trình thực tập).
+    - Danh sách nhiệm vụ được phân công và tiến độ hoàn thành.
+    """
+    # 1. Kiểm tra hồ sơ thực tập có tồn tại trong hệ thống không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == ho_so_id).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với mã ID: {ho_so_id}"
+        )
+
+    # 2. Lấy thông tin thời gian thực tập từ chương trình liên kết
+    chuong_trinh = ho_so.chuong_trinh
+    ngay_bat_dau_str = chuong_trinh.ngay_bat_dau.isoformat() if (chuong_trinh and chuong_trinh.ngay_bat_dau) else None
+    ngay_ket_thuc_str = chuong_trinh.ngay_ket_thuc.isoformat() if (chuong_trinh and chuong_trinh.ngay_ket_thuc) else None
+    ten_chuong_trinh = chuong_trinh.ten_chuong_trinh if chuong_trinh else None
+
+    # 3. Lấy danh sách nhiệm vụ được giao cho hồ sơ này
+    tasks = db.query(NhiemVu).filter(NhiemVu.ma_ho_so == ho_so_id).all()
+    danh_sach_nhiem_vu = [task.to_dict() for task in tasks]
+
+    # 4. Trả về phản hồi đầy đủ dữ liệu
+    return {
+        "status_code": 200,
+        "message": "Lấy lịch trình và danh sách nhiệm vụ thành công",
+        "data": {
+            "ma_ho_so": ho_so.ma_ho_so,
+            "ho_ten": ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None,
+            "ten_chuong_trinh": ten_chuong_trinh,
+            "ngay_bat_dau": ngay_bat_dau_str,
+            "ngay_ket_thuc": ngay_ket_thuc_str,
+            "trang_thai_thuc_tap": ho_so.trang_thai_thuc_tap,
+            "danh_sach_nhiem_vu": danh_sach_nhiem_vu,
+        }
+    }
+
 
 # api get intern detail
 @app.get("/api/v1/interns/{id}")
@@ -493,3 +549,4 @@ def create_program(program_data: ProgramCreate, db: Session = Depends(get_db)):
         "message": "Tạo chương trình thực tập thành công",
         "data": new_program.to_dict()
     }
+
