@@ -11,7 +11,16 @@ if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
 from database.session import Base, get_db, engine as prod_engine
-from database.models import PhongBan, TruongDaiHoc, ChuongTrinhThucTap, NguoiDung, HoSoThucTap, TaiLieuHoSo, HopDong
+from database.models import (
+    PhongBan,
+    TruongDaiHoc,
+    ChuongTrinhThucTap,
+    NguoiDung,
+    HoSoThucTap,
+    TaiLieuHoSo,
+    HopDong,
+    NhiemVu,
+)
 from main import app
 
 @pytest.fixture(autouse=True)
@@ -75,6 +84,11 @@ def reseed_sqlite_db():
         hd1 = HopDong(ma_hop_dong=1, ma_ho_so=1, duong_dan_file="uploads/hop_dong_nguyen_van_a.pdf", ngay_tai_len=date(2026, 9, 20), ngay_ky=None, trang_thai="ChuaXacNhan")
         hd2 = HopDong(ma_hop_dong=2, ma_ho_so=2, duong_dan_file="uploads/hop_dong_tran_thi_b.pdf", ngay_tai_len=date(2026, 9, 20), ngay_ky=date(2026, 9, 25), trang_thai="DaXacNhan")
         session.add_all([hd1, hd2])
+
+        nv1 = NhiemVu(ma_nhiem_vu=1, ma_ho_so=1, ten_nhiem_vu="Nghiên cứu tài liệu kiến trúc hệ thống", mo_ta="Đọc hiểu tài liệu thiết kế CSDL và luồng xử lý API", han_hoan_thanh=date(2026, 10, 15), tien_do_phantram=30, trang_thai="Đang thực hiện")
+        nv2 = NhiemVu(ma_nhiem_vu=2, ma_ho_so=1, ten_nhiem_vu="Xây dựng module xác thực phân quyền", mo_ta="Viết API đăng ký, đăng nhập và phân quyền JWT", han_hoan_thanh=date(2026, 10, 30), tien_do_phantram=0, trang_thai="Chưa bắt đầu")
+        nv3 = NhiemVu(ma_nhiem_vu=3, ma_ho_so=2, ten_nhiem_vu="Thiết kế giao diện Dashboard quản lý", mo_ta="Cắt HTML/CSS responsive cho bảng điều khiển", han_hoan_thanh=date(2026, 10, 20), tien_do_phantram=100, trang_thai="Hoàn thành")
+        session.add_all([nv1, nv2, nv3])
 
         session.commit()
     finally:

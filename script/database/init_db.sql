@@ -69,6 +69,29 @@ CREATE TABLE IF NOT EXISTS tai_lieu_ho_so (
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
 );
 
+-- 7. BẢNG HỢP ĐỒNG THỰC TẬP
+CREATE TABLE IF NOT EXISTS hop_dong (
+    ma_hop_dong INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    duong_dan_file VARCHAR(255) NOT NULL,
+    ngay_tai_len DATE DEFAULT (CURRENT_DATE),
+    ngay_ky DATE,
+    trang_thai VARCHAR(50) DEFAULT 'ChuaXacNhan',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
+-- 8. BẢNG NHIỆM VỤ (TASKS)
+CREATE TABLE IF NOT EXISTS nhiem_vu (
+    ma_nhiem_vu INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    ten_nhiem_vu VARCHAR(150) NOT NULL,
+    mo_ta TEXT,
+    han_hoan_thanh DATE NOT NULL,
+    tien_do_phantram INT DEFAULT 0,
+    trang_thai VARCHAR(50) DEFAULT 'Chưa bắt đầu',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API
 INSERT INTO phong_ban (ma_phong_ban, ten_phong_ban, mo_ta) 
 VALUES (1, 'Trung tâm Phần mềm', 'Phòng kỹ thuật & phát triển hệ thống')
@@ -102,3 +125,16 @@ VALUES
 (1, 1, 'CV', 'uploads/cv_nguyen_van_a.pdf', 'ChoDuyet'),
 (2, 1, 'DonXinThucTap', 'uploads/don_xin_nguyen_van_a.pdf', 'DaDuyet')
 ON DUPLICATE KEY UPDATE loai_tai_lieu = VALUES(loai_tai_lieu), trang_thai_duyet = VALUES(trang_thai_duyet);
+
+INSERT INTO hop_dong (ma_hop_dong, ma_ho_so, duong_dan_file, ngay_tai_len, ngay_ky, trang_thai)
+VALUES
+(1, 1, 'uploads/hop_dong_nguyen_van_a.pdf', '2026-09-20', NULL, 'ChuaXacNhan'),
+(2, 2, 'uploads/hop_dong_tran_thi_b.pdf', '2026-09-20', '2026-09-25', 'DaXacNhan')
+ON DUPLICATE KEY UPDATE trang_thai = VALUES(trang_thai);
+
+INSERT INTO nhiem_vu (ma_nhiem_vu, ma_ho_so, ten_nhiem_vu, mo_ta, han_hoan_thanh, tien_do_phantram, trang_thai)
+VALUES
+(1, 1, 'Nghiên cứu tài liệu kiến trúc hệ thống', 'Đọc hiểu tài liệu thiết kế CSDL và luồng xử lý API', '2026-10-15', 30, 'Đang thực hiện'),
+(2, 1, 'Xây dựng module xác thực phân quyền', 'Viết API đăng ký, đăng nhập và phân quyền JWT', '2026-10-30', 0, 'Chưa bắt đầu'),
+(3, 2, 'Thiết kế giao diện Dashboard quản lý', 'Cắt HTML/CSS responsive cho bảng điều khiển', '2026-10-20', 100, 'Hoàn thành')
+ON DUPLICATE KEY UPDATE ten_nhiem_vu = VALUES(ten_nhiem_vu), tien_do_phantram = VALUES(tien_do_phantram), trang_thai = VALUES(trang_thai);

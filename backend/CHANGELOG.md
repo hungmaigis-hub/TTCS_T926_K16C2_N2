@@ -4,6 +4,32 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.9.0] - 2026-09-28
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model SQLAlchemy Nhiệm vụ thực tập (`NhiemVu`)**:
+  - Xây dựng model `backend/database/models/nhiem_vu.py` theo đúng đặc tả thiết kế CSDL (bảng `nhiem_vu`: `ma_nhiem_vu`, `ma_ho_so`, `ten_nhiem_vu`, `mo_ta`, `han_hoan_thanh`, `tien_do_phantram`, `trang_thai`).
+  - Thiết lập quan hệ 2 chiều giữa `NhiemVu` và `HoSoThucTap` qua `danh_sach_nhiem_vu`.
+- **Endpoint Cập nhật Tiến độ Nhiệm vụ (`PATCH /api/v1/tasks/{id}/progress`)**:
+  - Xây dựng endpoint chuẩn `PATCH /api/v1/tasks/{id}/progress` trả về `HTTP 200 OK`.
+  - Validate giá trị `tien_do_phantram` chặt chẽ từ 0 đến 100% bằng Pydantic `Field(..., ge=0, le=100)`.
+  - Tự động cập nhật `trang_thai`:
+    - Đổi thành `"Hoàn thành"` khi `tien_do_phantram == 100`.
+    - Đổi thành `"Đang thực hiện"` khi `0 < tien_do_phantram < 100`.
+    - Đổi thành `"Chưa bắt đầu"` khi `tien_do_phantram == 0`.
+  - Trả về `HTTP 404 Not Found` nếu không tìm thấy mã nhiệm vụ (`id`).
+  - Trả về `HTTP 422 Unprocessable Entity` khi dữ liệu tiến độ không hợp lệ (< 0, > 100, sai kiểu dữ liệu, null, thiếu field) hoặc ID không hợp lệ (<= 0).
+- **Kiểm thử tự động (Unit Test)**:
+  - Xây dựng file test mới `tests/test_task_progress.py` gồm **13 test cases** kiểm thử toàn diện:
+    - Cập nhật tiến độ 100% tự động đổi sang "Hoàn thành" (200).
+    - Cập nhật tiến độ trong khoảng (0, 100) đổi sang "Đang thực hiện" (200).
+    - Cập nhật tiến độ 0% đổi sang "Chưa bắt đầu" (200).
+    - Giảm tiến độ từ 100% về 75% đổi lại "Đang thực hiện" (200).
+    - Bắt lỗi 404 task không tồn tại, 422 khi tiến độ âm, vượt quá 100, sai kiểu dữ liệu, null, thiếu field, ID không hợp lệ.
+  - Nâng tổng số test cases của toàn hệ thống lên **123/123 PASS 100%**.
+
+---
+
 ## [1.8.0] - 2026-09-27
 
 ### Đã hoàn thành (Added & Enhanced)

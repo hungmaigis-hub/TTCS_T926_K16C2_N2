@@ -160,7 +160,7 @@ Tại thư mục `backend/`, chạy lệnh:
 ```bash
 pytest -v
 ```
-*(Thực thi trọn bộ **96 unit test**: bao gồm đầy đủ tạo hồ sơ POST, cập nhật PUT, duyệt hồ sơ PATCH, xác nhận hợp đồng PATCH kèm email BackgroundTasks, truy vấn GET, upload tài liệu POST, duyệt tài liệu PATCH và xử lý ngoại lệ).*
+*(Thực thi trọn bộ **123 unit test**: bao gồm đầy đủ tạo hồ sơ POST, cập nhật PUT, duyệt hồ sơ PATCH, xác nhận hợp đồng PATCH kèm email BackgroundTasks, truy vấn GET, upload tài liệu POST, duyệt tài liệu PATCH, tạo chương trình POST, cập nhật tiến độ nhiệm vụ PATCH và xử lý ngoại lệ).*
 
 ---
 
@@ -408,4 +408,43 @@ pytest -v
     "mo_ta": "Đào tạo chuyên sâu AI và Machine Learning"
   }
 }
+
+---
+
+### 9. Cập nhật tiến độ nhiệm vụ thực tập sinh
+* **URL:** `/api/v1/tasks/{id}/progress`
+* **Method:** `PATCH`
+* **Status Code:** `200 OK`
+* **URL Params:** `id=[integer]` (Mã nhiệm vụ)
+* **Request Body (JSON):**
+```json
+{
+  "tien_do_phantram": 100
+}
+```
+> **Quy tắc Validate & Tính năng:**
+> - `tien_do_phantram`: Bắt buộc, số nguyên trong khoảng `0` đến `100`. Nếu vi phạm sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - **Tự động cập nhật trạng thái (`trang_thai`):**
+>   - Đạt `100%`: Tự động chuyển `trang_thai = "Hoàn thành"`.
+>   - Từ `1%` đến `99%`: Tự động chuyển `trang_thai = "Đang thực hiện"`.
+>   - Bằng `0%`: Tự động chuyển `trang_thai = "Chưa bắt đầu"`.
+> - Nếu mã nhiệm vụ không tồn tại: Trả về `HTTP 404 Not Found`.
+
+#### Response mẫu (HTTP 200 OK):
+```json
+{
+  "status_code": 200,
+  "message": "Cập nhật tiến độ nhiệm vụ thành công",
+  "data": {
+    "ma_nhiem_vu": 1,
+    "ma_ho_so": 1,
+    "ten_nhiem_vu": "Nghiên cứu tài liệu kiến trúc hệ thống",
+    "mo_ta": "Đọc hiểu tài liệu thiết kế CSDL và luồng xử lý API",
+    "han_hoan_thanh": "2026-10-15",
+    "tien_do_phantram": 100,
+    "trang_thai": "Hoàn thành"
+  }
+}
+```
+
 ```

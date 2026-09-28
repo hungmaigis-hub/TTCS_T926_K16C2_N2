@@ -30,12 +30,13 @@ def clear_email_history():
 # KIỂM THỬ TÍCH HỢP FASTAPI BACKGROUNDTASKS VỚI API DUYỆT TÀI LIỆU
 # ==============================================================================
 
+from tests.conftest import MYSQL_AVAILABLE, TestSessionLocal
 from database.session import SessionLocal
 from database.models import HoSoThucTap
 
 def _get_target_email_for_doc_1() -> str:
     """Lấy email thực tế của thực tập sinh sở hữu tài liệu 1 từ CSDL"""
-    db = SessionLocal()
+    db = SessionLocal() if MYSQL_AVAILABLE else TestSessionLocal()
     try:
         ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == 1).first()
         if ho_so and ho_so.thuc_tap_sinh and ho_so.thuc_tap_sinh.email:

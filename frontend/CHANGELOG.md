@@ -4,6 +4,21 @@ Tất cả các thay đổi và tiến độ phát triển của phân hệ Fron
 
 ---
 
+## [1.2.0] - 2026-09-28
+
+### Đã thêm & Cải tiến (Added & Refactored)
+- **Đồng bộ hóa Nhiệm vụ & Tiến độ với Backend API (`html/sinhvien/nhiem_vu.html` & `js/nhiem_vu.js`)**:
+  - Gắn thuộc tính định danh `data-task-id="1"`, `data-task-id="2"`, `data-task-id="3"` vào các thẻ nhiệm vụ.
+  - Tích hợp gọi trực tiếp API `PATCH /api/v1/tasks/{id}/progress` khi sinh viên bấm nút **Lưu tiến độ**.
+  - Hiệu ứng nút bấm: chuyển trạng thái loading spinner xoay mượt mà và vô hiệu hóa nút bấm trong lúc gửi request tránh gửi trùng lặp.
+  - Tự động đồng bộ trạng thái thực tập sinh trên thẻ theo phản hồi trả về từ CSDL Backend (`"Hoàn thành"`, `"Đang thực hiện"`, `"Chưa bắt đầu"`).
+  - Tích hợp Huy hiệu kết nối Backend API thời gian thực (`#badgeTrangThaiApi`) thông báo tình trạng server.
+  - Tích hợp cơ chế tự động chuyển sang Fallback Mock Data nếu Backend chưa khởi chạy hoặc gặp sự cố mạng, đảm bảo trải nghiệm người dùng không bị gián đoạn.
+- **Cập nhật Đặc tả Tích hợp API (`frontend/API_INTEGRATION.md`)**:
+  - Bổ sung tài liệu mục 5 cho endpoint `PATCH /api/v1/tasks/{id}/progress`.
+
+---
+
 ## [1.1.0] - 2026-09-27
 
 ### Đã thêm & Cải tiến (Added & Refactored)

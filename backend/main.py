@@ -16,11 +16,22 @@ from schemas import (
     DocumentUploadResponse,
     ProgramCreate,
     ProgramResponse,
+    TaskProgressUpdate,
+    TaskProgressResponse,
 )
 
 # Thư mục database & models
 from database.session import get_db
-from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo, PhongBan, ChuongTrinhThucTap, HopDong
+from database.models import (
+    HoSoThucTap,
+    NguoiDung,
+    TruongDaiHoc,
+    TaiLieuHoSo,
+    PhongBan,
+    ChuongTrinhThucTap,
+    HopDong,
+    NhiemVu,
+)
 
 # Dịch vụ gửi email thông báo
 from services.email_service import (
@@ -493,3 +504,54 @@ def create_program(program_data: ProgramCreate, db: Session = Depends(get_db)):
         "message": "Tạo chương trình thực tập thành công",
         "data": new_program.to_dict()
     }
+
+
+# ==============================================================
+# API QUẢN LÝ NHIỆM VỤ THỰC TẬP (TASKS)
+# ==============================================================
+
+# api patch task progress
+@app.patch("/api/v1/tasks/{id}/progress", status_code=200, response_model=TaskProgressResponse)
+def update_task_progress(
+    id: int,
+    progress_data: TaskProgressUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Cập nhật tiến độ hoàn thành của nhiệm vụ (tien_do_phantram từ 0 đến 100%).
+    Tự động cập nhật trang_thai:
+    - Nếu tien_do_phantram == 100: tự động chuyển sang "Hoàn thành"
+    - Nếu 0 < tien_do_phantram < 100: chuyển sang "Đang thực hiện"
+    - Nếu tien_do_phantram == 0: chuyển sang "Chưa bắt đầu"
+    """
+    # 1. Kiểm tra ID hợp lệ
+    if id <= 0:
+        raise HTTPException(status_code=422, detail="Mã nhiệm vụ không hợp lệ")
+
+    # 2. Tìm nhiệm vụ trong CSDL
+    task = db.query(NhiemVu).filter(NhiemVu.ma_nhiem_vu == id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy nhiệm vụ ID: {id}")
+
+    # 3. Cập nhật tiến độ phần trăm
+    task.tien_do_phantram = progress_data.tien_do_phantram
+
+    # 4. Tự động chuyển đổi trạng thái tương ứng
+    if progress_data.tien_do_phantram == 100:
+        task.trang_thai = "Hoàn thành"
+    elif progress_data.tien_do_phantram > 0:
+        task.trang_thai = "Đang thực hiện"
+    else:
+        task.trang_thai = "Chưa bắt đầu"
+
+    # 5. Lưu vào CSDL
+    db.commit()
+    db.refresh(task)
+
+    # 6. Trả về phản hồi thành công
+    return {
+        "status_code": 200,
+        "message": "Cập nhật tiến độ nhiệm vụ thành công",
+        "data": task.to_dict()
+    }
+
