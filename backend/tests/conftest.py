@@ -11,7 +11,7 @@ if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
 from database.session import Base, get_db, engine as prod_engine
-from database.models import PhongBan, TruongDaiHoc, ChuongTrinhThucTap, NguoiDung, HoSoThucTap, TaiLieuHoSo, HopDong
+from database.models import PhongBan, TruongDaiHoc, ChuongTrinhThucTap, NguoiDung, HoSoThucTap, TaiLieuHoSo, HopDong, NhiemVu
 from main import app
 
 @pytest.fixture(autouse=True)
@@ -33,6 +33,11 @@ def check_mysql() -> bool:
         return False
 
 MYSQL_AVAILABLE = check_mysql()
+if MYSQL_AVAILABLE:
+    try:
+        Base.metadata.create_all(bind=prod_engine)
+    except Exception:
+        pass
 
 # Cấu hình SQLite test engine phòng khi môi trường không có MySQL đang chạy
 test_db_path = backend_dir / "test_intern_db.sqlite"
@@ -75,6 +80,10 @@ def reseed_sqlite_db():
         hd1 = HopDong(ma_hop_dong=1, ma_ho_so=1, duong_dan_file="uploads/hop_dong_nguyen_van_a.pdf", ngay_tai_len=date(2026, 9, 20), ngay_ky=None, trang_thai="ChuaXacNhan")
         hd2 = HopDong(ma_hop_dong=2, ma_ho_so=2, duong_dan_file="uploads/hop_dong_tran_thi_b.pdf", ngay_tai_len=date(2026, 9, 20), ngay_ky=date(2026, 9, 25), trang_thai="DaXacNhan")
         session.add_all([hd1, hd2])
+
+        nv1 = NhiemVu(ma_nhiem_vu=1, ma_ho_so=1, ten_nhiem_vu="Nghiên cứu kiến trúc Microservices & Docker", mo_ta="Cấu hình Docker Compose", han_hoan_thanh=date(2026, 10, 15), tien_do_phantram=100, trang_thai="HoanThanh")
+        nv2 = NhiemVu(ma_nhiem_vu=2, ma_ho_so=1, ten_nhiem_vu="Xây dựng API quản lý lịch trình và nhiệm vụ", mo_ta="Thiết kế endpoint GET /api/v1/interns/my-schedule", han_hoan_thanh=date(2026, 10, 20), tien_do_phantram=80, trang_thai="DangThucHien")
+        session.add_all([nv1, nv2])
 
         session.commit()
     finally:
