@@ -1,5 +1,5 @@
 from datetime import date
-from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from database.session import Base
 
@@ -14,11 +14,11 @@ class NhiemVu(Base):
     tien_do_phantram = Column(Integer, default=0, nullable=False)
     trang_thai = Column(String(50), default="Chưa bắt đầu", nullable=False)
 
-    # Quan hệ liên kết ngược tới hồ sơ thực tập
+    # Thiết lập quan hệ ngược về hồ sơ thực tập
     ho_so = relationship("HoSoThucTap", back_populates="danh_sach_nhiem_vu")
 
     def to_dict(self):
-        """Chuyển đổi thông tin nhiệm vụ thành dict để trả về response API"""
+        """Hỗ trợ chuyển đổi object sang dict để trả về API"""
         return {
             "ma_nhiem_vu": self.ma_nhiem_vu,
             "ma_ho_so": self.ma_ho_so,

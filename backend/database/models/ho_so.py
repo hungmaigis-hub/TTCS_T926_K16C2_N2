@@ -22,6 +22,7 @@ class HoSoThucTap(Base):
     danh_sach_tai_lieu = relationship("TaiLieuHoSo", back_populates="ho_so", cascade="all, delete-orphan")
     danh_sach_hop_dong = relationship("HopDong", back_populates="ho_so", cascade="all, delete-orphan")
     danh_sach_nhiem_vu = relationship("NhiemVu", back_populates="ho_so", cascade="all, delete-orphan")
+    danh_sach_bao_cao = relationship("BaoCaoTuan", back_populates="ho_so", cascade="all, delete-orphan")
 
     def to_dict(self):
         """Chuyển đổi thông tin hồ sơ và các quan hệ liên kết thành dict để trả về API"""

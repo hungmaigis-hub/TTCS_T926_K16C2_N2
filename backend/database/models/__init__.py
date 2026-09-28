@@ -6,6 +6,7 @@ from database.models.ho_so import HoSoThucTap
 from database.models.tai_lieu import TaiLieuHoSo
 from database.models.hop_dong import HopDong
 from database.models.nhiem_vu import NhiemVu
+from database.models.bao_cao_tuan import BaoCaoTuan
 
 __all__ = [
     "PhongBan",
@@ -16,4 +17,5 @@ __all__ = [
     "TaiLieuHoSo",
     "HopDong",
     "NhiemVu",
+    "BaoCaoTuan",
 ]

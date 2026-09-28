@@ -315,7 +315,6 @@ class ProgramResponse(BaseModel):
     message: str
     data: Optional[ProgramDetailData] = None
 
-
 # ==============================================================
 # SCHEMAS CHO NHIỆM VỤ THỰC TẬP (TASKS API)
 # ==============================================================
@@ -343,4 +342,79 @@ class TaskProgressResponse(BaseModel):
     status_code: int = 200
     message: str
     data: Optional[TaskDetailData] = None
+
+
+# ==============================================================
+# SCHEMAS CHO LỊCH TRÌNH VÀ NHIỆM VỤ (MY-SCHEDULE API)
+# ==============================================================
+
+class TaskItemResponse(BaseModel):
+    ma_nhiem_vu: int
+    ma_ho_so: int
+    ten_nhiem_vu: str
+    mo_ta: Optional[str] = None
+    han_hoan_thanh: Optional[str] = None
+    tien_do_phantram: int = 0
+    trang_thai: str = "Moi"
+
+
+class MyScheduleData(BaseModel):
+    ma_ho_so: int
+    ho_ten: Optional[str] = None
+    ten_chuong_trinh: Optional[str] = None
+    ngay_bat_dau: Optional[str] = None
+    ngay_ket_thuc: Optional[str] = None
+    trang_thai_thuc_tap: Optional[str] = None
+    danh_sach_nhiem_vu: List[TaskItemResponse] = []
+
+
+class MyScheduleResponse(BaseModel):
+    status_code: int = 200
+    message: str
+    data: Optional[MyScheduleData] = None
+
+
+# ==============================================================
+# SCHEMAS CHO BÁO CÁO TUẦN (REPORTS API)
+# ==============================================================
+
+class ReportCreate(BaseModel):
+    """Schema tạo mới báo cáo tuần (POST /api/v1/reports)"""
+    ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập sinh")
+    ma_nhiem_vu: Optional[int] = Field(default=None, gt=0, description="Mã nhiệm vụ liên kết (tùy chọn)")
+    tuan_so: int = Field(..., ge=1, description="Số thứ tự tuần thực tập (>= 1)")
+    noi_dung_cong_viec: str = Field(..., min_length=1, description="Nội dung công việc thực hiện trong tuần")
+    ket_qua_dat_duoc: Optional[str] = Field(default=None, description="Kết quả hoặc sản phẩm đạt được")
+
+    @field_validator('noi_dung_cong_viec')
+    def validate_noi_dung(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Nội dung công việc không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+    @field_validator('ket_qua_dat_duoc')
+    def validate_ket_qua(cls, value: Optional[str]):
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned if cleaned else None
+
+
+class ReportDetailData(BaseModel):
+    ma_bao_cao: int
+    ma_ho_so: int
+    ma_nhiem_vu: Optional[int] = None
+    tuan_so: int
+    noi_dung_cong_viec: str
+    ket_qua_dat_duoc: Optional[str] = None
+    phan_hoi_mentor: Optional[str] = None
+    thoi_gian_nop: Optional[str] = None
+
+
+class ReportResponse(BaseModel):
+    status_code: int = 201
+    message: str
+    data: Optional[ReportDetailData] = None
+
 

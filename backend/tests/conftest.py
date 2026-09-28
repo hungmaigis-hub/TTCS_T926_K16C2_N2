@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 import pytest
 from sqlalchemy import create_engine, text
@@ -20,6 +20,7 @@ from database.models import (
     TaiLieuHoSo,
     HopDong,
     NhiemVu,
+    BaoCaoTuan,
 )
 from main import app
 
@@ -42,6 +43,11 @@ def check_mysql() -> bool:
         return False
 
 MYSQL_AVAILABLE = check_mysql()
+if MYSQL_AVAILABLE:
+    try:
+        Base.metadata.create_all(bind=prod_engine)
+    except Exception:
+        pass
 
 # Cấu hình SQLite test engine phòng khi môi trường không có MySQL đang chạy
 test_db_path = backend_dir / "test_intern_db.sqlite"
@@ -85,10 +91,13 @@ def reseed_sqlite_db():
         hd2 = HopDong(ma_hop_dong=2, ma_ho_so=2, duong_dan_file="uploads/hop_dong_tran_thi_b.pdf", ngay_tai_len=date(2026, 9, 20), ngay_ky=date(2026, 9, 25), trang_thai="DaXacNhan")
         session.add_all([hd1, hd2])
 
-        nv1 = NhiemVu(ma_nhiem_vu=1, ma_ho_so=1, ten_nhiem_vu="Nghiên cứu tài liệu kiến trúc hệ thống", mo_ta="Đọc hiểu tài liệu thiết kế CSDL và luồng xử lý API", han_hoan_thanh=date(2026, 10, 15), tien_do_phantram=30, trang_thai="Đang thực hiện")
-        nv2 = NhiemVu(ma_nhiem_vu=2, ma_ho_so=1, ten_nhiem_vu="Xây dựng module xác thực phân quyền", mo_ta="Viết API đăng ký, đăng nhập và phân quyền JWT", han_hoan_thanh=date(2026, 10, 30), tien_do_phantram=0, trang_thai="Chưa bắt đầu")
+        nv1 = NhiemVu(ma_nhiem_vu=1, ma_ho_so=1, ten_nhiem_vu="Nghiên cứu kiến trúc Microservices & Docker", mo_ta="Cấu hình Docker Compose", han_hoan_thanh=date(2026, 10, 15), tien_do_phantram=30, trang_thai="Đang thực hiện")
+        nv2 = NhiemVu(ma_nhiem_vu=2, ma_ho_so=1, ten_nhiem_vu="Xây dựng API quản lý lịch trình và nhiệm vụ", mo_ta="Thiết kế endpoint GET /api/v1/interns/my-schedule", han_hoan_thanh=date(2026, 10, 20), tien_do_phantram=0, trang_thai="Chưa bắt đầu")
         nv3 = NhiemVu(ma_nhiem_vu=3, ma_ho_so=2, ten_nhiem_vu="Thiết kế giao diện Dashboard quản lý", mo_ta="Cắt HTML/CSS responsive cho bảng điều khiển", han_hoan_thanh=date(2026, 10, 20), tien_do_phantram=100, trang_thai="Hoàn thành")
         session.add_all([nv1, nv2, nv3])
+
+        bc1 = BaoCaoTuan(ma_bao_cao=1, ma_ho_so=1, ma_nhiem_vu=1, tuan_so=1, noi_dung_cong_viec="Hoàn thành Docker Compose", ket_qua_dat_duoc="Chạy thành công môi trường", thoi_gian_nop=datetime(2026, 9, 10, 17, 0))
+        session.add(bc1)
 
         session.commit()
     finally:
