@@ -69,6 +69,43 @@ CREATE TABLE IF NOT EXISTS tai_lieu_ho_so (
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
 );
 
+-- 7. BẢNG HỢP ĐỒNG THỰC TẬP
+CREATE TABLE IF NOT EXISTS hop_dong (
+    ma_hop_dong INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    duong_dan_file VARCHAR(255) NOT NULL,
+    ngay_tai_len DATE NOT NULL,
+    ngay_ky DATE,
+    trang_thai VARCHAR(50) DEFAULT 'ChuaXacNhan' COMMENT 'ChuaXacNhan, DaXacNhan',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
+-- 8. BẢNG NHIỆM VỤ (Tasks)
+CREATE TABLE IF NOT EXISTS nhiem_vu (
+    ma_nhiem_vu INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    ten_nhiem_vu VARCHAR(150) NOT NULL,
+    mo_ta TEXT,
+    han_hoan_thanh DATE NOT NULL,
+    tien_do_phantram INT DEFAULT 0,
+    trang_thai VARCHAR(50) DEFAULT 'Moi' COMMENT 'Moi, DangThucHien, HoanThanh',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
+-- 9. BẢNG BÁO CÁO TUẦN (Weekly Reports)
+CREATE TABLE IF NOT EXISTS bao_cao_tuan (
+    ma_bao_cao INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    ma_nhiem_vu INT,
+    tuan_so INT NOT NULL,
+    noi_dung_cong_viec TEXT NOT NULL,
+    ket_qua_dat_duoc TEXT,
+    phan_hoi_mentor TEXT,
+    thoi_gian_nop DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE,
+    FOREIGN KEY (ma_nhiem_vu) REFERENCES nhiem_vu(ma_nhiem_vu) ON DELETE SET NULL
+);
+
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API
 INSERT INTO phong_ban (ma_phong_ban, ten_phong_ban, mo_ta) 
 VALUES (1, 'Trung tâm Phần mềm', 'Phòng kỹ thuật & phát triển hệ thống')
@@ -98,7 +135,26 @@ VALUES
 ON DUPLICATE KEY UPDATE chuyen_nganh = VALUES(chuyen_nganh);
 
 INSERT INTO tai_lieu_ho_so (ma_tai_lieu, ma_ho_so, loai_tai_lieu, duong_dan_file, trang_thai_duyet)
-VALUES
+VALUES 
 (1, 1, 'CV', 'uploads/cv_nguyen_van_a.pdf', 'ChoDuyet'),
 (2, 1, 'DonXinThucTap', 'uploads/don_xin_nguyen_van_a.pdf', 'DaDuyet')
 ON DUPLICATE KEY UPDATE loai_tai_lieu = VALUES(loai_tai_lieu), trang_thai_duyet = VALUES(trang_thai_duyet);
+
+INSERT INTO hop_dong (ma_hop_dong, ma_ho_so, duong_dan_file, ngay_tai_len, ngay_ky, trang_thai)
+VALUES 
+(1, 1, 'uploads/hop_dong_nguyen_van_a.pdf', '2026-09-20', NULL, 'ChuaXacNhan'),
+(2, 2, 'uploads/hop_dong_tran_thi_b.pdf', '2026-09-20', '2026-09-25', 'DaXacNhan')
+ON DUPLICATE KEY UPDATE trang_thai = VALUES(trang_thai);
+
+INSERT INTO nhiem_vu (ma_nhiem_vu, ma_ho_so, ten_nhiem_vu, mo_ta, han_hoan_thanh, tien_do_phantram, trang_thai)
+VALUES 
+(1, 1, 'Nghiên cứu kiến trúc Microservices & Docker', 'Cấu hình Docker Compose và pass review Tech Lead', '2026-10-15', 100, 'HoanThanh'),
+(2, 1, 'Xây dựng API quản lý lịch trình và nhiệm vụ', 'Thiết kế endpoint GET /api/v1/interns/my-schedule', '2026-10-20', 80, 'DangThucHien'),
+(3, 2, 'Tìm hiểu quy trình DevOps và CI/CD', 'Thiết lập pipeline GitHub Actions', '2026-10-25', 0, 'Moi')
+ON DUPLICATE KEY UPDATE ten_nhiem_vu = VALUES(ten_nhiem_vu);
+
+INSERT INTO bao_cao_tuan (ma_bao_cao, ma_ho_so, ma_nhiem_vu, tuan_so, noi_dung_cong_viec, ket_qua_dat_duoc, phan_hoi_mentor, thoi_gian_nop)
+VALUES
+(1, 1, 1, 1, 'Tìm hiểu Docker và triển khai container hóa cho ứng dụng FastAPI', 'Hoàn thành file Dockerfile và docker-compose.yml', 'Tốt, tiếp tục nghiên cứu Microservices', '2026-09-10 17:00:00'),
+(2, 1, 2, 2, 'Thiết kế endpoint GET /api/v1/interns/my-schedule', 'Hoàn thiện endpoint và test case đạt 100%', NULL, '2026-09-17 16:30:00')
+ON DUPLICATE KEY UPDATE noi_dung_cong_viec = VALUES(noi_dung_cong_viec);
