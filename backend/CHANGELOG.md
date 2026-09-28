@@ -4,7 +4,31 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.10.0] - 2026-09-28
+> **Người thực hiện**: Dương Đình Hoàng  
+> **Nhiệm vụ**: Backend (FastAPI): Thiết kế model `bao_cao_tuan`, viết endpoint `POST /api/v1/reports` lưu `ma_ho_so`, `ma_nhiem_vu`, `tuan_so`, `noi_dung_cong_viec`, `ket_qua_dat_duoc` kèm gán `thoi_gian_nop = datetime.now()`.
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model SQLAlchemy Báo cáo tuần (`BaoCaoTuan`)**:
+  - Xây dựng model `backend/database/models/bao_cao_tuan.py` theo đúng đặc tả Mục 2.9 `DATABASE_DESIGN.md` (bảng `bao_cao_tuan`: `ma_bao_cao`, `ma_ho_so`, `ma_nhiem_vu`, `tuan_so`, `noi_dung_cong_viec`, `ket_qua_dat_duoc`, `phan_hoi_mentor`, `thoi_gian_nop`).
+  - Thiết lập quan hệ hai chiều giữa `HoSoThucTap` và `BaoCaoTuan` (`danh_sach_bao_cao`).
+- **Endpoint Nộp Báo cáo Tuần (`POST /api/v1/reports`)**:
+  - Xây dựng endpoint chuẩn `POST /api/v1/reports` trả về `HTTP 201 Created` cho phép thực tập sinh nộp báo cáo định kỳ tuần.
+  - Lưu trữ mã hồ sơ (`ma_ho_so`), mã nhiệm vụ liên kết (`ma_nhiem_vu`), tuần số (`tuan_so`), nội dung công việc và kết quả đạt được.
+  - Tự động gán thời gian nộp `thoi_gian_nop = datetime.now()` tại thời điểm nộp.
+  - Validate kiểm tra hồ sơ thực tập tồn tại (`HTTP 404`), kiểm tra mã nhiệm vụ tồn tại và thuộc quyền sở hữu của hồ sơ (`HTTP 400`), validate tuần số và cắt khoảng trắng thừa (`HTTP 422`).
+- **Đồng bộ Cơ sở dữ liệu & Seed Data**:
+  - Bổ sung bảng `bao_cao_tuan` và dữ liệu mẫu vào `script/database/init_db.sql`.
+  - Tích hợp tự động tạo bảng qua `Base.metadata.create_all(bind=engine)`.
+- **Kiểm thử tự động (Unit Test)**:
+  - Xây dựng file test `tests/test_weekly_reports.py` gồm **13 test cases** kiểm thử toàn diện từ happy path đến các trường hợp biên.
+  - Nâng tổng số test cases của toàn hệ thống lên **127/127 PASS 100%**.
+
+---
+
 ## [1.9.0] - 2026-09-28
+> **Người thực hiện**: Dương Đình Hoàng  
+> **Nhiệm vụ**: Backend (FastAPI): Viết endpoint `GET /api/v1/interns/my-schedule` truy vấn ngày bắt đầu, ngày kết thúc và nhiệm vụ cá nhân.
 
 ### Đã hoàn thành (Added & Enhanced)
 - **Model SQLAlchemy Nhiệm vụ (`NhiemVu`)**:
@@ -24,6 +48,7 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 ---
 
 ## [1.8.0] - 2026-09-27
+> **Người thực hiện**: Nguyễn Trung Học
 
 ### Đã hoàn thành (Added & Enhanced)
 - **Model SQLAlchemy Hợp đồng thực tập (`HopDong`)**:
@@ -52,6 +77,7 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 ---
 
 ## [1.7.0] - 2026-09-27
+> **Người thực hiện**: Nguyễn Trung Học
 
 ### Đã hoàn thành (Added & Enhanced)
 - **Endpoint Cập nhật trạng thái xét duyệt hồ sơ thực tập sinh (`PATCH /api/v1/interns/{id}/approval`)**:
@@ -78,6 +104,7 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 ---
 
 ## [1.6.0] - 2026-09-27
+> **Người thực hiện**: Nguyễn Trung Học
 
 ### Đã hoàn thành (Added & Enhanced)
 - **Endpoint Tải lên tài liệu đính kèm (`POST /api/v1/documents/upload`)**:
@@ -102,6 +129,7 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 ---
 
 ## [1.5.0] - 2026-09-27
+> **Người thực hiện**: Nguyễn Trung Học
 
 ### Đã hoàn thành (Added & Enhanced)
 - **Endpoint Tạo mới hồ sơ thực tập sinh (`POST /api/v1/interns`)**:
@@ -128,6 +156,8 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 ---
 
 ## [1.4.0] - 2026-09-26
+> **Người thực hiện**: Dương Đình Hoàng  
+> **Nhiệm vụ**: Backend (FastAPI): Sử dụng `fastapi.BackgroundTasks` kết hợp thư viện email gửi mail tự động thông báo kết quả sau khi duyệt.
 
 ### Đã hoàn thành (Added & Enhanced)
 - **Tích hợp gửi Email tự động trong nền (`fastapi.BackgroundTasks`)**:
@@ -154,6 +184,8 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 ---
 
 ## [1.3.0] - 2026-09-25
+> **Người thực hiện**: Dương Đình Hoàng  
+> **Nhiệm vụ**: Backend (FastAPI): Viết endpoint `GET /api/v1/documents/{ho_so_id}` lấy tài liệu và `PATCH /api/v1/documents/{id}/status` cập nhật `trang_thai_duyet`.
 
 ### Đã hoàn thành
 - **Cấu trúc Model dạng Package (`backend/database/models/`)**:
@@ -180,6 +212,8 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 ---
 
 ## [1.2.0] - 2026-09-25
+> **Người thực hiện**: Dương Đình Hoàng  
+> **Nhiệm vụ**: Backend (FastAPI): Viết endpoint `GET /api/v1/interns/{id}` lấy chi tiết và `PUT /api/v1/interns/{id}` cập nhật thông tin hồ sơ.
 
 ### Đã thay đổi & Cải tiến
 - **Tái cấu trúc CSDL & Models (Database & ORM Models)**:
@@ -206,6 +240,8 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 ---
 
 ## [1.1.0] - 2026-09-23
+> **Người thực hiện**: Dương Đình Hoàng  
+> **Nhiệm vụ**: Backend (FastAPI): Thiết kế model `chuong_trinh_thuc_tap`, viết endpoint `POST /api/v1/programs` liên kết `ma_phong_ban`, lưu `ten_chuong_trinh`, `mo_ta`.
 
 ### Đã hoàn thành (Added)
 - **Validation & Schemas**:

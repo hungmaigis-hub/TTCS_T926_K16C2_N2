@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 import pytest
 from sqlalchemy import create_engine, text
@@ -11,7 +11,7 @@ if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
 from database.session import Base, get_db, engine as prod_engine
-from database.models import PhongBan, TruongDaiHoc, ChuongTrinhThucTap, NguoiDung, HoSoThucTap, TaiLieuHoSo, HopDong, NhiemVu
+from database.models import PhongBan, TruongDaiHoc, ChuongTrinhThucTap, NguoiDung, HoSoThucTap, TaiLieuHoSo, HopDong, NhiemVu, BaoCaoTuan
 from main import app
 
 @pytest.fixture(autouse=True)
@@ -84,6 +84,9 @@ def reseed_sqlite_db():
         nv1 = NhiemVu(ma_nhiem_vu=1, ma_ho_so=1, ten_nhiem_vu="Nghiên cứu kiến trúc Microservices & Docker", mo_ta="Cấu hình Docker Compose", han_hoan_thanh=date(2026, 10, 15), tien_do_phantram=100, trang_thai="HoanThanh")
         nv2 = NhiemVu(ma_nhiem_vu=2, ma_ho_so=1, ten_nhiem_vu="Xây dựng API quản lý lịch trình và nhiệm vụ", mo_ta="Thiết kế endpoint GET /api/v1/interns/my-schedule", han_hoan_thanh=date(2026, 10, 20), tien_do_phantram=80, trang_thai="DangThucHien")
         session.add_all([nv1, nv2])
+
+        bc1 = BaoCaoTuan(ma_bao_cao=1, ma_ho_so=1, ma_nhiem_vu=1, tuan_so=1, noi_dung_cong_viec="Hoàn thành Docker Compose", ket_qua_dat_duoc="Chạy thành công môi trường", thoi_gian_nop=datetime(2026, 9, 10, 17, 0))
+        session.add(bc1)
 
         session.commit()
     finally:

@@ -92,6 +92,20 @@ CREATE TABLE IF NOT EXISTS nhiem_vu (
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
 );
 
+-- 9. BẢNG BÁO CÁO TUẦN (Weekly Reports)
+CREATE TABLE IF NOT EXISTS bao_cao_tuan (
+    ma_bao_cao INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    ma_nhiem_vu INT,
+    tuan_so INT NOT NULL,
+    noi_dung_cong_viec TEXT NOT NULL,
+    ket_qua_dat_duoc TEXT,
+    phan_hoi_mentor TEXT,
+    thoi_gian_nop DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE,
+    FOREIGN KEY (ma_nhiem_vu) REFERENCES nhiem_vu(ma_nhiem_vu) ON DELETE SET NULL
+);
+
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API
 INSERT INTO phong_ban (ma_phong_ban, ten_phong_ban, mo_ta) 
 VALUES (1, 'Trung tâm Phần mềm', 'Phòng kỹ thuật & phát triển hệ thống')
@@ -138,3 +152,9 @@ VALUES
 (2, 1, 'Xây dựng API quản lý lịch trình và nhiệm vụ', 'Thiết kế endpoint GET /api/v1/interns/my-schedule', '2026-10-20', 80, 'DangThucHien'),
 (3, 2, 'Tìm hiểu quy trình DevOps và CI/CD', 'Thiết lập pipeline GitHub Actions', '2026-10-25', 0, 'Moi')
 ON DUPLICATE KEY UPDATE ten_nhiem_vu = VALUES(ten_nhiem_vu);
+
+INSERT INTO bao_cao_tuan (ma_bao_cao, ma_ho_so, ma_nhiem_vu, tuan_so, noi_dung_cong_viec, ket_qua_dat_duoc, phan_hoi_mentor, thoi_gian_nop)
+VALUES
+(1, 1, 1, 1, 'Tìm hiểu Docker và triển khai container hóa cho ứng dụng FastAPI', 'Hoàn thành file Dockerfile và docker-compose.yml', 'Tốt, tiếp tục nghiên cứu Microservices', '2026-09-10 17:00:00'),
+(2, 1, 2, 2, 'Thiết kế endpoint GET /api/v1/interns/my-schedule', 'Hoàn thiện endpoint và test case đạt 100%', NULL, '2026-09-17 16:30:00')
+ON DUPLICATE KEY UPDATE noi_dung_cong_viec = VALUES(noi_dung_cong_viec);
