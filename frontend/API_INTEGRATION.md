@@ -14,7 +14,47 @@ Tài liệu đặc tả các giao thức kết nối, định dạng dữ liệu
 
 ## 📋 Danh sách Endpoints đã tích hợp
 
-### 1. Truy xuất chi tiết hồ sơ thực tập sinh
+### 1. Truy xuất danh sách hồ sơ thực tập sinh
+- **Method**: `GET`
+- **Endpoint**: `/api/v1/interns`
+- **Tham số Query**:
+  - `trang_thai_xet_duyet` *(Query string, tùy chọn)*: `ChoDuyet`, `DaDuyet`, `TuChoi`
+  - `trang_thai_thuc_tap` *(Query string, tùy chọn)*: `DangThucTap`, `HoanThanh`, `ThoiHoc`
+  - `limit` *(int, mặc định 100)*
+  - `offset` *(int, mặc định 0)*
+- **Tệp Frontend sử dụng**: `frontend/js/xet_duyet_ho_so.js`, `frontend/js/them_ho_so.js`
+- **Response mẫu (HTTP 200)**:
+```json
+{
+  "status_code": 200,
+  "message": "Danh sách thực tập sinh",
+  "total": 1,
+  "data": [
+    {
+      "ma_ho_so": 1,
+      "ma_nguoi_dung": 1,
+      "ho_ten": "Nguyễn Văn A",
+      "email": "vana@example.com",
+      "so_dien_thoai": "0912345678",
+      "chuyen_nganh": "Công nghệ thông tin",
+      "ma_truong": 1,
+      "ten_truong": "Đại học Thái Nguyên",
+      "ma_chuong_trinh": 1,
+      "ten_chuong_trinh": "Thực tập sinh Khóa Mùa Thu 2026",
+      "ngay_bat_dau": "2026-09-01",
+      "ngay_ket_thuc": "2026-12-30",
+      "ma_mentor": 3,
+      "ten_mentor": "Nguyễn Hướng Dẫn",
+      "trang_thai_xet_duyet": "ChoDuyet",
+      "trang_thai_thuc_tap": "DangThucTap"
+    }
+  ]
+}
+```
+
+---
+
+### 2. Truy xuất chi tiết hồ sơ thực tập sinh
 - **Method**: `GET`
 - **Endpoint**: `/api/v1/interns/{id}`
 - **Tham số**:

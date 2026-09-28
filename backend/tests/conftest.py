@@ -59,9 +59,11 @@ def reseed_sqlite_db():
         ct = ChuongTrinhThucTap(ma_chuong_trinh=1, ma_phong_ban=1, ten_chuong_trinh="Thực tập sinh Khóa Mùa Thu 2026", ngay_bat_dau=date(2026, 9, 1), ngay_ket_thuc=date(2026, 12, 30), mo_ta="Chương trình đào tạo kỹ sư phần mềm thực chiến")
         session.add(ct)
 
-        u1 = NguoiDung(ma_nguoi_dung=1, ma_phong_ban=1, ho_ten="Nguyễn Văn A", email="vana@example.com", so_dien_thoai="0912345678", vai_tro="ThucTapSinh", trang_thai="HoatDong")
-        u2 = NguoiDung(ma_nguoi_dung=2, ma_phong_ban=1, ho_ten="Trần Thị B", email="thib@example.com", so_dien_thoai="0987654321", vai_tro="ThucTapSinh", trang_thai="HoatDong")
-        u3 = NguoiDung(ma_nguoi_dung=3, ma_phong_ban=1, ho_ten="Nguyễn Hướng Dẫn", email="mentor@example.com", so_dien_thoai="0905123456", vai_tro="Mentor", trang_thai="HoatDong")
+        from security import get_password_hash
+        pass_hash = get_password_hash("123456")
+        u1 = NguoiDung(ma_nguoi_dung=1, ma_phong_ban=1, ho_ten="Nguyễn Văn A", email="vana@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0912345678", vai_tro="ThucTapSinh", trang_thai="HoatDong")
+        u2 = NguoiDung(ma_nguoi_dung=2, ma_phong_ban=1, ho_ten="Trần Thị B", email="thib@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0987654321", vai_tro="ThucTapSinh", trang_thai="HoatDong")
+        u3 = NguoiDung(ma_nguoi_dung=3, ma_phong_ban=1, ho_ten="Nguyễn Hướng Dẫn", email="mentor@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0905123456", vai_tro="Mentor", trang_thai="HoatDong")
         session.add_all([u1, u2, u3])
 
         hs1 = HoSoThucTap(ma_ho_so=1, ma_nguoi_dung=1, ma_truong=1, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Công nghệ thông tin", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="ChuaThucTap")
@@ -87,14 +89,10 @@ def override_get_db():
     finally:
         db.close()
 
-# Nếu MySQL không khả dụng, sử dụng SQLite và override get_db dependency
-if not MYSQL_AVAILABLE:
-    reseed_sqlite_db()
-    app.dependency_overrides[get_db] = override_get_db
+reseed_sqlite_db()
+app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(autouse=True)
-def reset_db_state_if_sqlite():
-    """Đảm bảo trạng thái DB sạch sẽ trước mỗi test case nếu dùng SQLite fallback"""
-    if not MYSQL_AVAILABLE:
-        reseed_sqlite_db()
+def reset_db_state():
+    reseed_sqlite_db()
     yield

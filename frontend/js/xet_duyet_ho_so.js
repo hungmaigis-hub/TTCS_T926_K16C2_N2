@@ -59,16 +59,11 @@ async function taiDanhSachHoSo() {
   }
 
   try {
-    const cacYeuCau = [1, 2].map((id) =>
-      fetch(`${duongDanApi}/interns/${id}`)
-        .then((res) => (res.ok ? res.json() : null))
-        .catch(() => null),
-    );
+    const phanHoi = await fetch(`${duongDanApi}/interns`);
+    if (!phanHoi.ok) throw new Error("Không thể kết nối đến API danh sách hồ sơ");
 
-    const ketQua = await Promise.all(cacYeuCau);
-    const hoSoApi = ketQua
-      .filter((item) => item && item.data)
-      .map((item) => item.data);
+    const ketQua = await phanHoi.json();
+    const hoSoApi = ketQua.data || [];
 
     if (hoSoApi.length > 0) {
       daKetNoiApi = true;
@@ -95,7 +90,13 @@ async function taiDanhSachHoSo() {
         "success",
       );
     } else {
-      throw new Error("Không có dữ liệu trả về từ API");
+      daKetNoiApi = true;
+      danhSachHoSo = [];
+      if (badgeEl) {
+        badgeEl.className =
+          "hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200";
+        badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>API Backend: Đang kết nối (0 hồ sơ)</span>`;
+      }
     }
   } catch (err) {
     daKetNoiApi = false;

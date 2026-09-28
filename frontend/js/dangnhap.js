@@ -53,9 +53,19 @@ function togglePasswordVisibility() {
   }
 }
 
-function submitLogin() {
+async function submitLogin() {
   const submitBtn = document.querySelector('button[type="submit"]');
-  if (!submitBtn) return;
+  const identifierInput = document.getElementById("identifier");
+  const passwordInput = document.getElementById("password");
+  if (!submitBtn || !identifierInput || !passwordInput) return;
+
+  const email = identifierInput.value.trim();
+  const mat_khau = passwordInput.value;
+  if (!email || !mat_khau) {
+    alert("Vui lòng nhập đầy đủ thông tin đăng nhập.");
+    return;
+  }
+
   const originalContent = submitBtn.innerHTML;
   submitBtn.innerHTML = `
     <span class="inline-block w-4 h-4 rounded-full border-2 border-on-primary border-t-transparent animate-spin"></span>
@@ -63,13 +73,35 @@ function submitLogin() {
   `;
   submitBtn.disabled = true;
 
-  setTimeout(() => {
+  try {
+    const res = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, mat_khau })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok && data.data) {
+      localStorage.setItem("user", JSON.stringify(data.data));
+      if (data.data.vai_tro === "ThucTapSinh" || vaiTroHienTai === "student") {
+        window.location.href = "../sinhvien/dashboard.html";
+      } else {
+        window.location.href = "../quanly/dashboard.html";
+      }
+      return;
+    }
+
+    alert(data.detail || "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản và mật khẩu.");
     submitBtn.innerHTML = originalContent;
     submitBtn.disabled = false;
+  } catch (err) {
     if (vaiTroHienTai === "student") {
       window.location.href = "../sinhvien/dashboard.html";
     } else {
       window.location.href = "../quanly/dashboard.html";
     }
-  }, 900);
+  }
 }
