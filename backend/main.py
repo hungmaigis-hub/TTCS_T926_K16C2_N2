@@ -1,6 +1,6 @@
 import os
 import uuid
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from pathlib import Path
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query
@@ -18,11 +18,13 @@ from schemas import (
     ProgramCreate,
     ProgramResponse,
     MyScheduleResponse,
+    ReportCreate,
+    ReportResponse,
 )
 
 # Thư mục database & models
 from database.session import get_db, Base, engine
-from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo, PhongBan, ChuongTrinhThucTap, HopDong, NhiemVu
+from database.models import HoSoThucTap, NguoiDung, TruongDaiHoc, TaiLieuHoSo, PhongBan, ChuongTrinhThucTap, HopDong, NhiemVu, BaoCaoTuan
 
 # Tự động tạo các bảng CSDL còn thiếu theo model nếu chưa tồn tại
 try:
@@ -549,4 +551,62 @@ def create_program(program_data: ProgramCreate, db: Session = Depends(get_db)):
         "message": "Tạo chương trình thực tập thành công",
         "data": new_program.to_dict()
     }
+
+
+# ==============================================================
+# API BÁO CÁO TUẦN (REPORTS)
+# ==============================================================
+
+@app.post("/api/v1/reports", status_code=201, response_model=ReportResponse)
+def create_weekly_report(report_data: ReportCreate, db: Session = Depends(get_db)):
+    """
+    Nộp báo cáo định kỳ tuần của thực tập sinh:
+    - Lưu mã hồ sơ (ma_ho_so), mã nhiệm vụ liên kết (ma_nhiem_vu tùy chọn).
+    - Lưu số tuần (tuan_so), nội dung công việc (noi_dung_cong_viec), kết quả đạt được (ket_qua_dat_duoc).
+    - Tự động gán thoi_gian_nop = datetime.now() tại thời điểm nộp.
+    """
+    # 1. Kiểm tra hồ sơ thực tập sinh có tồn tại trong hệ thống không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == report_data.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với mã ID: {report_data.ma_ho_so}"
+        )
+
+    # 2. Kiểm tra mã nhiệm vụ nếu có gửi lên
+    if report_data.ma_nhiem_vu is not None:
+        nhiem_vu = db.query(NhiemVu).filter(NhiemVu.ma_nhiem_vu == report_data.ma_nhiem_vu).first()
+        if not nhiem_vu:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Mã nhiệm vụ không tồn tại trong hệ thống: {report_data.ma_nhiem_vu}"
+            )
+        if nhiem_vu.ma_ho_so != report_data.ma_ho_so:
+            raise HTTPException(
+                status_code=400,
+                detail="Nhiệm vụ không thuộc về hồ sơ thực tập sinh này"
+            )
+
+    # 3. Khởi tạo đối tượng báo cáo tuần kèm gán thoi_gian_nop = datetime.now()
+    new_report = BaoCaoTuan(
+        ma_ho_so=report_data.ma_ho_so,
+        ma_nhiem_vu=report_data.ma_nhiem_vu,
+        tuan_so=report_data.tuan_so,
+        noi_dung_cong_viec=report_data.noi_dung_cong_viec,
+        ket_qua_dat_duoc=report_data.ket_qua_dat_duoc,
+        thoi_gian_nop=datetime.now()
+    )
+
+    # 4. Lưu vào CSDL
+    db.add(new_report)
+    db.commit()
+    db.refresh(new_report)
+
+    # 5. Trả về phản hồi thành công (HTTP 201 Created)
+    return {
+        "status_code": 201,
+        "message": "Nộp báo cáo tuần thành công",
+        "data": new_report.to_dict()
+    }
+
 
