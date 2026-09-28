@@ -9,3 +9,11 @@ __pycache__/
 # Thư mục nháp cá nhân và các trang không dùng
 frontend/unused_html/
 scratch/
+
+# Test artifacts & SQLite
+*.sqlite
+.pytest_cache/
+
+# Uploaded files
+backend/uploads/*
+!backend/uploads/.gitkeep

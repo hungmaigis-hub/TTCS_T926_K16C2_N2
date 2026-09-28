@@ -198,3 +198,41 @@ def send_profile_approval_email(
 
     content = "\n".join(body_lines)
     return send_email_smtp(to_email=to_email, subject=subject, content=content)
+
+
+def send_contract_confirmed_email(
+    to_email: str,
+    intern_name: str,
+    contract_id: int,
+    sign_date: str,
+    internship_status: str = "DangThucTap",
+    note: Optional[str] = None
+) -> bool:
+    """
+    Gửi email thông báo ký hợp đồng thực tập thành công và kích hoạt trạng thái thực tập (chạy qua BackgroundTasks).
+    """
+    subject = f"[Xác nhận] Hợp đồng thực tập #{contract_id} đã ký kết thành công"
+    status_label = "Đang thực tập (Chính thức)" if internship_status == "DangThucTap" else internship_status
+
+    body_lines = [
+        f"Xin chào {intern_name},",
+        "",
+        f"Hợp đồng thực tập điện tử mã số #{contract_id} của bạn đã được xác nhận ký kết thành công.",
+        f"- Ngày ký: {sign_date}",
+        f"- Trạng thái thực tập hiện tại: {status_label}",
+    ]
+
+    if note and note.strip():
+        body_lines.append(f"- Ghi chú / Mã xác thực: {note.strip()}")
+
+    body_lines.extend([
+        "",
+        "Chúc bạn có một kỳ thực tập hiệu quả, tích lũy được nhiều kinh nghiệm thực tiễn!",
+        "Vui lòng đăng nhập hệ thống để xem chi tiết hợp đồng và phân công nhiệm vụ từ Mentor.",
+        "",
+        "Trân trọng,",
+        "Ban Quản lý Chương trình Thực tập"
+    ])
+
+    content = "\n".join(body_lines)
+    return send_email_smtp(to_email=to_email, subject=subject, content=content)

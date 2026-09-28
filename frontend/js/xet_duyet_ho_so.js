@@ -318,13 +318,13 @@ async function duyetHoSo(maHoSo, maTaiLieu) {
 
   try {
     const phanHoi = await fetch(
-      `${duongDanApi}/documents/${maTaiLieu || maHoSo}/status`,
+      `${duongDanApi}/interns/${maHoSo}/approval`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           trang_thai_duyet: "DaDuyet",
-          ghi_chu: "Hồ sơ và tài liệu đạt tiêu chuẩn phê duyệt.",
+          ghi_chu: "Hồ sơ đạt tiêu chuẩn phê duyệt.",
         }),
       },
     );
@@ -405,7 +405,7 @@ async function xacNhanTuChoiHoSo() {
 
   try {
     const phanHoi = await fetch(
-      `${duongDanApi}/documents/${dangChonMaTaiLieu}/status`,
+      `${duongDanApi}/interns/${dangChonMa}/approval`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

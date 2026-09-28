@@ -4,6 +4,71 @@ from datetime import date
 import re
 
 # ==============================================================
+# SCHEMA CHO REQUEST TẠO MỚI HỒ SƠ THỰC TẬP SINH (POST)
+# ==============================================================
+class InternCreate(BaseModel):
+    # Thông tin tài khoản sinh viên (bảng NGUOI_DUNG)
+    ho_ten: str = Field(..., min_length=1, max_length=100, description="Họ và tên sinh viên")
+    email: str = Field(..., min_length=1, max_length=100, description="Địa chỉ email")
+    so_dien_thoai: Optional[str] = Field(default=None, description="Số điện thoại liên lạc")
+    
+    # Thông tin hồ sơ thực tập (bảng HO_SO_THUC_TAP)
+    chuyen_nganh: Optional[str] = Field(default=None, max_length=100, description="Chuyên ngành đào tạo")
+    ma_truong: Optional[int] = Field(default=None, description="Mã trường đại học")
+    ma_chuong_trinh: Optional[int] = Field(default=None, description="Mã chương trình thực tập")
+    ma_mentor: Optional[int] = Field(default=None, description="Mã mentor hướng dẫn")
+    trang_thai_xet_duyet: Optional[str] = Field(default="ChoDuyet", description="Trạng thái duyệt: ChoDuyet, DaDuyet, TuChoi")
+    trang_thai_thuc_tap: Optional[str] = Field(default="DangThucTap", description="Trạng thái thực tập: DangThucTap, HoanThanh, ThoiHoc")
+
+    @field_validator('ho_ten')
+    def validate_ho_ten(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Họ tên không được để trống hoặc chỉ chứa khoảng trắng")
+        if not re.match(r"^[a-zA-Z\s\u00C0-\u1EF9]+$", cleaned):
+            raise ValueError("Họ tên không hợp lệ (chỉ được chứa chữ cái)")
+        return cleaned
+
+    @field_validator('email')
+    def validate_email(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Email không được để trống hoặc chỉ chứa khoảng trắng")
+        if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", cleaned):
+            raise ValueError("Email không đúng định dạng hợp lệ")
+        return cleaned
+
+    @field_validator('so_dien_thoai')
+    def validate_so_dien_thoai(cls, value: Optional[str]):
+        if not value or not value.strip():
+            return None
+        cleaned = value.strip()
+        if not re.match(r"^(0|\+84)[0-9]{9}$|^[0-9]{10}$", cleaned):
+            raise ValueError("Số điện thoại không hợp lệ (phải gồm 10 chữ số)")
+        return cleaned
+
+    @field_validator('trang_thai_xet_duyet')
+    def validate_trang_thai_xet_duyet(cls, value: Optional[str]):
+        if value is None:
+            return "ChoDuyet"
+        cleaned = value.strip()
+        valid = ["ChoDuyet", "DaDuyet", "TuChoi"]
+        if cleaned not in valid:
+            raise ValueError(f"Trạng thái xét duyệt không hợp lệ. Chỉ chấp nhận: {', '.join(valid)}")
+        return cleaned
+
+    @field_validator('trang_thai_thuc_tap')
+    def validate_trang_thai_thuc_tap(cls, value: Optional[str]):
+        if value is None:
+            return "DangThucTap"
+        cleaned = value.strip()
+        valid = ["DangThucTap", "HoanThanh", "ThoiHoc"]
+        if cleaned not in valid:
+            raise ValueError(f"Trạng thái thực tập không hợp lệ. Chỉ chấp nhận: {', '.join(valid)}")
+        return cleaned
+
+
+# ==============================================================
 # SCHEMA CHO REQUEST CẬP NHẬT THÔNG TIN HỒ SƠ THỰC TẬP SINH (PUT)
 # ==============================================================
 class InternUpdate(BaseModel):
@@ -49,6 +114,83 @@ class InternUpdate(BaseModel):
 
 
 # ==============================================================
+# SCHEMA CHO REQUEST CẬP NHẬT TRẠNG THÁI DUYỆT HỒ SƠ (PATCH)
+# ==============================================================
+class InternApprovalUpdate(BaseModel):
+    """Schema cập nhật trạng thái xét duyệt hồ sơ thực tập sinh (PATCH)"""
+    trang_thai_xet_duyet: Optional[str] = Field(default=None, description="Trạng thái: ChoDuyet, DaDuyet, TuChoi")
+    trang_thai_duyet: Optional[str] = Field(default=None, description="Alias cho trang_thai_xet_duyet")
+    ghi_chu: Optional[str] = Field(default=None, max_length=500, description="Ghi chú / nhận xét hoặc lý do từ chối")
+
+    @field_validator('trang_thai_xet_duyet', 'trang_thai_duyet')
+    def validate_status(cls, value: Optional[str]):
+        if value is None:
+            return None
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Trạng thái xét duyệt không được để trống hoặc chỉ chứa khoảng trắng")
+        valid_statuses = ["ChoDuyet", "DaDuyet", "TuChoi"]
+        if cleaned not in valid_statuses:
+            raise ValueError(f"Trạng thái không hợp lệ. Chỉ chấp nhận một trong các giá trị: {', '.join(valid_statuses)}")
+        return cleaned
+
+    @field_validator('ghi_chu')
+    def validate_ghi_chu(cls, value: Optional[str]):
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned if cleaned else None
+
+    def get_status(self) -> str:
+        status = self.trang_thai_xet_duyet or self.trang_thai_duyet
+        if not status:
+            raise ValueError("Vui lòng cung cấp 'trang_thai_duyet' hoặc 'trang_thai_xet_duyet'")
+        return status
+
+
+# ==============================================================
+# SCHEMA CHO REQUEST XÁC NHẬN KÝ HỢP ĐỒNG (PATCH)
+# ==============================================================
+class ContractConfirmRequest(BaseModel):
+    """Schema cho request xác nhận ký hợp đồng điện tử (PATCH)"""
+    trang_thai: Optional[str] = Field(default="DaXacNhan", description="Trạng thái hợp đồng: DaXacNhan hoặc ChuaXacNhan")
+    trang_thai_thuc_tap: Optional[str] = Field(default="DangThucTap", description="Trạng thái thực tập: ChuaThucTap, DangThucTap, HoanThanh, ThoiHoc")
+    ngay_ky: Optional[date] = Field(default=None, description="Ngày ký (mặc định hôm nay nếu để trống)")
+    ghi_chu: Optional[str] = Field(default=None, max_length=500, description="Ghi chú xác nhận / mã OTP chữ ký")
+
+    @field_validator('trang_thai')
+    def validate_trang_thai(cls, value: Optional[str]):
+        if value is None:
+            return "DaXacNhan"
+        cleaned = value.strip()
+        if not cleaned:
+            return "DaXacNhan"
+        valid_statuses = ["ChuaXacNhan", "DaXacNhan"]
+        if cleaned not in valid_statuses:
+            raise ValueError(f"Trạng thái hợp đồng không hợp lệ. Chỉ chấp nhận: {', '.join(valid_statuses)}")
+        return cleaned
+
+    @field_validator('trang_thai_thuc_tap')
+    def validate_trang_thai_thuc_tap(cls, value: Optional[str]):
+        if value is None:
+            return "DangThucTap"
+        cleaned = value.strip()
+        if not cleaned:
+            return "DangThucTap"
+        valid_statuses = ["ChuaThucTap", "DangThucTap", "HoanThanh", "ThoiHoc"]
+        if cleaned not in valid_statuses:
+            raise ValueError(f"Trạng thái thực tập không hợp lệ. Chỉ chấp nhận: {', '.join(valid_statuses)}")
+        return cleaned
+
+    @field_validator('ghi_chu')
+    def validate_ghi_chu(cls, value: Optional[str]):
+        if value is None:
+            return None
+        cleaned = value.strip()
+        return cleaned if cleaned else None
+
+
+# ==============================================================
 # SCHEMA CHO RESPONSE CHI TIẾT THỰC TẬP SINH (GET)
 # ==============================================================
 class InternDetailData(BaseModel):
@@ -71,6 +213,12 @@ class InternDetailData(BaseModel):
 
 class InternResponse(BaseModel):
     status_code: int = 200
+    message: str
+    data: Optional[InternDetailData] = None
+
+
+class InternCreateResponse(BaseModel):
+    status_code: int = 201
     message: str
     data: Optional[InternDetailData] = None
 
@@ -114,6 +262,11 @@ class DocumentListResponse(BaseModel):
     message: str
     data: List[DocumentItem]
 
+
+class DocumentUploadResponse(BaseModel):
+    status_code: int = 201
+    message: str
+    data: DocumentItem
 
 # ==============================================================
 # SCHEMAS CHO CHƯƠNG TRÌNH THỰC TẬP (PROGRAMS API)
@@ -161,4 +314,3 @@ class ProgramResponse(BaseModel):
     status_code: int = 201
     message: str
     data: Optional[ProgramDetailData] = None
-
