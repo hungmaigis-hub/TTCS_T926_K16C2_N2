@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tra cứu Tuyển sinh Đại học & Ngành đào tạo</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header & Hero Section -->
+  <header class="app-header">
+    <div class="container header-container">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div>
+          <h1>Cổng Tra Cứu Tuyển Sinh Đại Học</h1>
+          <p class="subtitle">Tìm kiếm thông tin ngành học, điểm chuẩn & chỉ tiêu xét tuyển các trường đại học</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge info-badge"><i class="fa-solid fa-clock-rotate-left"></i> Dữ liệu mới nhất 2024 - 2025</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container main-content">
+
+    <!-- Filter & Search Card -->
+    <section class="card filter-card">
+      <div class="card-header">
+        <h2><i class="fa-solid fa-sliders"></i> Bộ lọc & Tìm kiếm thông minh</h2>
+        <button id="resetBtn" class="btn btn-outline" title="Khôi phục mặc định">
+          <i class="fa-solid fa-rotate-right"></i> Đặt lại bộ lọc
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-wrapper">
+        <div class="search-input-group">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Tìm theo tên trường, tên ngành, mã ngành, mã trường (vd: Bách Khoa, CNTT, 7480101...)" 
+            autocomplete="off"
+          />
+          <button id="clearSearchBtn" class="clear-btn" style="display: none;" title="Xóa nội dung tìm kiếm">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Select Dropdown Filters Grid -->
+      <div class="filters-grid">
+        <!-- Filter theo Trường -->
+        <div class="filter-group">
+          <label for="schoolSelect">
+            <i class="fa-solid fa-building-columns"></i> Chọn trường đại học:
+          </label>
+          <div class="select-wrapper">
+            <select id="schoolSelect">
+              <option value="">-- Tất cả các trường --</option>
+              <!-- Options được render động qua JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Filter theo Ngành / Nhóm ngành -->
+        <div class="filter-group">
+          <label for="categorySelect">
+            <i class="fa-solid fa-book-bookmark"></i> Chọn nhóm ngành đào tạo:
+          </label>
+          <div class="select-wrapper">
+            <select id="categorySelect">
+              <option value="">-- Tất cả nhóm ngành --</option>
+              <!-- Options được render động qua JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Filter theo Tổ hợp xét tuyển -->
+        <div class="filter-group">
+          <label for="subjectSelect">
+            <i class="fa-solid fa-layer-group"></i> Tổ hợp môn (Khối):
+          </label>
+          <div class="select-wrapper">
+            <select id="subjectSelect">
+              <option value="">-- Tất cả các khối --</option>
+              <option value="A00">A00 (Toán, Lý, Hóa)</option>
+              <option value="A01">A01 (Toán, Lý, Anh)</option>
+              <option value="B00">B00 (Toán, Hóa, Sinh)</option>
+              <option value="D01">D01 (Toán, Văn, Anh)</option>
+              <option value="D07">D07 (Toán, Hóa, Anh)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filter Sắp xếp điểm chuẩn -->
+        <div class="filter-group">
+          <label for="sortSelect">
+            <i class="fa-solid fa-arrow-down-wide-short"></i> Sắp xếp kết quả:
+          </label>
+          <div class="select-wrapper">
+            <select id="sortSelect">
+              <option value="default">Mặc định</option>
+              <option value="score-desc">Điểm chuẩn: Cao đến Thấp</option>
+              <option value="score-asc">Điểm chuẩn: Thấp đến Cao</option>
+              <option value="school-az">Tên trường: A - Z</option>
+              <option value="major-az">Tên ngành: A - Z</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Status Bar -->
+    <div class="results-meta">
+      <div class="count-display">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Kết quả tìm kiếm: <strong id="resultCount">0</strong> ngành đào tạo</span>
+      </div>
+      <div class="filter-tags" id="activeFilterTags">
+        <!-- Render các tag đang lọc tích cực -->
+      </div>
+    </div>
+
+    <!-- Table Card Container -->
+    <section class="card table-card">
+      <div class="table-responsive">
+        <table class="data-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th style="width: 55px;" class="text-center">STT</th>
+              <th style="width: 250px;">Trường Đại học</th>
+              <th>Ngành đào tạo</th>
+              <th style="width: 170px;">Nhóm ngành</th>
+              <th style="width: 140px;" class="text-center">Tổ hợp môn</th>
+              <th style="width: 130px;" class="text-center">Điểm chuẩn</th>
+              <th style="width: 170px;">Học phí tham khảo</th>
+              <th style="width: 110px;" class="text-center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Render động bằng JavaScript -->
+          </tbody>
+        </table>
+
+        <!-- Empty State (Hiển thị khi không tìm thấy kết quả) -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <div class="empty-icon">
+            <i class="fa-regular fa-face-frown-open"></i>
+          </div>
+          <h3>Không tìm thấy kết quả phù hợp!</h3>
+          <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc chọn lại các tiêu chí lọc trong thẻ dropdown.</p>
+          <button id="emptyResetBtn" class="btn btn-primary">
+            <i class="fa-solid fa-filter-circle-xmark"></i> Xóa tất cả bộ lọc
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Detail Modal Popup -->
+  <div id="detailModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="school-code-badge" id="modalSchoolCode">BKA</span>
+          <h3 id="modalSchoolName">Đại học Bách Khoa Hà Nội</h3>
+        </div>
+        <button id="closeModalBtn" class="modal-close-btn" title="Đóng">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Dynamic Modal Content -->
+      </div>
+      <div class="modal-footer">
+        <a id="modalWebsiteLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem website tuyển sinh
+        </a>
+        <button id="modalDismissBtn" class="btn btn-outline">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
