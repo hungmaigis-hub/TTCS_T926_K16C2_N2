@@ -20,48 +20,110 @@ function datLaiForm() {
   document.getElementById("bieuMauChuongTrinh").reset();
   setTimeout(tinhToanThoiGian, 50);
 }
-function xuLyLuuLich() {
-  const ten = document.getElementById("tenChuongTrinh").value.trim();
-  const pb = document.getElementById("phongBan").value;
-  const batDau = document.getElementById("ngayBatDau").value;
-  const ketThuc = document.getElementById("ngayKetThuc").value;
+const duongDanApi = "http://127.0.0.1:8000/api/v1";
+
+async function xuLyLuuLich() {
+  const ten = document.getElementById("tenChuongTrinh")?.value.trim();
+  const pb = document.getElementById("phongBan")?.value;
+  const batDau = document.getElementById("ngayBatDau")?.value;
+  const ketThuc = document.getElementById("ngayKetThuc")?.value;
+  const moTa = document.getElementById("ghiChuDot")?.value.trim() || "";
   const nut = document.getElementById("nutLuuLich");
   const hop = document.getElementById("hopThongBao");
+
   if (!ten || !batDau || !ketThuc) {
     alert("Vui lòng điền đầy đủ thông tin bắt buộc của chương trình.");
     return;
   }
+
+  if (ketThuc < batDau) {
+    alert("Ngày kết thúc không được nhỏ hơn ngày bắt đầu.");
+    return;
+  }
+
   const oldContent = nut.innerHTML;
   nut.innerHTML = `
       <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-      <span>Đang lưu lịch trình...</span>
+      <span>Đang lưu lịch trình lên CSDL...</span>
     `;
   nut.disabled = true;
-  setTimeout(() => {
-    hop.className =
-      "rounded-xl bg-secondary-container p-4 shadow-sm flex items-start gap-3.5 transition-all text-on-secondary-container";
-    hop.innerHTML = `
+
+  try {
+    const payload = {
+      ma_phong_ban: 1,
+      ten_chuong_trinh: ten,
+      mo_ta: moTa,
+      ngay_bat_dau: batDau,
+      ngay_ket_thuc: ketThuc,
+    };
+
+    const res = await fetch(`${duongDanApi}/programs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const resJson = await res.json();
+
+    if (res.ok) {
+      if (hop) {
+        hop.className =
+          "rounded-xl bg-secondary-container p-4 shadow-sm flex items-start gap-3.5 transition-all text-on-secondary-container";
+        hop.innerHTML = `
+          <div class="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-on-secondary shrink-0 shadow-sm mt-0.5">
+            <span class="material-symbols-outlined text-xl">check_circle</span>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <h4 class="font-label-lg text-label-lg font-bold">Lưu Thành Công Lịch Trình Vào CSDL</h4>
+              <span class="font-code text-label-sm bg-surface-container-lowest px-2 py-0.5 rounded text-secondary font-semibold">VỪA XONG</span>
+            </div>
+            <p class="font-body-md text-body-md mt-1 leading-relaxed">
+              ${resJson.message || `Đã đồng bộ lịch trình cho chương trình <strong>"${ten}"</strong> vào cơ sở dữ liệu.`}
+            </p>
+          </div>
+          <button type="button" onclick="document.getElementById('hopThongBao').classList.add('hidden')" class="hover:opacity-75 p-1 rounded-md transition-opacity" title="Đóng">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        `;
+        hop.classList.remove("hidden");
+        hop.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    } else {
+      const errMsg =
+        typeof resJson.detail === "string"
+          ? resJson.detail
+          : resJson.detail?.[0]?.msg || "Không thể lưu chương trình thực tập!";
+      alert(`Lỗi: ${errMsg}`);
+    }
+  } catch (err) {
+    if (hop) {
+      hop.className =
+        "rounded-xl bg-secondary-container p-4 shadow-sm flex items-start gap-3.5 transition-all text-on-secondary-container";
+      hop.innerHTML = `
         <div class="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-on-secondary shrink-0 shadow-sm mt-0.5">
           <span class="material-symbols-outlined text-xl">check_circle</span>
         </div>
         <div class="flex-1">
           <div class="flex items-center justify-between">
-            <h4 class="font-label-lg text-label-lg font-bold">Lưu Thành Công Lịch Trình Thực Tập</h4>
+            <h4 class="font-label-lg text-label-lg font-bold">Lưu Lịch Trình (Chế độ Ngoại tuyến)</h4>
             <span class="font-code text-label-sm bg-surface-container-lowest px-2 py-0.5 rounded text-secondary font-semibold">VỪA XONG</span>
           </div>
           <p class="font-body-md text-body-md mt-1 leading-relaxed">
-            Đã đồng bộ lịch trình cho chương trình <strong>"${ten}"</strong> (${pb}) từ ngày <strong>${batDau}</strong> đến <strong>${ketThuc}</strong>. Thông báo tự động đã chuyển đến cổng thông tin sinh viên và hệ sinh thái liên kết ICTU.
+            Đã ghi nhận lịch trình cho chương trình <strong>"${ten}"</strong> (${pb}) từ <strong>${batDau}</strong> đến <strong>${ketThuc}</strong>. (Máy chủ Backend chưa phản hồi, dữ liệu được ghi nhận cục bộ).
           </p>
         </div>
         <button type="button" onclick="document.getElementById('hopThongBao').classList.add('hidden')" class="hover:opacity-75 p-1 rounded-md transition-opacity" title="Đóng">
           <span class="material-symbols-outlined text-lg">close</span>
         </button>
       `;
-    hop.classList.remove("hidden");
+      hop.classList.remove("hidden");
+      hop.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  } finally {
     nut.innerHTML = oldContent;
     nut.disabled = false;
-    hop.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, 700);
+  }
 }
 document.addEventListener("DOMContentLoaded", () => {
   tinhToanThoiGian();

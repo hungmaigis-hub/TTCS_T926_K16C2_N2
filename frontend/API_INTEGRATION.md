@@ -157,6 +157,91 @@ Tài liệu đặc tả các giao thức kết nối, định dạng dữ liệu
 
 ---
 
+### 5. Tạo mới chương trình / Lịch thực tập
+- **Method**: `POST`
+- **Endpoint**: `/api/v1/programs`
+- **Request Body**:
+```json
+{
+  "ma_phong_ban": 1,
+  "ten_chuong_trinh": "Kỳ thực tập K16 Công nghệ Thông tin đợt 2",
+  "mo_ta": "Chương trình thực tập chuyên môn tại doanh nghiệp",
+  "ngay_bat_dau": "2024-11-01",
+  "ngay_ket_thuc": "2025-01-31"
+}
+```
+- **Tệp Frontend sử dụng**: `frontend/js/lich_thuc_tap.js`
+
+---
+
+### 6. Xem lịch trình & nhiệm vụ thực tập sinh
+- **Method**: `GET`
+- **Endpoint**: `/api/v1/interns/my-schedule`
+- **Tham số Query**:
+  - `ho_so_id` *(int)*: Mã hồ sơ thực tập
+- **Tệp Frontend sử dụng**: `frontend/js/nhiem_vu.js`
+- **Response mẫu (HTTP 200)**:
+```json
+{
+  "status_code": 200,
+  "message": "Lấy lịch trình và nhiệm vụ thực tập sinh thành công",
+  "data": {
+    "ho_ten": "Nguyễn Văn A",
+    "ma_ho_so": 1,
+    "ten_chuong_trinh": "Thực tập sinh Khóa Mùa Thu 2026",
+    "danh_sach_nhiem_vu": [
+      {
+        "ma_nhiem_vu": 1,
+        "ten_nhiem_vu": "Nghiên cứu kiến trúc hệ thống",
+        "mo_ta": "Đọc tài liệu và viết báo cáo phân tích",
+        "tien_do_phantram": 85
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 7. Nộp báo cáo tuần thực tập
+- **Method**: `POST`
+- **Endpoint**: `/api/v1/reports`
+- **Request Body**:
+```json
+{
+  "ma_ho_so": 1,
+  "tuan_so": 6,
+  "noi_dung_cong_viec": "Hoàn thành module tích hợp API và sửa lỗi giao diện",
+  "ket_qua_dat_duoc": "Mã nguồn đã merge và kiểm thử thành công"
+}
+```
+- **Tệp Frontend sử dụng**: `frontend/js/nhiem_vu.js`
+
+---
+
+### 8. Ký kết hợp đồng điện tử
+- **Method**: `PATCH`
+- **Endpoint**: `/api/v1/contracts/{id}/confirm`
+- **Request Body**:
+```json
+{
+  "trang_thai": "DaXacNhan",
+  "trang_thai_thuc_tap": "DangThucTap",
+  "ghi_chu": "Ký số điện tử OTP qua Cổng sinh viên"
+}
+```
+- **Tệp Frontend sử dụng**: `frontend/js/hop_dong.js`
+
+---
+
+### 9. Tải tài liệu đính kèm (CV, Đơn xin, Giấy giới thiệu)
+- **Method**: `POST`
+- **Endpoint**: `/api/v1/documents/upload`
+- **Content-Type**: `multipart/form-data`
+- **Tệp Frontend sử dụng**: `frontend/js/tai_tai_lieu.js`
+
+---
+
 ## 🛡️ Cơ chế Fallback và Xử lý Lỗi
 
 Phía Frontend cài đặt lớp xử lý an toàn tự động:
