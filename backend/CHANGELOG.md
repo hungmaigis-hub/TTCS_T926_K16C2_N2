@@ -4,6 +4,44 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.12.0] - 2026-09-29
+> **Người thực hiện**: Dương Đình Hoàng  
+> **Nhiệm vụ**: Backend (FastAPI): Viết endpoint `GET /api/v1/evaluations/summary` tổng hợp dữ liệu từ `ho_so_thuc_tap`, `danh_gia`, `truong_dai_hoc`, đồng thời hỗ trợ xuất dữ liệu ra file PDF/Excel.
+
+### Đã hoàn thành (Added & Enhanced)
+- **Cơ sở dữ liệu & Model ORM Đánh giá năng lực (`DanhGia`)**:
+  - Bổ sung định nghĩa bảng `danh_gia` (Mục 2.10 `DATABASE_DESIGN.md`) và nạp dữ liệu mẫu vào file `script/database/init_db.sql`.
+  - Thực thi đồng bộ tạo bảng và nạp 4 bản ghi seed data vào MySQL thực tế (`intern_management`) thông qua `script/init_db.py`.
+  - Xây dựng model SQLAlchemy `backend/database/models/danh_gia.py` đầy đủ thuộc tính: `ma_danh_gia`, `ma_ho_so`, `ma_nguoi_danh_gia`, `loai_danh_gia`, `diem_ky_nang`, `diem_thai_do`, `nhan_xet_chi_tiet`, `de_xuat_tuyen_chinh_thuc`.
+  - Tích hợp các thuộc tính tính toán tự động: `diem_trung_binh`, `xep_loai` (Xuất sắc, Giỏi, Khá, Trung bình, Yếu) và quan hệ ORM hai chiều với `HoSoThucTap` (`danh_sach_danh_gia`).
+- **Pydantic Schemas tổng hợp đánh giá (`backend/schemas.py`)**:
+  - `GradeDistribution`: Phân bổ số lượng theo xếp loại.
+  - `UniversityEvaluationStat`: Thống kê số lượng và điểm trung bình theo trường đại học.
+  - `EvaluationSummaryStats`: Chỉ số KPI tổng thể (tổng SV, tổng ĐG, điểm kỹ năng TB, điểm thái độ TB, điểm tổng kết TB, tỷ lệ đề xuất tuyển dụng chính thức).
+  - `EvaluationDetailItem`: Chi tiết từng bản đánh giá kết hợp thông tin sinh viên và trường học.
+  - `EvaluationSummaryResponse`: Response chuẩn trả về cho JSON API.
+- **Module Xuất File Đa định dạng (`backend/services/export_service.py`)**:
+  - `export_evaluations_to_excel`: Xuất file Excel (.xlsx) 2 sheet chuyên nghiệp gồm Sheet KPI/Phân bổ/Thống kê trường và Sheet Chi tiết từng sinh viên; định dạng font, màu sắc header, border và tự động căn chỉnh độ rộng cột.
+  - `export_evaluations_to_pdf`: Xuất file PDF khổ A4 ngang (Landscape) bằng ReportLab; đăng ký font TrueType Unicode tiếng Việt (Arial) đảm bảo 100% hiển thị tiếng Việt có dấu chuẩn xác; layout 2 bảng KPI & phân loại xếp loại, bảng thống kê trường và bảng chi tiết thực tập sinh.
+- **Endpoint Tổng hợp Đánh giá (`GET /api/v1/evaluations/summary`)**:
+  - Hỗ trợ các bộ lọc tìm kiếm linh hoạt: `ma_truong`, `loai_danh_gia` (`GiuaKy`, `CuoiKy`), `trang_thai_thuc_tap`, `de_xuat_tuyen_chinh_thuc` (`true`/`false`), và tìm kiếm từ khóa `tu_khoa` (theo họ tên, email, chuyên ngành, tên trường).
+  - Hỗ trợ tham số `format`: `json` (mặc định), `excel`/`xlsx` (tải file .xlsx kèm header `Content-Disposition`), `pdf` (tải file .pdf).
+  - Hỗ trợ phân trang danh sách với `page` và `page_size` khi xem dạng JSON.
+- **Kiểm thử tự động (Unit Test)**:
+  - Cập nhật `tests/conftest.py` bổ sung seed data cho bảng `danh_gia`.
+  - Xây dựng bộ test mới `tests/test_evaluation_summary.py` gồm **25 test cases** bao phủ toàn diện:
+    - Test lấy dữ liệu JSON mặc định, độ chính xác của các chỉ số KPI tính toán.
+    - Test đầy đủ các trường của `items`.
+    - Test các bộ lọc độc lập và kết hợp (`ma_truong`, `loai_danh_gia`, `trang_thai_thuc_tap`, `de_xuat_tuyen_chinh_thuc`).
+    - Test tìm kiếm theo từ khóa (họ tên, email, chuyên ngành, trường, không khớp).
+    - Test phân trang: trang 1, trang 2, ngoài giới hạn, lỗi validation 422 khi `page <= 0` hoặc `page_size > 100`.
+    - Test xuất file Excel (`format=excel`, `format=xlsx`), kiểm tra header, tải và đọc cấu trúc openpyxl cả trường hợp có filter.
+    - Test xuất file PDF (`format=pdf`), kiểm tra Content-Type, magic byte `%PDF` cả trường hợp có filter.
+    - Test kiểm tra lỗi định dạng không hỗ trợ (`format=docx` -> 400 Bad Request).
+  - Toàn bộ **165/165 test cases** của hệ thống đều **PASS 100%**.
+
+---
+
 ## [1.11.0] - 2026-09-28
 
 ### Đã hoàn thành (Added & Enhanced)

@@ -418,3 +418,81 @@ class ReportResponse(BaseModel):
     data: Optional[ReportDetailData] = None
 
 
+# ==============================================================
+# SCHEMAS CHO ENDPOINT TỔNG HỢP ĐÁNH GIÁ (GET /api/v1/evaluations/summary)
+# ==============================================================
+
+class GradeDistribution(BaseModel):
+    """Phân bổ xếp loại đánh giá"""
+    XuatSac: int = 0
+    Gioi: int = 0
+    Kha: int = 0
+    TrungBinh: int = 0
+    Yeu: int = 0
+
+
+class UniversityEvaluationStat(BaseModel):
+    """Thống kê kết quả đánh giá theo từng trường đại học"""
+    ma_truong: Optional[int] = None
+    ten_truong: str
+    so_luong_danh_gia: int
+    diem_trung_binh: float
+
+
+class EvaluationSummaryStats(BaseModel):
+    """Tổng hợp chỉ số KPI toàn diện của đợt thực tập"""
+    tong_so_ho_so: int
+    tong_so_danh_gia: int
+    diem_ky_nang_tb: float
+    diem_thai_do_tb: float
+    diem_tong_ket_tb: float
+    so_luong_de_xuat_tuyen_dung: int
+    ty_le_de_xuat_tuyen_dung: float
+    phan_bo_xep_loai: GradeDistribution
+    thong_ke_theo_truong: List[UniversityEvaluationStat]
+
+
+class EvaluationDetailItem(BaseModel):
+    """Thông tin chi tiết một bản đánh giá kèm hồ sơ và trường đại học"""
+    ma_danh_gia: int
+    ma_ho_so: int
+    ho_ten: Optional[str] = None
+    email: Optional[str] = None
+    so_dien_thoai: Optional[str] = None
+    chuyen_nganh: Optional[str] = None
+    ma_truong: Optional[int] = None
+    ten_truong: Optional[str] = None
+    trang_thai_thuc_tap: Optional[str] = None
+    loai_danh_gia: str
+    diem_ky_nang: float
+    diem_thai_do: float
+    diem_trung_binh: float
+    xep_loai: str
+    nhan_xet_chi_tiet: Optional[str] = None
+    de_xuat_tuyen_chinh_thuc: bool
+    nguoi_danh_gia: Optional[str] = None
+
+
+class EvaluationPagination(BaseModel):
+    """Thông tin phân trang danh sách đánh giá"""
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+
+
+class EvaluationSummaryData(BaseModel):
+    """Cấu trúc dữ liệu trả về của Evaluation Summary"""
+    summary: EvaluationSummaryStats
+    items: List[EvaluationDetailItem]
+    pagination: EvaluationPagination
+
+
+class EvaluationSummaryResponse(BaseModel):
+    """Response chuẩn trả về cho endpoint GET /api/v1/evaluations/summary"""
+    status_code: int = 200
+    message: str = "Lấy dữ liệu tổng hợp đánh giá thành công"
+    data: EvaluationSummaryData
+
+
+

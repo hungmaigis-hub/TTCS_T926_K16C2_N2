@@ -7,6 +7,7 @@ from database.models.tai_lieu import TaiLieuHoSo
 from database.models.hop_dong import HopDong
 from database.models.nhiem_vu import NhiemVu
 from database.models.bao_cao_tuan import BaoCaoTuan
+from database.models.danh_gia import DanhGia
 
 __all__ = [
     "PhongBan",
@@ -18,4 +19,6 @@ __all__ = [
     "HopDong",
     "NhiemVu",
     "BaoCaoTuan",
+    "DanhGia",
 ]
+

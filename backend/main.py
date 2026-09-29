@@ -5,8 +5,10 @@ from pathlib import Path
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from schemas import (
     InternCreate,
@@ -22,6 +24,7 @@ from schemas import (
     MyScheduleResponse,
     ReportCreate,
     ReportResponse,
+    EvaluationSummaryResponse,
 )
 
 # Thư mục database & models
@@ -36,7 +39,10 @@ from database.models import (
     HopDong,
     NhiemVu,
     BaoCaoTuan,
+    DanhGia,
 )
+
+from services.export_service import export_evaluations_to_excel, export_evaluations_to_pdf
 
 # Tự động tạo các bảng CSDL còn thiếu theo model nếu chưa tồn tại
 try:
@@ -670,4 +676,218 @@ def create_weekly_report(report_data: ReportCreate, db: Session = Depends(get_db
         "message": "Nộp báo cáo tuần thành công",
         "data": new_report.to_dict()
     }
+
+
+# ==============================================================
+# API TỔNG HỢP KẾT QUẢ ĐÁNH GIÁ (EVALUATIONS SUMMARY)
+# ==============================================================
+
+@app.get("/api/v1/evaluations/summary")
+def get_evaluations_summary(
+    ma_truong: Optional[int] = Query(None, description="Lọc theo mã trường đại học"),
+    loai_danh_gia: Optional[str] = Query(None, description="Lọc theo đợt đánh giá (GiuaKy, CuoiKy)"),
+    trang_thai_thuc_tap: Optional[str] = Query(None, description="Lọc theo trạng thái thực tập (DangThucTap, HoanThanh, ThoiHoc)"),
+    de_xuat_tuyen_chinh_thuc: Optional[bool] = Query(None, description="Lọc theo đề xuất tuyển dụng (true/false)"),
+    tu_khoa: Optional[str] = Query(None, description="Tìm kiếm theo tên sinh viên, email, trường hoặc chuyên ngành"),
+    format: Optional[str] = Query("json", description="Định dạng dữ liệu trả về: json (mặc định), excel, pdf"),
+    page: int = Query(1, ge=1, description="Số trang khi xem dạng json"),
+    page_size: int = Query(50, ge=1, le=100, description="Số bản ghi mỗi trang khi xem dạng json"),
+    db: Session = Depends(get_db),
+):
+    """
+    Endpoint tổng hợp dữ liệu kết quả đánh giá thực tập sinh:
+    - Tổng hợp thông tin từ 3 bảng chính: ho_so_thuc_tap, danh_gia, truong_dai_hoc (kèm nguoi_dung).
+    - Hỗ trợ các bộ lọc linh hoạt: mã trường, đợt đánh giá, trạng thái thực tập, đề xuất tuyển dụng, tìm kiếm từ khóa.
+    - Cung cấp các chỉ số KPI thống kê: Điểm kỹ năng TB, điểm thái độ TB, điểm tổng kết TB, tỷ lệ đề xuất tuyển dụng, phân bổ xếp loại rèn luyện và thống kê theo từng trường đại học.
+    - Hỗ trợ xuất dữ liệu ra 3 định dạng: JSON API, Excel (.xlsx), hoặc PDF (.pdf).
+    """
+    # 1. Kiểm tra tham số format
+    fmt = format.strip().lower() if format else "json"
+    if fmt not in ["json", "excel", "xlsx", "pdf"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Định dạng xuất file không được hỗ trợ. Chỉ chấp nhận: json, excel, pdf"
+        )
+
+    # 2. Xây dựng câu truy vấn kết hợp các bảng dữ liệu
+    query = (
+        db.query(DanhGia, HoSoThucTap, TruongDaiHoc, NguoiDung)
+        .join(HoSoThucTap, DanhGia.ma_ho_so == HoSoThucTap.ma_ho_so)
+        .outerjoin(TruongDaiHoc, HoSoThucTap.ma_truong == TruongDaiHoc.ma_truong)
+        .outerjoin(NguoiDung, HoSoThucTap.ma_nguoi_dung == NguoiDung.ma_nguoi_dung)
+    )
+
+    # 3. Áp dụng các bộ lọc tìm kiếm
+    if ma_truong is not None:
+        query = query.filter(HoSoThucTap.ma_truong == ma_truong)
+
+    if loai_danh_gia and loai_danh_gia.strip():
+        query = query.filter(DanhGia.loai_danh_gia.ilike(f"%{loai_danh_gia.strip()}%"))
+
+    if trang_thai_thuc_tap and trang_thai_thuc_tap.strip():
+        query = query.filter(HoSoThucTap.trang_thai_thuc_tap.ilike(f"%{trang_thai_thuc_tap.strip()}%"))
+
+    if de_xuat_tuyen_chinh_thuc is not None:
+        query = query.filter(DanhGia.de_xuat_tuyen_chinh_thuc == de_xuat_tuyen_chinh_thuc)
+
+    if tu_khoa and tu_khoa.strip():
+        kw = f"%{tu_khoa.strip()}%"
+        query = query.filter(
+            or_(
+                NguoiDung.ho_ten.ilike(kw),
+                NguoiDung.email.ilike(kw),
+                HoSoThucTap.chuyen_nganh.ilike(kw),
+                TruongDaiHoc.ten_truong.ilike(kw),
+            )
+        )
+
+    # 4. Thực thi truy vấn lấy toàn bộ kết quả phù hợp sắp xếp theo mã đánh giá giảm dần
+    records = query.order_by(DanhGia.ma_danh_gia.desc()).all()
+
+    # 5. Xây dựng danh sách chi tiết các đánh giá
+    all_items = []
+    unique_ho_so_ids = set()
+    total_evaluations = len(records)
+    total_ky_nang = 0.0
+    total_thai_do = 0.0
+    total_tong_ket = 0.0
+    so_luong_de_xuat = 0
+
+    phan_bo_xep_loai = {
+        "XuatSac": 0,
+        "Gioi": 0,
+        "Kha": 0,
+        "TrungBinh": 0,
+        "Yeu": 0
+    }
+
+    # Thống kê điểm và số lượng theo trường
+    truong_stats_map = {} # ma_truong: {"ten_truong": str, "scores": []}
+
+    for dg, hs, tr, nd in records:
+        unique_ho_so_ids.add(hs.ma_ho_so)
+        total_ky_nang += dg.diem_ky_nang
+        total_thai_do += dg.diem_thai_do
+        dtb = dg.diem_trung_binh
+        total_tong_ket += dtb
+
+        if dg.de_xuat_tuyen_chinh_thuc:
+            so_luong_de_xuat += 1
+
+        xl = dg.xep_loai
+        if xl in phan_bo_xep_loai:
+            phan_bo_xep_loai[xl] += 1
+
+        t_id = tr.ma_truong if tr else None
+        t_name = tr.ten_truong if tr else "Chưa xác định"
+        if t_id not in truong_stats_map:
+            truong_stats_map[t_id] = {
+                "ma_truong": t_id,
+                "ten_truong": t_name,
+                "scores": []
+            }
+        truong_stats_map[t_id]["scores"].append(dtb)
+
+        # Lấy tên người đánh giá
+        nguoi_dg_name = dg.nguoi_danh_gia.ho_ten if dg.nguoi_danh_gia else None
+
+        item_dict = {
+            "ma_danh_gia": dg.ma_danh_gia,
+            "ma_ho_so": hs.ma_ho_so,
+            "ho_ten": nd.ho_ten if nd else None,
+            "email": nd.email if nd else None,
+            "so_dien_thoai": nd.so_dien_thoai if nd else None,
+            "chuyen_nganh": hs.chuyen_nganh,
+            "ma_truong": tr.ma_truong if tr else None,
+            "ten_truong": tr.ten_truong if tr else None,
+            "trang_thai_thuc_tap": hs.trang_thai_thuc_tap,
+            "loai_danh_gia": dg.loai_danh_gia,
+            "diem_ky_nang": dg.diem_ky_nang,
+            "diem_thai_do": dg.diem_thai_do,
+            "diem_trung_binh": dtb,
+            "xep_loai": xl,
+            "nhan_xet_chi_tiet": dg.nhan_xet_chi_tiet,
+            "de_xuat_tuyen_chinh_thuc": dg.de_xuat_tuyen_chinh_thuc,
+            "nguoi_danh_gia": nguoi_dg_name,
+        }
+        all_items.append(item_dict)
+
+    # 6. Tính toán các chỉ số thống kê KPI
+    diem_ky_nang_tb = round(total_ky_nang / total_evaluations, 2) if total_evaluations else 0.0
+    diem_thai_do_tb = round(total_thai_do / total_evaluations, 2) if total_evaluations else 0.0
+    diem_tong_ket_tb = round(total_tong_ket / total_evaluations, 2) if total_evaluations else 0.0
+    ty_le_de_xuat = round((so_luong_de_xuat / total_evaluations) * 100.0, 2) if total_evaluations else 0.0
+
+    thong_ke_theo_truong = []
+    for t_id, data in truong_stats_map.items():
+        scs = data["scores"]
+        avg_s = round(sum(scs) / len(scs), 2) if scs else 0.0
+        thong_ke_theo_truong.append({
+            "ma_truong": data["ma_truong"],
+            "ten_truong": data["ten_truong"],
+            "so_luong_danh_gia": len(scs),
+            "diem_trung_binh": avg_s
+        })
+    thong_ke_theo_truong.sort(key=lambda x: x["so_luong_danh_gia"], reverse=True)
+
+    summary_data = {
+        "tong_so_ho_so": len(unique_ho_so_ids),
+        "tong_so_danh_gia": total_evaluations,
+        "diem_ky_nang_tb": diem_ky_nang_tb,
+        "diem_thai_do_tb": diem_thai_do_tb,
+        "diem_tong_ket_tb": diem_tong_ket_tb,
+        "so_luong_de_xuat_tuyen_dung": so_luong_de_xuat,
+        "ty_le_de_xuat_tuyen_dung": ty_le_de_xuat,
+        "phan_bo_xep_loai": phan_bo_xep_loai,
+        "thong_ke_theo_truong": thong_ke_theo_truong,
+    }
+
+    # 7. Xử lý xuất file theo format
+    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    if fmt in ["excel", "xlsx"]:
+        excel_stream = export_evaluations_to_excel(summary_data, all_items)
+        filename = f"Bao_cao_tong_hop_danh_gia_{timestamp_str}.xlsx"
+        return StreamingResponse(
+            excel_stream,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
+
+    if fmt == "pdf":
+        pdf_stream = export_evaluations_to_pdf(summary_data, all_items)
+        filename = f"Bao_cao_tong_hop_danh_gia_{timestamp_str}.pdf"
+        return StreamingResponse(
+            pdf_stream,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
+
+    # 8. Mặc định trả về JSON response kèm phân trang
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    paginated_items = all_items[start_idx:end_idx]
+    total_pages = (total_evaluations + page_size - 1) // page_size if total_evaluations > 0 else 0
+
+    return {
+        "status_code": 200,
+        "message": "Lấy dữ liệu tổng hợp đánh giá thành công",
+        "data": {
+            "summary": summary_data,
+            "items": paginated_items,
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total_items": total_evaluations,
+                "total_pages": total_pages,
+            }
+        }
+    }
+
 
