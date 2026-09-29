@@ -1,3 +1,4 @@
+from datetime import date
 from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from database.session import Base
@@ -10,8 +11,8 @@ class NhiemVu(Base):
     ten_nhiem_vu = Column(String(150), nullable=False)
     mo_ta = Column(Text, nullable=True)
     han_hoan_thanh = Column(Date, nullable=False)
-    tien_do_phantram = Column(Integer, default=0)
-    trang_thai = Column(String(50), default="Moi")  # Các trạng thái: Moi, DangThucHien, HoanThanh
+    tien_do_phantram = Column(Integer, default=0, nullable=False)
+    trang_thai = Column(String(50), default="Chưa bắt đầu", nullable=False)
 
     # Thiết lập quan hệ ngược về hồ sơ thực tập
     ho_so = relationship("HoSoThucTap", back_populates="danh_sach_nhiem_vu")
