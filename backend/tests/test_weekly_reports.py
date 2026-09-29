@@ -21,7 +21,12 @@ client = TestClient(app)
 def cleanup_created_reports():
     """Dọn dẹp các báo cáo được tạo trong quá trình test để đảm bảo tính độc lập"""
     yield
-    db = SessionLocal()
+    try:
+        from tests.conftest import MYSQL_AVAILABLE, TestSessionLocal
+        Session = SessionLocal if MYSQL_AVAILABLE else TestSessionLocal
+    except Exception:
+        Session = SessionLocal
+    db = Session()
     try:
         # Xóa các báo cáo tuần có số tuần >= 90 (dùng cho test case)
         db.query(BaoCaoTuan).filter(BaoCaoTuan.tuan_so >= 90).delete()

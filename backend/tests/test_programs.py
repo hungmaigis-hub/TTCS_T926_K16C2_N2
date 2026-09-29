@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fastapi.testclient import TestClient
 from main import app
+from tests.conftest import MYSQL_AVAILABLE, TestSessionLocal
 from database.session import SessionLocal
 from database.models import ChuongTrinhThucTap
 
@@ -17,7 +18,7 @@ client = TestClient(app)
 def clean_created_test_programs():
     """Dọn dẹp các chương trình được tạo trong quá trình test sau mỗi test case"""
     yield
-    db = SessionLocal()
+    db = SessionLocal() if MYSQL_AVAILABLE else TestSessionLocal()
     try:
         # Xóa các chương trình test có mã lớn hơn 1 (dữ liệu mẫu ban đầu là 1)
         db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh > 1).delete()

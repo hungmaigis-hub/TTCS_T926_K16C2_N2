@@ -20,7 +20,12 @@ TEST_EMAILS = [
 @pytest.fixture(autouse=True)
 def cleanup_test_interns():
     def _cleanup():
-        db = SessionLocal()
+        try:
+            from tests.conftest import MYSQL_AVAILABLE, TestSessionLocal
+            Session = SessionLocal if MYSQL_AVAILABLE else TestSessionLocal
+        except Exception:
+            Session = SessionLocal
+        db = Session()
         try:
             users = db.query(NguoiDung).filter(NguoiDung.email.in_(TEST_EMAILS)).all()
             for u in users:

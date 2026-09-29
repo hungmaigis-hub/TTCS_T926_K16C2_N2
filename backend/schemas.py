@@ -316,6 +316,35 @@ class ProgramResponse(BaseModel):
     data: Optional[ProgramDetailData] = None
 
 # ==============================================================
+# SCHEMAS CHO NHIỆM VỤ THỰC TẬP (TASKS API)
+# ==============================================================
+class TaskProgressUpdate(BaseModel):
+    """Schema cập nhật tiến độ nhiệm vụ (PATCH)"""
+    tien_do_phantram: int = Field(
+        ...,
+        ge=0,
+        le=100,
+        description="Tiến độ hoàn thành của nhiệm vụ (từ 0% đến 100%)"
+    )
+
+
+class TaskDetailData(BaseModel):
+    ma_nhiem_vu: int
+    ma_ho_so: int
+    ten_nhiem_vu: str
+    mo_ta: Optional[str] = None
+    han_hoan_thanh: Optional[str] = None
+    tien_do_phantram: int
+    trang_thai: str
+
+
+class TaskProgressResponse(BaseModel):
+    status_code: int = 200
+    message: str
+    data: Optional[TaskDetailData] = None
+
+
+# ==============================================================
 # SCHEMAS CHO LỊCH TRÌNH VÀ NHIỆM VỤ (MY-SCHEDULE API)
 # ==============================================================
 
@@ -387,4 +416,5 @@ class ReportResponse(BaseModel):
     status_code: int = 201
     message: str
     data: Optional[ReportDetailData] = None
+
 

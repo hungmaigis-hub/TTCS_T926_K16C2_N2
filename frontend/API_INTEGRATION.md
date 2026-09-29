@@ -117,6 +117,42 @@ Tài liệu đặc tả các giao thức kết nối, định dạng dữ liệu
 
 ---
 
+### 5. Cập nhật tiến độ nhiệm vụ thực tập sinh
+- **Method**: `PATCH`
+- **Endpoint**: `/api/v1/tasks/{id}/progress`
+- **Tham số**:
+  - `id` *(Path parameter)*: Mã nhiệm vụ (`ma_nhiem_vu`)
+- **Request Body**:
+```json
+{
+  "tien_do_phantram": 100
+}
+```
+- **Quy tắc & Logic chuyển đổi**:
+  - `tien_do_phantram`: Số nguyên từ `0` đến `100`.
+  - Nếu `100%`: Trạng thái tự động đổi thành `"Hoàn thành"`.
+  - Nếu `1% - 99%`: Trạng thái tự động đổi thành `"Đang thực hiện"`.
+  - Nếu `0%`: Trạng thái tự động đổi thành `"Chưa bắt đầu"`.
+- **Tệp Frontend sử dụng**: `frontend/js/nhiem_vu.js`
+- **Response mẫu (HTTP 200)**:
+```json
+{
+  "status_code": 200,
+  "message": "Cập nhật tiến độ nhiệm vụ thành công",
+  "data": {
+    "ma_nhiem_vu": 1,
+    "ma_ho_so": 1,
+    "ten_nhiem_vu": "Nghiên cứu tài liệu kiến trúc hệ thống",
+    "mo_ta": "Đọc hiểu tài liệu thiết kế CSDL và luồng xử lý API",
+    "han_hoan_thanh": "2026-10-15",
+    "tien_do_phantram": 100,
+    "trang_thai": "Hoàn thành"
+  }
+}
+```
+
+---
+
 ## 🛡️ Cơ chế Fallback và Xử lý Lỗi
 
 Phía Frontend cài đặt lớp xử lý an toàn tự động:
@@ -126,3 +162,4 @@ Phía Frontend cài đặt lớp xử lý an toàn tự động:
    - Giao diện có huy hiệu kết nối (Badge) tại góc màn hình thông báo:
      - 🟢 *Đã kết nối API Backend*: Đang lấy dữ liệu thực từ CSDL.
      - 🟡 *Chế độ Thử nghiệm (Offline)*: Đang sử dụng dữ liệu mẫu cho phép thử nghiệm mượt mà.
+

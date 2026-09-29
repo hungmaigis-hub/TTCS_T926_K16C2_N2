@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS hop_dong (
     ma_hop_dong INT AUTO_INCREMENT PRIMARY KEY,
     ma_ho_so INT NOT NULL,
     duong_dan_file VARCHAR(255) NOT NULL,
-    ngay_tai_len DATE NOT NULL,
+    ngay_tai_len DATE DEFAULT (CURRENT_DATE),
     ngay_ky DATE,
     trang_thai VARCHAR(50) DEFAULT 'ChuaXacNhan' COMMENT 'ChuaXacNhan, DaXacNhan',
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS nhiem_vu (
     mo_ta TEXT,
     han_hoan_thanh DATE NOT NULL,
     tien_do_phantram INT DEFAULT 0,
-    trang_thai VARCHAR(50) DEFAULT 'Moi' COMMENT 'Moi, DangThucHien, HoanThanh',
+    trang_thai VARCHAR(50) DEFAULT 'Chưa bắt đầu',
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
 );
 
@@ -105,7 +105,6 @@ CREATE TABLE IF NOT EXISTS bao_cao_tuan (
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE,
     FOREIGN KEY (ma_nhiem_vu) REFERENCES nhiem_vu(ma_nhiem_vu) ON DELETE SET NULL
 );
-
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API
 INSERT INTO phong_ban (ma_phong_ban, ten_phong_ban, mo_ta) 
 VALUES (1, 'Trung tâm Phần mềm', 'Phòng kỹ thuật & phát triển hệ thống')
@@ -148,13 +147,14 @@ ON DUPLICATE KEY UPDATE trang_thai = VALUES(trang_thai);
 
 INSERT INTO nhiem_vu (ma_nhiem_vu, ma_ho_so, ten_nhiem_vu, mo_ta, han_hoan_thanh, tien_do_phantram, trang_thai)
 VALUES 
-(1, 1, 'Nghiên cứu kiến trúc Microservices & Docker', 'Cấu hình Docker Compose và pass review Tech Lead', '2026-10-15', 100, 'HoanThanh'),
-(2, 1, 'Xây dựng API quản lý lịch trình và nhiệm vụ', 'Thiết kế endpoint GET /api/v1/interns/my-schedule', '2026-10-20', 80, 'DangThucHien'),
-(3, 2, 'Tìm hiểu quy trình DevOps và CI/CD', 'Thiết lập pipeline GitHub Actions', '2026-10-25', 0, 'Moi')
-ON DUPLICATE KEY UPDATE ten_nhiem_vu = VALUES(ten_nhiem_vu);
+(1, 1, 'Nghiên cứu kiến trúc Microservices & Docker', 'Cấu hình Docker Compose và pass review Tech Lead', '2026-10-15', 30, 'Đang thực hiện'),
+(2, 1, 'Xây dựng API quản lý lịch trình và nhiệm vụ', 'Thiết kế endpoint GET /api/v1/interns/my-schedule', '2026-10-20', 0, 'Chưa bắt đầu'),
+(3, 2, 'Thiết kế giao diện Dashboard quản lý', 'Cắt HTML/CSS responsive cho bảng điều khiển', '2026-10-20', 100, 'Hoàn thành')
+ON DUPLICATE KEY UPDATE ten_nhiem_vu = VALUES(ten_nhiem_vu), tien_do_phantram = VALUES(tien_do_phantram), trang_thai = VALUES(trang_thai);
 
 INSERT INTO bao_cao_tuan (ma_bao_cao, ma_ho_so, ma_nhiem_vu, tuan_so, noi_dung_cong_viec, ket_qua_dat_duoc, phan_hoi_mentor, thoi_gian_nop)
 VALUES
 (1, 1, 1, 1, 'Tìm hiểu Docker và triển khai container hóa cho ứng dụng FastAPI', 'Hoàn thành file Dockerfile và docker-compose.yml', 'Tốt, tiếp tục nghiên cứu Microservices', '2026-09-10 17:00:00'),
 (2, 1, 2, 2, 'Thiết kế endpoint GET /api/v1/interns/my-schedule', 'Hoàn thiện endpoint và test case đạt 100%', NULL, '2026-09-17 16:30:00')
 ON DUPLICATE KEY UPDATE noi_dung_cong_viec = VALUES(noi_dung_cong_viec);
+
