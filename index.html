@@ -3,258 +3,441 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Danh Sách Thực Tập Sinh - Chọn Mentor</title>
-  <!-- Bootstrap 5 CSS để giao diện đẹp, chuẩn và dễ tích hợp -->
+  <title>Giao Việc Cho Thực Tập Sinh | Mentor Portal</title>
+  
+  <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
     body {
-      background-color: #f8f9fa;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      padding-top: 30px;
+      padding-bottom: 50px;
     }
+
+    .main-container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
     .card {
       border: none;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
     }
-    .table thead th {
+
+    .card-header-custom {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      border-radius: 16px 16px 0 0 !important;
+      padding: 24px 28px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .form-label .required {
+      color: #ef4444;
+      margin-left: 2px;
+    }
+
+    .form-control, .form-select {
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3.5px rgba(59, 130, 246, 0.15);
+    }
+
+    .input-group-text {
+      background-color: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-right: none;
+      border-radius: 10px 0 0 10px;
+      color: #64748b;
+    }
+
+    .input-group .form-control, .input-group .form-select {
+      border-left: none;
+    }
+
+    .btn-submit {
+      background-color: #2563eb;
+      border-color: #2563eb;
+      padding: 12px 28px;
+      font-weight: 600;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      transition: all 0.2s ease;
+    }
+
+    .btn-submit:hover {
+      background-color: #1d4ed8;
+      border-color: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-reset {
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-weight: 500;
+    }
+
+    .recent-tasks-card {
+      margin-top: 28px;
+    }
+
+    .badge-priority-high {
+      background-color: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .badge-priority-normal {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .badge-priority-low {
       background-color: #f1f5f9;
       color: #475569;
-      font-weight: 600;
-      border-bottom: 2px solid #e2e8f0;
     }
-    .table tbody tr {
-      transition: background-color 0.2s ease;
-    }
-    .table tbody tr:hover {
-      background-color: #f8fafc;
-    }
-    .row-changed {
-      background-color: #fffbeb !important;
-    }
-    .select-mentor {
-      min-width: 220px;
-    }
+
     .toast-container {
       position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1060;
+      top: 24px;
+      right: 24px;
+      z-index: 1100;
     }
   </style>
 </head>
-<body class="py-4">
-  <div class="container">
-    <!-- Tiêu đề & Nút thao tác chung -->
-    <div class="card p-4 mb-4">
-      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-          <h4 class="mb-1 text-primary fw-bold">
-            <i class="bi bi-people-fill me-2"></i>Bảng Danh Sách Thực Tập Sinh
-          </h4>
-          <p class="text-muted mb-0 small">
-            Quản lý và phân công Mentor hướng dẫn cho từng thực tập sinh
-          </p>
-        </div>
-        <div class="d-flex gap-2">
-          <button id="btnSaveAll" class="btn btn-primary" onclick="saveAll()">
-            <i class="bi bi-floppy-fill me-1"></i> Lưu tất cả thay đổi
-          </button>
-        </div>
-      </div>
-    </div>
+<body>
 
-    <!-- Bảng danh sách thực tập sinh -->
-    <div class="card p-0 overflow-hidden">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead>
-            <tr>
-              <th class="text-center" style="width: 60px;">STT</th>
-              <th>Mã TTS</th>
-              <th>Họ và Tên</th>
-              <th>Vị trí thực tập</th>
-              <th>Trạng thái</th>
-              <th>Mentor phụ trách</th>
-              <th class="text-center" style="width: 120px;">Hành động</th>
-            </tr>
-          </thead>
-          <tbody id="internTableBody">
-            <!-- Hàng 1 -->
-            <tr data-id="TTS001">
-              <td class="text-center fw-semibold text-secondary">1</td>
-              <td><span class="badge bg-light text-dark border">TTS001</span></td>
-              <td>
-                <div class="fw-bold">Nguyễn Văn An</div>
-                <small class="text-muted">an.nguyen@email.com</small>
-              </td>
-              <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">Frontend Developer</span></td>
-              <td><span class="badge bg-success">Đang thực tập</span></td>
-              <td>
-                <select class="form-select form-select-sm select-mentor" onchange="onMentorChange('TTS001')">
-                  <option value="">-- Chưa phân công --</option>
-                  <option value="M01" selected>Trần Hoàng Nam (Senior Frontend)</option>
-                  <option value="M02">Lê Thị Mai (Tech Lead)</option>
-                  <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
-                  <option value="M04">Võ Hoài An (DevOps)</option>
-                </select>
-              </td>
-              <td class="text-center">
-                <button class="btn btn-sm btn-outline-success" onclick="saveRow('TTS001')">
-                  <i class="bi bi-check-lg"></i> Lưu
-                </button>
-              </td>
-            </tr>
-
-            <!-- Hàng 2 -->
-            <tr data-id="TTS002">
-              <td class="text-center fw-semibold text-secondary">2</td>
-              <td><span class="badge bg-light text-dark border">TTS002</span></td>
-              <td>
-                <div class="fw-bold">Trần Thị Bích</div>
-                <small class="text-muted">bich.tran@email.com</small>
-              </td>
-              <td><span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">Backend Developer</span></td>
-              <td><span class="badge bg-warning text-dark">Mới tiếp nhận</span></td>
-              <td>
-                <select class="form-select form-select-sm select-mentor" onchange="onMentorChange('TTS002')">
-                  <option value="">-- Chưa phân công --</option>
-                  <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
-                  <option value="M02">Lê Thị Mai (Tech Lead)</option>
-                  <option value="M03" selected>Phạm Quốc Bảo (Senior Backend)</option>
-                  <option value="M04">Võ Hoài An (DevOps)</option>
-                </select>
-              </td>
-              <td class="text-center">
-                <button class="btn btn-sm btn-outline-success" onclick="saveRow('TTS002')">
-                  <i class="bi bi-check-lg"></i> Lưu
-                </button>
-              </td>
-            </tr>
-
-            <!-- Hàng 3 -->
-            <tr data-id="TTS003">
-              <td class="text-center fw-semibold text-secondary">3</td>
-              <td><span class="badge bg-light text-dark border">TTS003</span></td>
-              <td>
-                <div class="fw-bold">Lê Hoàng Cường</div>
-                <small class="text-muted">cuong.le@email.com</small>
-              </td>
-              <td><span class="badge bg-secondary-subtle text-secondary-emphasis border">Mobile (Flutter)</span></td>
-              <td><span class="badge bg-success">Đang thực tập</span></td>
-              <td>
-                <select class="form-select form-select-sm select-mentor" onchange="onMentorChange('TTS003')">
-                  <option value="" selected>-- Chưa phân công --</option>
-                  <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
-                  <option value="M02">Lê Thị Mai (Tech Lead)</option>
-                  <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
-                  <option value="M04">Võ Hoài An (DevOps)</option>
-                </select>
-              </td>
-              <td class="text-center">
-                <button class="btn btn-sm btn-outline-success" onclick="saveRow('TTS003')">
-                  <i class="bi bi-check-lg"></i> Lưu
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast thông báo kết quả -->
+  <!-- Toast thông báo -->
   <div class="toast-container">
-    <div id="saveToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
       <div class="d-flex">
-        <div class="toast-body" id="toastMessage">
-          <i class="bi bi-check-circle-fill me-2"></i>Đã cập nhật thành công!
+        <div class="toast-body d-flex align-items-center gap-2">
+          <i class="bi bi-check-circle-fill fs-5"></i>
+          <span id="toastMessage">Giao việc thành công!</span>
         </div>
         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
       </div>
     </div>
   </div>
 
-  <!-- Bootstrap 5 JS -->
+  <div class="container main-container">
+    
+    <!-- Header Card -->
+    <div class="card mb-4">
+      <div class="card-header-custom">
+        <div class="d-flex align-items-center gap-3">
+          <div class="bg-white text-primary p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+            <i class="bi bi-clipboard-plus-fill fs-4"></i>
+          </div>
+          <div>
+            <h4 class="mb-1 fw-bold text-white">Giao Việc Cho Thực Tập Sinh</h4>
+            <p class="mb-0 text-white-50 small">Mentor phân công nhiệm vụ, mục tiêu và thời hạn hoàn thành công việc</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body p-4 p-md-5">
+        <!-- FORM BẮT ĐẦU -->
+        <form id="assignTaskForm" novalidate>
+          
+          <div class="row g-4">
+            <!-- 1. CHỌN THỰC TẬP SINH -->
+            <div class="col-md-7">
+              <label for="internSelect" class="form-label">
+                <i class="bi bi-person-check text-primary me-1"></i>Chọn thực tập sinh <span class="required">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person"></i></span>
+                <select class="form-select" id="internSelect" name="internId" required>
+                  <option value="" selected disabled>-- Chọn thực tập sinh --</option>
+                  <option value="TTS001" data-dept="Frontend Team">Nguyễn Văn An (TTS001) - Web Frontend</option>
+                  <option value="TTS002" data-dept="Backend Team">Trần Thị Bích (TTS002) - Java / Spring Boot</option>
+                  <option value="TTS003" data-dept="Mobile Team">Lê Hoàng Nam (TTS003) - React Native / Flutter</option>
+                  <option value="TTS004" data-dept="QA Team">Phạm Minh Đức (TTS004) - Manual & Automation Test</option>
+                  <option value="TTS005" data-dept="AI / Data Team">Đặng Mỹ Linh (TTS005) - Data Analytics</option>
+                </select>
+                <div class="invalid-feedback">Vui lòng chọn thực tập sinh nhận việc.</div>
+              </div>
+            </div>
+
+            <!-- MỨC ĐỘ ƯU TIÊN (Bổ trợ thêm để form chuyên nghiệp) -->
+            <div class="col-md-5">
+              <label for="taskPriority" class="form-label">
+                <i class="bi bi-flag text-primary me-1"></i>Mức độ ưu tiên
+              </label>
+              <select class="form-select" id="taskPriority" name="priority">
+                <option value="Bình thường" selected>Bình thường</option>
+                <option value="Cao">Quan trọng / Ưu tiên cao</option>
+                <option value="Khẩn cấp">Khẩn cấp</option>
+                <option value="Thấp">Thấp</option>
+              </select>
+            </div>
+
+            <!-- 2. NHẬP TIÊU ĐỀ CÔNG VIỆC -->
+            <div class="col-12">
+              <label for="taskTitle" class="form-label">
+                <i class="bi bi-card-heading text-primary me-1"></i>Tiêu đề công việc <span class="required">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-pencil-square"></i></span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="taskTitle" 
+                  name="title" 
+                  placeholder="Ví dụ: Thiết kế giao diện Dashboard theo Figma sprint 3..." 
+                  maxlength="150"
+                  required
+                >
+                <div class="invalid-feedback">Vui lòng nhập tiêu đề công việc.</div>
+              </div>
+            </div>
+
+            <!-- 3. HẠN NỘP (<input type="date">) -->
+            <div class="col-md-6">
+              <label for="taskDeadline" class="form-label">
+                <i class="bi bi-calendar-event text-primary me-1"></i>Hạn nộp (Deadline) <span class="required">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                <input 
+                  type="date" 
+                  class="form-control" 
+                  id="taskDeadline" 
+                  name="deadline" 
+                  required
+                >
+                <div class="invalid-feedback">Vui lòng chọn hạn nộp hợp lệ.</div>
+              </div>
+              <div class="form-text small text-muted">
+                <i class="bi bi-info-circle me-1"></i>Hạn nộp tối thiểu từ ngày hôm nay trở đi.
+              </div>
+            </div>
+
+            <!-- FILE / TÀI LIỆU KÈM THEO (Bổ sung tiện ích) -->
+            <div class="col-md-6">
+              <label for="taskAttachment" class="form-label">
+                <i class="bi bi-paperclip text-primary me-1"></i>Tài liệu đính kèm (nếu có)
+              </label>
+              <input type="file" class="form-control" id="taskAttachment" name="attachment">
+              <div class="form-text small text-muted">Hỗ trợ file PDF, Word, Excel, ZIP (Tối đa 15MB).</div>
+            </div>
+
+            <!-- 4. MÔ TẢ CÔNG VIỆC (<textarea>) -->
+            <div class="col-12">
+              <label for="taskDescription" class="form-label">
+                <i class="bi bi-text-paragraph text-primary me-1"></i>Mô tả chi tiết <span class="required">*</span>
+              </label>
+              <textarea 
+                class="form-control" 
+                id="taskDescription" 
+                name="description" 
+                rows="5" 
+                placeholder="Mô tả cụ thể yêu cầu bài toán, tiêu chuẩn nghiệm thu (Acceptance Criteria), đường dẫn Figma/API doc hoặc lưu ý quan trọng..."
+                required
+              ></textarea>
+              <div class="invalid-feedback">Vui lòng nhập nội dung mô tả chi tiết công việc.</div>
+            </div>
+
+          </div>
+
+          <!-- NÚT THAO TÁC -->
+          <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 mt-4 pt-3 border-top">
+            <button type="reset" class="btn btn-outline-secondary btn-reset" id="btnReset">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Làm lại
+            </button>
+            <button type="submit" class="btn btn-primary btn-submit">
+              <i class="bi bi-send-fill me-1"></i>Giao việc ngay
+            </button>
+          </div>
+
+        </form>
+        <!-- FORM KẾT THÚC -->
+      </div>
+    </div>
+
+    <!-- DANH SÁCH CÔNG VIỆC VỪA GIAO (Mô phỏng hiển thị dữ liệu sau khi submit) -->
+    <div class="card recent-tasks-card">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0 text-secondary">
+            <i class="bi bi-clock-history me-2"></i>Các công việc đã giao gần đây
+          </h5>
+          <span class="badge bg-light text-dark border" id="taskCountBadge">2 công việc</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0" id="assignedTasksTable">
+            <thead class="table-light">
+              <tr class="small text-muted text-uppercase">
+                <th style="width: 25%;">Thực tập sinh</th>
+                <th style="width: 30%;">Tiêu đề việc</th>
+                <th style="width: 15%;">Mức độ</th>
+                <th style="width: 15%;">Hạn nộp</th>
+                <th style="width: 15%;" class="text-end">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody id="taskListBody">
+              <!-- Dữ liệu mẫu ban đầu -->
+              <tr>
+                <td>
+                  <div class="fw-semibold">Nguyễn Văn An</div>
+                  <small class="text-muted">TTS001 • Web Frontend</small>
+                </td>
+                <td>
+                  <div class="fw-medium text-dark">Tối ưu tốc độ tải trang chủ</div>
+                  <small class="text-muted text-truncate d-inline-block" style="max-width: 260px;">Nén ảnh WebP, giảm bundle JS</small>
+                </td>
+                <td><span class="badge badge-priority-high">Cao</span></td>
+                <td><span class="fw-medium text-danger"><i class="bi bi-calendar-event me-1"></i>2026-09-30</span></td>
+                <td class="text-end"><span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Đang làm</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="fw-semibold">Trần Thị Bích</div>
+                  <small class="text-muted">TTS002 • Java / Spring Boot</small>
+                </td>
+                <td>
+                  <div class="fw-medium text-dark">Viết API authentication JWT</div>
+                  <small class="text-muted text-truncate d-inline-block" style="max-width: 260px;">Bổ sung refresh token và mã hóa bcrypt</small>
+                </td>
+                <td><span class="badge badge-priority-normal">Bình thường</span></td>
+                <td><span class="fw-medium text-secondary"><i class="bi bi-calendar-event me-1"></i>2026-10-05</span></td>
+                <td class="text-end"><span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Đang làm</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bootstrap 5 Bundle JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- JavaScript xử lý sự kiện Lưu -->
   <script>
-    // Hàm hiển thị Toast thông báo
-    function showNotification(msg) {
-      const toastEl = document.getElementById('saveToast');
-      document.getElementById('toastMessage').innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>${msg}`;
-      const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
-      toast.show();
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('assignTaskForm');
+      const dateInput = document.getElementById('taskDeadline');
+      const taskListBody = document.getElementById('taskListBody');
+      const taskCountBadge = document.getElementById('taskCountBadge');
+      const successToast = new bootstrap.Toast(document.getElementById('successToast'));
+      const toastMessage = document.getElementById('toastMessage');
 
-    // Khi người dùng thay đổi dropdown mentor
-    function onMentorChange(internId) {
-      const row = document.querySelector(`tr[data-id="${internId}"]`);
-      if (row) {
-        row.classList.add('row-changed');
+      // 1. Tự động thiết lập ngày nhỏ nhất của input[type="date"] là ngày hôm nay
+      const today = new Date().toISOString().split('T')[0];
+      dateInput.min = today;
+
+      // Cập nhật số lượng task hiển thị
+      function updateTaskCount() {
+        const count = taskListBody.querySelectorAll('tr').length;
+        taskCountBadge.textContent = `${count} công việc`;
       }
-    }
 
-    // 1. Lưu theo từng dòng
-    function saveRow(internId) {
-      const row = document.querySelector(`tr[data-id="${internId}"]`);
-      if (!row) return;
+      // 2. Xử lý sự kiện Submit Form
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
 
-      const internName = row.querySelector('.fw-bold').innerText;
-      const select = row.querySelector('.select-mentor');
-      const selectedMentorId = select.value;
-      const selectedMentorName = select.options[select.selectedIndex].text;
+        // Kiểm tra tính hợp lệ qua HTML5 validation
+        if (!form.checkValidity()) {
+          form.classList.add('was-validated');
+          return;
+        }
 
-      // Chuẩn bị dữ liệu gửi lên Server (API)
-      const dataToSend = {
-        internId: internId,
-        mentorId: selectedMentorId
-      };
+        // Lấy dữ liệu từ form
+        const internSelect = document.getElementById('internSelect');
+        const selectedInternText = internSelect.options[internSelect.selectedIndex].text;
+        const internName = selectedInternText.split('(')[0].trim();
+        const internSub = selectedInternText.includes('(') ? selectedInternText.substring(selectedInternText.indexOf('(')).replace(/[\(\)]/g, '') : '';
+        
+        const title = document.getElementById('taskTitle').value.trim();
+        const deadline = dateInput.value;
+        const description = document.getElementById('taskDescription').value.trim();
+        const priority = document.getElementById('taskPriority').value;
 
-      console.log('Đang gửi dữ liệu API (1 thực tập sinh):', dataToSend);
+        // Chọn badge style cho mức độ ưu tiên
+        let priorityBadgeClass = 'badge-priority-normal';
+        if (priority === 'Cao' || priority === 'Khẩn cấp') {
+          priorityBadgeClass = 'badge-priority-high';
+        } else if (priority === 'Thấp') {
+          priorityBadgeClass = 'badge-priority-low';
+        }
 
-      /*
-      // Ví dụ gọi API thực tế qua fetch:
-      fetch('/api/interns/assign-mentor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSend)
-      })
-      .then(response => response.json())
-      .then(data => { ... });
-      */
+        // Tạo dòng mới trong bảng công việc
+        const newRow = document.createElement('tr');
+        newRow.className = 'table-success'; // Đánh dấu dòng mới thêm
+        newRow.innerHTML = `
+          <td>
+            <div class="fw-semibold">${escapeHtml(internName)}</div>
+            <small class="text-muted">${escapeHtml(internSub)}</small>
+          </td>
+          <td>
+            <div class="fw-medium text-dark">${escapeHtml(title)}</div>
+            <small class="text-muted text-truncate d-inline-block" style="max-width: 260px;">${escapeHtml(description)}</small>
+          </td>
+          <td><span class="badge ${priorityBadgeClass}">${escapeHtml(priority)}</span></td>
+          <td><span class="fw-medium text-danger"><i class="bi bi-calendar-event me-1"></i>${deadline}</span></td>
+          <td class="text-end"><span class="badge bg-secondary"><i class="bi bi-clock me-1"></i>Mới giao</span></td>
+        `;
 
-      // Đánh dấu đã lưu (bỏ viền highlight thay đổi)
-      row.classList.remove('row-changed');
+        // Thêm vào đầu bảng
+        taskListBody.insertBefore(newRow, taskListBody.firstChild);
 
-      // Thông báo cho người dùng
-      showNotification(`Đã lưu Mentor cho thực tập sinh <b>${internName}</b> thành công!`);
-    }
+        // Hiệu ứng mờ dần màu xanh sau 2s
+        setTimeout(() => {
+          newRow.classList.remove('table-success');
+        }, 2000);
 
-    // 2. Lưu toàn bộ bảng (Lưu tất cả thay đổi)
-    function saveAll() {
-      const rows = document.querySelectorAll('#internTableBody tr');
-      const payload = [];
+        // Cập nhật số lượng
+        updateTaskCount();
 
-      rows.forEach(row => {
-        const internId = row.getAttribute('data-id');
-        const mentorId = row.querySelector('.select-mentor').value;
+        // Hiển thị Toast thông báo
+        toastMessage.textContent = `Đã giao việc "${title}" thành công cho ${internName}!`;
+        successToast.show();
 
-        payload.push({
-          internId: internId,
-          mentorId: mentorId
-        });
-
-        // Bỏ màu highlight
-        row.classList.remove('row-changed');
+        // Reset form và validation state
+        form.reset();
+        form.classList.remove('was-validated');
+        dateInput.min = today; // Giữ lại hạn chế ngày
       });
 
-      console.log('Đang gửi dữ liệu API (Toàn bộ danh sách):', payload);
+      // Reset form
+      document.getElementById('btnReset').addEventListener('click', function () {
+        form.classList.remove('was-validated');
+        dateInput.min = today;
+      });
 
-      // Thông báo
-      showNotification(`Đã lưu phân công Mentor cho tất cả <b>${payload.length}</b> thực tập sinh!`);
-    }
+      // Hàm chống XSS đơn giản khi render nội dung người dùng nhập
+      function escapeHtml(string) {
+        const div = document.createElement('div');
+        div.textContent = string;
+        return div.innerHTML;
+      }
+    });
   </script>
 </body>
 </html>
