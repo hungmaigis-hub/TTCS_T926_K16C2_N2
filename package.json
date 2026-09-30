@@ -1,0 +1,10 @@
+{
+  "name": "internship-management",
+  "version": "1.0.0",
+  "description": "ICTU Internship Management System",
+  "scripts": {
+    "dev": "python -m uvicorn main:app --reload --port 8000 --app-dir backend",
+    "start": "python -m uvicorn main:app --reload --port 8000 --app-dir backend",
+    "test": "python -m pytest backend/tests"
+  }
+}

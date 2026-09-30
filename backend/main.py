@@ -19,6 +19,9 @@ from schemas import (
     DocumentUploadResponse,
     ProgramCreate,
     ProgramResponse,
+    InternRegisterRequest,
+    LoginRequest,
+    AuthResponse,
     ProgramTimelineUpdate,
     ProgramTimelineResponse,
     TaskProgressUpdate,
@@ -35,6 +38,7 @@ from schemas import (
     AttendanceReportItem,
     AttendancePagination,
 )
+from security import get_password_hash, verify_password
 
 # Thư mục database & models
 from database.session import get_db, Base, engine
@@ -205,6 +209,37 @@ def get_my_schedule(
             "trang_thai_thuc_tap": ho_so.trang_thai_thuc_tap,
             "danh_sach_nhiem_vu": danh_sach_nhiem_vu,
         }
+    }
+
+
+# api get intern list
+@app.get("/api/v1/interns", status_code=200)
+def get_interns_list(
+    trang_thai_xet_duyet: Optional[str] = None,
+    trang_thai_thuc_tap: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh sách hồ sơ thực tập sinh từ cơ sở dữ liệu.
+    Hỗ trợ lọc theo trạng thái xét duyệt (ChoDuyet, DaDuyet, TuChoi) và trạng thái thực tập (DangThucTap, HoanThanh, ThoiHoc).
+    Sắp xếp theo mã hồ sơ mới nhất (desc).
+    """
+    query = db.query(HoSoThucTap)
+    if trang_thai_xet_duyet:
+        query = query.filter(HoSoThucTap.trang_thai_xet_duyet == trang_thai_xet_duyet)
+    if trang_thai_thuc_tap:
+        query = query.filter(HoSoThucTap.trang_thai_thuc_tap == trang_thai_thuc_tap)
+
+    total = query.count()
+    items = query.order_by(HoSoThucTap.ma_ho_so.desc()).offset(offset).limit(limit).all()
+
+    return {
+        "status_code": 200,
+        "message": "Danh sách thực tập sinh",
+        "total": total,
+        "data": [item.to_dict() for item in items]
     }
 
 
@@ -582,7 +617,99 @@ def create_program(program_data: ProgramCreate, db: Session = Depends(get_db)):
     }
 
 
-# api patch program timeline
+@app.post("/api/v1/auth/register", status_code=201, response_model=AuthResponse)
+def register_intern(data: InternRegisterRequest, db: Session = Depends(get_db)):
+    if data.vai_tro and data.vai_tro != "ThucTapSinh":
+        raise HTTPException(
+            status_code=400,
+            detail="Cổng đăng ký trực tuyến chỉ dành cho Thực tập sinh. Tài khoản Mentor hoặc Nhà trường do Quản trị viên cấp."
+        )
+
+    email_normalized = data.email.strip().lower()
+
+    existing_user = db.query(NguoiDung).filter(NguoiDung.email == email_normalized).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email này đã được sử dụng trong hệ thống")
+
+    if data.so_dien_thoai:
+        existing_phone = db.query(NguoiDung).filter(NguoiDung.so_dien_thoai == data.so_dien_thoai.strip()).first()
+        if existing_phone:
+            raise HTTPException(status_code=400, detail="Số điện thoại này đã được sử dụng trong hệ thống")
+
+    if data.ma_truong:
+        truong = db.query(TruongDaiHoc).filter(TruongDaiHoc.ma_truong == data.ma_truong).first()
+        if not truong:
+            raise HTTPException(status_code=400, detail="Mã trường đại học không tồn tại trong hệ thống")
+
+    hashed_password = get_password_hash(data.mat_khau)
+
+    new_user = NguoiDung(
+        ho_ten=data.ho_ten.strip(),
+        email=email_normalized,
+        mat_khau_hash=hashed_password,
+        so_dien_thoai=data.so_dien_thoai.strip() if data.so_dien_thoai else None,
+        vai_tro="ThucTapSinh",
+        trang_thai="HoatDong"
+    )
+    db.add(new_user)
+    db.flush()
+
+    new_profile = HoSoThucTap(
+        ma_nguoi_dung=new_user.ma_nguoi_dung,
+        ma_truong=data.ma_truong,
+        chuyen_nganh=data.chuyen_nganh.strip() if data.chuyen_nganh else None,
+        trang_thai_xet_duyet="ChoDuyet",
+        trang_thai_thuc_tap="DangThucTap"
+    )
+    db.add(new_profile)
+    db.commit()
+    db.refresh(new_user)
+    db.refresh(new_profile)
+
+    return {
+        "status_code": 201,
+        "message": "Đăng ký tài khoản thực tập sinh và tạo hồ sơ thành công",
+        "data": {
+            "ma_nguoi_dung": new_user.ma_nguoi_dung,
+            "ho_ten": new_user.ho_ten,
+            "email": new_user.email,
+            "vai_tro": new_user.vai_tro,
+            "so_dien_thoai": new_user.so_dien_thoai,
+            "ma_ho_so": new_profile.ma_ho_so
+        }
+    }
+
+
+@app.post("/api/v1/auth/login", status_code=200, response_model=AuthResponse)
+def login_user(data: LoginRequest, db: Session = Depends(get_db)):
+    email_normalized = data.email.strip().lower()
+
+    user = db.query(NguoiDung).filter(NguoiDung.email == email_normalized).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không chính xác")
+
+    if not user.mat_khau_hash or not verify_password(data.mat_khau, user.mat_khau_hash):
+        raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không chính xác")
+
+    if user.trang_thai == "Khoa":
+        raise HTTPException(status_code=403, detail="Tài khoản này đang bị khóa")
+
+    profile = db.query(HoSoThucTap).filter(HoSoThucTap.ma_nguoi_dung == user.ma_nguoi_dung).first()
+
+    return {
+        "status_code": 200,
+        "message": "Đăng nhập thành công",
+        "data": {
+            "ma_nguoi_dung": user.ma_nguoi_dung,
+            "ho_ten": user.ho_ten,
+            "email": user.email,
+            "vai_tro": user.vai_tro,
+            "so_dien_thoai": user.so_dien_thoai,
+            "ma_ho_so": profile.ma_ho_so if profile else None
+        }
+    }
+
+
 @app.patch("/api/v1/programs/{id}/timeline", status_code=200, response_model=ProgramTimelineResponse)
 def update_program_timeline(
     id: int,
@@ -593,27 +720,22 @@ def update_program_timeline(
     Cập nhật mốc thời gian (ngay_bat_dau, ngay_ket_thuc) của chương trình thực tập.
     Validate logic: ngày kết thúc phải lớn hơn ngày bắt đầu (ngay_ket_thuc > ngay_bat_dau).
     """
-    # 1. Kiểm tra ID hợp lệ
     if id <= 0:
         raise HTTPException(status_code=422, detail="Mã chương trình không hợp lệ")
 
-    # 2. Tìm chương trình thực tập trong CSDL
     program = db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh == id).first()
     if not program:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy chương trình thực tập ID: {id}")
 
-    # 3. Xác định mốc thời gian áp dụng (kết hợp dữ liệu mới và dữ liệu hiện tại trong DB)
     new_start = timeline_data.ngay_bat_dau if timeline_data.ngay_bat_dau is not None else program.ngay_bat_dau
     new_end = timeline_data.ngay_ket_thuc if timeline_data.ngay_ket_thuc is not None else program.ngay_ket_thuc
 
-    # 4. Kiểm tra logic ngày kết thúc > ngày bắt đầu
     if new_start and new_end and new_end <= new_start:
         raise HTTPException(
             status_code=400,
             detail="Ngày kết thúc phải lớn hơn ngày bắt đầu"
         )
 
-    # 5. Cập nhật dữ liệu vào model
     if timeline_data.ngay_bat_dau is not None:
         program.ngay_bat_dau = timeline_data.ngay_bat_dau
     if timeline_data.ngay_ket_thuc is not None:
@@ -622,15 +744,11 @@ def update_program_timeline(
     db.commit()
     db.refresh(program)
 
-    # 6. Trả về phản hồi thành công
     return {
         "status_code": 200,
         "message": "Cập nhật thời gian chương trình thực tập thành công",
         "data": program.to_dict()
     }
-
-
-
 # ==============================================================
 # API QUẢN LÝ NHIỆM VỤ THỰC TẬP (TASKS)
 # ==============================================================

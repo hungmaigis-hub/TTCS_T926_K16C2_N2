@@ -1,8 +1,6 @@
 const duongDanApi = "http://127.0.0.1:8000/api/v1";
 
-/**
- * Kiểm tra kết nối tới Backend API và hiển thị huy hiệu trạng thái thời gian thực
- */
+
 async function kiemTraKetNoiApi() {
   const badge = document.getElementById("badgeTrangThaiApi");
   if (!badge) return;
@@ -23,9 +21,7 @@ async function kiemTraKetNoiApi() {
   }
 }
 
-/**
- * Tính toán tổng số ngày và tuần thực tập dự kiến, validate ngày kết thúc > ngày bắt đầu
- */
+
 function tinhToanThoiGian() {
   const batDau = document.getElementById("ngayBatDau").value;
   const ketThuc = document.getElementById("ngayKetThuc").value;
@@ -49,18 +45,15 @@ function tinhToanThoiGian() {
   labelSoNgay.className = "font-bold text-primary";
 }
 
-/**
- * Đặt lại form và cập nhật lại dự phóng thời gian
- */
+
 function datLaiForm() {
   const form = document.getElementById("bieuMauChuongTrinh");
   if (form) form.reset();
   setTimeout(tinhToanThoiGian, 50);
 }
 
-/**
- * Hiển thị thông báo thành công
- */
+
+
 function hienThiThongBaoThanhCong(tieuDe, noiDung) {
   const hop = document.getElementById("hopThongBao");
   if (!hop) return;
@@ -89,9 +82,7 @@ function hienThiThongBaoThanhCong(tieuDe, noiDung) {
   hop.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-/**
- * Hiển thị thông báo lỗi
- */
+
 function hienThiThongBaoLoi(tieuDe, noiDung) {
   const hop = document.getElementById("hopThongBao");
   if (!hop) return;
@@ -120,10 +111,7 @@ function hienThiThongBaoLoi(tieuDe, noiDung) {
   hop.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-/**
- * Xử lý lưu lịch trình chương trình thực tập:
- * Gọi API PATCH /api/v1/programs/{id}/timeline kèm validate ngày kết thúc > ngày bắt đầu
- */
+
 async function xuLyLuuLich() {
   const programIdInput = document.getElementById("maChuongTrinh");
   const programId = programIdInput ? (parseInt(programIdInput.value, 10) || 1) : 1;
@@ -138,7 +126,6 @@ async function xuLyLuuLich() {
     return;
   }
 
-  // Validate phía client: ngày kết thúc > ngày bắt đầu
   if (ketThuc <= batDau) {
     hienThiThongBaoLoi(
       "Lỗi xác thực thời gian",
@@ -151,7 +138,7 @@ async function xuLyLuuLich() {
   if (nut) {
     nut.innerHTML = `
       <span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-      <span>Đang lưu lịch trình...</span>
+      <span>Đang lưu lịch trình lên CSDL...</span>
     `;
     nut.disabled = true;
   }
@@ -181,7 +168,6 @@ async function xuLyLuuLich() {
       return;
     }
 
-    // Cập nhật thành công từ API Backend
     const data = resData.data || {};
     const tenHienThi = data.ten_chuong_trinh || ten;
     const startStr = data.ngay_bat_dau || batDau;
@@ -193,7 +179,6 @@ async function xuLyLuuLich() {
     );
   } catch (error) {
     console.warn("Không thể kết nối đến Backend API, chuyển sang chế độ lưu offline:", error);
-    // Fallback offline mượt mà
     hienThiThongBaoThanhCong(
       "Lưu Lịch Trình Thực Tập (Chế độ Thử nghiệm)",
       `Đã đồng bộ lịch trình cho chương trình <strong>"${ten}"</strong> (${pb}) từ ngày <strong>${batDau}</strong> đến <strong>${ketThuc}</strong> (Chế độ offline).`

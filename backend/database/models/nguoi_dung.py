@@ -9,6 +9,7 @@ class NguoiDung(Base):
     ma_phong_ban = Column(Integer, ForeignKey("phong_ban.ma_phong_ban"), nullable=True)
     ho_ten = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, nullable=False)
+    mat_khau_hash = Column(String(255), nullable=True)
     so_dien_thoai = Column(String(20), unique=True, nullable=True)
     vai_tro = Column(String(50), default="ThucTapSinh")  # Admin, HR, Mentor, ThucTapSinh
     trang_thai = Column(String(50), default="HoatDong")   # HoatDong, Khoa
