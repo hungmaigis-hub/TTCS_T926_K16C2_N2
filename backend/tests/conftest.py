@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, time
 from pathlib import Path
 import pytest
 from sqlalchemy import create_engine, text
@@ -22,6 +22,8 @@ from database.models import (
     NhiemVu,
     BaoCaoTuan,
     DanhGia,
+    ChamCong,
+    DonNghiPhep,
 )
 from main import app
 
@@ -105,6 +107,18 @@ def reseed_sqlite_db():
         dg3 = DanhGia(ma_danh_gia=3, ma_ho_so=2, ma_nguoi_danh_gia=3, loai_danh_gia="GiuaKy", diem_ky_nang=7.5, diem_thai_do=8.0, nhan_xet_chi_tiet="Thực hiện công việc đúng tiến độ", de_xuat_tuyen_chinh_thuc=False)
         dg4 = DanhGia(ma_danh_gia=4, ma_ho_so=2, ma_nguoi_danh_gia=3, loai_danh_gia="CuoiKy", diem_ky_nang=8.0, diem_thai_do=8.5, nhan_xet_chi_tiet="Tiến bộ rõ rệt, đáp ứng tốt yêu cầu", de_xuat_tuyen_chinh_thuc=False)
         session.add_all([dg1, dg2, dg3, dg4])
+
+        cc1 = ChamCong(ma_cham_cong=1, ma_ho_so=1, ngay_cham_cong=date(2026, 9, 2), gio_check_in=time(8, 15, 0), gio_check_out=time(17, 30, 0), phuong_thuc="Web")
+        cc2 = ChamCong(ma_cham_cong=2, ma_ho_so=1, ngay_cham_cong=date(2026, 9, 3), gio_check_in=time(8, 45, 0), gio_check_out=time(17, 35, 0), phuong_thuc="Web")
+        cc3 = ChamCong(ma_cham_cong=3, ma_ho_so=1, ngay_cham_cong=date(2026, 9, 4), gio_check_in=time(8, 20, 0), gio_check_out=time(17, 30, 0), phuong_thuc="QR")
+        cc4 = ChamCong(ma_cham_cong=4, ma_ho_so=2, ngay_cham_cong=date(2026, 9, 2), gio_check_in=time(8, 10, 0), gio_check_out=time(17, 30, 0), phuong_thuc="Web")
+        cc5 = ChamCong(ma_cham_cong=5, ma_ho_so=2, ngay_cham_cong=date(2026, 9, 3), gio_check_in=time(8, 50, 0), gio_check_out=time(17, 40, 0), phuong_thuc="The")
+        session.add_all([cc1, cc2, cc3, cc4, cc5])
+
+        dnp1 = DonNghiPhep(ma_don=1, ma_ho_so=1, ngay_nghi=date(2026, 9, 5), ly_do="Bị ốm đột xuất", trang_thai="DaDuyet")
+        dnp2 = DonNghiPhep(ma_don=2, ma_ho_so=1, ngay_nghi=date(2026, 9, 12), ly_do="Việc gia đình", trang_thai="ChoDuyet")
+        dnp3 = DonNghiPhep(ma_don=3, ma_ho_so=2, ngay_nghi=date(2026, 9, 8), ly_do="Thi học phần", trang_thai="DaDuyet")
+        session.add_all([dnp1, dnp2, dnp3])
 
         session.commit()
     finally:
