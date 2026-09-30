@@ -487,4 +487,53 @@ pytest -v
 }
 ```
 
+---
+
+### 10. Tạo mới đánh giá kết quả thực tập
+* **URL:** `/api/v1/evaluations`
+* **Method:** `POST`
+* **Status Code:** `201 Created`
+* **Request Body (JSON):**
+```json
+{
+  "ma_ho_so": 1,
+  "ma_nguoi_danh_gia": 3,
+  "loai_danh_gia": "CuoiKy",
+  "diem_ky_nang": 8.5,
+  "diem_thai_do": 9.0,
+  "nhan_xet": "Sinh viên tiếp thu nhanh, hoàn thành tốt các nhiệm vụ được giao.",
+  "de_xuat_tuyen_dung": true
+}
 ```
+
+> **Quy tắc Validate & Tính năng:**
+> - `ma_ho_so`: Bắt buộc, số nguyên dương > 0. Nếu không tìm thấy hồ sơ sẽ trả về `HTTP 404 Not Found`.
+> - `ma_nguoi_danh_gia`: Bắt buộc, số nguyên dương > 0. Nếu người đánh giá không tồn tại trong hệ thống sẽ trả về `HTTP 400 Bad Request`.
+> - `loai_danh_gia`: Bắt buộc, chỉ nhận `"GiuaKy"` hoặc `"CuoiKy"`. Giá trị khác sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - `diem_ky_nang`, `diem_thai_do`: Bắt buộc, số thực trong khoảng `0.0` đến `10.0`. Nếu ngoài khoảng sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - `nhan_xet`: Tùy chọn (hỗ trợ cả alias `nhan_xet_chi_tiet`).
+> - `de_xuat_tuyen_dung`: Tùy chọn, kiểu boolean (hỗ trợ cả alias `de_xuat_tuyen_chinh_thuc`).
+> - **Chống trùng lặp:** Mỗi hồ sơ chỉ có tối đa 1 đánh giá giữa kỳ và 1 đánh giá cuối kỳ. Trùng lặp sẽ trả về `HTTP 400 Bad Request`.
+> - **Tự động tính toán:** Tự động tính điểm trung bình (`diem_trung_binh`) và xếp loại rèn luyện (`xep_loai`: XuatSac, Gioi, Kha, TrungBinh, Yeu).
+
+* **Phản hồi thành công (HTTP 201 Created):**
+```json
+{
+  "status_code": 201,
+  "message": "Tạo đánh giá thực tập sinh thành công",
+  "data": {
+    "ma_danh_gia": 1,
+    "ma_ho_so": 1,
+    "ma_nguoi_danh_gia": 3,
+    "ten_nguoi_danh_gia": "Nguyễn Hướng Dẫn",
+    "loai_danh_gia": "CuoiKy",
+    "diem_ky_nang": 8.5,
+    "diem_thai_do": 9.0,
+    "diem_trung_binh": 8.75,
+    "xep_loai": "Gioi",
+    "nhan_xet_chi_tiet": "Sinh viên tiếp thu nhanh, hoàn thành tốt các nhiệm vụ được giao.",
+    "de_xuat_tuyen_chinh_thuc": true
+  }
+}
+```
+

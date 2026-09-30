@@ -517,4 +517,65 @@ class EvaluationSummaryResponse(BaseModel):
     data: EvaluationSummaryData
 
 
+# ==============================================================
+# SCHEMAS CHO TẠO ĐÁNH GIÁ THỰC TẬP SINH (POST /api/v1/evaluations)
+# ==============================================================
+
+class EvaluationCreate(BaseModel):
+    """Schema tạo mới đánh giá thực tập sinh (POST /api/v1/evaluations)"""
+    ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập sinh")
+    ma_nguoi_danh_gia: int = Field(..., gt=0, description="Mã người đánh giá")
+    loai_danh_gia: str = Field(..., description="Loại đánh giá: GiuaKy hoặc CuoiKy")
+    diem_ky_nang: float = Field(..., ge=0.0, le=10.0, description="Điểm kỹ năng chuyên môn (0.0 - 10.0)")
+    diem_thai_do: float = Field(..., ge=0.0, le=10.0, description="Điểm thái độ kỷ luật (0.0 - 10.0)")
+    nhan_xet: Optional[str] = Field(default=None, description="Nhận xét chi tiết")
+    nhan_xet_chi_tiet: Optional[str] = Field(default=None, description="Nhận xét chi tiết (alias)")
+    de_xuat_tuyen_dung: Optional[bool] = Field(default=None, description="Đề xuất tuyển dụng chính thức")
+    de_xuat_tuyen_chinh_thuc: Optional[bool] = Field(default=None, description="Đề xuất tuyển dụng chính thức (alias)")
+
+    @field_validator('loai_danh_gia')
+    def validate_loai_danh_gia(cls, v: str):
+        cleaned = v.strip()
+        if cleaned not in ["GiuaKy", "CuoiKy"]:
+            raise ValueError("Loại đánh giá phải là 'GiuaKy' hoặc 'CuoiKy'")
+        return cleaned
+
+    def get_nhan_xet(self) -> Optional[str]:
+        if self.nhan_xet is not None:
+            cleaned = self.nhan_xet.strip()
+            return cleaned if cleaned else None
+        if self.nhan_xet_chi_tiet is not None:
+            cleaned = self.nhan_xet_chi_tiet.strip()
+            return cleaned if cleaned else None
+        return None
+
+    def get_de_xuat(self) -> bool:
+        if self.de_xuat_tuyen_dung is not None:
+            return bool(self.de_xuat_tuyen_dung)
+        if self.de_xuat_tuyen_chinh_thuc is not None:
+            return bool(self.de_xuat_tuyen_chinh_thuc)
+        return False
+
+
+class EvaluationItemData(BaseModel):
+    ma_danh_gia: int
+    ma_ho_so: int
+    ma_nguoi_danh_gia: int
+    ten_nguoi_danh_gia: Optional[str] = None
+    loai_danh_gia: str
+    diem_ky_nang: float
+    diem_thai_do: float
+    diem_trung_binh: float
+    xep_loai: str
+    nhan_xet_chi_tiet: Optional[str] = None
+    de_xuat_tuyen_chinh_thuc: bool = False
+
+
+class EvaluationCreateResponse(BaseModel):
+    status_code: int = 201
+    message: str = "Tạo đánh giá thực tập sinh thành công"
+    data: Optional[EvaluationItemData] = None
+
+
+
 

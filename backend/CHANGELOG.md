@@ -4,7 +4,36 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.13.0] - 2026-09-30
+
+### Đã hoàn thành (Added & Enhanced)
+- **Endpoint Tạo Mới Đánh Giá Thực Tập Sinh (`POST /api/v1/evaluations`)**:
+  - Triển khai endpoint tiếp nhận đánh giá thực tập sinh (Giữa kỳ hoặc Cuối kỳ).
+  - Lưu đầy đủ các trường: `ma_ho_so`, `ma_nguoi_danh_gia`, `loai_danh_gia`, `diem_ky_nang`, `diem_thai_do`, `nhan_xet`, `de_xuat_tuyen_dung`.
+  - Hỗ trợ linh hoạt cả 2 tên trường `nhan_xet` $\leftrightarrow$ `nhan_xet_chi_tiet` và `de_xuat_tuyen_dung` $\leftrightarrow$ `de_xuat_tuyen_chinh_thuc`.
+  - Tự động tính điểm trung bình (`diem_trung_binh`) và xếp loại rèn luyện (`xep_loai`: XuatSac, Gioi, Kha, TrungBinh, Yeu).
+  - Validate chặt chẽ:
+    - Thang điểm `diem_ky_nang` và `diem_thai_do` từ 0.0 đến 10.0 $\rightarrow$ báo lỗi `HTTP 422 Unprocessable Entity` nếu vi phạm.
+    - Loại đánh giá `loai_danh_gia` chỉ nhận `GiuaKy` hoặc `CuoiKy` $\rightarrow$ báo lỗi `HTTP 422 Unprocessable Entity` nếu sai giá trị.
+    - Kiểm tra khóa ngoại `ma_ho_so` tồn tại $\rightarrow$ trả về `HTTP 404 Not Found`.
+    - Kiểm tra khóa ngoại `ma_nguoi_danh_gia` tồn tại $\rightarrow$ trả về `HTTP 400 Bad Request`.
+    - Chống trùng lặp đánh giá cùng loại cho một hồ sơ $\rightarrow$ trả về `HTTP 400 Bad Request`.
+- **Kiểm thử tự động (Unit Test)**:
+  - Tạo mới bộ kiểm thử `backend/tests/test_create_evaluation.py` với **14 test cases** kiểm thử toàn diện:
+    - Tạo đánh giá Giữa kỳ và Cuối kỳ thành công với đầy đủ thông tin (201 Created).
+    - Kiểm tra tính toán điểm trung bình cộng và xếp loại rèn luyện chính xác.
+    - Kiểm tra chặn trùng lặp cùng loại đánh giá cho 1 hồ sơ (400 Bad Request).
+    - Cho phép 1 hồ sơ có cả đánh giá Giữa kỳ và Cuối kỳ (201 Created).
+    - Bắt lỗi điểm kỹ năng / thái độ âm hoặc > 10.0 (422).
+    - Bắt lỗi loại đánh giá không hợp lệ (422).
+    - Bắt lỗi mã hồ sơ không tồn tại (404), người đánh giá không tồn tại (400).
+    - Kiểm tra điểm số biên 0.0 (Yếu) và 10.0 (Xuất sắc).
+  - Nâng tổng số test cases của toàn hệ thống lên **190/190 PASS 100%**.
+
+---
+
 ## [1.12.0] - 2026-09-30
+
 
 ### Đã hoàn thành (Added & Enhanced)
 - **Endpoint Cập nhật Thời gian Chương trình Thực tập (`PATCH /api/v1/programs/{id}/timeline`)**:
