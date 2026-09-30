@@ -17,6 +17,8 @@ from schemas import (
     DocumentUploadResponse,
     ProgramCreate,
     ProgramResponse,
+    ProgramTimelineUpdate,
+    ProgramTimelineResponse,
     TaskProgressUpdate,
     TaskProgressResponse,
     MyScheduleResponse,
@@ -563,6 +565,55 @@ def create_program(program_data: ProgramCreate, db: Session = Depends(get_db)):
         "message": "Tạo chương trình thực tập thành công",
         "data": new_program.to_dict()
     }
+
+
+# api patch program timeline
+@app.patch("/api/v1/programs/{id}/timeline", status_code=200, response_model=ProgramTimelineResponse)
+def update_program_timeline(
+    id: int,
+    timeline_data: ProgramTimelineUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Cập nhật mốc thời gian (ngay_bat_dau, ngay_ket_thuc) của chương trình thực tập.
+    Validate logic: ngày kết thúc phải lớn hơn ngày bắt đầu (ngay_ket_thuc > ngay_bat_dau).
+    """
+    # 1. Kiểm tra ID hợp lệ
+    if id <= 0:
+        raise HTTPException(status_code=422, detail="Mã chương trình không hợp lệ")
+
+    # 2. Tìm chương trình thực tập trong CSDL
+    program = db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh == id).first()
+    if not program:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy chương trình thực tập ID: {id}")
+
+    # 3. Xác định mốc thời gian áp dụng (kết hợp dữ liệu mới và dữ liệu hiện tại trong DB)
+    new_start = timeline_data.ngay_bat_dau if timeline_data.ngay_bat_dau is not None else program.ngay_bat_dau
+    new_end = timeline_data.ngay_ket_thuc if timeline_data.ngay_ket_thuc is not None else program.ngay_ket_thuc
+
+    # 4. Kiểm tra logic ngày kết thúc > ngày bắt đầu
+    if new_start and new_end and new_end <= new_start:
+        raise HTTPException(
+            status_code=400,
+            detail="Ngày kết thúc phải lớn hơn ngày bắt đầu"
+        )
+
+    # 5. Cập nhật dữ liệu vào model
+    if timeline_data.ngay_bat_dau is not None:
+        program.ngay_bat_dau = timeline_data.ngay_bat_dau
+    if timeline_data.ngay_ket_thuc is not None:
+        program.ngay_ket_thuc = timeline_data.ngay_ket_thuc
+
+    db.commit()
+    db.refresh(program)
+
+    # 6. Trả về phản hồi thành công
+    return {
+        "status_code": 200,
+        "message": "Cập nhật thời gian chương trình thực tập thành công",
+        "data": program.to_dict()
+    }
+
 
 
 # ==============================================================
