@@ -22,6 +22,11 @@ def clean_created_test_programs():
     try:
         # Xóa các chương trình test có mã lớn hơn 1 (dữ liệu mẫu ban đầu là 1)
         db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh > 1).delete()
+        # Khôi phục mốc thời gian ban đầu của chương trình mẫu 1
+        prog1 = db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh == 1).first()
+        if prog1:
+            prog1.ngay_bat_dau = date(2026, 9, 1)
+            prog1.ngay_ket_thuc = date(2026, 12, 30)
         db.commit()
     finally:
         db.close()

@@ -4,6 +4,34 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.13.0] - 2026-09-30
+
+### Đã hoàn thành (Added & Enhanced)
+- **Endpoint Báo cáo Tổng hợp Chấm công (`GET /api/v1/attendance/reports`)**:
+  - Triển khai endpoint lọc và tổng hợp dữ liệu chấm công của thực tập sinh:
+    - Lọc linh hoạt theo `thang` (1-12), `nam`, `ma_phong_ban`.
+    - Tối ưu hóa truy vấn thời gian SARGable (`ngay_cham_cong >= start_date AND < end_date`) giúp tận dụng index CSDL và tương thích 100% giữa MySQL và SQLite.
+    - Tổng hợp các chỉ số KPI: `so_ngay_di_lam`, `so_lan_di_muon` (tùy biến mốc giờ qua `gio_chuan`, mặc định `08:30:00`), `so_ngay_nghi` (chỉ tính các đơn nghỉ phép ở trạng thái `DaDuyet`).
+    - Tính toán KPI tổng quan: `tong_so_thuc_tap_sinh`, `tong_so_ngay_di_lam`, `tong_so_lan_di_muon`, `tong_so_ngay_nghi`, `ty_le_di_muon`, `trung_binh_ngay_cong`.
+    - Hỗ trợ phân trang chuẩn `page`, `page_size`, `total_items`, `total_pages`.
+- **Cơ sở dữ liệu & Models**:
+  - Bổ sung bảng `cham_cong` và `don_nghi_phep` vào file [init_db.sql](file:///d:/clone/ttcs/script/database/init_db.sql) chuẩn theo [DATABASE_DESIGN.md](file:///d:/clone/ttcs/backend/database/DATABASE_DESIGN.md).
+  - Bổ sung Seed Data mẫu cho chấm công và đơn xin nghỉ phép vào [init_db.sql](file:///d:/clone/ttcs/script/database/init_db.sql) và [init_db.py](file:///d:/clone/ttcs/script/init_db.py).
+  - Tạo model [ChamCong](file:///d:/clone/ttcs/backend/database/models/cham_cong.py) và [DonNghiPhep](file:///d:/clone/ttcs/backend/database/models/don_nghi_phep.py).
+  - Khai báo relationships `danh_sach_cham_cong` và `danh_sach_nghi_phep` trong [HoSoThucTap](file:///d:/clone/ttcs/backend/database/models/ho_so.py).
+- **Kiểm thử tự động (Unit Test)**:
+  - Tạo mới `backend/tests/test_attendance_reports.py` với 11 test cases bao phủ:
+    - Báo cáo mặc định và theo tháng/năm.
+    - Lọc theo phòng ban và xử lý phòng ban không tồn tại (404).
+    - Lọc tháng không có dữ liệu (số liệu 0).
+    - Tùy chỉnh giờ chuẩn vào làm (`gio_chuan`).
+    - Lọc trạng thái đơn nghỉ phép (chỉ tính đơn `DaDuyet`).
+    - Phân trang kết quả.
+    - Validate dữ liệu đầu vào (tháng ngoài 1-12, năm < 2000, page/page_size <= 0 -> 422).
+  - Toàn bộ test suite đạt **162/162 unit tests PASS 100%**.
+
+---
+
 ## [1.12.0] - 2026-09-30
 
 ### Đã hoàn thành (Added & Enhanced)

@@ -120,6 +120,27 @@ CREATE TABLE IF NOT EXISTS danh_gia (
     FOREIGN KEY (ma_nguoi_danh_gia) REFERENCES nguoi_dung(ma_nguoi_dung) ON DELETE RESTRICT
 );
 
+-- 11. BẢNG CHẤM CÔNG (Attendance Log)
+CREATE TABLE IF NOT EXISTS cham_cong (
+    ma_cham_cong INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    ngay_cham_cong DATE NOT NULL,
+    gio_check_in TIME,
+    gio_check_out TIME,
+    phuong_thuc VARCHAR(50) DEFAULT 'Web' COMMENT 'QR, The, Web',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
+-- 12. BẢNG ĐƠN NGHỈ PHÉP (Leave Requests)
+CREATE TABLE IF NOT EXISTS don_nghi_phep (
+    ma_don INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    ngay_nghi DATE NOT NULL,
+    ly_do VARCHAR(255) NOT NULL,
+    trang_thai VARCHAR(50) DEFAULT 'ChoDuyet' COMMENT 'ChoDuyet, DaDuyet, TuChoi',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API
 INSERT INTO phong_ban (ma_phong_ban, ten_phong_ban, mo_ta) 
 VALUES (1, 'Trung tâm Phần mềm', 'Phòng kỹ thuật & phát triển hệ thống')
@@ -180,5 +201,21 @@ VALUES
 (3, 2, 3, 'GiuaKy', 7.5, 8.0, 'Thực hiện công việc đúng tiến độ, cần chủ động hơn trong giao tiếp', FALSE),
 (4, 2, 3, 'CuoiKy', 8.0, 8.5, 'Tiến bộ rõ rệt, đáp ứng tốt yêu cầu dự án', FALSE)
 ON DUPLICATE KEY UPDATE diem_ky_nang = VALUES(diem_ky_nang), diem_thai_do = VALUES(diem_thai_do), de_xuat_tuyen_chinh_thuc = VALUES(de_xuat_tuyen_chinh_thuc);
+
+INSERT INTO cham_cong (ma_cham_cong, ma_ho_so, ngay_cham_cong, gio_check_in, gio_check_out, phuong_thuc)
+VALUES
+(1, 1, '2026-09-02', '08:15:00', '17:30:00', 'Web'),
+(2, 1, '2026-09-03', '08:45:00', '17:35:00', 'Web'),
+(3, 1, '2026-09-04', '08:20:00', '17:30:00', 'QR'),
+(4, 2, '2026-09-02', '08:10:00', '17:30:00', 'Web'),
+(5, 2, '2026-09-03', '08:50:00', '17:40:00', 'The')
+ON DUPLICATE KEY UPDATE ngay_cham_cong = VALUES(ngay_cham_cong), gio_check_in = VALUES(gio_check_in), gio_check_out = VALUES(gio_check_out);
+
+INSERT INTO don_nghi_phep (ma_don, ma_ho_so, ngay_nghi, ly_do, trang_thai)
+VALUES
+(1, 1, '2026-09-05', 'Bị ốm đột xuất có giấy khám bệnh', 'DaDuyet'),
+(2, 1, '2026-09-12', 'Việc bận gia đình', 'ChoDuyet'),
+(3, 2, '2026-09-08', 'Đi thi học phần ở trường', 'DaDuyet')
+ON DUPLICATE KEY UPDATE ngay_nghi = VALUES(ngay_nghi), ly_do = VALUES(ly_do), trang_thai = VALUES(trang_thai);
 
 
