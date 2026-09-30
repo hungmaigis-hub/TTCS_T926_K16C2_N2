@@ -23,6 +23,7 @@ class HoSoThucTap(Base):
     danh_sach_hop_dong = relationship("HopDong", back_populates="ho_so", cascade="all, delete-orphan")
     danh_sach_nhiem_vu = relationship("NhiemVu", back_populates="ho_so", cascade="all, delete-orphan")
     danh_sach_bao_cao = relationship("BaoCaoTuan", back_populates="ho_so", cascade="all, delete-orphan")
+    danh_sach_danh_gia = relationship("DanhGia", back_populates="ho_so", cascade="all, delete-orphan")
     danh_sach_cham_cong = relationship("ChamCong", back_populates="ho_so", cascade="all, delete-orphan")
     danh_sach_nghi_phep = relationship("DonNghiPhep", back_populates="ho_so", cascade="all, delete-orphan")
 

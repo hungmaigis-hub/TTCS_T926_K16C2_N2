@@ -72,15 +72,19 @@ function hienThiThongBaoThanhCong(tieuDe, noiDung) {
     </div>
     <div class="flex-1">
       <div class="flex items-center justify-between">
-        <h4 class="font-label-lg text-label-lg font-bold">${tieuDe}</h4>
+        <h4 class="font-label-lg text-label-lg font-bold" data-thong-bao-tieu-de></h4>
         <span class="font-code text-label-sm bg-surface-container-lowest px-2 py-0.5 rounded text-secondary font-semibold">VỪA XONG</span>
       </div>
-      <p class="font-body-md text-body-md mt-1 leading-relaxed">${noiDung}</p>
+      <p class="font-body-md text-body-md mt-1 leading-relaxed" data-thong-bao-noi-dung></p>
     </div>
     <button type="button" onclick="document.getElementById('hopThongBao').classList.add('hidden')" class="hover:opacity-75 p-1 rounded-md transition-opacity" title="Đóng">
       <span class="material-symbols-outlined text-lg">close</span>
     </button>
   `;
+  const titleNode = hop.querySelector("[data-thong-bao-tieu-de]");
+  const contentNode = hop.querySelector("[data-thong-bao-noi-dung]");
+  if (titleNode) titleNode.textContent = tieuDe;
+  if (contentNode) contentNode.textContent = noiDung;
   hop.classList.remove("hidden");
   hop.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -99,15 +103,19 @@ function hienThiThongBaoLoi(tieuDe, noiDung) {
     </div>
     <div class="flex-1">
       <div class="flex items-center justify-between">
-        <h4 class="font-label-lg text-label-lg font-bold text-red-800">${tieuDe}</h4>
+        <h4 class="font-label-lg text-label-lg font-bold text-red-800" data-thong-bao-tieu-de></h4>
         <span class="font-code text-label-sm bg-red-100 px-2 py-0.5 rounded text-red-700 font-semibold">LỖI XÁC THỰC</span>
       </div>
-      <p class="font-body-md text-body-md mt-1 leading-relaxed text-red-700">${noiDung}</p>
+      <p class="font-body-md text-body-md mt-1 leading-relaxed text-red-700" data-thong-bao-noi-dung></p>
     </div>
     <button type="button" onclick="document.getElementById('hopThongBao').classList.add('hidden')" class="hover:opacity-75 p-1 rounded-md transition-opacity text-red-600" title="Đóng">
       <span class="material-symbols-outlined text-lg">close</span>
     </button>
   `;
+  const titleNode = hop.querySelector("[data-thong-bao-tieu-de]");
+  const contentNode = hop.querySelector("[data-thong-bao-noi-dung]");
+  if (titleNode) titleNode.textContent = tieuDe;
+  if (contentNode) contentNode.textContent = noiDung;
   hop.classList.remove("hidden");
   hop.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
