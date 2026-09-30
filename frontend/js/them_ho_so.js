@@ -187,6 +187,7 @@ async function handleLuuHoSo() {
           `Đã thêm mới thành công hồ sơ của sinh viên ${hoTen} (Mã hồ sơ: #${maHoSoTaoMoi || ""}) vào CSDL Backend!`,
       );
       form?.reset();
+      taiHoSoGanDay();
     } else {
       let loiChiTiet = "Có lỗi xảy ra khi lưu hồ sơ!";
       if (typeof ketQua.detail === "string") {
@@ -259,6 +260,93 @@ function hienThongBaoLoi(thongDiep) {
   hopThongBao.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+async function taiHoSoGanDay() {
+  const tbody = document.getElementById("bangHoSoGanDay");
+  if (!tbody) return;
+
+  try {
+    const phanHoi = await fetch(`${duongDanApi}?limit=6`);
+    if (!phanHoi.ok) return;
+
+    const ketQua = await phanHoi.json();
+    const danhSach = ketQua.data;
+    if (!danhSach || danhSach.length === 0) return;
+
+    const mauAvatar = [
+      "bg-blue-100 text-blue-700",
+      "bg-indigo-100 text-indigo-700",
+      "bg-emerald-100 text-emerald-700",
+      "bg-amber-100 text-amber-700",
+      "bg-purple-100 text-purple-700",
+      "bg-sky-100 text-sky-700",
+    ];
+
+    tbody.innerHTML = danhSach
+      .map((item, idx) => {
+        const hoTen = item.ho_ten || "Chưa cập nhật";
+        const email = item.email || "—";
+        const chuyenNganh = item.chuyen_nganh || "Công nghệ thông tin";
+        const thoiGian =
+          item.ngay_bat_dau && item.ngay_ket_thuc
+            ? `${dinhDangNgay(item.ngay_bat_dau)} - ${dinhDangNgay(item.ngay_ket_thuc)}`
+            : "Học kỳ 2024 - 2025";
+
+        let badgeTrangThai = "";
+        if (item.trang_thai_xet_duyet === "DaDuyet") {
+          badgeTrangThai = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Đã duyệt</span>`;
+        } else if (item.trang_thai_xet_duyet === "TuChoi") {
+          badgeTrangThai = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">Bị từ chối</span>`;
+        } else if (item.trang_thai_thuc_tap === "DangThucTap") {
+          badgeTrangThai = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">Đang thực tập</span>`;
+        } else {
+          badgeTrangThai = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Chờ duyệt</span>`;
+        }
+
+        const tu = hoTen.trim().split(" ");
+        const vietTat =
+          tu.length === 1
+            ? tu[0].substring(0, 2).toUpperCase()
+            : (tu[0][0] + tu[tu.length - 1][0]).toUpperCase();
+
+        const mau = mauAvatar[idx % mauAvatar.length];
+
+        return `
+          <tr class="hover:bg-slate-50/60 transition-colors">
+            <td class="py-3 font-bold text-slate-900 flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full ${mau} flex items-center justify-center text-[10px] font-bold shrink-0">
+                ${vietTat}
+              </div>
+              <a href="them_ho_so.html?id=${item.ma_ho_so}" class="hover:text-blue-600 transition-colors font-semibold" title="Nhấp để chỉnh sửa hồ sơ #${item.ma_ho_so}">
+                ${hoTen}
+              </a>
+            </td>
+            <td class="py-3 text-slate-500">${email}</td>
+            <td class="py-3">${chuyenNganh}</td>
+            <td class="py-3 text-slate-500">${thoiGian}</td>
+            <td class="py-3 text-center">${badgeTrangThai}</td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    const thoiGianCapNhat = document.getElementById("thoiGianCapNhatHoSo");
+    if (thoiGianCapNhat) {
+      thoiGianCapNhat.textContent = "Đồng bộ từ CSDL Backend";
+    }
+  } catch (err) {}
+}
+
+function dinhDangNgay(chuoiNgay) {
+  if (!chuoiNgay) return "";
+  try {
+    const d = new Date(chuoiNgay);
+    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+  } catch {
+    return chuoiNgay;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   kiemTraVaNapHoSo();
+  taiHoSoGanDay();
 });
