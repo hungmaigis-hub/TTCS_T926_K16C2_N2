@@ -4,7 +4,23 @@ Tất cả các thay đổi và tiến độ phát triển của phân hệ Fron
 
 ---
 
+## [1.3.0] - 2026-09-30
+
+### Đã thêm & Cải tiến (Added & Refactored)
+- **Đồng bộ hóa Lịch Thực Tập & Timeline với Backend API (`html/quanly/lich_thuc_tap.html` & `js/lich_thuc_tap.js`)**:
+  - Tích hợp gọi trực tiếp API `PATCH /api/v1/programs/{id}/timeline` khi Quản trị viên bấm nút **Lưu lịch chương trình**.
+  - Bổ sung trường định danh `maChuongTrinh` trong biểu mẫu quản lý đợt thực tập.
+  - Xử lý validate logic thời gian nghiêm ngặt ngay tại Client: bắt buộc **ngày kết thúc > ngày bắt đầu** (`ngayKetThuc > ngayBatDau`). Báo lỗi tức thì và ngăn chặn gửi request sai.
+  - Bắt và hiển thị lỗi chi tiết từ Backend nếu vi phạm quy tắc ngày hoặc ID chương trình không tồn tại (HTTP 400 / 404 / 422).
+  - Tích hợp Huy hiệu trạng thái kết nối Backend thời gian thực (`#badgeTrangThaiApi`) trên tiêu đề trang quản lý lịch thực tập.
+  - Tích hợp cơ chế Fallback Offline tự động sang chế độ thử nghiệm nếu Backend chưa bật hoặc mất kết nối mạng.
+- **Cập nhật Đặc tả Tích hợp API (`frontend/API_INTEGRATION.md`)**:
+  - Bổ sung mục 6 đặc tả chi tiết giao thức kết nối và mẫu payload cho `PATCH /api/v1/programs/{id}/timeline`.
+
+---
+
 ## [1.2.0] - 2026-09-28
+
 
 ### Đã thêm & Cải tiến (Added & Refactored)
 - **Đồng bộ hóa Nhiệm vụ & Tiến độ với Backend API (`html/sinhvien/nhiem_vu.html` & `js/nhiem_vu.js`)**:

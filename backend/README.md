@@ -411,6 +411,46 @@ pytest -v
 
 ---
 
+### 6. Cập nhật thời gian chương trình thực tập (Timeline)
+* **URL:** `/api/v1/programs/{id}/timeline`
+* **Method:** `PATCH`
+* **Status Code:** `200 OK`
+* **URL Params:** `id=[integer]` (Mã chương trình thực tập)
+* **Request Body (JSON):**
+```json
+{
+  "ngay_bat_dau": "2026-10-01",
+  "ngay_ket_thuc": "2026-12-31"
+}
+```
+
+> **Quy tắc Validate & Nghiệp vụ:**
+> - `ngay_bat_dau`, `ngay_ket_thuc`: Tùy chọn (cho phép cập nhật một hoặc cả hai trường).
+> - Yêu cầu cung cấp ít nhất một trường trong payload, nếu rỗng sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - **Quy tắc thời gian bắt buộc:** `ngay_ket_thuc > ngay_bat_dau` (ngày kết thúc phải lớn hơn ngày bắt đầu).
+>   - Nếu gửi cả hai ngày mà `ngay_ket_thuc <= ngay_bat_dau`: Trả về `HTTP 422 Unprocessable Entity`.
+>   - Nếu chỉ gửi một ngày mà xung đột với mốc thời gian hiện tại trong CSDL: Trả về `HTTP 400 Bad Request`.
+> - `id`: Nếu không tìm thấy chương trình thực tập trong hệ thống sẽ trả về `HTTP 404 Not Found`.
+
+* **Phản hồi thành công (HTTP 200 OK):**
+```json
+{
+  "status_code": 200,
+  "message": "Cập nhật thời gian chương trình thực tập thành công",
+  "data": {
+    "ma_chuong_trinh": 1,
+    "ma_phong_ban": 1,
+    "ten_phong_ban": "Trung tâm Phần mềm",
+    "ten_chuong_trinh": "Thực tập sinh Khóa Mùa Thu 2026",
+    "ngay_bat_dau": "2026-10-01",
+    "ngay_ket_thuc": "2026-12-31",
+    "mo_ta": "Chương trình đào tạo kỹ sư phần mềm thực chiến"
+  }
+}
+```
+
+---
+
 ### 9. Cập nhật tiến độ nhiệm vụ thực tập sinh
 * **URL:** `/api/v1/tasks/{id}/progress`
 * **Method:** `PATCH`
