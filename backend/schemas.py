@@ -315,6 +315,28 @@ class ProgramResponse(BaseModel):
     message: str
     data: Optional[ProgramDetailData] = None
 
+
+class ProgramTimelineUpdate(BaseModel):
+    """Schema cập nhật thời gian chương trình thực tập (PATCH /api/v1/programs/{id}/timeline)"""
+    ngay_bat_dau: Optional[date] = Field(default=None, description="Ngày bắt đầu mới của chương trình")
+    ngay_ket_thuc: Optional[date] = Field(default=None, description="Ngày kết thúc mới của chương trình")
+
+    @model_validator(mode='after')
+    def validate_timeline(self):
+        if self.ngay_bat_dau is None and self.ngay_ket_thuc is None:
+            raise ValueError("Cần cung cấp ít nhất một trường: ngay_bat_dau hoặc ngay_ket_thuc")
+        if self.ngay_bat_dau and self.ngay_ket_thuc:
+            if self.ngay_ket_thuc <= self.ngay_bat_dau:
+                raise ValueError("Ngày kết thúc phải lớn hơn ngày bắt đầu")
+        return self
+
+
+class ProgramTimelineResponse(BaseModel):
+    status_code: int = 200
+    message: str
+    data: Optional[ProgramDetailData] = None
+
+
 # ==============================================================
 # SCHEMAS CHO NHIỆM VỤ THỰC TẬP (TASKS API)
 # ==============================================================

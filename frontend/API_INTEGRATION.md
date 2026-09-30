@@ -153,6 +153,44 @@ Tài liệu đặc tả các giao thức kết nối, định dạng dữ liệu
 
 ---
 
+### 6. Cập nhật thời gian chương trình thực tập (Timeline)
+- **Method**: `PATCH`
+- **Endpoint**: `/api/v1/programs/{id}/timeline`
+- **Tham số**:
+  - `id` *(Path parameter)*: Mã chương trình thực tập (`ma_chuong_trinh`)
+- **Request Body**:
+```json
+{
+  "ngay_bat_dau": "2026-10-01",
+  "ngay_ket_thuc": "2026-12-31"
+}
+```
+- **Quy tắc & Logic nghiệp vụ**:
+  - `ngay_bat_dau`, `ngay_ket_thuc`: Tùy chọn (cho phép cập nhật một hoặc cả 2 trường).
+  - Bắt buộc: **`ngay_ket_thuc > ngay_bat_dau`** (ngày kết thúc phải lớn hơn ngày bắt đầu).
+  - Phía Client validate trước khi gửi yêu cầu.
+  - Phía Backend validate và trả về `HTTP 422 Unprocessable Entity` nếu `ngay_ket_thuc <= ngay_bat_dau`, hoặc `HTTP 400 Bad Request` nếu xung đột mốc thời gian với CSDL.
+- **Tệp Frontend sử dụng**: `frontend/js/lich_thuc_tap.js` (giao diện `frontend/html/quanly/lich_thuc_tap.html`)
+- **Response mẫu (HTTP 200)**:
+```json
+{
+  "status_code": 200,
+  "message": "Cập nhật thời gian chương trình thực tập thành công",
+  "data": {
+    "ma_chuong_trinh": 1,
+    "ma_phong_ban": 1,
+    "ten_phong_ban": "Trung tâm Phát triển Phần mềm",
+    "ten_chuong_trinh": "Kỳ thực tập K16 Công nghệ Thông tin đợt 2",
+    "ngay_bat_dau": "2026-10-01",
+    "ngay_ket_thuc": "2026-12-31",
+    "mo_ta": "Chương trình đào tạo kỹ sư thực chiến"
+  }
+}
+```
+
+---
+
+
 ## 🛡️ Cơ chế Fallback và Xử lý Lỗi
 
 Phía Frontend cài đặt lớp xử lý an toàn tự động:

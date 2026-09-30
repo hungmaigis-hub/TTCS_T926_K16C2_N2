@@ -4,6 +4,36 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.12.0] - 2026-09-30
+
+### Đã hoàn thành (Added & Enhanced)
+- **Endpoint Cập nhật Thời gian Chương trình Thực tập (`PATCH /api/v1/programs/{id}/timeline`)**:
+  - Triển khai endpoint cập nhật mốc thời gian `ngay_bat_dau` và `ngay_ket_thuc` cho chương trình thực tập theo `id` (`ma_chuong_trinh`).
+  - Xây dựng schema `ProgramTimelineUpdate` và `ProgramTimelineResponse` trong `backend/schemas.py`.
+  - Validate chặt chẽ logic thời gian:
+    - Bắt buộc cung cấp ít nhất một trường (`ngay_bat_dau` hoặc `ngay_ket_thuc`), trả về `HTTP 422 Unprocessable Entity` nếu body rỗng `{}`.
+    - Validate bắt buộc: **ngày kết thúc > ngày bắt đầu** (`ngay_ket_thuc > ngay_bat_dau`).
+    - Nếu gửi cả hai ngày và `ngay_ket_thuc <= ngay_bat_dau` $\rightarrow$ Trả về `HTTP 422 Unprocessable Entity`.
+    - Nếu chỉ gửi một ngày và vi phạm với ngày hiện tại trong DB $\rightarrow$ Trả về `HTTP 400 Bad Request`.
+    - Trả về `HTTP 404 Not Found` nếu không tìm thấy chương trình thực tập theo `id`.
+    - Trả về `HTTP 422 Unprocessable Entity` nếu `id <= 0`.
+- **Kiểm thử tự động (Unit Test)**:
+  - Bổ sung 11 unit test cases mới vào `backend/tests/test_programs.py` (tổng số test trong file tăng từ 14 lên 25 tests):
+    - Cập nhật thành công cả 2 ngày (`ngay_ket_thuc > ngay_bat_dau`) $\rightarrow$ 200 OK.
+    - Cập nhật chỉ ngày bắt đầu $\rightarrow$ 200 OK.
+    - Cập nhật chỉ ngày kết thúc $\rightarrow$ 200 OK.
+    - Bắt lỗi khi ngày kết thúc trước ngày bắt đầu $\rightarrow$ 422.
+    - Bắt lỗi khi ngày kết thúc trùng ngày bắt đầu $\rightarrow$ 422.
+    - Bắt lỗi khi ngày bắt đầu mới $\ge$ ngày kết thúc hiện tại trong DB $\rightarrow$ 400.
+    - Bắt lỗi khi ngày kết thúc mới $\le$ ngày bắt đầu hiện tại trong DB $\rightarrow$ 400.
+    - Bắt lỗi khi ngày kết thúc mới bằng đúng ngày bắt đầu hiện tại $\rightarrow$ 400.
+    - Bắt lỗi khi gửi payload rỗng $\rightarrow$ 422.
+    - Bắt lỗi khi mã chương trình không tồn tại $\rightarrow$ 404.
+    - Bắt lỗi khi ID âm hoặc bằng 0 $\rightarrow$ 422.
+  - Toàn bộ test suite: **151/151 unit tests PASS 100%**.
+
+---
+
 ## [1.12.0] - 2026-09-29
 > **Người thực hiện**: Dương Đình Hoàng  
 > **Nhiệm vụ**: Backend (FastAPI): Viết endpoint `GET /api/v1/evaluations/summary` tổng hợp dữ liệu từ `ho_so_thuc_tap`, `danh_gia`, `truong_dai_hoc`, đồng thời hỗ trợ xuất dữ liệu ra file PDF/Excel.
@@ -43,6 +73,7 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 ---
 
 ## [1.11.0] - 2026-09-28
+
 
 ### Đã hoàn thành (Added & Enhanced)
 - **Model SQLAlchemy Nhiệm vụ thực tập (`NhiemVu`)**:
