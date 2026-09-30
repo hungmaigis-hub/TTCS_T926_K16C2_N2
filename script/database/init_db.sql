@@ -105,6 +105,28 @@ CREATE TABLE IF NOT EXISTS bao_cao_tuan (
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE,
     FOREIGN KEY (ma_nhiem_vu) REFERENCES nhiem_vu(ma_nhiem_vu) ON DELETE SET NULL
 );
+
+-- 10. BẢNG CHẤM CÔNG (Attendance Log)
+CREATE TABLE IF NOT EXISTS cham_cong (
+    ma_cham_cong INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    ngay_cham_cong DATE NOT NULL,
+    gio_check_in TIME,
+    gio_check_out TIME,
+    phuong_thuc VARCHAR(50) DEFAULT 'Web' COMMENT 'QR, The, Web',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
+-- 11. BẢNG ĐƠN NGHỈ PHÉP (Leave Requests)
+CREATE TABLE IF NOT EXISTS don_nghi_phep (
+    ma_don INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    ngay_nghi DATE NOT NULL,
+    ly_do VARCHAR(255) NOT NULL,
+    trang_thai VARCHAR(50) DEFAULT 'ChoDuyet' COMMENT 'ChoDuyet, DaDuyet, TuChoi',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API
 INSERT INTO phong_ban (ma_phong_ban, ten_phong_ban, mo_ta) 
 VALUES (1, 'Trung tâm Phần mềm', 'Phòng kỹ thuật & phát triển hệ thống')
@@ -157,4 +179,21 @@ VALUES
 (1, 1, 1, 1, 'Tìm hiểu Docker và triển khai container hóa cho ứng dụng FastAPI', 'Hoàn thành file Dockerfile và docker-compose.yml', 'Tốt, tiếp tục nghiên cứu Microservices', '2026-09-10 17:00:00'),
 (2, 1, 2, 2, 'Thiết kế endpoint GET /api/v1/interns/my-schedule', 'Hoàn thiện endpoint và test case đạt 100%', NULL, '2026-09-17 16:30:00')
 ON DUPLICATE KEY UPDATE noi_dung_cong_viec = VALUES(noi_dung_cong_viec);
+
+INSERT INTO cham_cong (ma_cham_cong, ma_ho_so, ngay_cham_cong, gio_check_in, gio_check_out, phuong_thuc)
+VALUES
+(1, 1, '2026-09-02', '08:15:00', '17:30:00', 'Web'),
+(2, 1, '2026-09-03', '08:45:00', '17:35:00', 'Web'),
+(3, 1, '2026-09-04', '08:20:00', '17:30:00', 'QR'),
+(4, 2, '2026-09-02', '08:10:00', '17:30:00', 'Web'),
+(5, 2, '2026-09-03', '08:50:00', '17:40:00', 'The')
+ON DUPLICATE KEY UPDATE ngay_cham_cong = VALUES(ngay_cham_cong), gio_check_in = VALUES(gio_check_in), gio_check_out = VALUES(gio_check_out);
+
+INSERT INTO don_nghi_phep (ma_don, ma_ho_so, ngay_nghi, ly_do, trang_thai)
+VALUES
+(1, 1, '2026-09-05', 'Bị ốm đột xuất có giấy khám bệnh', 'DaDuyet'),
+(2, 1, '2026-09-12', 'Việc bận gia đình', 'ChoDuyet'),
+(3, 2, '2026-09-08', 'Đi thi học phần ở trường', 'DaDuyet')
+ON DUPLICATE KEY UPDATE ngay_nghi = VALUES(ngay_nghi), ly_do = VALUES(ly_do), trang_thai = VALUES(trang_thai);
+
 

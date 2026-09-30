@@ -1,12 +1,13 @@
 import os
 import uuid
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from sqlalchemy import extract, or_
 
 from schemas import (
     InternCreate,
@@ -24,6 +25,11 @@ from schemas import (
     MyScheduleResponse,
     ReportCreate,
     ReportResponse,
+    AttendanceReportResponse,
+    AttendanceReportData,
+    AttendanceReportSummary,
+    AttendanceReportItem,
+    AttendancePagination,
 )
 
 # Thư mục database & models
@@ -38,6 +44,8 @@ from database.models import (
     HopDong,
     NhiemVu,
     BaoCaoTuan,
+    ChamCong,
+    DonNghiPhep,
 )
 
 # Tự động tạo các bảng CSDL còn thiếu theo model nếu chưa tồn tại
@@ -721,4 +729,172 @@ def create_weekly_report(report_data: ReportCreate, db: Session = Depends(get_db
         "message": "Nộp báo cáo tuần thành công",
         "data": new_report.to_dict()
     }
+
+
+# ==============================================================
+# API BÁO CÁO TỔNG HỢP CHẤM CÔNG (ATTENDANCE REPORTS API)
+# ==============================================================
+@app.get("/api/v1/attendance/reports", response_model=AttendanceReportResponse)
+def get_attendance_reports(
+    thang: Optional[int] = Query(None, ge=1, le=12, description="Tháng báo cáo (1 - 12)"),
+    nam: Optional[int] = Query(None, ge=2000, description="Năm báo cáo (mặc định năm hiện tại)"),
+    ma_phong_ban: Optional[int] = Query(None, description="Lọc theo mã phòng ban"),
+    gio_chuan: str = Query("08:30:00", description="Giờ chuẩn bắt đầu làm việc (HH:MM:SS) để tính đi muộn"),
+    page: int = Query(1, ge=1, description="Trang hiện tại (>= 1)"),
+    page_size: int = Query(20, ge=1, le=100, description="Số lượng bản ghi trên một trang (1 - 100)"),
+    db: Session = Depends(get_db),
+):
+    """
+    Endpoint lọc và tổng hợp dữ liệu chấm công của thực tập sinh:
+    - Lọc theo tháng, năm, phòng ban.
+    - Tổng hợp số ngày đi làm, số lần đi muộn (so với giờ chuẩn), số ngày nghỉ có phép (đơn đã duyệt).
+    - Trả về KPI tổng quan và danh sách chi tiết có hỗ trợ phân trang.
+    """
+    target_year = nam if nam is not None else datetime.now().year
+    target_month = thang
+
+    # 1. Parse giờ chuẩn quy định
+    try:
+        gio_chuan_time = datetime.strptime(gio_chuan, "%H:%M:%S").time()
+    except ValueError:
+        gio_chuan_time = time(8, 30, 0)
+
+    # 2. Kiểm tra phòng ban nếu có truyền ma_phong_ban
+    ten_phong_ban = None
+    if ma_phong_ban is not None:
+        pb = db.query(PhongBan).filter(PhongBan.ma_phong_ban == ma_phong_ban).first()
+        if not pb:
+            raise HTTPException(status_code=404, detail="Phòng ban không tồn tại")
+        ten_phong_ban = pb.ten_phong_ban
+
+    # 3. Xác định khoảng thời gian lọc (SARGable query tối ưu index)
+    if target_month is not None:
+        start_date = date(target_year, target_month, 1)
+        if target_month == 12:
+            end_date = date(target_year + 1, 1, 1)
+        else:
+            end_date = date(target_year, target_month + 1, 1)
+    else:
+        start_date = date(target_year, 1, 1)
+        end_date = date(target_year + 1, 1, 1)
+
+    # 4. Lấy danh sách hồ sơ thực tập sinh
+    query_hs = db.query(HoSoThucTap).join(NguoiDung, HoSoThucTap.ma_nguoi_dung == NguoiDung.ma_nguoi_dung)
+    if ma_phong_ban is not None:
+        query_hs = query_hs.outerjoin(ChuongTrinhThucTap, HoSoThucTap.ma_chuong_trinh == ChuongTrinhThucTap.ma_chuong_trinh)
+        query_hs = query_hs.filter(
+            or_(
+                ChuongTrinhThucTap.ma_phong_ban == ma_phong_ban,
+                NguoiDung.ma_phong_ban == ma_phong_ban
+            )
+        )
+
+    ho_so_list = query_hs.order_by(HoSoThucTap.ma_ho_so.asc()).all()
+
+    # 5. Tính toán cho từng hồ sơ
+    all_items = []
+    tong_so_ngay_di_lam = 0
+    tong_so_lan_di_muon = 0
+    tong_so_ngay_nghi = 0
+
+    for hs in ho_so_list:
+        user = hs.thuc_tap_sinh
+        ho_ten = user.ho_ten if user else f"Thực tập sinh #{hs.ma_ho_so}"
+        email = user.email if user else ""
+
+        # Xác định phòng ban của TTS
+        hs_phong_ban_id = None
+        hs_ten_phong_ban = None
+        if hs.chuong_trinh and hs.chuong_trinh.phong_ban:
+            hs_phong_ban_id = hs.chuong_trinh.phong_ban.ma_phong_ban
+            hs_ten_phong_ban = hs.chuong_trinh.phong_ban.ten_phong_ban
+        elif user and user.phong_ban:
+            hs_phong_ban_id = user.phong_ban.ma_phong_ban
+            hs_ten_phong_ban = user.phong_ban.ten_phong_ban
+
+        # Truy vấn chấm công
+        cc_query = db.query(ChamCong).filter(
+            ChamCong.ma_ho_so == hs.ma_ho_so,
+            ChamCong.ngay_cham_cong >= start_date,
+            ChamCong.ngay_cham_cong < end_date
+        )
+        cham_cong_records = cc_query.all()
+
+        so_ngay_di_lam = len(cham_cong_records)
+        so_lan_di_muon = 0
+        for cc in cham_cong_records:
+            if cc.gio_check_in and cc.gio_check_in > gio_chuan_time:
+                so_lan_di_muon += 1
+
+        # Truy vấn đơn nghỉ phép đã duyệt
+        dnp_query = db.query(DonNghiPhep).filter(
+            DonNghiPhep.ma_ho_so == hs.ma_ho_so,
+            DonNghiPhep.trang_thai == "DaDuyet",
+            DonNghiPhep.ngay_nghi >= start_date,
+            DonNghiPhep.ngay_nghi < end_date
+        )
+        so_ngay_nghi = dnp_query.count()
+
+        # Cộng dồn KPI
+        tong_so_ngay_di_lam += so_ngay_di_lam
+        tong_so_lan_di_muon += so_lan_di_muon
+        tong_so_ngay_nghi += so_ngay_nghi
+
+        all_items.append(
+            AttendanceReportItem(
+                ma_ho_so=hs.ma_ho_so,
+                ma_nguoi_dung=hs.ma_nguoi_dung,
+                ho_ten=ho_ten,
+                email=email,
+                ma_phong_ban=hs_phong_ban_id,
+                ten_phong_ban=hs_ten_phong_ban,
+                chuyen_nganh=hs.chuyen_nganh,
+                so_ngay_di_lam=so_ngay_di_lam,
+                so_lan_di_muon=so_lan_di_muon,
+                so_ngay_nghi=so_ngay_nghi,
+            )
+        )
+
+    # 5. Tính toán KPI tổng quan
+    tong_so_tts = len(all_items)
+    ty_le_di_muon = round((tong_so_lan_di_muon / tong_so_ngay_di_lam * 100), 2) if tong_so_ngay_di_lam > 0 else 0.0
+    trung_binh_ngay_cong = round(tong_so_ngay_di_lam / tong_so_tts, 2) if tong_so_tts > 0 else 0.0
+
+    summary = AttendanceReportSummary(
+        thang=target_month,
+        nam=target_year,
+        ma_phong_ban=ma_phong_ban,
+        ten_phong_ban=ten_phong_ban,
+        tong_so_thuc_tap_sinh=tong_so_tts,
+        tong_so_ngay_di_lam=tong_so_ngay_di_lam,
+        tong_so_lan_di_muon=tong_so_lan_di_muon,
+        tong_so_ngay_nghi=tong_so_ngay_nghi,
+        ty_le_di_muon=ty_le_di_muon,
+        trung_binh_ngay_cong=trung_binh_ngay_cong,
+    )
+
+    # 6. Phân trang kết quả
+    total_items = len(all_items)
+    total_pages = (total_items + page_size - 1) // page_size if total_items > 0 else 0
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    paginated_items = all_items[start_idx:end_idx]
+
+    pagination = AttendancePagination(
+        page=page,
+        page_size=page_size,
+        total_items=total_items,
+        total_pages=total_pages,
+    )
+
+    return {
+        "status_code": 200,
+        "message": "Lấy báo cáo chấm công thành công",
+        "data": {
+            "summary": summary,
+            "items": paginated_items,
+            "pagination": pagination,
+        }
+    }
+
 

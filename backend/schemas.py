@@ -440,3 +440,58 @@ class ReportResponse(BaseModel):
     data: Optional[ReportDetailData] = None
 
 
+# ==============================================================
+# SCHEMAS CHO BÁO CÁO CHẤM CÔNG (ATTENDANCE REPORTS API)
+# ==============================================================
+
+class AttendanceReportItem(BaseModel):
+    """Thông tin tổng hợp chấm công của từng thực tập sinh"""
+    ma_ho_so: int
+    ma_nguoi_dung: int
+    ho_ten: str
+    email: str
+    ma_phong_ban: Optional[int] = None
+    ten_phong_ban: Optional[str] = None
+    chuyen_nganh: Optional[str] = None
+    so_ngay_di_lam: int = 0
+    so_lan_di_muon: int = 0
+    so_ngay_nghi: int = 0
+
+
+class AttendanceReportSummary(BaseModel):
+    """Tổng hợp KPI chấm công toàn bộ phòng ban / kỳ báo cáo"""
+    thang: Optional[int] = None
+    nam: int
+    ma_phong_ban: Optional[int] = None
+    ten_phong_ban: Optional[str] = None
+    tong_so_thuc_tap_sinh: int = 0
+    tong_so_ngay_di_lam: int = 0
+    tong_so_lan_di_muon: int = 0
+    tong_so_ngay_nghi: int = 0
+    ty_le_di_muon: float = 0.0
+    trung_binh_ngay_cong: float = 0.0
+
+
+class AttendancePagination(BaseModel):
+    """Thông tin phân trang báo cáo chấm công"""
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+
+
+class AttendanceReportData(BaseModel):
+    """Dữ liệu phản hồi báo cáo chấm công"""
+    summary: AttendanceReportSummary
+    items: List[AttendanceReportItem] = []
+    pagination: AttendancePagination
+
+
+class AttendanceReportResponse(BaseModel):
+    """Response bọc chuẩn trả về cho client"""
+    status_code: int = 200
+    message: str
+    data: AttendanceReportData
+
+
+
