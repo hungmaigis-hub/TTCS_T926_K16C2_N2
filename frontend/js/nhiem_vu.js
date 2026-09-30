@@ -160,7 +160,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const danhSach = document.getElementById("danhSachNhiemVu");
   const hopThongBao = document.getElementById("hopThongBao");
 
-  // Kiểm tra trạng thái kết nối tới Backend API
   kiemTraKetNoiApi();
 
   async function kiemTraKetNoiApi() {
@@ -184,7 +183,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (danhSach) {
-    // Lắng nghe sự kiện trượt thanh tiến độ để cập nhật hiển thị tức thì trên giao diện
     danhSach.addEventListener("input", (e) => {
       if (e.target && e.target.classList.contains("thanh-tien-do")) {
         const card = e.target.closest("article");
@@ -207,7 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Lắng nghe sự kiện click nút "Lưu tiến độ" -> Gọi API PATCH /api/v1/tasks/{id}/progress
     danhSach.addEventListener("click", async (e) => {
       const nutLuu = e.target.closest(".nut-luu-tien-do");
       if (!nutLuu) return;
@@ -243,7 +240,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const resJson = await response.json();
         const taskData = resJson.data;
 
-        // Cập nhật trạng thái chuẩn xác từ CSDL Backend trả về
         if (badgeTrangThai && taskData && taskData.trang_thai) {
           badgeTrangThai.textContent = `Trạng thái: ${taskData.trang_thai}`;
         }
@@ -258,7 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (err) {
         console.warn("Backend offline hoặc gặp lỗi, sử dụng fallback:", err);
 
-        // Fallback cục bộ khi chưa bật backend
         let fallbackStatus = "Đang thực hiện";
         if (tienDo === 100) fallbackStatus = "Hoàn thành";
         else if (tienDo === 0) fallbackStatus = "Chưa bắt đầu";
@@ -279,7 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Hàm hiển thị thông báo phản hồi thao tác trực quan
   function hienThiThongBao(loai, tieuDe, noiDung) {
     if (!hopThongBao) return;
 
