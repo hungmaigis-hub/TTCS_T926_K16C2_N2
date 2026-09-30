@@ -21,6 +21,7 @@ from database.models import (
     HopDong,
     NhiemVu,
     BaoCaoTuan,
+    DanhGia,
 )
 from main import app
 
@@ -98,6 +99,12 @@ def reseed_sqlite_db():
 
         bc1 = BaoCaoTuan(ma_bao_cao=1, ma_ho_so=1, ma_nhiem_vu=1, tuan_so=1, noi_dung_cong_viec="Hoàn thành Docker Compose", ket_qua_dat_duoc="Chạy thành công môi trường", thoi_gian_nop=datetime(2026, 9, 10, 17, 0))
         session.add(bc1)
+
+        dg1 = DanhGia(ma_danh_gia=1, ma_ho_so=1, ma_nguoi_danh_gia=3, loai_danh_gia="GiuaKy", diem_ky_nang=8.5, diem_thai_do=9.0, nhan_xet_chi_tiet="Tiếp thu nhanh, hoàn thành tốt nhiệm vụ", de_xuat_tuyen_chinh_thuc=False)
+        dg2 = DanhGia(ma_danh_gia=2, ma_ho_so=1, ma_nguoi_danh_gia=3, loai_danh_gia="CuoiKy", diem_ky_nang=9.0, diem_thai_do=9.5, nhan_xet_chi_tiet="Kỹ năng chuyên môn xuất sắc, trách nhiệm cao", de_xuat_tuyen_chinh_thuc=True)
+        dg3 = DanhGia(ma_danh_gia=3, ma_ho_so=2, ma_nguoi_danh_gia=3, loai_danh_gia="GiuaKy", diem_ky_nang=7.5, diem_thai_do=8.0, nhan_xet_chi_tiet="Thực hiện công việc đúng tiến độ", de_xuat_tuyen_chinh_thuc=False)
+        dg4 = DanhGia(ma_danh_gia=4, ma_ho_so=2, ma_nguoi_danh_gia=3, loai_danh_gia="CuoiKy", diem_ky_nang=8.0, diem_thai_do=8.5, nhan_xet_chi_tiet="Tiến bộ rõ rệt, đáp ứng tốt yêu cầu", de_xuat_tuyen_chinh_thuc=False)
+        session.add_all([dg1, dg2, dg3, dg4])
 
         session.commit()
     finally:

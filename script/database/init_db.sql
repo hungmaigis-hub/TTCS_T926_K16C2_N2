@@ -105,6 +105,21 @@ CREATE TABLE IF NOT EXISTS bao_cao_tuan (
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE,
     FOREIGN KEY (ma_nhiem_vu) REFERENCES nhiem_vu(ma_nhiem_vu) ON DELETE SET NULL
 );
+
+-- 10. BẢNG ĐÁNH GIÁ (Evaluations)
+CREATE TABLE IF NOT EXISTS danh_gia (
+    ma_danh_gia INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    ma_nguoi_danh_gia INT NOT NULL,
+    loai_danh_gia VARCHAR(50) NOT NULL COMMENT 'GiuaKy, CuoiKy',
+    diem_ky_nang FLOAT NOT NULL,
+    diem_thai_do FLOAT NOT NULL,
+    nhan_xet_chi_tiet TEXT,
+    de_xuat_tuyen_chinh_thuc BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE,
+    FOREIGN KEY (ma_nguoi_danh_gia) REFERENCES nguoi_dung(ma_nguoi_dung) ON DELETE RESTRICT
+);
+
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API
 INSERT INTO phong_ban (ma_phong_ban, ten_phong_ban, mo_ta) 
 VALUES (1, 'Trung tâm Phần mềm', 'Phòng kỹ thuật & phát triển hệ thống')
@@ -157,4 +172,13 @@ VALUES
 (1, 1, 1, 1, 'Tìm hiểu Docker và triển khai container hóa cho ứng dụng FastAPI', 'Hoàn thành file Dockerfile và docker-compose.yml', 'Tốt, tiếp tục nghiên cứu Microservices', '2026-09-10 17:00:00'),
 (2, 1, 2, 2, 'Thiết kế endpoint GET /api/v1/interns/my-schedule', 'Hoàn thiện endpoint và test case đạt 100%', NULL, '2026-09-17 16:30:00')
 ON DUPLICATE KEY UPDATE noi_dung_cong_viec = VALUES(noi_dung_cong_viec);
+
+INSERT INTO danh_gia (ma_danh_gia, ma_ho_so, ma_nguoi_danh_gia, loai_danh_gia, diem_ky_nang, diem_thai_do, nhan_xet_chi_tiet, de_xuat_tuyen_chinh_thuc)
+VALUES
+(1, 1, 3, 'GiuaKy', 8.5, 9.0, 'Tiếp thu nhanh, hoàn thành tốt nhiệm vụ được giao', FALSE),
+(2, 1, 3, 'CuoiKy', 9.0, 9.5, 'Kỹ năng chuyên môn xuất sắc, có tinh thần trách nhiệm cao', TRUE),
+(3, 2, 3, 'GiuaKy', 7.5, 8.0, 'Thực hiện công việc đúng tiến độ, cần chủ động hơn trong giao tiếp', FALSE),
+(4, 2, 3, 'CuoiKy', 8.0, 8.5, 'Tiến bộ rõ rệt, đáp ứng tốt yêu cầu dự án', FALSE)
+ON DUPLICATE KEY UPDATE diem_ky_nang = VALUES(diem_ky_nang), diem_thai_do = VALUES(diem_thai_do), de_xuat_tuyen_chinh_thuc = VALUES(de_xuat_tuyen_chinh_thuc);
+
 
