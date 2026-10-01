@@ -109,9 +109,9 @@ async function submitLogin() {
     const expireTime = Date.now() + 2 * 60 * 60 * 1000;
     const namePart = email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     const mockUser = {
-      ho_ten: namePart || (vaiTroHienTai === "student" ? "Vũ Quang Huy" : "Ban Đào Tạo & QLTT"),
+      ho_ten: namePart || (vaiTroHienTai === "student" ? "Vũ Quang Huy" : (vaiTroHienTai === "faculty" ? "Ban Đào Tạo & QLTT" : "Nguyễn Hướng Dẫn")),
       email: email,
-      vai_tro: vaiTroHienTai === "student" ? "ThucTapSinh" : (vaiTroHienTai === "mentor" ? "Mentor" : "Admin"),
+      vai_tro: vaiTroHienTai === "student" ? "ThucTapSinh" : (vaiTroHienTai === "mentor" ? "Mentor" : (vaiTroHienTai === "faculty" ? "NhaTruong" : "Admin")),
       ma_sinh_vien: vaiTroHienTai === "student" ? "DTC2051060124" : null,
       ma_nguoi_dung: 1,
       ma_ho_so: 1,
