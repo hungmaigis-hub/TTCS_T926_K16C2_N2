@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional, List
-from datetime import date
+from datetime import date, datetime
 import re
 
 # ==============================================================
@@ -727,5 +727,53 @@ class EvaluationCreateResponse(BaseModel):
     status_code: int = 201
     message: str = "Tạo đánh giá thực tập sinh thành công"
     data: Optional[EvaluationItemData] = None
+
+
+# ==============================================================
+# SCHEMAS CHO ĐIỂM DANH / CHẤM CÔNG (CHECK-IN & CHECK-OUT API)
+# ==============================================================
+
+class CheckInRequest(BaseModel):
+    """Schema yêu cầu check-in ca làm việc (POST /api/v1/attendance/check-in)"""
+    ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập sinh")
+    thoi_gian_checkin: Optional[datetime] = Field(default=None, description="Thời điểm check-in (ISO 8601). Mặc định lấy thời gian hiện tại nếu không truyền.")
+    phuong_thuc: Optional[str] = Field(default="Web", description="Phương thức chấm công: Web, QR, The")
+    ghi_chu: Optional[str] = Field(default=None, description="Ghi chú thêm (lý do muộn, on-site...)")
+
+
+class CheckOutRequest(BaseModel):
+    """Schema yêu cầu check-out kết thúc ca làm việc (POST /api/v1/attendance/check-out)"""
+    ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập sinh")
+    thoi_gian_checkout: Optional[datetime] = Field(default=None, description="Thời điểm check-out (ISO 8601). Mặc định lấy thời gian hiện tại nếu không truyền.")
+    ghi_chu: Optional[str] = Field(default=None, description="Ghi chú thêm")
+
+
+class AttendanceItemData(BaseModel):
+    """Dữ liệu chi tiết bản ghi chấm công trả về cho client"""
+    ma_cham_cong: int
+    ma_ho_so: int
+    ngay_cham_cong: str
+    thoi_gian_checkin: Optional[str] = None
+    thoi_gian_checkout: Optional[str] = None
+    gio_check_in: Optional[str] = None
+    gio_check_out: Optional[str] = None
+    trang_thai: str = "DungGio"
+    phuong_thuc: str = "Web"
+    ghi_chu: Optional[str] = None
+
+
+class CheckInResponse(BaseModel):
+    """Phản hồi sau khi check-in thành công (HTTP 201 Created)"""
+    status_code: int = 201
+    message: str = "Check-in thành công"
+    data: Optional[AttendanceItemData] = None
+
+
+class CheckOutResponse(BaseModel):
+    """Phản hồi sau khi check-out thành công (HTTP 200 OK)"""
+    status_code: int = 200
+    message: str = "Check-out thành công"
+    data: Optional[AttendanceItemData] = None
+
 
 
