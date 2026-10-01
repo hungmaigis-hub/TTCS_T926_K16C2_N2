@@ -1,397 +1,541 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Ký Tài Khoản & Nộp Hồ Sơ Ứng Tuyển</title>
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Thực Tập Sinh - Phân Công Mentor</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-body: #f8fafc;
+    }
+    body {
+      background-color: var(--bg-body);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #1e293b;
+    }
+    .main-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      background: #ffffff;
+    }
+    .table-custom thead th {
+      background-color: #f1f5f9;
+      color: #475569;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      border-bottom: 2px solid #cbd5e1;
+      padding-top: 14px;
+      padding-bottom: 14px;
+    }
+    .table-custom tbody tr {
+      transition: all 0.2s ease;
+    }
+    .table-custom tbody tr:hover {
+      background-color: #f8fafc;
+    }
+    /* Đánh dấu dòng có thay đổi chưa lưu */
+    .row-unsaved {
+      background-color: #fefce8 !important;
+      border-left: 4px solid #eab308;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .select-mentor {
+      min-width: 230px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .select-mentor:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .status-badge {
+      font-size: 0.75rem;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 1080;
+    }
+  </style>
 </head>
-<body>
+<body class="py-4">
 
-    <div class="page-wrapper">
-        <!-- Header -->
-        <header class="form-header">
-            <div class="brand-badge">
-                <i class="fa-solid fa-file-signature"></i> Cổng Tiếp Nhận Ứng Viên
-            </div>
-            <h1>Đăng Ký Tài Khoản &amp; Nộp Hồ Sơ</h1>
-            <p class="subtitle">Vui lòng điền đầy đủ và chính xác các thông tin bên dưới để tạo tài khoản ứng viên và hoàn tất hồ sơ xét tuyển.</p>
-        </header>
-
-        <!-- Main Form Container -->
-        <main class="form-card">
-            <form id="registrationForm" novalidate>
-                
-                <!-- SECTION 1: TÀI KHOẢN HỆ THỐNG -->
-                <section class="form-section">
-                    <div class="section-title">
-                        <span class="step-num">1</span>
-                        <div>
-                            <h2>Thông Tin Tài Khoản</h2>
-                            <p>Dùng để đăng nhập hệ thống và theo dõi kết quả hồ sơ</p>
-                        </div>
-                    </div>
-
-                    <div class="form-grid">
-                        <!-- Tên đăng nhập -->
-                        <div class="form-group">
-                            <label for="username">Tên đăng nhập <span class="required">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="fa-regular fa-user"></i>
-                                <input type="text" id="username" name="username" placeholder="vd: nguyen_van_a" required autocomplete="username">
-                            </div>
-                            <span class="error-msg" id="usernameError"></span>
-                        </div>
-
-                        <!-- Email -->
-                        <div class="form-group">
-                            <label for="email">Địa chỉ Email <span class="required">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="fa-regular fa-envelope"></i>
-                                <input type="email" id="email" name="email" placeholder="example@domain.com" required autocomplete="email">
-                            </div>
-                            <span class="error-msg" id="emailError"></span>
-                        </div>
-
-                        <!-- Mật khẩu -->
-                        <div class="form-group">
-                            <label for="password">Mật khẩu <span class="required">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="fa-solid fa-lock"></i>
-                                <input type="password" id="password" name="password" placeholder="Tối thiểu 8 ký tự" required autocomplete="new-password">
-                                <button type="button" class="btn-toggle-pwd" data-target="password" title="Hiện/Ẩn mật khẩu">
-                                    <i class="fa-regular fa-eye"></i>
-                                </button>
-                            </div>
-                            <!-- Password Strength Indicator -->
-                            <div class="pwd-strength-container" id="strengthContainer">
-                                <div class="pwd-strength-bar"><div class="pwd-strength-fill" id="strengthFill"></div></div>
-                                <span class="pwd-strength-text" id="strengthText">Độ mạnh mật khẩu</span>
-                            </div>
-                            <span class="error-msg" id="passwordError"></span>
-                        </div>
-
-                        <!-- Nhập lại mật khẩu -->
-                        <div class="form-group">
-                            <label for="confirmPassword">Xác nhận mật khẩu <span class="required">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="fa-solid fa-shield-halved"></i>
-                                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Nhập lại mật khẩu vừa tạo" required autocomplete="new-password">
-                                <button type="button" class="btn-toggle-pwd" data-target="confirmPassword" title="Hiện/Ẩn mật khẩu">
-                                    <i class="fa-regular fa-eye"></i>
-                                </button>
-                            </div>
-                            <span class="error-msg" id="confirmPasswordError"></span>
-                        </div>
-                    </div>
-                </section>
-
-                <hr class="divider">
-
-                <!-- SECTION 2: THÔNG TIN CÁ NHÂN -->
-                <section class="form-section">
-                    <div class="section-title">
-                        <span class="step-num">2</span>
-                        <div>
-                            <h2>Thông Tin Cá Nhân</h2>
-                            <p>Cung cấp các thông tin liên hệ và nhận diện nhân thân</p>
-                        </div>
-                    </div>
-
-                    <!-- Upload ảnh chân dung -->
-                    <div class="avatar-upload-box">
-                        <div class="avatar-preview-wrapper">
-                            <img id="avatarPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='150' viewBox='0 0 120 150'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='13'%3E%E1%BA%A2nh 3x4%3C/text%3E%3C/svg%3E" alt="Ảnh chân dung">
-                        </div>
-                        <div class="avatar-actions">
-                            <label for="avatarUpload" class="btn-upload-avatar">
-                                <i class="fa-solid fa-camera"></i> Chọn ảnh thẻ (3x4 hoặc 4x6)
-                            </label>
-                            <input type="file" id="avatarUpload" name="avatar" accept="image/png, image/jpeg, image/jpg" class="visually-hidden">
-                            <p class="file-hint">Định dạng JPG, PNG. Dung lượng tối đa 2MB.</p>
-                            <span class="error-msg" id="avatarError"></span>
-                        </div>
-                    </div>
-
-                    <div class="form-grid">
-                        <!-- Họ và tên -->
-                        <div class="form-group col-span-2">
-                            <label for="fullName">Họ và tên đầy đủ <span class="required">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="fa-solid fa-signature"></i>
-                                <input type="text" id="fullName" name="fullName" placeholder="NGUYỄN VĂN AN" required>
-                            </div>
-                            <span class="error-msg" id="fullNameError"></span>
-                        </div>
-
-                        <!-- Ngày sinh -->
-                        <div class="form-group">
-                            <label for="birthDate">Ngày sinh <span class="required">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="fa-regular fa-calendar-days"></i>
-                                <input type="date" id="birthDate" name="birthDate" required>
-                            </div>
-                            <span class="error-msg" id="birthDateError"></span>
-                        </div>
-
-                        <!-- Giới tính -->
-                        <div class="form-group">
-                            <label>Giới tính <span class="required">*</span></label>
-                            <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="gender" value="male" checked>
-                                    <span>Nam</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="gender" value="female">
-                                    <span>Nữ</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="gender" value="other">
-                                    <span>Khác</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Số điện thoại -->
-                        <div class="form-group">
-                            <label for="phone">Số điện thoại liên hệ <span class="required">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="fa-solid fa-phone"></i>
-                                <input type="tel" id="phone" name="phone" placeholder="vd: 0912345678" required>
-                            </div>
-                            <span class="error-msg" id="phoneError"></span>
-                        </div>
-
-                        <!-- CCCD / Hộ chiếu -->
-                        <div class="form-group">
-                            <label for="idNumber">Số CCCD / CMND <span class="required">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="fa-regular fa-id-card"></i>
-                                <input type="text" id="idNumber" name="idNumber" placeholder="12 số căn cước" maxlength="12" required>
-                            </div>
-                            <span class="error-msg" id="idNumberError"></span>
-                        </div>
-
-                        <!-- Tỉnh / Thành phố -->
-                        <div class="form-group">
-                            <label for="province">Tỉnh / Thành phố <span class="required">*</span></label>
-                            <div class="input-with-icon select-wrapper">
-                                <i class="fa-solid fa-location-dot"></i>
-                                <select id="province" name="province" required>
-                                    <option value="" disabled selected>Chọn Tỉnh / Thành phố</option>
-                                    <option value="Hà Nội">Hà Nội</option>
-                                    <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                                    <option value="Đà Nẵng">Đà Nẵng</option>
-                                    <option value="Hải Phòng">Hải Phòng</option>
-                                    <option value="Cần Thơ">Cần Thơ</option>
-                                    <option value="Bình Dương">Bình Dương</option>
-                                    <option value="Đồng Nai">Đồng Nai</option>
-                                    <option value="Tỉnh thành khác">Tỉnh thành khác</option>
-                                </select>
-                            </div>
-                            <span class="error-msg" id="provinceError"></span>
-                        </div>
-
-                        <!-- Địa chỉ chi tiết -->
-                        <div class="form-group">
-                            <label for="detailedAddress">Địa chỉ hiện tại (Số nhà, đường, phường/xã) <span class="required">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="fa-solid fa-house"></i>
-                                <input type="text" id="detailedAddress" name="detailedAddress" placeholder="Số 123 Đường XYZ, Phường..." required>
-                            </div>
-                            <span class="error-msg" id="detailedAddressError"></span>
-                        </div>
-                    </div>
-                </section>
-
-                <hr class="divider">
-
-                <!-- SECTION 3: THÔNG TIN HỒ SƠ ỨNG TUYỂN -->
-                <section class="form-section">
-                    <div class="section-title">
-                        <span class="step-num">3</span>
-                        <div>
-                            <h2>Thông Tin Hồ Sơ &amp; Ứng Tuyển</h2>
-                            <p>Chi tiết nguyện vọng công việc, trình độ chuyên môn và CV</p>
-                        </div>
-                    </div>
-
-                    <div class="form-grid">
-                        <!-- Vị trí ứng tuyển -->
-                        <div class="form-group">
-                            <label for="position">Vị trí mong muốn ứng tuyển <span class="required">*</span></label>
-                            <div class="input-with-icon select-wrapper">
-                                <i class="fa-solid fa-briefcase"></i>
-                                <select id="position" name="position" required>
-                                    <option value="" disabled selected>Chọn vị trí</option>
-                                    <option value="Frontend Developer">Lập trình viên Frontend (HTML/CSS/JS/React)</option>
-                                    <option value="Backend Developer">Lập trình viên Backend (Node.js/Java/Python)</option>
-                                    <option value="Fullstack Developer">Lập trình viên Fullstack</option>
-                                    <option value="UI/UX Designer">Thiết kế UI/UX Designer</option>
-                                    <option value="QA / Tester">Chuyên viên Kiểm thử (QA/QC)</option>
-                                    <option value="Project Manager / PO">Quản lý dự án (PM/PO)</option>
-                                    <option value="Chuyên viên Nhân sự / Tuyển dụng">Chuyên viên Nhân sự / Tuyển dụng</option>
-                                    <option value="Khác">Vị trí khác</option>
-                                </select>
-                            </div>
-                            <span class="error-msg" id="positionError"></span>
-                        </div>
-
-                        <!-- Trình độ học vấn -->
-                        <div class="form-group">
-                            <label for="education">Trình độ học vấn cao nhất <span class="required">*</span></label>
-                            <div class="input-with-icon select-wrapper">
-                                <i class="fa-solid fa-graduation-cap"></i>
-                                <select id="education" name="education" required>
-                                    <option value="" disabled selected>Chọn trình độ</option>
-                                    <option value="Sau đại học (Thạc sĩ, Tiến sĩ)">Sau đại học (Thạc sĩ, Tiến sĩ)</option>
-                                    <option value="Đại học">Đại học</option>
-                                    <option value="Cao đẳng">Cao đẳng</option>
-                                    <option value="Trung cấp / Nghề">Trung cấp / Nghề</option>
-                                    <option value="THPT">Tốt nghiệp THPT</option>
-                                </select>
-                            </div>
-                            <span class="error-msg" id="educationError"></span>
-                        </div>
-
-                        <!-- Kinh nghiệm làm việc -->
-                        <div class="form-group">
-                            <label for="experience">Kinh nghiệm làm việc <span class="required">*</span></label>
-                            <div class="input-with-icon select-wrapper">
-                                <i class="fa-solid fa-chart-line"></i>
-                                <select id="experience" name="experience" required>
-                                    <option value="" disabled selected>Chọn số năm kinh nghiệm</option>
-                                    <option value="Chưa có kinh nghiệm (Fresher/Intern)">Chưa có kinh nghiệm (Fresher/Intern)</option>
-                                    <option value="Dưới 1 năm">Dưới 1 năm</option>
-                                    <option value="1 - 2 năm">1 - 2 năm</option>
-                                    <option value="3 - 5 năm">3 - 5 năm</option>
-                                    <option value="Trên 5 năm (Senior/Lead)">Trên 5 năm (Senior/Lead)</option>
-                                </select>
-                            </div>
-                            <span class="error-msg" id="experienceError"></span>
-                        </div>
-
-                        <!-- Mức lương mong muốn -->
-                        <div class="form-group">
-                            <label for="expectedSalary">Mức lương mong muốn (VNĐ/tháng)</label>
-                            <div class="input-with-icon">
-                                <i class="fa-solid fa-money-bill-wave"></i>
-                                <input type="text" id="expectedSalary" name="expectedSalary" placeholder="vd: 15.000.000 hoặc Thỏa thuận">
-                            </div>
-                        </div>
-
-                        <!-- Ngày có thể nhận việc -->
-                        <div class="form-group">
-                            <label for="startDate">Thời gian có thể bắt đầu làm việc <span class="required">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="fa-regular fa-clock"></i>
-                                <input type="date" id="startDate" name="startDate" required>
-                            </div>
-                            <span class="error-msg" id="startDateError"></span>
-                        </div>
-
-                        <!-- Kỹ năng nổi bật -->
-                        <div class="form-group">
-                            <label for="skills">Kỹ năng chuyên môn nổi bật</label>
-                            <div class="input-with-icon">
-                                <i class="fa-solid fa-lightbulb"></i>
-                                <input type="text" id="skills" name="skills" placeholder="vd: JavaScript, Git, Giao tiếp, Tiếng Anh...">
-                            </div>
-                        </div>
-
-                        <!-- Giới thiệu bản thân & Mục tiêu nghề nghiệp -->
-                        <div class="form-group col-span-2">
-                            <label for="bio">Tóm tắt quá trình học tập, kinh nghiệm &amp; mục tiêu nghề nghiệp</label>
-                            <textarea id="bio" name="bio" rows="4" placeholder="Mô tả ngắn gọn về kinh nghiệm, thế mạnh bản thân và mong muốn phát triển tại công ty..."></textarea>
-                        </div>
-
-                        <!-- Khu vực Tải lên CV / Hồ sơ đính kèm -->
-                        <div class="form-group col-span-2">
-                            <label>Hồ sơ xin việc / CV đính kèm <span class="required">*</span></label>
-                            <div class="file-dropzone" id="dropZone">
-                                <input type="file" id="cvFile" name="cvFile" accept=".pdf,.doc,.docx" class="visually-hidden" required>
-                                <div class="dropzone-content" id="dropzoneContent">
-                                    <div class="upload-icon-circle">
-                                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    </div>
-                                    <p class="drop-title">Kéo &amp; thả file hồ sơ (CV) vào đây hoặc <span class="browse-link">chọn từ thiết bị</span></p>
-                                    <p class="drop-subtitle">Chấp nhận định dạng .PDF, .DOC, .DOCX (Dung lượng tối đa 10MB)</p>
-                                </div>
-                                <!-- File selected status -->
-                                <div class="file-selected-badge d-none" id="fileSelectedBadge">
-                                    <div class="file-info-group">
-                                        <i class="fa-solid fa-file-pdf file-type-icon"></i>
-                                        <div>
-                                            <span class="selected-file-name" id="selectedFileName">filename.pdf</span>
-                                            <span class="selected-file-size" id="selectedFileSize">0 KB</span>
-                                        </div>
-                                    </div>
-                                    <button type="button" class="btn-remove-file" id="btnRemoveFile" title="Xóa file">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <span class="error-msg" id="cvFileError"></span>
-                        </div>
-                    </div>
-                </section>
-
-                <hr class="divider">
-
-                <!-- SECTION 4: ĐIỀU KHOẢN & CAM KẾT -->
-                <section class="form-section terms-section">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="termsCheck" name="terms" required>
-                        <span class="checkmark"></span>
-                        <span class="terms-text">
-                            Tôi cam đoan toàn bộ thông tin kê khai trên là hoàn toàn chính xác và trung thực. Tôi đồng ý với <a href="#" target="_blank">Chính sách bảo mật dữ liệu</a> và <a href="#" target="_blank">Quy chế tuyển dụng</a> của hệ thống.
-                        </span>
-                    </label>
-                    <span class="error-msg" id="termsCheckError"></span>
-                </section>
-
-                <!-- Actions Button -->
-                <div class="form-actions">
-                    <button type="reset" class="btn-secondary" id="btnReset">
-                        <i class="fa-solid fa-arrow-rotate-left"></i> Làm mới
-                    </button>
-                    <button type="submit" class="btn-primary" id="btnSubmit">
-                        <i class="fa-solid fa-paper-plane"></i> Đăng Ký &amp; Nộp Hồ Sơ
-                    </button>
-                </div>
-
-                <div class="form-footer-notes">
-                    <p>Đã có tài khoản? <a href="#" class="login-link">Đăng nhập tại đây</a></p>
-                </div>
-            </form>
-        </main>
+<div class="container-xl">
+  <!-- Header: Tiêu đề & Thống kê nhanh -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+      <h3 class="fw-bold text-dark mb-1">
+        <i class="bi bi-people-fill text-primary me-2"></i>Danh Sách Thực Tập Sinh
+      </h3>
+      <p class="text-muted mb-0 small">
+        Quản lý thông tin và phân công Mentor hướng dẫn theo từng cá nhân
+      </p>
     </div>
-
-    <!-- Modal thông báo nộp thành công -->
-    <div class="modal-overlay d-none" id="successModal">
-        <div class="modal-card">
-            <div class="modal-icon-success">
-                <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <h2>Nộp Hồ Sơ Thành Công!</h2>
-            <p>Hệ thống đã ghi nhận thông tin đăng ký tài khoản và tiếp nhận hồ sơ ứng tuyển của bạn.</p>
-            <div class="modal-summary" id="modalSummary">
-                <!-- Nội dung tóm tắt sẽ được nạp bằng JS -->
-            </div>
-            <button type="button" class="btn-primary modal-close-btn" id="modalCloseBtn">
-                Xác nhận &amp; Đóng
-            </button>
-        </div>
+    <div class="d-flex gap-2">
+      <!-- Nút Lưu Tất Cả -->
+      <button id="btnSaveAll" class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 fw-medium" onclick="saveAll()">
+        <i class="bi bi-floppy2-fill"></i>
+        <span>Lưu tất cả thay đổi</span>
+        <span id="unsavedCountBadge" class="badge bg-white text-primary rounded-pill d-none">0</span>
+      </button>
     </div>
+  </div>
 
-    <script src="script.js"></script>
+  <!-- Bộ lọc & Thống kê số lượng -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0 text-muted">
+          <i class="bi bi-search"></i>
+        </span>
+        <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Tìm theo tên hoặc mã TTS..." oninput="filterTable()">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <select id="statusFilter" class="form-select" onchange="filterTable()">
+        <option value="ALL">Tất cả tình trạng phân công</option>
+        <option value="ASSIGNED">Đã có Mentor</option>
+        <option value="UNASSIGNED">Chưa có Mentor</option>
+      </select>
+    </div>
+    <div class="col-md-5 text-md-end d-flex align-items-center justify-content-md-end gap-3 text-muted small">
+      <span>Tổng số: <strong id="totalCount" class="text-dark">0</strong> thực tập sinh</span>
+      <span>•</span>
+      <span>Đã phân công: <strong id="assignedCount" class="text-success">0</strong></span>
+      <span>•</span>
+      <span>Chưa phân công: <strong id="unassignedCount" class="text-danger">0</strong></span>
+    </div>
+  </div>
+
+  <!-- Bảng dữ liệu -->
+  <div class="main-card overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-custom align-middle mb-0" id="internTable">
+        <thead>
+          <tr>
+            <th class="text-center" style="width: 60px;">STT</th>
+            <th style="width: 110px;">Mã TTS</th>
+            <th>Thông tin Thực tập sinh</th>
+            <th>Vị trí / Chuyên môn</th>
+            <th style="min-width: 260px;">Mentor phụ trách</th>
+            <th class="text-center" style="width: 130px;">Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="internTableBody">
+          <!-- Hàng 1 -->
+          <tr data-id="TTS001" data-original-mentor="M01">
+            <td class="text-center text-muted fw-semibold row-stt">1</td>
+            <td>
+              <span class="badge bg-light text-secondary border font-monospace">TTS001</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-primary-subtle text-primary">NA</div>
+                <div>
+                  <div class="fw-bold intern-name">Nguyễn Văn An</div>
+                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>an.nguyen@company.vn</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle status-badge">
+                Frontend React
+              </span>
+            </td>
+            <td>
+              <div class="d-flex flex-column gap-1">
+                <select class="form-select form-select-sm select-mentor" onchange="onMentorSelectChange('TTS001')">
+                  <option value="">-- Chưa phân công --</option>
+                  <option value="M01" selected>Trần Hoàng Nam (Senior Frontend)</option>
+                  <option value="M02">Lê Thị Mai (Tech Lead)</option>
+                  <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
+                  <option value="M04">Võ Hoài An (DevOps Lead)</option>
+                </select>
+                <small class="text-muted status-text small"></small>
+              </div>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary btn-save-row px-3" onclick="saveRow('TTS001')">
+                <i class="bi bi-check-lg me-1"></i>Lưu
+              </button>
+            </td>
+          </tr>
+
+          <!-- Hàng 2 -->
+          <tr data-id="TTS002" data-original-mentor="M03">
+            <td class="text-center text-muted fw-semibold row-stt">2</td>
+            <td>
+              <span class="badge bg-light text-secondary border font-monospace">TTS002</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-success-subtle text-success">TB</div>
+                <div>
+                  <div class="fw-bold intern-name">Trần Thị Bích</div>
+                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>bich.tran@company.vn</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-success-subtle text-success border border-success-subtle status-badge">
+                Backend Java / Spring
+              </span>
+            </td>
+            <td>
+              <div class="d-flex flex-column gap-1">
+                <select class="form-select form-select-sm select-mentor" onchange="onMentorSelectChange('TTS002')">
+                  <option value="">-- Chưa phân công --</option>
+                  <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
+                  <option value="M02">Lê Thị Mai (Tech Lead)</option>
+                  <option value="M03" selected>Phạm Quốc Bảo (Senior Backend)</option>
+                  <option value="M04">Võ Hoài An (DevOps Lead)</option>
+                </select>
+                <small class="text-muted status-text small"></small>
+              </div>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary btn-save-row px-3" onclick="saveRow('TTS002')">
+                <i class="bi bi-check-lg me-1"></i>Lưu
+              </button>
+            </td>
+          </tr>
+
+          <!-- Hàng 3 -->
+          <tr data-id="TTS003" data-original-mentor="">
+            <td class="text-center text-muted fw-semibold row-stt">3</td>
+            <td>
+              <span class="badge bg-light text-secondary border font-monospace">TTS003</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-warning-subtle text-warning-emphasis">LC</div>
+                <div>
+                  <div class="fw-bold intern-name">Lê Hoàng Cường</div>
+                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>cuong.le@company.vn</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle status-badge">
+                Mobile Flutter
+              </span>
+            </td>
+            <td>
+              <div class="d-flex flex-column gap-1">
+                <select class="form-select form-select-sm select-mentor" onchange="onMentorSelectChange('TTS003')">
+                  <option value="" selected>-- Chưa phân công --</option>
+                  <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
+                  <option value="M02">Lê Thị Mai (Tech Lead)</option>
+                  <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
+                  <option value="M04">Võ Hoài An (DevOps Lead)</option>
+                </select>
+                <small class="text-muted status-text small"></small>
+              </div>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary btn-save-row px-3" onclick="saveRow('TTS003')">
+                <i class="bi bi-check-lg me-1"></i>Lưu
+              </button>
+            </td>
+          </tr>
+
+          <!-- Hàng 4 -->
+          <tr data-id="TTS004" data-original-mentor="M02">
+            <td class="text-center text-muted fw-semibold row-stt">4</td>
+            <td>
+              <span class="badge bg-light text-secondary border font-monospace">TTS004</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-danger-subtle text-danger">PD</div>
+                <div>
+                  <div class="fw-bold intern-name">Phạm Thùy Dương</div>
+                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>duong.pham@company.vn</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle status-badge">
+                QA / Tester
+              </span>
+            </td>
+            <td>
+              <div class="d-flex flex-column gap-1">
+                <select class="form-select form-select-sm select-mentor" onchange="onMentorSelectChange('TTS004')">
+                  <option value="">-- Chưa phân công --</option>
+                  <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
+                  <option value="M02" selected>Lê Thị Mai (Tech Lead)</option>
+                  <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
+                  <option value="M04">Võ Hoài An (DevOps Lead)</option>
+                </select>
+                <small class="text-muted status-text small"></small>
+              </div>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary btn-save-row px-3" onclick="saveRow('TTS004')">
+                <i class="bi bi-check-lg me-1"></i>Lưu
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Toast thông báo (Bootstrap Toast) -->
+<div class="toast-container">
+  <div id="actionToast" class="toast align-items-center text-bg-dark border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center gap-2" id="toastContent">
+        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+        <span id="toastMsg">Thao tác thành công!</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // 1. Khởi tạo & Cập nhật số liệu thống kê
+  document.addEventListener('DOMContentLoaded', () => {
+    updateStatistics();
+  });
+
+  // Hiển thị Toast thông báo
+  function showToast(message, isSuccess = true) {
+    const toastEl = document.getElementById('actionToast');
+    const toastMsg = document.getElementById('toastMsg');
+    const icon = toastEl.querySelector('i');
+
+    if (isSuccess) {
+      toastEl.className = 'toast align-items-center text-bg-dark border-0 shadow-lg';
+      icon.className = 'bi bi-check-circle-fill text-success fs-5';
+    } else {
+      toastEl.className = 'toast align-items-center text-bg-danger border-0 shadow-lg';
+      icon.className = 'bi bi-exclamation-triangle-fill text-white fs-5';
+    }
+
+    toastMsg.innerHTML = message;
+    const toast = new bootstrap.Toast(toastEl, { delay: 3500 });
+    toast.show();
+  }
+
+  // 2. Xử lý khi người dùng đổi Mentor trên dropdown
+  function onMentorSelectChange(internId) {
+    const row = document.querySelector(`tr[data-id="${internId}"]`);
+    if (!row) return;
+
+    const select = row.querySelector('.select-mentor');
+    const originalMentor = row.getAttribute('data-original-mentor');
+    const currentMentor = select.value;
+
+    // Kiểm tra xem giá trị có khác với giá trị ban đầu (chưa lưu) không
+    if (currentMentor !== originalMentor) {
+      row.classList.add('row-unsaved');
+      const btn = row.querySelector('.btn-save-row');
+      btn.classList.remove('btn-outline-primary');
+      btn.classList.add('btn-warning');
+      btn.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>Lưu *';
+    } else {
+      row.classList.remove('row-unsaved');
+      const btn = row.querySelector('.btn-save-row');
+      btn.classList.add('btn-outline-primary');
+      btn.classList.remove('btn-warning');
+      btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Lưu';
+    }
+
+    updateUnsavedCounter();
+    updateStatistics();
+  }
+
+  // Cập nhật số lượng các dòng chưa lưu
+  function updateUnsavedCounter() {
+    const unsavedRows = document.querySelectorAll('#internTableBody tr.row-unsaved');
+    const badge = document.getElementById('unsavedCountBadge');
+    if (unsavedRows.length > 0) {
+      badge.textContent = unsavedRows.length;
+      badge.classList.remove('d-none');
+    } else {
+      badge.classList.add('d-none');
+    }
+  }
+
+  // 3. Hàm Lưu cho từng dòng
+  async function saveRow(internId) {
+    const row = document.querySelector(`tr[data-id="${internId}"]`);
+    if (!row) return;
+
+    const btn = row.querySelector('.btn-save-row');
+    const select = row.querySelector('.select-mentor');
+    const internName = row.querySelector('.intern-name').textContent.trim();
+    const selectedMentorId = select.value;
+    const selectedMentorName = select.options[select.selectedIndex].text;
+
+    // Dữ liệu gói JSON chuẩn bị gửi lên Server
+    const payload = {
+      internId: internId,
+      mentorId: selectedMentorId || null,
+      updatedAt: new Date().toISOString()
+    };
+
+    console.log('[API Call] Lưu 1 thực tập sinh:', payload);
+
+    // Hiệu ứng Loading nút bấm
+    const originalBtnHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Đang lưu...';
+
+    try {
+      // Mô phỏng gọi API backend (thay bằng fetch thực tế: await fetch('/api/interns/assign', {...}))
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Cập nhật trạng thái thành công
+      row.setAttribute('data-original-mentor', selectedMentorId);
+      row.classList.remove('row-unsaved');
+
+      btn.classList.remove('btn-warning');
+      btn.classList.add('btn-outline-primary');
+      btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Lưu';
+      btn.disabled = false;
+
+      updateUnsavedCounter();
+      updateStatistics();
+
+      const mentorDisplay = selectedMentorId ? `<b>${selectedMentorName}</b>` : '<i class="text-warning">Chưa phân công</i>';
+      showToast(`Đã lưu phân công cho <b>${internName}</b> &rarr; ${mentorDisplay}!`);
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = originalBtnHtml;
+      showToast('Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại!', false);
+    }
+  }
+
+  // 4. Hàm Lưu Tất Cả (Bulk Save)
+  async function saveAll() {
+    const rows = document.querySelectorAll('#internTableBody tr');
+    const btnSaveAll = document.getElementById('btnSaveAll');
+
+    const updateList = [];
+    rows.forEach(row => {
+      const internId = row.getAttribute('data-id');
+      const select = row.querySelector('.select-mentor');
+      updateList.push({
+        internId: internId,
+        mentorId: select.value || null
+      });
+    });
+
+    console.log('[API Call] Lưu toàn bộ danh sách:', updateList);
+
+    // Loading State
+    const originalBtnText = btnSaveAll.innerHTML;
+    btnSaveAll.disabled = true;
+    btnSaveAll.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Đang xử lý...';
+
+    try {
+      // Giả lập gửi API qua fetch:
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Đánh dấu toàn bộ là đã lưu
+      rows.forEach(row => {
+        const select = row.querySelector('.select-mentor');
+        row.setAttribute('data-original-mentor', select.value);
+        row.classList.remove('row-unsaved');
+
+        const btn = row.querySelector('.btn-save-row');
+        btn.classList.remove('btn-warning');
+        btn.classList.add('btn-outline-primary');
+        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Lưu';
+      });
+
+      updateUnsavedCounter();
+      updateStatistics();
+
+      btnSaveAll.disabled = false;
+      btnSaveAll.innerHTML = originalBtnText;
+
+      showToast(`Đã lưu thành công danh sách phân công cho toàn bộ <b>${updateList.length}</b> thực tập sinh!`);
+    } catch (error) {
+      btnSaveAll.disabled = false;
+      btnSaveAll.innerHTML = originalBtnText;
+      showToast('Lỗi khi lưu danh sách. Vui lòng kiểm tra lại kết nối mạng!', false);
+    }
+  }
+
+  // 5. Cập nhật thống kê số lượng
+  function updateStatistics() {
+    const rows = document.querySelectorAll('#internTableBody tr');
+    let assigned = 0;
+    let unassigned = 0;
+
+    rows.forEach(row => {
+      const select = row.querySelector('.select-mentor');
+      if (select.value && select.value !== '') {
+        assigned++;
+      } else {
+        unassigned++;
+      }
+    });
+
+    document.getElementById('totalCount').textContent = rows.length;
+    document.getElementById('assignedCount').textContent = assigned;
+    document.getElementById('unassignedCount').textContent = unassigned;
+  }
+
+  // 6. Tìm kiếm và Lọc dữ liệu trong bảng
+  function filterTable() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const filterStatus = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('#internTableBody tr');
+
+    rows.forEach(row => {
+      const internId = row.getAttribute('data-id').toLowerCase();
+      const internName = row.querySelector('.intern-name').textContent.toLowerCase();
+      const selectValue = row.querySelector('.select-mentor').value;
+
+      const matchesQuery = internName.includes(query) || internId.includes(query);
+      let matchesStatus = true;
+
+      if (filterStatus === 'ASSIGNED') {
+        matchesStatus = selectValue !== '';
+      } else if (filterStatus === 'UNASSIGNED') {
+        matchesStatus = selectValue === '';
+      }
+
+      if (matchesQuery && matchesStatus) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+</script>
 </body>
 </html>
