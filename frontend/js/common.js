@@ -5,6 +5,199 @@ function kichHoatHienThi() {
 window.addEventListener("DOMContentLoaded", kichHoatHienThi);
 setTimeout(kichHoatHienThi, 300);
 
+const THOI_HAN_SESSION_MS = 2 * 60 * 60 * 1000;
+
+function layThongTinSession(loai) {
+  try {
+    const key = loai === "student" ? "ictu_student_session" : "ictu_admin_session";
+    let raw = localStorage.getItem(key);
+    if (!raw) {
+      const fallback = localStorage.getItem("user") || localStorage.getItem("currentUser");
+      if (fallback) {
+        const parsed = JSON.parse(fallback);
+        if (loai === "student" && parsed.vai_tro === "ThucTapSinh") {
+          raw = fallback;
+        } else if (loai === "manager" && parsed.vai_tro !== "ThucTapSinh") {
+          raw = fallback;
+        }
+      }
+    }
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    const now = Date.now();
+    if (session.expires_at && now > parseInt(session.expires_at, 10)) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+function luuThongTinSession(loai, user) {
+  try {
+    const key = loai === "student" ? "ictu_student_session" : "ictu_admin_session";
+    user.expires_at = Date.now() + THOI_HAN_SESSION_MS;
+    localStorage.setItem(key, JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("currentUser", JSON.stringify(user));
+  } catch {}
+}
+
+function layTenVietTat(hoTen) {
+  if (!hoTen) return "AD";
+  const words = hoTen.trim().split(/\s+/);
+  if (words.length >= 2) {
+    return (words[words.length - 2][0] + words[words.length - 1][0]).toUpperCase();
+  }
+  return hoTen.substring(0, 2).toUpperCase();
+}
+
+function dongBoThongTinNguoiDung() {
+  const isStudentPage =
+    window.location.pathname.includes("/sinhvien/") ||
+    document.querySelector("#sidebarTenSinhVien") !== null;
+  const isManagerPage =
+    window.location.pathname.includes("/quanly/") ||
+    document.querySelector("#adminSidebarName") !== null ||
+    (document.querySelector("aside") && window.location.pathname.includes("/quanly/"));
+
+  if (isStudentPage) {
+    let student = layThongTinSession("student");
+    if (!student) {
+      student = {
+        ho_ten: "Vũ Quang Huy",
+        email: "quanghuy.dtc@ictu.edu.vn",
+        ma_sinh_vien: "DTC2051060124",
+        vai_tro: "ThucTapSinh"
+      };
+      luuThongTinSession("student", student);
+    }
+
+    const hoTen = student.ho_ten || "Vũ Quang Huy";
+    const email = student.email || "quanghuy.dtc@ictu.edu.vn";
+    const maSV = student.ma_sinh_vien || (email.includes("@") ? email.split("@")[0].toUpperCase() : "DTC2051060124");
+    const initials = layTenVietTat(hoTen);
+
+    const elTenSinhVien = document.getElementById("sidebarTenSinhVien");
+    if (elTenSinhVien) elTenSinhVien.textContent = hoTen;
+
+    const elMaSinhVien = document.getElementById("sidebarMaSinhVien");
+    if (elMaSinhVien) elMaSinhVien.textContent = `${maSV} - K19`;
+
+    const elAvatarInitials = document.getElementById("avatarInitials");
+    if (elAvatarInitials) elAvatarInitials.textContent = initials;
+
+    const elWelcome = document.getElementById("welcomeTenSinhVien");
+    if (elWelcome) {
+      elWelcome.textContent = hoTen;
+    } else {
+      document.querySelectorAll("h1").forEach((h1) => {
+        if (h1.textContent.includes("Xin chào,")) {
+          h1.innerHTML = `Xin chào, ${hoTen}! 👋`;
+        }
+      });
+    }
+
+    const elChuKy = document.getElementById("chuKySinhVienTen");
+    if (elChuKy) elChuKy.textContent = hoTen;
+
+    const aside = document.querySelector("aside");
+    if (aside) {
+      const userCard = aside.querySelector(".rounded-2xl");
+      if (userCard) {
+        const h4 = userCard.querySelector("h4");
+        if (h4) {
+          h4.textContent = hoTen;
+        }
+        const p = userCard.querySelector("p");
+        if (p) {
+          p.textContent = `${maSV} - K19`;
+        }
+        const avt = userCard.querySelector(".rounded-full.bg-gradient-to-tr");
+        if (avt) {
+          avt.textContent = initials;
+        }
+      }
+    }
+
+    document.querySelectorAll("a[title='Đăng xuất'], [data-action='logout']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        localStorage.removeItem("ictu_student_session");
+        localStorage.removeItem("user");
+        localStorage.removeItem("currentUser");
+      });
+    });
+  }
+
+  if (isManagerPage) {
+    let admin = layThongTinSession("manager");
+    if (!admin) {
+      admin = {
+        ho_ten: "Ban Đào Tạo & QLTT",
+        email: "admin@ictu.edu.vn",
+        vai_tro: "Admin"
+      };
+      luuThongTinSession("manager", admin);
+    }
+
+    const hoTen = admin.ho_ten || "Ban Đào Tạo & QLTT";
+    const email = admin.email || "admin@ictu.edu.vn";
+    const initials = layTenVietTat(hoTen);
+
+    let vaiTroText = "Quản trị viên";
+    if (admin.vai_tro === "HR" || admin.vai_tro === "hr") vaiTroText = "Cán bộ HR";
+    else if (admin.vai_tro === "Mentor" || admin.vai_tro === "mentor") vaiTroText = "Mentor hướng dẫn";
+    else if (admin.vai_tro === "NhaTruong") vaiTroText = "Đại diện Nhà trường";
+
+    const elAdminName = document.getElementById("adminSidebarName");
+    if (elAdminName) elAdminName.textContent = hoTen;
+
+    const elAdminEmail = document.getElementById("adminSidebarEmail");
+    if (elAdminEmail) elAdminEmail.textContent = email;
+
+    const elAdminRole = document.getElementById("adminSidebarRole");
+    if (elAdminRole) elAdminRole.textContent = vaiTroText;
+
+    const elAdminAvatar = document.getElementById("adminAvatarInitials");
+    if (elAdminAvatar) elAdminAvatar.textContent = initials;
+
+    const aside = document.querySelector("aside");
+    if (aside) {
+      const userCard = aside.querySelector(".rounded-2xl");
+      if (userCard) {
+        const h4 = userCard.querySelector("h4");
+        if (h4) {
+          h4.textContent = hoTen;
+        }
+        const p = userCard.querySelector("p");
+        if (p) {
+          p.textContent = email;
+        }
+        const span = userCard.querySelector("span.rounded-full");
+        if (span) {
+          span.textContent = vaiTroText;
+        }
+        const avt = userCard.querySelector(".rounded-full.bg-gradient-to-tr");
+        if (avt) {
+          avt.textContent = initials;
+        }
+      }
+    }
+
+    document.querySelectorAll("a[title='Đăng xuất'], [data-action='logout']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        localStorage.removeItem("ictu_admin_session");
+        localStorage.removeItem("user");
+        localStorage.removeItem("currentUser");
+      });
+    });
+  }
+}
+
+window.addEventListener("DOMContentLoaded", dongBoThongTinNguoiDung);
+
 function thongBaoDangCapNhat(tenTinhNang, moTa) {
   let modal = document.getElementById("modal-thong-bao-cap-nhat");
   if (!modal) {
