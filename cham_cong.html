@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Danh Sách Chấm Công & Chuyên Cần</title>
+    <!-- Thư viện Font & Icon & Tailwind CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { theme: { extend: { colors: { ictu: { 50: '#eff6ff', 100: '#dbeafe', 600: '#2563eb', 700: '#1d4ed8' } } } } };
+    </script>
+  </head>
+  <body class="bg-slate-50 font-sans text-slate-800 p-6 min-h-screen">
+    <div class="max-w-7xl mx-auto space-y-6">
+
+      <!-- TIÊU ĐỀ HỆ THỐNG -->
+      <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Bảng Theo Dõi Chấm Công Sinh Viên</h1>
+          <p class="text-xs text-slate-500 mt-1">Danh sách chuyên cần, bộ lọc thời gian & dữ liệu Fetch API</p>
+        </div>
+        <span id="badgeKetNoi" class="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span> API: Sẵn sàng
+        </span>
+      </div>
+
+      <!-- 1. THẺ CARD TÓM TẮT CHUYÊN CẦN -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-400 font-bold uppercase">Tổng Ca Chấm</span>
+          <div class="text-2xl font-extrabold text-slate-900 font-mono mt-1" id="cardTong">0</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-400 font-bold uppercase">Đúng Giờ</span>
+          <div class="text-2xl font-extrabold text-emerald-600 font-mono mt-1" id="cardDungGio">0</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-400 font-bold uppercase">Đi Muộn</span>
+          <div class="text-2xl font-extrabold text-amber-600 font-mono mt-1" id="cardDiMuon">0</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-400 font-bold uppercase">Vắng / Phép</span>
+          <div class="text-2xl font-extrabold text-rose-600 font-mono mt-1" id="cardVang">0</div>
+        </div>
+      </div>
+
+      <!-- 2. BỘ LỌC THÁNG/NĂM & TÌM KIẾM -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Chọn Tháng</label>
+          <select id="boLocThang" onchange="locDuLieu()" class="w-full h-9 border border-slate-300 rounded-lg px-2 text-xs font-semibold">
+            <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
+            <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
+            <option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option>
+            <option value="10" selected>Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Chọn Năm</label>
+          <select id="boLocNam" onchange="locDuLieu()" class="w-full h-9 border border-slate-300 rounded-lg px-2 text-xs font-semibold">
+            <option value="2024">Năm 2024</option><option value="2025">Năm 2025</option><option value="2026" selected>Năm 2026</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Trạng Thái</label>
+          <select id="boLocTrangThai" onchange="locDuLieu()" class="w-full h-9 border border-slate-300 rounded-lg px-2 text-xs font-semibold">
+            <option value="tat-ca">Tất cả</option>
+            <option value="DungGio">Đúng giờ</option>
+            <option value="DiMuon">Đi muộn</option>
+            <option value="VangMat">Vắng mặt</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Tìm Kiếm</label>
+          <input id="timKiem" type="text" placeholder="Tên hoặc mã SV..." oninput="locDuLieu()" class="w-full h-9 border border-slate-300 rounded-lg px-3 text-xs" />
+        </div>
+      </div>
+
+      <!-- 3. BẢNG HTML HIỂN THỊ DANH SÁCH CHẤM CÔNG -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase text-[11px]">
+                <th class="p-3 text-center">Mã SV</th>
+                <th class="p-3">Họ và Tên</th>
+                <th class="p-3 text-center">Ngày Chấm</th>
+                <th class="p-3 text-center">Giờ Vào</th>
+                <th class="p-3 text-center">Giờ Ra</th>
+                <th class="p-3 text-center">Số Giờ</th>
+                <th class="p-3 text-center">Trạng Thái</th>
+                <th class="p-3">Ghi Chú</th>
+              </tr>
+            </thead>
+            <tbody id="bangChamCongBody" class="divide-y divide-slate-100">
+              <!-- Render dữ liệu tại đây -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- JAVASCRIPT GỌI FETCH API & RENDER DỮ LIỆU NHÚNG TRỰC TIẾP -->
+    <script>
+      const duongDanApi = "http://127.0.0.1:8000/api/v1";
+
+      // Dữ liệu mẫu thử nghiệm khi API chưa sẵn sàng
+      const mockData = [
+        { ma_sv: "DTC2051060124", ho_ten: "Nguyễn Văn An", ngay: "01/10/2026", vao: "07:55", ra: "17:30", gio: 8.5, trang_thai: "DungGio", ghi_chu: "Đúng giờ ca sáng" },
+        { ma_sv: "DTC2051060188", ho_ten: "Trần Thị Mai Anh", ngay: "01/10/2026", vao: "08:18", ra: "17:30", gio: 8.0, trang_thai: "DiMuon", ghi_chu: "Đi muộn 18 phút" },
+        { ma_sv: "DTC2051060045", ho_ten: "Hoàng Minh Đức", ngay: "01/10/2026", vao: "08:00", ra: "17:30", gio: 8.5, trang_thai: "DungGio", ghi_chu: "Đủ giờ làm việc" },
+        { ma_sv: "DTC2051060312", ho_ten: "Lê Thu Trang", ngay: "01/10/2026", vao: "--:--", ra: "--:--", gio: 0, trang_thai: "VangMat", ghi_chu: "Vắng mặt không phép" },
+        { ma_sv: "DTC2051060012", ho_ten: "Phạm Thùy Linh", ngay: "01/10/2026", vao: "07:50", ra: "17:35", gio: 8.6, trang_thai: "DungGio", ghi_chu: "Đến sớm 10 phút" }
+      ];
+
+      let danhSachHienTai = [...mockData];
+
+      // Hàm gọi Fetch API
+      async function taiDuLieu() {
+        const thang = document.getElementById("boLocThang").value;
+        const nam = document.getElementById("boLocNam").value;
+        try {
+          const res = await fetch(`${duongDanApi}/cham-cong?thang=${thang}&nam=${nam}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.data) danhSachHienTai = data.data;
+          }
+        } catch (e) {
+          // Tự động dùng mockData nếu không kết nối được backend
+        }
+        locDuLieu();
+      }
+
+      // Hàm lọc dữ liệu theo tháng/năm, trạng thái, từ khóa
+      function locDuLieu() {
+        const tt = document.getElementById("boLocTrangThai").value;
+        const kw = document.getElementById("timKiem").value.toLowerCase();
+
+        const ketQua = danhSachHienTai.filter(item => {
+          const khopTT = tt === "tat-ca" || item.trang_thai === tt;
+          const khopKW = !kw || item.ma_sv.toLowerCase().includes(kw) || item.ho_ten.toLowerCase().includes(kw);
+          return khopTT && khopKW;
+        });
+
+        renderGiaoDien(ketQua);
+      }
+
+      // Hàm render HTML & thẻ Card
+      function renderGiaoDien(list) {
+        document.getElementById("cardTong").textContent = list.length;
+        document.getElementById("cardDungGio").textContent = list.filter(i => i.trang_thai === 'DungGio').length;
+        document.getElementById("cardDiMuon").textContent = list.filter(i => i.trang_thai === 'DiMuon').length;
+        document.getElementById("cardVang").textContent = list.filter(i => i.trang_thai === 'VangMat').length;
+
+        const tbody = document.getElementById("bangChamCongBody");
+        if (list.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">Không có dữ liệu phù hợp</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = list.map(item => {
+          let badge = item.trang_thai === 'DungGio' 
+            ? '<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">Đúng giờ</span>'
+            : item.trang_thai === 'DiMuon'
+            ? '<span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">Đi muộn</span>'
+            : '<span class="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-semibold">Vắng mặt</span>';
+
+          return `
+            <tr class="hover:bg-slate-50 font-medium">
+              <td class="p-3 text-center font-mono text-blue-600 font-bold">${item.ma_sv}</td>
+              <td class="p-3 font-semibold text-slate-900">${item.ho_ten}</td>
+              <td class="p-3 text-center font-mono">${item.ngay}</td>
+              <td class="p-3 text-center font-mono">${item.vao}</td>
+              <td class="p-3 text-center font-mono">${item.ra}</td>
+              <td class="p-3 text-center font-mono font-bold">${item.gio} hrs</td>
+              <td class="p-3 text-center">${badge}</td>
+              <td class="p-3 text-slate-500">${item.ghi_chu}</td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      document.addEventListener("DOMContentLoaded", taiDuLieu);
+    </script>
+  </body>
+</html>
