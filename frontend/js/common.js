@@ -107,18 +107,15 @@ function dongBoThongTinNguoiDung() {
     if (aside) {
       const userCard = aside.querySelector(".rounded-2xl");
       if (userCard) {
-        const h4 = userCard.querySelector("h4");
-        if (h4) {
-          h4.textContent = hoTen;
-        }
-        const p = userCard.querySelector("p");
-        if (p) {
-          p.textContent = `${maSV} - K19`;
+        const textContainer = userCard.querySelector(".flex-1");
+        if (textContainer) {
+          const h4 = textContainer.querySelector("h4");
+          if (h4) h4.textContent = hoTen;
+          const p = textContainer.querySelector("p");
+          if (p) p.textContent = `${maSV} - K19`;
         }
         const avt = userCard.querySelector(".rounded-full.bg-gradient-to-tr");
-        if (avt) {
-          avt.textContent = initials;
-        }
+        if (avt) avt.textContent = initials;
       }
     }
 
@@ -167,22 +164,19 @@ function dongBoThongTinNguoiDung() {
     if (aside) {
       const userCard = aside.querySelector(".rounded-2xl");
       if (userCard) {
-        const h4 = userCard.querySelector("h4");
-        if (h4) {
-          h4.textContent = hoTen;
-        }
-        const p = userCard.querySelector("p");
-        if (p) {
-          p.textContent = email;
-        }
-        const span = userCard.querySelector("span.rounded-full");
-        if (span) {
-          span.textContent = vaiTroText;
+        const textContainer = userCard.querySelector(".flex-1");
+        if (textContainer) {
+          const h4 = textContainer.querySelector("h4");
+          if (h4) h4.textContent = hoTen;
+          const p = textContainer.querySelector("p");
+          if (p) p.textContent = email;
+          const roleBadge = textContainer.querySelector("span.rounded-full");
+          if (roleBadge) roleBadge.textContent = vaiTroText;
         }
         const avt = userCard.querySelector(".rounded-full.bg-gradient-to-tr");
-        if (avt) {
-          avt.textContent = initials;
-        }
+        if (avt) avt.textContent = initials;
+        const statusDot = userCard.querySelector(".relative span.rounded-full");
+        if (statusDot) statusDot.textContent = "";
       }
     }
 
