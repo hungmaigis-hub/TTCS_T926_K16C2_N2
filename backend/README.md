@@ -537,3 +537,93 @@ pytest -v
 }
 ```
 
+---
+
+### 11. Điểm danh vào ca làm việc (Check-in)
+* **URL:** `/api/v1/attendance/check-in`
+* **Method:** `POST`
+* **Status Code:** `201 Created`
+* **Request Body (JSON):**
+```json
+{
+  "ma_ho_so": 1,
+  "thoi_gian_checkin": "2026-10-01T08:15:00",
+  "phuong_thuc": "Web",
+  "ghi_chu": "Check-in đúng giờ qua cổng Web"
+}
+```
+
+> **Quy tắc Validate & Nghiệp vụ:**
+> - `ma_ho_so`: Bắt buộc, số nguyên dương > 0. Nếu không tìm thấy hồ sơ sẽ trả về `HTTP 404 Not Found`.
+> - `thoi_gian_checkin`: Tùy chọn (định dạng ISO 8601). Nếu không truyền hoặc truyền `null`, hệ thống tự động lấy thời gian hiện tại (`datetime.now()`).
+> - `phuong_thuc`: Tùy chọn (`Web`, `QR`, `The`), mặc định là `"Web"`.
+> - `ghi_chu`: Tùy chọn chuỗi ghi chú lý do.
+> - **Quy tắc tính trạng thái chấm công (`trang_thai`):**
+>   - Check-in trước hoặc đúng 08:30:00 $\rightarrow$ `DungGio` (Đúng giờ).
+>   - Check-in sau 08:30:00 $\rightarrow$ `DiMuon` (Đi muộn).
+> - **Chống trùng lặp:** Mỗi thực tập sinh chỉ được check-in 1 lần trong một ngày. Nếu đã check-in trong ngày, trả về `HTTP 400 Bad Request`.
+
+#### Response mẫu (HTTP 201 Created):
+```json
+{
+  "status_code": 201,
+  "message": "Check-in thành công",
+  "data": {
+    "ma_cham_cong": 15,
+    "ma_ho_so": 1,
+    "ngay_cham_cong": "2026-10-01",
+    "thoi_gian_checkin": "2026-10-01T08:15:00",
+    "thoi_gian_checkout": null,
+    "gio_check_in": "08:15:00",
+    "gio_check_out": null,
+    "trang_thai": "DungGio",
+    "phuong_thuc": "Web",
+    "ghi_chu": "Check-in đúng giờ qua cổng Web"
+  }
+}
+```
+
+---
+
+### 12. Điểm danh kết thúc ca làm việc (Check-out)
+* **URL:** `/api/v1/attendance/check-out`
+* **Method:** `POST`
+* **Status Code:** `200 OK`
+* **Request Body (JSON):**
+```json
+{
+  "ma_ho_so": 1,
+  "thoi_gian_checkout": "2026-10-01T17:35:00",
+  "ghi_chu": "Hoàn thành ca làm việc"
+}
+```
+
+> **Quy tắc Validate & Nghiệp vụ:**
+> - `ma_ho_so`: Bắt buộc, số nguyên dương > 0. Nếu không tìm thấy hồ sơ sẽ trả về `HTTP 404 Not Found`.
+> - `thoi_gian_checkout`: Tùy chọn (định dạng ISO 8601). Nếu không truyền hoặc truyền `null`, hệ thống tự động lấy thời gian hiện tại (`datetime.now()`).
+> - `ghi_chu`: Tùy chọn chuỗi ghi chú bổ sung khi checkout.
+> - **Bắt buộc phải Check-in trước:** Nếu chưa có bản ghi check-in trong ngày tương ứng, trả về `HTTP 400 Bad Request`.
+> - **Chống trùng lặp:** Nếu hồ sơ đã check-out trong ngày, trả về `HTTP 400 Bad Request`.
+> - **Logic thời gian:** `thoi_gian_checkout` phải sau `thoi_gian_checkin`. Nếu checkout trước thời điểm checkin sẽ trả về `HTTP 400 Bad Request`.
+> - **Cập nhật trạng thái:** Nếu trước đó trạng thái là `DungGio` nhưng thời gian check-out trước 17:00:00 $\rightarrow$ cập nhật `trang_thai = "VeSom"` (Về sớm). Nếu trước đó đã là `DiMuon` thì giữ nguyên để phản ánh đúng kỷ luật ca làm việc.
+
+#### Response mẫu (HTTP 200 OK):
+```json
+{
+  "status_code": 200,
+  "message": "Check-out thành công",
+  "data": {
+    "ma_cham_cong": 15,
+    "ma_ho_so": 1,
+    "ngay_cham_cong": "2026-10-01",
+    "thoi_gian_checkin": "2026-10-01T08:15:00",
+    "thoi_gian_checkout": "2026-10-01T17:35:00",
+    "gio_check_in": "08:15:00",
+    "gio_check_out": "17:35:00",
+    "trang_thai": "DungGio",
+    "phuong_thuc": "Web",
+    "ghi_chu": "Hoàn thành ca làm việc"
+  }
+}
+```
+

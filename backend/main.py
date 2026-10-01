@@ -37,6 +37,10 @@ from schemas import (
     AttendanceReportSummary,
     AttendanceReportItem,
     AttendancePagination,
+    CheckInRequest,
+    CheckOutRequest,
+    CheckInResponse,
+    CheckOutResponse,
 )
 from security import get_password_hash, verify_password
 
@@ -1020,6 +1024,154 @@ def get_attendance_reports(
             "items": paginated_items,
             "pagination": pagination,
         }
+    }
+
+
+# ==============================================================
+# API ĐIỂM DANH / CHẤM CÔNG (ATTENDANCE CHECK-IN & CHECK-OUT)
+# ==============================================================
+
+@app.post("/api/v1/attendance/check-in", status_code=201, response_model=CheckInResponse)
+def attendance_check_in(req: CheckInRequest, db: Session = Depends(get_db)):
+    """
+    Endpoint tiếp nhận yêu cầu Check-in của thực tập sinh:
+    - Kiểm tra hồ sơ thực tập sinh tồn tại (404 Not Found nếu không tìm thấy).
+    - Xác định ngày và giờ check-in (lấy thời gian truyền lên hoặc thời gian hệ thống hiện tại).
+    - Kiểm tra xem hồ sơ đã check-in trong ngày hôm đó chưa (400 Bad Request nếu đã check-in).
+    - Tự động xác định trạng thái:
+        + Nếu giờ vào <= 08:30:00 -> "DungGio"
+        + Nếu giờ vào > 08:30:00 -> "DiMuon"
+    - Lưu bản ghi vào bảng cham_cong.
+    """
+    # 1. Kiểm tra hồ sơ thực tập sinh có tồn tại không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == req.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với mã ID: {req.ma_ho_so}"
+        )
+
+    # 2. Xác định thời điểm check-in
+    now_dt = req.thoi_gian_checkin if req.thoi_gian_checkin is not None else datetime.now()
+    target_date = now_dt.date()
+    target_time = now_dt.time()
+
+    # 3. Kiểm tra xem ngày này hồ sơ đã check-in chưa
+    existing_attendance = db.query(ChamCong).filter(
+        ChamCong.ma_ho_so == req.ma_ho_so,
+        ChamCong.ngay_cham_cong == target_date
+    ).first()
+    if existing_attendance:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Thực tập sinh ID {req.ma_ho_so} đã thực hiện check-in vào ngày {target_date}"
+        )
+
+    # 4. Xác định trạng thái vào làm (mốc chuẩn 08:30:00)
+    gio_chuan = time(8, 30, 0)
+    trang_thai = "DiMuon" if target_time > gio_chuan else "DungGio"
+
+    # 5. Khởi tạo bản ghi chấm công mới
+    new_record = ChamCong(
+        ma_ho_so=req.ma_ho_so,
+        ngay_cham_cong=target_date,
+        thoi_gian_checkin=now_dt,
+        thoi_gian_checkout=None,
+        gio_check_in=target_time,
+        gio_check_out=None,
+        trang_thai=trang_thai,
+        phuong_thuc=req.phuong_thuc or "Web",
+        ghi_chu=req.ghi_chu
+    )
+
+    db.add(new_record)
+    db.commit()
+    db.refresh(new_record)
+
+    return {
+        "status_code": 201,
+        "message": "Check-in thành công",
+        "data": new_record.to_dict()
+    }
+
+
+@app.post("/api/v1/attendance/check-out", status_code=200, response_model=CheckOutResponse)
+def attendance_check_out(req: CheckOutRequest, db: Session = Depends(get_db)):
+    """
+    Endpoint tiếp nhận yêu cầu Check-out kết thúc ca làm của thực tập sinh:
+    - Kiểm tra hồ sơ thực tập sinh tồn tại (404 Not Found nếu không tìm thấy).
+    - Xác định ngày và giờ check-out.
+    - Tìm bản ghi chấm công trong ngày của hồ sơ:
+        + Nếu chưa có bản ghi check-in -> báo lỗi 400 Bad Request ("Chưa thực hiện check-in trong ngày hôm nay, không thể check-out").
+        + Nếu đã check-out rồi -> báo lỗi 400 Bad Request ("Đã thực hiện check-out trong ngày hôm nay rồi").
+        + Nếu thời gian check-out nhỏ hơn thời gian check-in -> báo lỗi 400 Bad Request.
+    - Cập nhật thời gian check-out và lưu CSDL.
+    """
+    # 1. Kiểm tra hồ sơ thực tập sinh tồn tại không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == req.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với mã ID: {req.ma_ho_so}"
+        )
+
+    # 2. Xác định thời điểm check-out
+    now_dt = req.thoi_gian_checkout if req.thoi_gian_checkout is not None else datetime.now()
+    target_date = now_dt.date()
+    target_time = now_dt.time()
+
+    # 3. Tìm bản ghi chấm công trong ngày của hồ sơ
+    attendance = db.query(ChamCong).filter(
+        ChamCong.ma_ho_so == req.ma_ho_so,
+        ChamCong.ngay_cham_cong == target_date
+    ).first()
+
+    if not attendance:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Thực tập sinh ID {req.ma_ho_so} chưa thực hiện check-in vào ngày {target_date}, không thể check-out"
+        )
+
+    # 4. Kiểm tra xem đã check-out chưa
+    if attendance.thoi_gian_checkout is not None or attendance.gio_check_out is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Thực tập sinh ID {req.ma_ho_so} đã hoàn thành check-out vào ngày {target_date}"
+        )
+
+    # 5. Kiểm tra tính hợp lệ của thời gian check-out so với check-in
+    if attendance.thoi_gian_checkin and now_dt < attendance.thoi_gian_checkin:
+        raise HTTPException(
+            status_code=400,
+            detail="Thời gian check-out không thể trước thời gian check-in"
+        )
+    elif attendance.gio_check_in and target_time < attendance.gio_check_in:
+        raise HTTPException(
+            status_code=400,
+            detail="Giờ check-out không thể trước giờ check-in"
+        )
+
+    # 6. Cập nhật bản ghi chấm công
+    attendance.thoi_gian_checkout = now_dt
+    attendance.gio_check_out = target_time
+    if req.ghi_chu:
+        if attendance.ghi_chu:
+            attendance.ghi_chu = f"{attendance.ghi_chu}; {req.ghi_chu}"
+        else:
+            attendance.ghi_chu = req.ghi_chu
+
+    # Cập nhật trạng thái nếu về sớm (trước 17:00:00) hoặc giữ nguyên/hoàn thành
+    gio_tan_ca = time(17, 0, 0)
+    if target_time < gio_tan_ca and attendance.trang_thai == "DungGio":
+        attendance.trang_thai = "VeSom"
+
+    db.commit()
+    db.refresh(attendance)
+
+    return {
+        "status_code": 200,
+        "message": "Check-out thành công",
+        "data": attendance.to_dict()
     }
 
 

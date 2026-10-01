@@ -125,9 +125,13 @@ CREATE TABLE IF NOT EXISTS cham_cong (
     ma_cham_cong INT AUTO_INCREMENT PRIMARY KEY,
     ma_ho_so INT NOT NULL,
     ngay_cham_cong DATE NOT NULL,
-    gio_check_in TIME,
-    gio_check_out TIME,
+    thoi_gian_checkin DATETIME NULL,
+    thoi_gian_checkout DATETIME NULL,
+    gio_check_in TIME NULL,
+    gio_check_out TIME NULL,
+    trang_thai VARCHAR(50) DEFAULT 'DungGio' COMMENT 'DungGio, DiMuon, VeSom, HoanThanh',
     phuong_thuc VARCHAR(50) DEFAULT 'Web' COMMENT 'QR, The, Web',
+    ghi_chu VARCHAR(255) NULL,
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
 );
 

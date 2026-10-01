@@ -122,9 +122,13 @@ erDiagram
         int ma_cham_cong PK
         int ma_ho_so FK
         date ngay_cham_cong
+        datetime thoi_gian_checkin
+        datetime thoi_gian_checkout
         time gio_check_in
         time gio_check_out
+        string trang_thai "DungGio, DiMuon, VeSom, HoanThanh"
         string phuong_thuc "QR, The, Web"
+        string ghi_chu
     }
 
     DON_NGHI_PHEP {

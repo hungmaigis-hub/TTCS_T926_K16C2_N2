@@ -4,6 +4,45 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.15.0] - 2026-10-01
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model Điểm danh & Chấm công (`cham_cong`)**:
+  - Bổ sung và chuẩn hóa các trường dữ liệu:
+    - `thoi_gian_checkin` (DateTime, NULLABLE): Thời điểm quét/ghi nhận vào ca.
+    - `thoi_gian_checkout` (DateTime, NULLABLE): Thời điểm quét/ghi nhận kết thúc ca.
+    - `trang_thai` (String/Enum): Trạng thái ca làm việc (`DungGio`, `DiMuon`, `VeSom`, `NghiCoPhep`, `NghiKhongPhep`).
+    - `ghi_chu` (Text/String): Ghi chú bổ sung lý do, địa điểm công tác hoặc giải trình.
+  - Đảm bảo 100% tương thích ngược với API báo cáo tổng hợp chấm công (`GET /api/v1/attendance/reports`) qua các trường legacy `ngay_cham_cong`, `gio_check_in`, `gio_check_out`.
+- **Endpoint Check-in Ca làm việc (`POST /api/v1/attendance/check-in`)**:
+  - Ghi nhận thời gian check-in của thực tập sinh.
+  - Nhận `ma_ho_so`, tùy chọn `thoi_gian_checkin` (mặc định thời điểm hiện tại), `phuong_thuc` (`Web`, `QR`, `The`), `ghi_chu`.
+  - Tự động phân loại trạng thái: Đến trước hoặc đúng 08:30:00 là `DungGio`; đến sau 08:30:00 là `DiMuon`.
+  - Validate mã hồ sơ hợp lệ (`HTTP 404 Not Found` nếu không tồn tại).
+  - Chống trùng lặp: Từ chối check-in nhiều lần trong cùng một ngày (`HTTP 400 Bad Request`).
+  - Trả về mã phản hồi `HTTP 201 Created` kèm thông tin bản ghi chi tiết.
+- **Endpoint Check-out Ca làm việc (`POST /api/v1/attendance/check-out`)**:
+  - Ghi nhận thời gian check-out của thực tập sinh.
+  - Nhận `ma_ho_so`, tùy chọn `thoi_gian_checkout` (mặc định thời điểm hiện tại), `ghi_chu`.
+  - Yêu cầu phải check-in trước khi check-out (`HTTP 400 Bad Request` nếu chưa check-in trong ngày).
+  - Chống trùng lặp check-out (`HTTP 400 Bad Request` nếu đã check-out).
+  - Ràng buộc logic thời gian: Không cho phép check-out trước thời điểm check-in (`HTTP 400 Bad Request`).
+  - Tự động cập nhật trạng thái nếu về trước 17:00:00 sang `VeSom` (nếu trước đó đúng giờ).
+  - Trả về mã phản hồi `HTTP 200 OK` kèm thông tin bản ghi chi tiết.
+- **Kiểm thử tự động (Unit Test)**:
+  - Tạo mới bộ kiểm thử `backend/tests/test_attendance_checkin_checkout.py` với **14 test cases**:
+    - Check-in đúng giờ và đi muộn thành công.
+    - Check-in mặc định thời gian hiện tại khi không truyền payload thời gian.
+    - Chặn check-in trùng lặp trong cùng ngày.
+    - Bắt lỗi hồ sơ không tồn tại (404) và mã hồ sơ không hợp lệ (422).
+    - Check-out đúng giờ và về sớm thành công.
+    - Bắt lỗi check-out khi chưa check-in hoặc check-out trùng lặp (400).
+    - Bắt lỗi check-out có mốc thời gian sớm hơn check-in (400).
+    - Luồng hoàn chỉnh Check-in $\rightarrow$ Check-out trong cùng ca.
+  - Toàn bộ test suite đạt **225/225 tests PASS 100%**.
+
+---
+
 ## [1.14.0] - 2026-09-30
 
 ### Đã hoàn thành (Added & Enhanced)
