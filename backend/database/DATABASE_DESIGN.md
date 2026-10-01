@@ -31,6 +31,7 @@ erDiagram
         int ma_phong_ban FK
         string ho_ten
         string email
+        string mat_khau_hash
         string so_dien_thoai
         string vai_tro "Admin, HR, Mentor, ThucTapSinh"
         string trang_thai "HoatDong, Khoa"
@@ -188,6 +189,7 @@ erDiagram
 | `ma_phong_ban` | `INT` | **FK** | `NULL` được (cho TTS chưa gán phòng ban) | Liên kết tới `PHONG_BAN(ma_phong_ban)` |
 | `ho_ten` | `VARCHAR(100)` | | `NOT NULL` | Họ và tên |
 | `email` | `VARCHAR(100)` | | `NOT NULL, UNIQUE` | Địa chỉ email đăng nhập / liên hệ |
+| `mat_khau_hash` | `VARCHAR(255)` | | `NULL` | Mật khẩu tài khoản (đã băm bcrypt) |
 | `so_dien_thoai` | `VARCHAR(20)` | | `NULL, UNIQUE` | Số điện thoại liên lạc |
 | `vai_tro` | `VARCHAR(50)` | | `Admin`, `HR`, `Mentor`, `ThucTapSinh` | Quyền hạn tài khoản trong hệ thống |
 | `trang_thai` | `VARCHAR(50)` | | `HoatDong`, `Khoa` | Trạng thái kích hoạt tài khoản |
