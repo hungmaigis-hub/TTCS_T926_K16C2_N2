@@ -4,7 +4,40 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.17.0] - 2026-10-01
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model Nhiệm Vụ (`NhiemVu`)**:
+  - Bổ sung synonym `tieu_de` ánh xạ tới cột `ten_nhiem_vu` trong SQLAlchemy ORM model [NhiemVu](file:///d:/clone/ttcs/backend/database/models/nhiem_vu.py).
+  - Cập nhật hàm `to_dict()` trả về đồng thời cả `tieu_de` và `ten_nhiem_vu` để tương thích linh hoạt cho cả Client cũ và mới.
+  - Đảm bảo các giá trị mặc định: `tien_do_phantram = 0`, `trang_thai = "Chưa bắt đầu"`.
+- **Pydantic Schemas (`TaskCreate`, `TaskDetailData`, `TaskCreateResponse`)**:
+  - Thiết kế `TaskCreate` hỗ trợ validate chặt chẽ:
+    - Bắt buộc `ma_ho_so > 0`.
+    - Hỗ trợ cả trường `tieu_de` và `ten_nhiem_vu` (tự động chuẩn hóa và loại bỏ khoảng trắng thừa).
+    - Bắt buộc `han_hoan_thanh` (định dạng YYYY-MM-DD).
+    - Validate `tien_do_phantram` trong khoảng `[0, 100]`.
+    - Tự động gán mặc định `trang_thai = "Chưa bắt đầu"`.
+- **Endpoint Tạo Mới Nhiệm Vụ (`POST /api/v1/tasks`)**:
+  - Triển khai endpoint tiếp nhận yêu cầu tạo nhiệm vụ mới tại [main.py](file:///d:/clone/ttcs/backend/main.py).
+  - Kiểm tra tính tồn tại của hồ sơ thực tập (`ho_so_thuc_tap`), trả về `HTTP 404 Not Found` nếu không tìm thấy.
+  - Trả về mã phản hồi `HTTP 201 Created` kèm dữ liệu nhiệm vụ vừa được tạo.
+- **Kiểm thử tự động (Unit Test)**:
+  - Tạo mới bộ kiểm thử [test_create_task.py](file:///d:/clone/ttcs/backend/tests/test_create_task.py) với **10 test cases** kiểm thử đầy đủ các tình huống:
+    - Tạo nhiệm vụ thành công với dữ liệu tối thiểu và mặc định (201 Created).
+    - Tạo nhiệm vụ thành công với đầy đủ các trường (201 Created).
+    - Tạo nhiệm vụ khi truyền alias `ten_nhiem_vu` (201 Created).
+    - Bắt lỗi mã hồ sơ không tồn tại (404 Not Found).
+    - Bắt lỗi thiếu tiêu đề hoặc tiêu đề rỗng (422 Unprocessable Entity).
+    - Bắt lỗi thiếu hạn hoàn thành hoặc sai định dạng ngày (422 Unprocessable Entity).
+    - Bắt lỗi mã hồ sơ <= 0 (422 Unprocessable Entity).
+    - Bắt lỗi tiến độ phần trăm ngoài khoảng [0, 100] (422 Unprocessable Entity).
+  - Toàn bộ 23/23 tests liên quan đến Tasks đều PASS 100%.
+
+---
+
 ## [1.16.0] - 2026-10-01
+
 
 ### Đã hoàn thành (Added & Enhanced)
 - **Model Đơn Xin Nghỉ Phép (`DonXinNghi`)**:

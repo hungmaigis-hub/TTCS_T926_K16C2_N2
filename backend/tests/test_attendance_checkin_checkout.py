@@ -18,8 +18,8 @@ client = TestClient(app)
 def attendance_test_intern():
     """Tạo thực tập sinh độc lập phục vụ test chấm công và tự dọn dẹp sau khi kiểm thử"""
     try:
-        from tests.conftest import MYSQL_AVAILABLE, TestSessionLocal
-        Session = SessionLocal if MYSQL_AVAILABLE else TestSessionLocal
+        from tests.conftest import TestSessionLocal
+        Session = TestSessionLocal
     except Exception:
         Session = SessionLocal
 

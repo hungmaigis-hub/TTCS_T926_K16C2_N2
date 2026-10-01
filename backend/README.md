@@ -670,3 +670,48 @@ pytest -v
 }
 ```
 
+---
+
+### 14. Tạo mới nhiệm vụ thực tập (Tasks Management)
+* **URL:** `/api/v1/tasks`
+* **Method:** `POST`
+* **Status Code:** `201 Created`
+* **Request Body (JSON):**
+```json
+{
+  "ma_ho_so": 1,
+  "tieu_de": "Phát triển tính năng quản lý nhiệm vụ thực tập",
+  "mo_ta": "Thiết kế model CSDL, xây dựng endpoint POST và kiểm thử tự động",
+  "han_hoan_thanh": "2026-10-25",
+  "tien_do_phantram": 0,
+  "trang_thai": "Chưa bắt đầu"
+}
+```
+
+> **Quy tắc Validate & Nghiệp vụ:**
+> - `ma_ho_so`: Bắt buộc, số nguyên dương > 0. Nếu không tồn tại hồ sơ thực tập tương ứng sẽ trả về `HTTP 404 Not Found`.
+> - `tieu_de`: Bắt buộc, chuỗi không được để trống hoặc chỉ chứa khoảng trắng (hỗ trợ alias `ten_nhiem_vu`).
+> - `han_hoan_thanh`: Bắt buộc, định dạng ngày `YYYY-MM-DD`. Nếu định dạng sai sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - `tien_do_phantram`: Tùy chọn, mặc định tự động gán là `0` (khoảng giá trị từ `0` đến `100`).
+> - `trang_thai`: Tùy chọn, mặc định tự động gán là `"Chưa bắt đầu"`.
+> - `mo_ta`: Tùy chọn, mô tả chi tiết công việc cần hoàn thành.
+
+#### Response mẫu (HTTP 201 Created):
+```json
+{
+  "status_code": 201,
+  "message": "Tạo nhiệm vụ mới thành công",
+  "data": {
+    "ma_nhiem_vu": 4,
+    "ma_ho_so": 1,
+    "tieu_de": "Phát triển tính năng quản lý nhiệm vụ thực tập",
+    "ten_nhiem_vu": "Phát triển tính năng quản lý nhiệm vụ thực tập",
+    "mo_ta": "Thiết kế model CSDL, xây dựng endpoint POST và kiểm thử tự động",
+    "han_hoan_thanh": "2026-10-25",
+    "tien_do_phantram": 0,
+    "trang_thai": "Chưa bắt đầu"
+  }
+}
+```
+
+

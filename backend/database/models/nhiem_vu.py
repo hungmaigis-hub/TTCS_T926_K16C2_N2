@@ -1,6 +1,6 @@
 from datetime import date
 from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, synonym
 from database.session import Base
 
 class NhiemVu(Base):
@@ -14,6 +14,9 @@ class NhiemVu(Base):
     tien_do_phantram = Column(Integer, default=0, nullable=False)
     trang_thai = Column(String(50), default="Chưa bắt đầu", nullable=False)
 
+    # Alias / synonym cho tieu_de
+    tieu_de = synonym("ten_nhiem_vu")
+
     # Thiết lập quan hệ ngược về hồ sơ thực tập
     ho_so = relationship("HoSoThucTap", back_populates="danh_sach_nhiem_vu")
 
@@ -23,6 +26,7 @@ class NhiemVu(Base):
             "ma_nhiem_vu": self.ma_nhiem_vu,
             "ma_ho_so": self.ma_ho_so,
             "ten_nhiem_vu": self.ten_nhiem_vu,
+            "tieu_de": self.ten_nhiem_vu,
             "mo_ta": self.mo_ta,
             "han_hoan_thanh": self.han_hoan_thanh.isoformat() if self.han_hoan_thanh else None,
             "tien_do_phantram": self.tien_do_phantram,

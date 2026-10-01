@@ -16,8 +16,8 @@ client = TestClient(app)
 def sample_test_intern():
     """Tạo một thực tập sinh mới độc lập cho bài test đánh giá và tự dọn dẹp sau khi test"""
     try:
-        from tests.conftest import MYSQL_AVAILABLE, TestSessionLocal
-        Session = SessionLocal if MYSQL_AVAILABLE else TestSessionLocal
+        from tests.conftest import TestSessionLocal
+        Session = TestSessionLocal
     except Exception:
         Session = SessionLocal
 
