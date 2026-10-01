@@ -348,6 +348,21 @@ erDiagram
 
 ---
 
+### 2.12b. DON_XIN_NGHI (Đơn xin nghỉ phép theo khoảng thời gian - Leave Requests API)
+*Quản lý yêu cầu xin vắng mặt của sinh viên theo khoảng thời gian từ ngày đến ngày.*
+
+| Tên cột | Kiểu dữ liệu | Khóa | Ràng buộc / Giá trị cho phép | Mô tả |
+| :--- | :--- | :--- | :--- | :--- |
+| `ma_don` | `INT` | **PK** | `AUTO_INCREMENT` | Mã định danh đơn xin nghỉ |
+| `ma_ho_so` | `INT` | **FK** | `NOT NULL` | Người làm đơn (`HO_SO_THUC_TAP`) |
+| `tu_ngay` | `DATE` | | `NOT NULL` (>= ngày hiện tại) | Ngày bắt đầu nghỉ phép |
+| `den_ngay` | `DATE` | | `NOT NULL` (>= `tu_ngay`) | Ngày kết thúc nghỉ phép |
+| `ly_do` | `VARCHAR(255)` | | `NOT NULL` | Lý do xin nghỉ |
+| `trang_thai` | `VARCHAR(50)` | | `Chờ duyệt`, `Đã duyệt`, `Từ chối` | Mặc định: `Chờ duyệt` |
+| `ngay_tao` | `DATETIME` | | `DEFAULT CURRENT_TIMESTAMP` | Thời điểm nộp đơn |
+
+---
+
 ### 2.13. PHU_CAP (Phụ cấp thực tập hàng tháng)
 *Ghi nhận chính sách hỗ trợ tài chính cho sinh viên.*
 

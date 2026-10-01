@@ -145,6 +145,18 @@ CREATE TABLE IF NOT EXISTS don_nghi_phep (
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
 );
 
+-- 13. BẢNG ĐƠN XIN NGHỈ (Leave Requests API)
+CREATE TABLE IF NOT EXISTS don_xin_nghi (
+    ma_don INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    tu_ngay DATE NOT NULL,
+    den_ngay DATE NOT NULL,
+    ly_do VARCHAR(255) NOT NULL,
+    trang_thai VARCHAR(50) DEFAULT 'Chờ duyệt' COMMENT 'Chờ duyệt, Đã duyệt, Từ chối',
+    ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API
 INSERT INTO phong_ban (ma_phong_ban, ten_phong_ban, mo_ta) 
 VALUES (1, 'Trung tâm Phần mềm', 'Phòng kỹ thuật & phát triển hệ thống')

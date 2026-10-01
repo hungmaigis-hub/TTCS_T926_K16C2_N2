@@ -627,3 +627,46 @@ pytest -v
 }
 ```
 
+---
+
+### 13. Tạo đơn xin nghỉ phép (Leave Requests)
+* **URL:** `/api/v1/leave-requests`
+* **Method:** `POST`
+* **Status Code:** `201 Created`
+* **Request Body (JSON):**
+```json
+{
+  "ma_ho_so": 1,
+  "tu_ngay": "2026-10-05",
+  "den_ngay": "2026-10-06",
+  "ly_do": "[Nghỉ phép cá nhân] Có việc bận gia đình",
+  "trang_thai": "Chờ duyệt"
+}
+```
+
+> **Quy tắc Validate & Nghiệp vụ:**
+> - `ma_ho_so`: Bắt buộc, số nguyên dương > 0. Nếu không tìm thấy hồ sơ thực tập sinh tương ứng sẽ trả về `HTTP 404 Not Found`.
+> - `tu_ngay`: Bắt buộc, định dạng ngày `YYYY-MM-DD`. Ràng buộc `tu_ngay >= ngày hiện tại` (`date.today()`). Nếu ngày bắt đầu nghỉ trong quá khứ sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - `den_ngay`: Bắt buộc, định dạng ngày `YYYY-MM-DD`. Ràng buộc `den_ngay >= tu_ngay`. Nếu ngày kết thúc trước ngày bắt đầu sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - `ly_do`: Bắt buộc, chuỗi không được để trống hoặc chỉ chứa khoảng trắng. Nếu vi phạm trả về `HTTP 422 Unprocessable Entity`.
+> - `trang_thai`: Tùy chọn, mặc định tự động gán là `"Chờ duyệt"`.
+> - **Tiện ích:** API tự động tính toán tổng số ngày nghỉ `so_ngay = (den_ngay - tu_ngay).days + 1` trả về trong phản hồi.
+
+#### Response mẫu (HTTP 201 Created):
+```json
+{
+  "status_code": 201,
+  "message": "Tạo đơn xin nghỉ thành công",
+  "data": {
+    "ma_don": 1,
+    "ma_ho_so": 1,
+    "tu_ngay": "2026-10-05",
+    "den_ngay": "2026-10-06",
+    "so_ngay": 2,
+    "ly_do": "[Nghỉ phép cá nhân] Có việc bận gia đình",
+    "trang_thai": "Chờ duyệt",
+    "ngay_tao": "2026-10-01T19:39:24.000000"
+  }
+}
+```
+

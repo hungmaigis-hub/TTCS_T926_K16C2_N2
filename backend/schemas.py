@@ -776,4 +776,55 @@ class CheckOutResponse(BaseModel):
     data: Optional[AttendanceItemData] = None
 
 
+# ==============================================================
+# SCHEMAS CHO ĐƠN XIN NGHỈ PHÉP (LEAVE REQUESTS API)
+# ==============================================================
+
+class LeaveRequestCreate(BaseModel):
+    """Schema yêu cầu tạo đơn xin nghỉ phép (POST /api/v1/leave-requests)"""
+    ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập sinh")
+    tu_ngay: date = Field(..., description="Ngày bắt đầu nghỉ")
+    den_ngay: date = Field(..., description="Ngày kết thúc nghỉ")
+    ly_do: str = Field(..., min_length=1, max_length=255, description="Lý do xin nghỉ")
+    trang_thai: Optional[str] = Field(default="Chờ duyệt", description="Trạng thái đơn: Chờ duyệt, Đã duyệt, Từ chối")
+
+    @field_validator("tu_ngay")
+    def validate_tu_ngay(cls, v: date):
+        if v < date.today():
+            raise ValueError("Ngày bắt đầu nghỉ (tu_ngay) không được nhỏ hơn ngày hiện tại")
+        return v
+
+    @field_validator("ly_do")
+    def validate_ly_do(cls, v: str):
+        cleaned = v.strip()
+        if not cleaned:
+            raise ValueError("Lý do xin nghỉ không được để trống")
+        return cleaned
+
+    @model_validator(mode="after")
+    def validate_date_range(self):
+        if self.den_ngay < self.tu_ngay:
+            raise ValueError("Ngày kết thúc nghỉ (den_ngay) phải lớn hơn hoặc bằng ngày bắt đầu nghỉ (tu_ngay)")
+        return self
+
+
+class LeaveRequestItemData(BaseModel):
+    """Dữ liệu chi tiết đơn xin nghỉ trả về cho client"""
+    ma_don: int
+    ma_ho_so: int
+    tu_ngay: str
+    den_ngay: str
+    so_ngay: int
+    ly_do: str
+    trang_thai: str = "Chờ duyệt"
+    ngay_tao: Optional[str] = None
+
+
+class LeaveRequestCreateResponse(BaseModel):
+    """Phản hồi sau khi tạo đơn xin nghỉ thành công (HTTP 201 Created)"""
+    status_code: int = 201
+    message: str = "Tạo đơn xin nghỉ thành công"
+    data: Optional[LeaveRequestItemData] = None
+
+
 

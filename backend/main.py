@@ -41,6 +41,9 @@ from schemas import (
     CheckOutRequest,
     CheckInResponse,
     CheckOutResponse,
+    LeaveRequestCreate,
+    LeaveRequestCreateResponse,
+    LeaveRequestItemData,
 )
 from security import get_password_hash, verify_password
 
@@ -59,6 +62,7 @@ from database.models import (
     DanhGia,
     ChamCong,
     DonNghiPhep,
+    DonXinNghi,
 )
 
 from services.export_service import export_evaluations_to_excel, export_evaluations_to_pdf
@@ -1172,6 +1176,48 @@ def attendance_check_out(req: CheckOutRequest, db: Session = Depends(get_db)):
         "status_code": 200,
         "message": "Check-out thành công",
         "data": attendance.to_dict()
+    }
+
+
+# ==============================================================
+# API QUẢN LÝ ĐƠN XIN NGHỈ PHÉP (LEAVE REQUESTS)
+# ==============================================================
+
+@app.post("/api/v1/leave-requests", status_code=201, response_model=LeaveRequestCreateResponse)
+def create_leave_request(req: LeaveRequestCreate, db: Session = Depends(get_db)):
+    """
+    Endpoint tiếp nhận yêu cầu tạo đơn xin nghỉ phép của thực tập sinh:
+    - Tiếp nhận: ma_ho_so, tu_ngay, den_ngay, ly_do, trang_thai (mặc định 'Chờ duyệt').
+    - Validate mã hồ sơ thực tập sinh (404 Not Found nếu không tìm thấy).
+    - Validate tu_ngay >= ngày hiện tại và den_ngay >= tu_ngay (xử lý qua schema validator).
+    - Lưu bản ghi vào bảng don_xin_nghi.
+    - Trả về mã HTTP 201 Created cùng dữ liệu đơn xin nghỉ vừa tạo.
+    """
+    # 1. Kiểm tra hồ sơ thực tập sinh có tồn tại trong hệ thống không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == req.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với mã ID: {req.ma_ho_so}"
+        )
+
+    # 2. Khởi tạo bản ghi đơn xin nghỉ mới
+    new_request = DonXinNghi(
+        ma_ho_so=req.ma_ho_so,
+        tu_ngay=req.tu_ngay,
+        den_ngay=req.den_ngay,
+        ly_do=req.ly_do,
+        trang_thai=req.trang_thai or "Chờ duyệt"
+    )
+
+    db.add(new_request)
+    db.commit()
+    db.refresh(new_request)
+
+    return {
+        "status_code": 201,
+        "message": "Tạo đơn xin nghỉ thành công",
+        "data": new_request.to_dict()
     }
 
 
