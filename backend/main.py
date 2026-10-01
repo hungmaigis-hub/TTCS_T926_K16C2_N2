@@ -30,6 +30,8 @@ from schemas import (
     ReportCreate,
     ReportResponse,
     EvaluationSummaryResponse,
+    EvaluationCreate,
+    EvaluationCreateResponse,
     AttendanceReportResponse,
     AttendanceReportData,
     AttendanceReportSummary,
@@ -1018,6 +1020,77 @@ def get_attendance_reports(
             "items": paginated_items,
             "pagination": pagination,
         }
+    }
+
+
+# ==============================================================
+# API QUẢN LÝ ĐÁNH GIÁ THỰC TẬP (EVALUATIONS)
+# ==============================================================
+
+# api post create evaluation
+@app.post("/api/v1/evaluations", status_code=201, response_model=EvaluationCreateResponse)
+def create_evaluation(eval_data: EvaluationCreate, db: Session = Depends(get_db)):
+    """
+    Tạo mới đánh giá thực tập sinh (Giữa kỳ hoặc Cuối kỳ):
+    - Lưu mã hồ sơ (ma_ho_so), mã người đánh giá (ma_nguoi_danh_gia).
+    - Lưu loại đánh giá (loai_danh_gia: GiuaKy / CuoiKy).
+    - Lưu điểm kỹ năng chuyên môn (diem_ky_nang) và điểm thái độ kỷ luật (diem_thai_do) từ 0.0 đến 10.0.
+    - Lưu nhận xét (nhan_xet) và đề xuất tuyển dụng (de_xuat_tuyen_dung).
+    - Tự động tính điểm trung bình (diem_trung_binh) và xếp loại rèn luyện (xep_loai).
+    """
+    # 1. Kiểm tra hồ sơ thực tập sinh có tồn tại trong hệ thống không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == eval_data.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với mã ID: {eval_data.ma_ho_so}"
+        )
+
+    # 2. Kiểm tra người đánh giá có tồn tại trong hệ thống không
+    nguoi_danh_gia = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == eval_data.ma_nguoi_danh_gia).first()
+    if not nguoi_danh_gia:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Người đánh giá với mã ID {eval_data.ma_nguoi_danh_gia} không tồn tại trong hệ thống"
+        )
+
+    # 3. Kiểm tra trùng lặp đợt đánh giá: một hồ sơ chỉ có tối đa 1 đánh giá giữa kỳ và 1 đánh giá cuối kỳ
+    existing_eval = db.query(DanhGia).filter(
+        DanhGia.ma_ho_so == eval_data.ma_ho_so,
+        DanhGia.loai_danh_gia == eval_data.loai_danh_gia
+    ).first()
+    if existing_eval:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Hồ sơ ID {eval_data.ma_ho_so} đã có đánh giá {eval_data.loai_danh_gia}"
+        )
+
+    # 4. Khởi tạo bản ghi đánh giá mới
+    new_eval = DanhGia(
+        ma_ho_so=eval_data.ma_ho_so,
+        ma_nguoi_danh_gia=eval_data.ma_nguoi_danh_gia,
+        loai_danh_gia=eval_data.loai_danh_gia,
+        diem_ky_nang=eval_data.diem_ky_nang,
+        diem_thai_do=eval_data.diem_thai_do,
+        nhan_xet_chi_tiet=eval_data.get_nhan_xet(),
+        de_xuat_tuyen_chinh_thuc=eval_data.get_de_xuat()
+    )
+
+    # 5. Lưu vào CSDL
+    db.add(new_eval)
+    db.commit()
+    db.refresh(new_eval)
+
+    # 6. Đảm bảo tên người đánh giá được nạp đầy đủ trong response
+    result_dict = new_eval.to_dict()
+    if result_dict.get("ten_nguoi_danh_gia") is None and nguoi_danh_gia:
+        result_dict["ten_nguoi_danh_gia"] = nguoi_danh_gia.ho_ten
+
+    # 7. Trả về phản hồi thành công (HTTP 201 Created)
+    return {
+        "status_code": 201,
+        "message": "Tạo đánh giá thực tập sinh thành công",
+        "data": result_dict
     }
 
 
