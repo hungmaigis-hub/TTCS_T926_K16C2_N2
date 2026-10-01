@@ -24,6 +24,7 @@ from database.models import (
     DanhGia,
     ChamCong,
     DonNghiPhep,
+    DonXinNghi,
 )
 from main import app
 

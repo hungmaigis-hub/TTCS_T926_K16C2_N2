@@ -4,6 +4,48 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.16.0] - 2026-10-01
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model Đơn Xin Nghỉ Phép (`DonXinNghi`)**:
+  - Tạo mới ORM model [DonXinNghi](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/models/don_xin_nghi.py) quản lý bảng `don_xin_nghi`:
+    - `ma_don`: Khóa chính (Integer, PK, auto-increment).
+    - `ma_ho_so`: Khóa ngoại liên kết hồ sơ thực tập sinh (`ho_so_thuc_tap.ma_ho_so`).
+    - `tu_ngay`: Ngày bắt đầu nghỉ phép (Date).
+    - `den_ngay`: Ngày kết thúc nghỉ phép (Date).
+    - `ly_do`: Lý do chi tiết xin nghỉ (String(255)).
+    - `trang_thai`: Trạng thái duyệt đơn, mặc định là `"Chờ duyệt"` (`String(50)`).
+    - `ngay_tao`: Thời điểm nộp đơn (DateTime).
+  - Thiết lập quan hệ 2 chiều với `HoSoThucTap` (`danh_sach_don_xin_nghi` $\leftrightarrow$ `ho_so`).
+  - Cập nhật script khởi tạo CSDL [init_db.sql](file:///d:/CodeGym/TTCS_T926_K16C2_N2/script/database/init_db.sql) và kiến trúc [DATABASE_DESIGN.md](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/DATABASE_DESIGN.md).
+- **Endpoint Tạo Mới Đơn Xin Nghỉ Phép (`POST /api/v1/leave-requests`)**:
+  - Triển khai endpoint tiếp nhận yêu cầu xin nghỉ phép của thực tập sinh.
+  - Tương thích 100% với hợp đồng payload từ Frontend (`frontend/js/nghi_phep.js`).
+  - Validate dữ liệu đầu vào nghiêm ngặt:
+    - Bắt lỗi `tu_ngay < date.today()` (ngày bắt đầu trong quá khứ) $\rightarrow$ `HTTP 422 Unprocessable Entity`.
+    - Bắt lỗi `den_ngay < tu_ngay` (ngày kết thúc trước ngày bắt đầu) $\rightarrow$ `HTTP 422 Unprocessable Entity`.
+    - Bắt lỗi mã hồ sơ không tồn tại trong CSDL $\rightarrow$ `HTTP 404 Not Found`.
+    - Bắt lỗi mã hồ sơ âm hoặc bằng 0 $\rightarrow$ `HTTP 422 Unprocessable Entity`.
+    - Bắt lỗi lý do rỗng hoặc chỉ chứa khoảng trắng $\rightarrow$ `HTTP 422 Unprocessable Entity`.
+  - Tự động gán trạng thái mặc định `"Chờ duyệt"`.
+  - Tự động tính toán tổng số ngày nghỉ (`so_ngay`) trả về trong response.
+  - Trả về mã phản hồi `HTTP 201 Created` kèm thông tin đơn xin nghỉ vừa tạo.
+- **Kiểm thử tự động (Unit Test)**:
+  - Tạo mới file kiểm thử [test_leave_requests.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_leave_requests.py) với **10 test cases** kiểm thử toàn diện:
+    - Tạo đơn nghỉ tương lai thành công (201 Created).
+    - Tạo đơn nghỉ trong ngày hôm nay thành công (tu_ngay == den_ngay == today).
+    - Kiểm tra trạng thái mặc định "Chờ duyệt" khi không gửi trường trạng thái.
+    - Bắt lỗi ngày bắt đầu trong quá khứ (422).
+    - Bắt lỗi ngày kết thúc nhỏ hơn ngày bắt đầu (422).
+    - Bắt lỗi mã hồ sơ không tồn tại (404).
+    - Bắt lỗi mã hồ sơ không hợp lệ (422).
+    - Bắt lỗi lý do rỗng (422).
+    - Kiểm tra tính tương thích 100% với payload frontend gửi lên.
+    - Kiểm tra tạo nhiều đơn liên tiếp cho các thực tập sinh khác nhau.
+  - Toàn bộ test suite đạt **235/235 tests PASS 100%**.
+
+---
+
 ## [1.15.0] - 2026-10-01
 
 ### Đã hoàn thành (Added & Enhanced)
