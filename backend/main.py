@@ -1,9 +1,10 @@
+import math
 import os
 import uuid
 from datetime import date, timedelta, datetime, time
 from pathlib import Path
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query, Path as FastApiPath
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -31,6 +32,12 @@ from schemas import (
     MyScheduleResponse,
     ReportCreate,
     ReportResponse,
+    ReportListResponse,
+    ReportItemData,
+    ReportPagination,
+    ReportListData,
+    ReportFeedbackRequest,
+    ReportFeedbackResponse,
     EvaluationSummaryResponse,
     EvaluationCreate,
     EvaluationCreateResponse,
@@ -863,6 +870,170 @@ def create_weekly_report(report_data: ReportCreate, db: Session = Depends(get_db
         "status_code": 201,
         "message": "Nộp báo cáo tuần thành công",
         "data": new_report.to_dict()
+    }
+
+
+def format_report_item(report: BaoCaoTuan) -> dict:
+    """Helper chuyển đổi bản ghi BaoCaoTuan và các quan hệ liên kết thành dict chi tiết"""
+    hs = report.ho_so
+    sinh_vien = hs.thuc_tap_sinh if hs else None
+    mentor_obj = hs.mentor if hs else None
+    nv = report.nhiem_vu
+
+    return {
+        "ma_bao_cao": report.ma_bao_cao,
+        "ma_ho_so": report.ma_ho_so,
+        "ma_nguoi_dung": sinh_vien.ma_nguoi_dung if sinh_vien else None,
+        "ho_ten_sinh_vien": sinh_vien.ho_ten if sinh_vien else None,
+        "email_sinh_vien": sinh_vien.email if sinh_vien else None,
+        "ma_mentor": hs.ma_mentor if hs else None,
+        "ho_ten_mentor": mentor_obj.ho_ten if mentor_obj else None,
+        "ma_nhiem_vu": report.ma_nhiem_vu,
+        "ten_nhiem_vu": nv.ten_nhiem_vu if nv else None,
+        "tuan_so": report.tuan_so,
+        "noi_dung_cong_viec": report.noi_dung_cong_viec,
+        "ket_qua_dat_duoc": report.ket_qua_dat_duoc,
+        "phan_hoi_mentor": report.phan_hoi_mentor,
+        "thoi_gian_nop": report.thoi_gian_nop.isoformat() if report.thoi_gian_nop else None,
+    }
+
+
+@app.get("/api/v1/reports", response_model=ReportListResponse)
+def get_weekly_reports(
+    ma_mentor: Optional[int] = Query(None, description="Lọc báo cáo theo sinh viên mà Mentor phụ trách"),
+    ma_ho_so: Optional[int] = Query(None, description="Lọc báo cáo theo mã hồ sơ thực tập sinh"),
+    tuan_so: Optional[int] = Query(None, ge=1, description="Lọc theo tuần số"),
+    da_phan_hoi: Optional[bool] = Query(None, description="Lọc theo trạng thái đã có phản hồi hay chưa (true/false)"),
+    tu_khoa: Optional[str] = Query(None, description="Tìm kiếm từ khóa trong nội dung hoặc họ tên sinh viên"),
+    page: int = Query(1, ge=1, description="Số trang hiện tại (>= 1)"),
+    page_size: int = Query(20, ge=1, le=100, description="Số lượng bản ghi mỗi trang (1 - 100)"),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh sách báo cáo tuần:
+    - Hỗ trợ lọc theo mã Mentor phụ trách (ma_mentor).
+    - Hỗ trợ lọc theo mã hồ sơ thực tập (ma_ho_so), tuần số (tuan_so), trạng thái phản hồi (da_phan_hoi).
+    - Hỗ trợ tìm kiếm từ khóa theo nội dung hoặc tên sinh viên (tu_khoa).
+    - Hỗ trợ phân trang chuẩn RESTful (page, page_size).
+    """
+    # 1. Nếu có ma_mentor, kiểm tra mentor có tồn tại trong hệ thống không
+    if ma_mentor is not None:
+        mentor = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == ma_mentor).first()
+        if not mentor:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Không tìm thấy thông tin Mentor với mã ID: {ma_mentor}"
+            )
+
+    # 2. Xây dựng truy vấn cơ sở kết hợp các bảng liên quan
+    query = (
+        db.query(BaoCaoTuan)
+        .join(HoSoThucTap, BaoCaoTuan.ma_ho_so == HoSoThucTap.ma_ho_so)
+        .outerjoin(NguoiDung, HoSoThucTap.ma_nguoi_dung == NguoiDung.ma_nguoi_dung)
+    )
+
+    # 3. Áp dụng các điều kiện lọc
+    if ma_mentor is not None:
+        query = query.filter(HoSoThucTap.ma_mentor == ma_mentor)
+
+    if ma_ho_so is not None:
+        query = query.filter(BaoCaoTuan.ma_ho_so == ma_ho_so)
+
+    if tuan_so is not None:
+        query = query.filter(BaoCaoTuan.tuan_so == tuan_so)
+
+    if da_phan_hoi is not None:
+        if da_phan_hoi:
+            query = query.filter(BaoCaoTuan.phan_hoi_mentor.isnot(None), BaoCaoTuan.phan_hoi_mentor != "")
+        else:
+            query = query.filter(or_(BaoCaoTuan.phan_hoi_mentor.is_(None), BaoCaoTuan.phan_hoi_mentor == ""))
+
+    if tu_khoa:
+        keyword = f"%{tu_khoa.strip()}%"
+        query = query.filter(
+            or_(
+                BaoCaoTuan.noi_dung_cong_viec.ilike(keyword),
+                BaoCaoTuan.ket_qua_dat_duoc.ilike(keyword),
+                NguoiDung.ho_ten.ilike(keyword)
+            )
+        )
+
+    # 4. Tính toán phân trang
+    total_items = query.count()
+    total_pages = math.ceil(total_items / page_size) if total_items > 0 else 0
+    offset = (page - 1) * page_size
+
+    # Sắp xếp mặc định: thời gian nộp mới nhất lên đầu, tiếp đến mã báo cáo giảm dần
+    reports = (
+        query.order_by(BaoCaoTuan.thoi_gian_nop.desc(), BaoCaoTuan.ma_bao_cao.desc())
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
+
+    # 5. Format danh sách kết quả
+    items = [format_report_item(r) for r in reports]
+
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách báo cáo tuần thành công",
+        "data": {
+            "items": items,
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total_items": total_items,
+                "total_pages": total_pages
+            }
+        }
+    }
+
+
+@app.post("/api/v1/reports/{id}/feedback", response_model=ReportFeedbackResponse)
+def submit_report_feedback(
+    id: int = FastApiPath(..., gt=0, description="Mã báo cáo tuần cần gửi phản hồi"),
+    feedback_data: ReportFeedbackRequest = ...,
+    db: Session = Depends(get_db)
+):
+    """
+    Gửi phản hồi / ghi nhận của Mentor cho báo cáo tuần:
+    - Tìm báo cáo tuần theo mã ID (ma_bao_cao).
+    - Nếu gửi kèm ma_mentor, kiểm tra mentor có tồn tại và có phụ trách thực tập sinh này không.
+    - Cập nhật trường phan_hoi_mentor và lưu vào cơ sở dữ liệu.
+    """
+    # 1. Tìm báo cáo tuần trong cơ sở dữ liệu
+    report = db.query(BaoCaoTuan).filter(BaoCaoTuan.ma_bao_cao == id).first()
+    if not report:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy báo cáo tuần với mã ID: {id}"
+        )
+
+    # 2. Kiểm tra quyền của mentor nếu có gửi ma_mentor
+    ho_so = report.ho_so
+    if feedback_data.ma_mentor is not None:
+        mentor = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == feedback_data.ma_mentor).first()
+        if not mentor:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Không tìm thấy thông tin Mentor với mã ID: {feedback_data.ma_mentor}"
+            )
+        if ho_so and ho_so.ma_mentor != feedback_data.ma_mentor:
+            raise HTTPException(
+                status_code=403,
+                detail="Mentor không có quyền phản hồi báo cáo này do không phụ trách sinh viên tương ứng"
+            )
+
+    # 3. Cập nhật phản hồi vào báo cáo
+    report.phan_hoi_mentor = feedback_data.phan_hoi_mentor
+    db.commit()
+    db.refresh(report)
+
+    # 4. Trả về kết quả
+    return {
+        "status_code": 200,
+        "message": "Gửi phản hồi báo cáo tuần thành công",
+        "data": format_report_item(report)
     }
 
 

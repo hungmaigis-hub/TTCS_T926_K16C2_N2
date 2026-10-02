@@ -538,6 +538,65 @@ class ReportResponse(BaseModel):
     data: Optional[ReportDetailData] = None
 
 
+class ReportItemData(BaseModel):
+    """Chi tiết báo cáo tuần kèm thông tin sinh viên, mentor và nhiệm vụ liên quan"""
+    ma_bao_cao: int
+    ma_ho_so: int
+    ma_nguoi_dung: Optional[int] = None
+    ho_ten_sinh_vien: Optional[str] = None
+    email_sinh_vien: Optional[str] = None
+    ma_mentor: Optional[int] = None
+    ho_ten_mentor: Optional[str] = None
+    ma_nhiem_vu: Optional[int] = None
+    ten_nhiem_vu: Optional[str] = None
+    tuan_so: int
+    noi_dung_cong_viec: str
+    ket_qua_dat_duoc: Optional[str] = None
+    phan_hoi_mentor: Optional[str] = None
+    thoi_gian_nop: Optional[str] = None
+
+
+class ReportPagination(BaseModel):
+    """Thông tin phân trang danh sách báo cáo"""
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+
+
+class ReportListData(BaseModel):
+    """Cấu trúc dữ liệu trả về cho danh sách báo cáo kèm phân trang"""
+    items: List[ReportItemData]
+    pagination: ReportPagination
+
+
+class ReportListResponse(BaseModel):
+    """Response chuẩn trả về cho GET /api/v1/reports"""
+    status_code: int = 200
+    message: str = "Lấy danh sách báo cáo tuần thành công"
+    data: ReportListData
+
+
+class ReportFeedbackRequest(BaseModel):
+    """Request body cho POST /api/v1/reports/{id}/feedback"""
+    phan_hoi_mentor: str = Field(..., min_length=1, description="Nội dung phản hồi hoặc ghi nhận của mentor")
+    ma_mentor: Optional[int] = Field(default=None, gt=0, description="Mã người dùng của mentor gửi phản hồi (tùy chọn)")
+
+    @field_validator('phan_hoi_mentor')
+    def validate_phan_hoi(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Nội dung phản hồi không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+
+class ReportFeedbackResponse(BaseModel):
+    """Response chuẩn trả về cho POST /api/v1/reports/{id}/feedback"""
+    status_code: int = 200
+    message: str = "Gửi phản hồi báo cáo tuần thành công"
+    data: Optional[ReportItemData] = None
+
+
 # ==============================================================
 # SCHEMAS CHO ENDPOINT TỔNG HỢP ĐÁNH GIÁ (GET /api/v1/evaluations/summary)
 # ==============================================================
