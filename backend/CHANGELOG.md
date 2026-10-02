@@ -4,6 +4,31 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.18.0] - 2026-10-02
+
+### Đã hoàn thành (Added & Enhanced)
+- **Schemas Pydantic Báo cáo tuần & Phản hồi (`schemas.py`)**:
+  - `ReportItemData`: Schema biểu diễn báo cáo tuần chi tiết kèm thông tin sinh viên (`ho_ten_sinh_vien`, `email_sinh_vien`), Mentor phụ trách (`ma_mentor`, `ho_ten_mentor`) và tên nhiệm vụ liên kết (`ten_nhiem_vu`).
+  - `ReportPagination`: Thông tin phân trang chuẩn RESTful (`page`, `page_size`, `total_items`, `total_pages`).
+  - `ReportListData` & `ReportListResponse`: Schema response cho danh sách báo cáo tuần (`GET /api/v1/reports`).
+  - `ReportFeedbackRequest`: Request body cho phản hồi của Mentor (`POST /api/v1/reports/{id}/feedback`) kèm validator loại bỏ khoảng trắng thừa và cấm chuỗi rỗng.
+  - `ReportFeedbackResponse`: Response trả về sau khi gửi phản hồi thành công.
+- **Endpoint Lấy Danh Sách Báo Cáo Tuần (`GET /api/v1/reports`)**:
+  - Hỗ trợ lọc báo cáo theo sinh viên mà Mentor phụ trách thông qua tham số `ma_mentor`.
+  - Kiểm tra tính tồn tại của Mentor (`HTTP 404 Not Found` nếu không tìm thấy Mentor).
+  - Hỗ trợ các bộ lọc linh hoạt: `ma_ho_so`, `tuan_so`, trạng thái đã nhận xét `da_phan_hoi` (true/false).
+  - Hỗ trợ tìm kiếm từ khóa `tu_khoa` trong nội dung công việc, kết quả đạt được hoặc tên sinh viên.
+  - Hỗ trợ phân trang chuẩn RESTful (`page`, `page_size`) với sắp xếp mặc định ưu tiên báo cáo mới nhất.
+- **Endpoint Gửi Phản Hồi Báo Cáo Tuần (`POST /api/v1/reports/{id}/feedback`)**:
+  - Cho phép Mentor gửi nhận xét, phản hồi hoặc ghi nhận trực tiếp vào báo cáo tuần của sinh viên (cập nhật cột `phan_hoi_mentor` trong bảng `bao_cao_tuan`).
+  - Kiểm tra sự tồn tại của báo cáo (`HTTP 404 Not Found` nếu sai ID).
+  - Kiểm tra thẩm quyền của Mentor: Nếu gửi kèm `ma_mentor`, kiểm tra mentor có tồn tại không và có đúng là người phụ trách sinh viên của báo cáo đó không (`HTTP 403 Forbidden` nếu không có quyền phụ trách).
+- **Kiểm thử tự động (Unit Test)**:
+  - Bổ sung thêm **17 test cases** vào [tests/test_weekly_reports.py](file:///d:/clone/ttcs/backend/tests/test_weekly_reports.py), nâng tổng số test cases của module báo cáo tuần lên **30/30 PASS 100%**.
+  - Kiểm thử toàn diện toàn bộ test suite hệ thống: **262/262 PASS 100%**.
+
+---
+
 ## [1.17.0] - 2026-10-01
 
 ### Đã hoàn thành (Added & Enhanced)
