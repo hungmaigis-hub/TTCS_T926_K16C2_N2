@@ -827,4 +827,70 @@ class LeaveRequestCreateResponse(BaseModel):
     data: Optional[LeaveRequestItemData] = None
 
 
+# ==============================================================
+# SCHEMAS CHO QUẢN LÝ NHIỆM VỤ (TASKS API)
+# ==============================================================
+class TaskCreate(BaseModel):
+    """Schema cho request tạo mới nhiệm vụ thực tập (POST /api/v1/tasks)"""
+    ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập liên kết")
+    tieu_de: Optional[str] = Field(default=None, max_length=150, description="Tiêu đề nhiệm vụ")
+    ten_nhiem_vu: Optional[str] = Field(default=None, max_length=150, description="Tên nhiệm vụ (alias của tieu_de)")
+    mo_ta: Optional[str] = Field(default=None, description="Mô tả chi tiết nội dung nhiệm vụ")
+    han_hoan_thanh: date = Field(..., description="Hạn hoàn thành nhiệm vụ (YYYY-MM-DD)")
+    tien_do_phantram: Optional[int] = Field(default=0, ge=0, le=100, description="Tiến độ hoàn thành (từ 0% đến 100%)")
+    trang_thai: Optional[str] = Field(default="Chưa bắt đầu", description="Trạng thái nhiệm vụ")
+
+    @model_validator(mode="after")
+    def validate_task_fields(self):
+        title = self.tieu_de or self.ten_nhiem_vu
+        if not title or not title.strip():
+            raise ValueError("Tiêu đề nhiệm vụ không được để trống hoặc chỉ chứa khoảng trắng")
+        self.tieu_de = title.strip()
+        self.ten_nhiem_vu = title.strip()
+        if not self.trang_thai or not self.trang_thai.strip():
+            self.trang_thai = "Chưa bắt đầu"
+        else:
+            self.trang_thai = self.trang_thai.strip()
+        if self.tien_do_phantram is None:
+            self.tien_do_phantram = 0
+        return self
+
+
+class TaskDetailData(BaseModel):
+    """Cấu trúc dữ liệu chi tiết của một nhiệm vụ"""
+    ma_nhiem_vu: int
+    ma_ho_so: int
+    tieu_de: str
+    ten_nhiem_vu: str
+    mo_ta: Optional[str] = None
+    han_hoan_thanh: Optional[str] = None
+    tien_do_phantram: int = 0
+    trang_thai: str = "Chưa bắt đầu"
+
+
+class TaskCreateResponse(BaseModel):
+    """Phản hồi sau khi tạo nhiệm vụ thành công (HTTP 201 Created)"""
+    status_code: int = 201
+    message: str = "Tạo nhiệm vụ mới thành công"
+    data: Optional[TaskDetailData] = None
+
+
+class TaskProgressUpdate(BaseModel):
+    """Schema cập nhật tiến độ nhiệm vụ (PATCH)"""
+    tien_do_phantram: int = Field(
+        ...,
+        ge=0,
+        le=100,
+        description="Tiến độ hoàn thành của nhiệm vụ (từ 0% đến 100%)"
+    )
+
+
+class TaskProgressResponse(BaseModel):
+    status_code: int = 200
+    message: str
+    data: Optional[TaskDetailData] = None
+
+
+
+
 

@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS nguoi_dung (
     ma_phong_ban INT,
     ho_ten VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
+    mat_khau_hash VARCHAR(255) NULL,
     so_dien_thoai VARCHAR(20) UNIQUE,
     vai_tro VARCHAR(50) DEFAULT 'ThucTapSinh',
     trang_thai VARCHAR(50) DEFAULT 'HoatDong',
@@ -155,6 +156,49 @@ CREATE TABLE IF NOT EXISTS don_xin_nghi (
     trang_thai VARCHAR(50) DEFAULT 'Chờ duyệt' COMMENT 'Chờ duyệt, Đã duyệt, Từ chối',
     ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
+-- 14. BẢNG PHỤ CẤP THỰC TẬP (Allowance)
+CREATE TABLE IF NOT EXISTS phu_cap (
+    ma_phu_cap INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    thang_nam VARCHAR(7) NOT NULL COMMENT 'YYYY-MM',
+    so_tien DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    trang_thai_chi_tra VARCHAR(50) DEFAULT 'ChuaChiTra' COMMENT 'DaChiTra, ChuaChiTra',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
+-- 15. BẢNG YÊU CẦU HỖ TRỢ (Support Requests)
+CREATE TABLE IF NOT EXISTS yeu_cau_ho_tro (
+    ma_yeu_cau INT AUTO_INCREMENT PRIMARY KEY,
+    ma_ho_so INT NOT NULL,
+    loai_yeu_cau VARCHAR(50) NOT NULL COMMENT 'XinChungNhan, GiayXacNhan, Khac',
+    noi_dung TEXT NOT NULL,
+    phan_hoi_hr TEXT NULL,
+    trang_thai VARCHAR(50) DEFAULT 'ChoXuLy' COMMENT 'ChoXuLy, DaXuLy',
+    FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
+);
+
+-- 16. BẢNG THÔNG BÁO (Notifications)
+CREATE TABLE IF NOT EXISTS thong_bao (
+    ma_thong_bao INT AUTO_INCREMENT PRIMARY KEY,
+    ma_nguoi_dung INT NOT NULL,
+    tieu_de VARCHAR(200) NOT NULL,
+    noi_dung TEXT NOT NULL,
+    kenh VARCHAR(50) DEFAULT 'App' COMMENT 'Email, App',
+    da_doc BOOLEAN DEFAULT FALSE,
+    thoi_gian_gui DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ma_nguoi_dung) REFERENCES nguoi_dung(ma_nguoi_dung) ON DELETE CASCADE
+);
+
+-- 17. BẢNG NHẬT KÝ HỆ THỐNG (Audit Log)
+CREATE TABLE IF NOT EXISTS nhat_ky_he_thong (
+    ma_nhat_ky INT AUTO_INCREMENT PRIMARY KEY,
+    ma_nguoi_dung INT NULL,
+    hanh_dong VARCHAR(255) NOT NULL,
+    dia_chi_ip VARCHAR(45) NULL,
+    thoi_gian DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ma_nguoi_dung) REFERENCES nguoi_dung(ma_nguoi_dung) ON DELETE SET NULL
 );
 
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API

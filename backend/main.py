@@ -24,6 +24,8 @@ from schemas import (
     AuthResponse,
     ProgramTimelineUpdate,
     ProgramTimelineResponse,
+    TaskCreate,
+    TaskCreateResponse,
     TaskProgressUpdate,
     TaskProgressResponse,
     MyScheduleResponse,
@@ -1503,5 +1505,103 @@ def get_evaluations_summary(
             }
         }
     }
+
+
+# ==============================================================
+# API QUẢN LÝ NHIỆM VỤ THỰC TẬP (TASKS)
+# ==============================================================
+
+# api post create task
+@app.post("/api/v1/tasks", status_code=201, response_model=TaskCreateResponse)
+def create_task(
+    task_data: TaskCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Tạo mới nhiệm vụ cho thực tập sinh (gắn theo mã hồ sơ thực tập).
+    Lưu trữ:
+    - ma_ho_so: Khóa ngoại trỏ về ho_so_thuc_tap
+    - tieu_de: Tiêu đề nhiệm vụ
+    - mo_ta: Mô tả chi tiết nhiệm vụ (tùy chọn)
+    - han_hoan_thanh: Hạn hoàn thành công việc (YYYY-MM-DD)
+    - tien_do_phantram: Mặc định là 0%
+    - trang_thai: Mặc định là 'Chưa bắt đầu'
+    """
+    # 1. Kiểm tra hồ sơ thực tập có tồn tại trong CSDL hay không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == task_data.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập với mã: {task_data.ma_ho_so}"
+        )
+
+    # 2. Khởi tạo đối tượng NhiemVu mới
+    new_task = NhiemVu(
+        ma_ho_so=task_data.ma_ho_so,
+        ten_nhiem_vu=task_data.tieu_de,
+        mo_ta=task_data.mo_ta,
+        han_hoan_thanh=task_data.han_hoan_thanh,
+        tien_do_phantram=task_data.tien_do_phantram if task_data.tien_do_phantram is not None else 0,
+        trang_thai=task_data.trang_thai or "Chưa bắt đầu"
+    )
+
+    # 3. Lưu vào CSDL
+    db.add(new_task)
+    db.commit()
+    db.refresh(new_task)
+
+    # 4. Trả về phản hồi thành công
+    return {
+        "status_code": 201,
+        "message": "Tạo nhiệm vụ mới thành công",
+        "data": new_task.to_dict()
+    }
+
+
+# api patch task progress
+@app.patch("/api/v1/tasks/{id}/progress", status_code=200, response_model=TaskProgressResponse)
+def update_task_progress(
+    id: int,
+    progress_data: TaskProgressUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Cập nhật tiến độ hoàn thành của nhiệm vụ (tien_do_phantram từ 0 đến 100%).
+    Tự động cập nhật trang_thai:
+    - Nếu tien_do_phantram == 100: tự động chuyển sang "Hoàn thành"
+    - Nếu 0 < tien_do_phantram < 100: chuyển sang "Đang thực hiện"
+    - Nếu tien_do_phantram == 0: chuyển sang "Chưa bắt đầu"
+    """
+    # 1. Kiểm tra ID hợp lệ
+    if id <= 0:
+        raise HTTPException(status_code=422, detail="Mã nhiệm vụ không hợp lệ")
+
+    # 2. Tìm nhiệm vụ trong CSDL
+    task = db.query(NhiemVu).filter(NhiemVu.ma_nhiem_vu == id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy nhiệm vụ ID: {id}")
+
+    # 3. Cập nhật tiến độ phần trăm
+    task.tien_do_phantram = progress_data.tien_do_phantram
+
+    # 4. Tự động chuyển đổi trạng thái tương ứng
+    if progress_data.tien_do_phantram == 100:
+        task.trang_thai = "Hoàn thành"
+    elif progress_data.tien_do_phantram > 0:
+        task.trang_thai = "Đang thực hiện"
+    else:
+        task.trang_thai = "Chưa bắt đầu"
+
+    # 5. Lưu vào CSDL
+    db.commit()
+    db.refresh(task)
+
+    # 6. Trả về phản hồi thành công
+    return {
+        "status_code": 200,
+        "message": "Cập nhật tiến độ nhiệm vụ thành công",
+        "data": task.to_dict()
+    }
+
 
 
