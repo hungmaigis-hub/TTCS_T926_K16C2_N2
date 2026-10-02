@@ -53,6 +53,7 @@
       >
         <div class="relative shrink-0">
           <div
+            id="adminAvatarInitials"
             class="w-11 h-11 rounded-full bg-gradient-to-tr from-ictu-600 to-sky-400 flex items-center justify-center text-white font-bold text-base shadow-sm ring-2 ring-white"
           >
             AD
@@ -63,7 +64,7 @@
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-1.5">
-            <h4 class="text-sm font-bold text-slate-900 truncate">
+            <h4 id="adminSidebarName" class="text-sm font-bold text-slate-900 truncate">
               Ban Đào Tạo &amp; QLTT
             </h4>
             <span
@@ -71,8 +72,9 @@
               >verified</span
             >
           </div>
-          <p class="text-xs text-slate-500 truncate">admin@ictu.edu.vn</p>
+          <p id="adminSidebarEmail" class="text-xs text-slate-500 truncate">admin@ictu.edu.vn</p>
           <span
+            id="adminSidebarRole"
             class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-ictu-100 text-ictu-700"
             >Quản trị viên</span
           >
@@ -158,6 +160,17 @@
           >
         </a>
 
+        <a
+          href="cham_cong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >pending_actions</span
+          >
+          <span>Báo cáo chấm công</span>
+        </a>
+
         <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
           <p
             class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
@@ -227,6 +240,29 @@
         </div>
       </div>
     </aside>
+    <script>
+      (function(){
+        try {
+          const raw = localStorage.getItem("ictu_admin_session") || localStorage.getItem("currentUser") || localStorage.getItem("user");
+          if (!raw) return;
+          const u = JSON.parse(raw);
+          if (u.expires_at && Date.now() > u.expires_at) return;
+          const nameEl = document.getElementById("adminSidebarName");
+          const emailEl = document.getElementById("adminSidebarEmail");
+          const avatarEl = document.getElementById("adminAvatarInitials");
+          const roleEl = document.getElementById("adminSidebarRole");
+          if (nameEl && u.ho_ten) nameEl.textContent = u.ho_ten;
+          if (emailEl && u.email) emailEl.textContent = u.email;
+          if (roleEl && u.vai_tro) {
+            roleEl.textContent = u.vai_tro === "Admin" ? "Quản trị viên" : (u.vai_tro === "Mentor" ? "Người hướng dẫn" : "Thực tập sinh");
+          }
+          if (avatarEl && u.ho_ten) {
+            const parts = u.ho_ten.trim().split(/\s+/);
+            avatarEl.textContent = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+          }
+        } catch(e){}
+      })();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0">
       <div class="flex flex-col w-full">
@@ -265,7 +301,7 @@
                 <span
                   class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"
                 ></span>
-                Niên khóa 2024 - 2025 • Đợt 2
+                <span id="theNienKhoaLichTrinh">Niên khóa hiện hành</span>
               </span>
               <span class="text-on-surface-variant font-body-sm text-body-sm"
                 >• Học kỳ doanh nghiệp mở rộng</span
@@ -381,7 +417,7 @@
                 </h4>
                 <span
                   class="font-code text-label-sm text-primary bg-surface-container-highest px-2 py-0.5 rounded"
-                  >QUY-DINH-K16/2024</span
+                  >QUY-DINH-THUCTAP/ICTU</span
                 >
               </div>
               <p
@@ -556,7 +592,7 @@
                           onchange="tinhToanThoiGian()"
                           required=""
                           type="date"
-                          value="2024-11-01"
+                          value="2026-11-01"
                         />
                       </div>
                     </div>
@@ -574,7 +610,7 @@
                           onchange="tinhToanThoiGian()"
                           required=""
                           type="date"
-                          value="2025-01-31"
+                          value="2027-01-31"
                         />
                       </div>
                     </div>
@@ -729,7 +765,7 @@
                       <span class="text-on-surface">Đánh giá giữa kỳ:</span>
                     </div>
                     <span class="font-code text-on-surface font-semibold"
-                      >Tuần 6 (15/12/2024)</span
+                      >Tuần 6 (15/12/2026)</span
                     >
                   </div>
                   <div
@@ -740,7 +776,7 @@
                       <span class="text-on-surface">Hạn nộp báo cáo:</span>
                     </div>
                     <span class="font-code text-primary font-bold"
-                      >25/01/2025</span
+                      >25/01/2027</span
                     >
                   </div>
                 </div>
@@ -802,8 +838,8 @@
             >
               <div>
                 <div class="flex items-center gap-2">
-                  <h2 class="font-headline-sm text-headline-sm text-on-surface">
-                    Các Đợt Thực Tập Đang Triển Khai (2024 - 2025)
+                  <h2 class="font-headline-sm text-headline-sm text-on-surface" id="tieuDeCacDotThucTap">
+                    Các Đợt Thực Tập Đang Triển Khai
                   </h2>
                   <span
                     class="px-2.5 py-0.5 rounded-full bg-surface-container font-code text-label-sm text-primary font-semibold"
@@ -871,10 +907,10 @@
                     <td
                       class="py-4 px-6 font-code text-label-md text-primary font-semibold"
                     >
-                      ICTU-INT-2024-K16-01
+                      ICTU-INT-2026-K19-01
                     </td>
                     <td class="py-4 px-4 font-semibold text-on-surface">
-                      Thực tập chuyên sâu Web &amp; Cloud K16
+                      Thực tập chuyên sâu Web &amp; Cloud K19
                       <span
                         class="block font-body-sm text-body-sm text-on-surface-variant font-normal"
                         >Kỳ tốt nghiệp mùa Thu</span
@@ -892,7 +928,7 @@
                       </span>
                     </td>
                     <td class="py-4 px-4 font-code text-body-sm">
-                      01/08/2024 - 31/10/2024
+                      01/08/2026 - 31/10/2026
                     </td>
                     <td class="py-4 px-4 text-center">
                       <span
@@ -959,10 +995,10 @@
                     <td
                       class="py-4 px-6 font-code text-label-md text-primary font-semibold"
                     >
-                      ICTU-INT-2024-K17-02
+                      ICTU-INT-2026-K20-02
                     </td>
                     <td class="py-4 px-4 font-semibold text-on-surface">
-                      Thực tập cơ sở doanh nghiệp K17
+                      Thực tập cơ sở doanh nghiệp K20
                       <span
                         class="block font-body-sm text-body-sm text-on-surface-variant font-normal"
                         >Đợt thực hành thực tế 1</span
@@ -980,7 +1016,7 @@
                       </span>
                     </td>
                     <td class="py-4 px-4 font-code text-body-sm">
-                      15/09/2024 - 15/11/2024
+                      15/09/2026 - 15/12/2026
                     </td>
                     <td class="py-4 px-4 text-center">
                       <span
@@ -1045,7 +1081,7 @@
                     <td
                       class="py-4 px-6 font-code text-label-md text-primary font-semibold"
                     >
-                      ICTU-INT-2024-AI-01
+                      ICTU-INT-2026-AI-01
                     </td>
                     <td class="py-4 px-4 font-semibold text-on-surface">
                       Chương trình thực tập Tài năng Trí tuệ Nhân tạo
@@ -1068,7 +1104,7 @@
                     <td
                       class="py-4 px-4 font-code text-body-sm text-primary font-semibold"
                     >
-                      01/11/2024 - 31/01/2025
+                      01/11/2026 - 31/01/2027
                     </td>
                     <td class="py-4 px-4 text-center">
                       <span
@@ -1132,10 +1168,10 @@
                     <td
                       class="py-4 px-6 font-code text-label-md text-primary font-semibold"
                     >
-                      ICTU-INT-2025-SPRING
+                      ICTU-INT-2027-SPRING
                     </td>
                     <td class="py-4 px-4 font-semibold text-on-surface">
-                      Kỳ thực tập Mùa Xuân 2025 (Doanh nghiệp Quốc tế)
+                      Kỳ thực tập Mùa Xuân 2027 (Doanh nghiệp Quốc tế)
                       <span
                         class="block font-body-sm text-body-sm text-on-surface-variant font-normal"
                         >Chương trình liên kết Nhật Bản - Hàn Quốc</span
@@ -1153,7 +1189,7 @@
                       </span>
                     </td>
                     <td class="py-4 px-4 font-code text-body-sm">
-                      15/02/2025 - 15/05/2025
+                      15/02/2027 - 15/05/2027
                     </td>
                     <td class="py-4 px-4 text-center">
                       <span
@@ -1221,10 +1257,9 @@
               class="px-6 py-4 bg-surface/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-on-surface-variant font-body-sm text-body-sm"
             >
               <div class="flex items-center gap-2">
-                <span
+                <span id="theHienThiTongSoChuongTrinh"
                   >Hiển thị <strong>4</strong> trên tổng số
-                  <strong>4</strong> chương trình thực tập năm học 2024 -
-                  2025</span
+                  <strong>4</strong> chương trình thực tập</span
                 >
               </div>
               <div class="flex items-center gap-1">
@@ -1255,7 +1290,7 @@
           </section>
         </div>
       </div>
-      <script src="../../js/lich_thuc_tap.js"></script>
+      <script src="../../js/quanly/lich_thuc_tap.js"></script>
     </main>
   </body>
 </html>

@@ -191,7 +191,22 @@ async function xuLyLuuLich() {
   }
 }
 
+function capNhatNienKhoaLichTrinh() {
+  const now = new Date();
+  const curY = now.getFullYear();
+  const startY = now.getMonth() >= 8 ? curY : curY - 1;
+  const nienKhoa = `${startY} - ${startY + 1}`;
+  const hocKy = now.getMonth() >= 8 || now.getMonth() <= 1 ? "Đợt 1" : "Đợt 2";
+  const elNienKhoa = document.getElementById("theNienKhoaLichTrinh");
+  if (elNienKhoa) elNienKhoa.textContent = `Niên khóa ${nienKhoa} • ${hocKy}`;
+  const elTieuDe = document.getElementById("tieuDeCacDotThucTap");
+  if (elTieuDe) elTieuDe.textContent = `Các Đợt Thực Tập Đang Triển Khai (${nienKhoa})`;
+  const elFooter = document.getElementById("theHienThiTongSoChuongTrinh");
+  if (elFooter) elFooter.innerHTML = `Hiển thị <strong>4</strong> trên tổng số <strong>4</strong> chương trình thực tập năm học ${nienKhoa}`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  capNhatNienKhoaLichTrinh();
   kiemTraKetNoiApi();
   tinhToanThoiGian();
 });

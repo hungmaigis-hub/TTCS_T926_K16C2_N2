@@ -1,47 +1,6 @@
 const duongDanApi = "http://127.0.0.1:8000/api/v1";
 
-let danhSachHoSo = [
-  {
-    ma_ho_so: 1,
-    ma_tai_lieu: 1,
-    ho_ten: "Nguyễn Văn An",
-    email: "an.nguyen@ictu.edu.vn",
-    ten_truong: "ĐH Công nghệ Thông tin & Truyền thông (ICTU)",
-    chuyen_nganh: "Kỹ thuật Phần mềm",
-    ten_chuong_trinh: "Thực tập sinh Backend (Java / Node.js)",
-    trang_thai_xet_duyet: "ChoDuyet",
-  },
-  {
-    ma_ho_so: 2,
-    ma_tai_lieu: 2,
-    ho_ten: "Trần Thị Bình",
-    email: "binh.tran@ictu.edu.vn",
-    ten_truong: "ĐH Công nghệ Thông tin & Truyền thông (ICTU)",
-    chuyen_nganh: "Khoa học Dữ liệu",
-    ten_chuong_trinh: "Data Analyst & Business Intelligence",
-    trang_thai_xet_duyet: "ChoDuyet",
-  },
-  {
-    ma_ho_so: 3,
-    ma_tai_lieu: 3,
-    ho_ten: "Hoàng Minh Đức",
-    email: "duc.hoang@ictu.edu.vn",
-    ten_truong: "ĐH Công nghệ Thông tin & Truyền thông (ICTU)",
-    chuyen_nganh: "Công nghệ Thông tin",
-    ten_chuong_trinh: "Frontend React & Web Application",
-    trang_thai_xet_duyet: "DaDuyet",
-  },
-  {
-    ma_ho_so: 4,
-    ma_tai_lieu: 4,
-    ho_ten: "Lê Cẩm Nhung",
-    email: "nhung.le@ictu.edu.vn",
-    ten_truong: "ĐH Khoa học Tự nhiên",
-    chuyen_nganh: "Hệ thống Thông tin Quản lý",
-    ten_chuong_trinh: "Business Analyst & QA Tester",
-    trang_thai_xet_duyet: "TuChoi",
-  },
-];
+let danhSachHoSo = [];
 
 let dangChonMa = null;
 let dangChonTen = "";
@@ -50,7 +9,7 @@ let dangChonEmail = "";
 let daKetNoiApi = false;
 let boLocHienTai = "tat-ca";
 
-async function taiDanhSachHoSo() {
+async function taiDanhSachHoSo(hienThongBaoKetNoi = false) {
   const badgeEl = document.getElementById("trangThaiKetNoiApi");
   if (badgeEl) {
     badgeEl.className =
@@ -65,38 +24,37 @@ async function taiDanhSachHoSo() {
     const ketQua = await phanHoi.json();
     const hoSoApi = ketQua.data || [];
 
-    if (hoSoApi.length > 0) {
-      daKetNoiApi = true;
-      if (badgeEl) {
-        badgeEl.className =
-          "hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200";
-        badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>API Backend: Đang kết nối</span>`;
-      }
+    daKetNoiApi = true;
+    if (badgeEl) {
+      badgeEl.className =
+        "hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200";
+      badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>API Backend: Đang kết nối (${hoSoApi.length} hồ sơ)</span>`;
+    }
 
-      danhSachHoSo = hoSoApi.map((h, index) => ({
-        ma_ho_so: h.ma_ho_so || index + 1,
-        ma_tai_lieu: h.ma_ho_so || index + 1,
-        ho_ten: h.ho_ten || "Chưa cập nhật",
-        email: h.email || "email@domain.com",
-        ten_truong:
-          h.ten_truong || "ĐH Công nghệ Thông tin & Truyền thông (ICTU)",
-        chuyen_nganh: h.chuyen_nganh || "Công nghệ Thông tin",
-        ten_chuong_trinh: h.ten_chuong_trinh || "Thực tập sinh Doanh nghiệp",
-        trang_thai_xet_duyet: h.trang_thai_xet_duyet || "ChoDuyet",
-      }));
+    danhSachHoSo = hoSoApi.map((h, index) => ({
+      ma_ho_so: h.ma_ho_so || index + 1,
+      ma_tai_lieu: h.ma_ho_so || index + 1,
+      ho_ten: h.ho_ten || "Chưa cập nhật",
+      email: h.email || "email@domain.com",
+      ten_truong:
+        h.ten_truong || "ĐH Công nghệ Thông tin & Truyền thông (ICTU)",
+      chuyen_nganh: h.chuyen_nganh || "Công nghệ Thông tin",
+      ten_chuong_trinh:
+        h.ten_chuong_trinh ||
+        (() => {
+          const d = new Date();
+          const y = d.getFullYear();
+          const s = d.getMonth() >= 8 ? y : y - 1;
+          return `Chương trình Thực tập (${s} - ${s + 1})`;
+        })(),
+      trang_thai_xet_duyet: h.trang_thai_xet_duyet || "ChoDuyet",
+    }));
 
+    if (hienThongBaoKetNoi) {
       hienThongBao(
         `Đã tải thành công ${danhSachHoSo.length} hồ sơ trực tiếp từ cơ sở dữ liệu Backend qua API!`,
         "success",
       );
-    } else {
-      daKetNoiApi = true;
-      danhSachHoSo = [];
-      if (badgeEl) {
-        badgeEl.className =
-          "hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200";
-        badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>API Backend: Đang kết nối (0 hồ sơ)</span>`;
-      }
     }
   } catch (err) {
     daKetNoiApi = false;
@@ -144,6 +102,11 @@ function hienThiDanhSach(danhSach) {
 
     return khopTrangThai && khopTuKhoa;
   });
+
+  const elPhanTrang = document.getElementById("phanTrangThongTin");
+  if (elPhanTrang) {
+    elPhanTrang.innerHTML = `Hiển thị <strong class="text-on-surface">1 - ${danhSachLoc.length}</strong> của <strong class="text-on-surface">${danhSach.length}</strong> hồ sơ`;
+  }
 
   if (danhSachLoc.length === 0) {
     tbody.innerHTML = `
@@ -477,23 +440,12 @@ async function moHopThoaiTaiLieu(maHoSo, tenUngVien) {
     }
   } catch (err) {}
 
-  const mockDocs = [
-    {
-      ma_tai_lieu: 1,
-      ma_ho_so: maHoSo,
-      loai_tai_lieu: "CV",
-      duong_dan_file: `uploads/cv_${maHoSo}.pdf`,
-      trang_thai_duyet: "ChoDuyet",
-    },
-    {
-      ma_tai_lieu: 2,
-      ma_ho_so: maHoSo,
-      loai_tai_lieu: "DonXinThucTap",
-      duong_dan_file: `uploads/don_xin_${maHoSo}.pdf`,
-      trang_thai_duyet: "DaDuyet",
-    },
-  ];
-  hienThiDanhSachTaiLieuTrongModal(mockDocs, maHoSo);
+  container.innerHTML = `
+    <div class="py-12 text-center text-slate-400">
+      <span class="material-symbols-outlined text-[36px] text-slate-300 block mb-1">folder_off</span>
+      <p class="text-sm font-medium">Hồ sơ #${maHoSo} chưa có tài liệu đính kèm nào được tải lên.</p>
+    </div>
+  `;
 }
 
 function hienThiDanhSachTaiLieuTrongModal(docs, maHoSo) {
@@ -587,6 +539,16 @@ function capNhatBoDem() {
   if (elChoDuyet) elChoDuyet.textContent = choDuyet;
   if (elDaDuyet) elDaDuyet.textContent = daDuyet;
   if (elTuChoi) elTuChoi.textContent = tuChoi;
+
+  const btnTatCa = document.getElementById("demNutLocTatCa");
+  const btnChoDuyet = document.getElementById("demNutLocChoDuyet");
+  const btnDaDuyet = document.getElementById("demNutLocDaDuyet");
+  const btnTuChoi = document.getElementById("demNutLocTuChoi");
+
+  if (btnTatCa) btnTatCa.textContent = tongSo;
+  if (btnChoDuyet) btnChoDuyet.textContent = choDuyet;
+  if (btnDaDuyet) btnDaDuyet.textContent = daDuyet;
+  if (btnTuChoi) btnTuChoi.textContent = tuChoi;
 }
 
 function hienThongBao(noiDung, loai) {

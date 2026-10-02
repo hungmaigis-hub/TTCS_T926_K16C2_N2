@@ -229,7 +229,7 @@
         <div class="flex items-center justify-between text-xs text-slate-500">
           <span class="flex items-center gap-1.5 font-medium">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            Học kỳ 2024 - 2025
+            <span id="theHocKyTaiLieuSidebar">Học kỳ hiện hành</span>
           </span>
           <a
             href="../public/index.html"
@@ -241,6 +241,20 @@
         </div>
       </div>
     </aside>
+    <script>
+      (function(){
+        try {
+          const now = new Date();
+          const curY = now.getFullYear();
+          const startY = now.getMonth() >= 8 ? curY : curY - 1;
+          const nienKhoa = startY + " - " + (startY + 1);
+          const elSidebar = document.getElementById("theHocKyTaiLieuSidebar");
+          if (elSidebar) elSidebar.textContent = "Học kỳ " + nienKhoa;
+          const elBanner = document.getElementById("theHocKyTaiLieuBanner");
+          if (elBanner) elBanner.textContent = "Cổng Nộp Hồ Sơ Số Hóa ICTU - Năm học " + nienKhoa;
+        } catch(e){}
+      })();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0">
       <div class="flex flex-col w-full">
@@ -323,7 +337,7 @@
                 <span class="material-symbols-outlined text-[14px]"
                   >school</span
                 >
-                <span>Cổng Nộp Hồ Sơ Số Hóa ICTU - Học Kỳ 2024 - 2025</span>
+                <span id="theHocKyTaiLieuBanner">Cổng Nộp Hồ Sơ Số Hóa ICTU</span>
               </div>
               <h1
                 class="font-headline-lg text-headline-lg text-on-surface tracking-tight"
@@ -620,11 +634,11 @@
                       </div>
                       <div>
                         <span class="font-bold block"
-                          >NguyenVanA_CV_Fullstack_2024.pdf</span
+                          >CV_UngTuyen_ThucTap.pdf</span
                         >
                         <span
                           class="font-body-sm text-body-sm text-on-surface-variant"
-                          >Mã hồ sơ: ICTU-2024-8842</span
+                          >Tài liệu minh chứng số hóa</span
                         >
                       </div>
                     </td>
@@ -800,7 +814,7 @@
                     <td
                       class="py-4 px-4 font-body-sm text-body-sm text-on-surface-variant"
                     >
-                      12/10/2024
+                      Mới cập nhật
                     </td>
                     <td class="py-4 px-4">
                       <span
@@ -846,7 +860,7 @@
             </div>
           </div>
         </div>
-        <script src="../../js/tai_tai_lieu.js"></script>
+        <script src="../../js/sinhvien/tai_tai_lieu.js"></script>
       </div>
     </main>
   </body>

@@ -227,7 +227,7 @@
         <div class="flex items-center justify-between text-xs text-slate-500">
           <span class="flex items-center gap-1.5 font-medium">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            Học kỳ 2024 - 2025
+            <span id="theHocKySinhVienSidebar">Học kỳ hiện hành</span>
           </span>
           <a
             href="../public/index.html"
@@ -239,6 +239,30 @@
         </div>
       </div>
     </aside>
+    <script>
+      (function(){
+        try {
+          const now = new Date();
+          const curY = now.getFullYear();
+          const startY = now.getMonth() >= 8 ? curY : curY - 1;
+          const nienKhoa = startY + " - " + (startY + 1);
+          const hocKy = now.getMonth() >= 8 || now.getMonth() <= 1 ? "Học kỳ I" : "Học kỳ II";
+          const elSidebar = document.getElementById("theHocKySinhVienSidebar");
+          if (elSidebar) elSidebar.textContent = "Học kỳ " + nienKhoa;
+          const elBanner = document.getElementById("theHocKySinhVienBanner");
+          if (elBanner) elBanner.textContent = "Kỳ thực tập " + hocKy + " (" + nienKhoa + ")";
+
+          const raw = localStorage.getItem("ictu_student_session") || localStorage.getItem("currentUser") || localStorage.getItem("user");
+          if (raw) {
+            const u = JSON.parse(raw);
+            if (!u.expires_at || Date.now() <= u.expires_at) {
+              const elName = document.getElementById("welcomeTenSinhVien");
+              if (elName && u.ho_ten) elName.textContent = u.ho_ten;
+            }
+          }
+        } catch(e){}
+      })();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0">
       <header
@@ -322,10 +346,10 @@
                 <span
                   class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
                 ></span>
-                Kỳ thực tập Học kỳ I (2024 - 2025)
+                <span id="theHocKySinhVienBanner">Kỳ thực tập doanh nghiệp</span>
               </div>
               <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                Xin chào, Nguyễn Văn An! 👋
+                Xin chào, <span id="welcomeTenSinhVien">Nguyễn Văn An</span>! 👋
               </h1>
               <p class="text-slate-200 text-sm leading-relaxed">
                 Bạn đang trong
@@ -556,7 +580,7 @@
                 Nộp hồ sơ &amp; CV
               </h3>
               <p class="text-[11px] text-slate-500 mb-2">
-                Hoàn tất ngày 10/08/2024
+                Hoàn tất giai đoạn đầu
               </p>
               <a
                 href="tai_tai_lieu.html"
@@ -673,7 +697,7 @@
               <h3 class="text-xs font-bold text-slate-700 mb-1">
                 Báo cáo &amp; Đánh giá
               </h3>
-              <p class="text-[11px] text-slate-400 mb-2">Dự kiến: 10/11/2024</p>
+              <p class="text-[11px] text-slate-400 mb-2">Đánh giá giữa kỳ</p>
               <button
                 type="button"
                 onclick="
@@ -745,7 +769,7 @@
                         <span class="material-symbols-outlined text-[14px]"
                           >calendar_today</span
                         >
-                        Hạn: 28/09/2024
+                        Hạn nộp định kỳ
                       </span>
                       <span
                         class="flex items-center gap-1 text-emerald-600 font-medium"
@@ -1162,14 +1186,13 @@
                     <span class="font-bold text-blue-700"
                       >Khoa CNTT - ICTU</span
                     >
-                    <span>22/09/2024</span>
+                    <span>Báo cáo tuần</span>
                   </div>
                   <h4 class="text-xs font-bold text-slate-800 mb-1">
                     Nhắc nhở nộp báo cáo giữa kỳ
                   </h4>
                   <p class="text-[11px] text-slate-500 leading-relaxed">
-                    Hạn chót hoàn tất báo cáo tuần 6 có xác nhận của Mentor
-                    doanh nghiệp là ngày 30/09/2024.
+                    Hạn chót hoàn tất báo cáo tuần theo kế hoạch đào tạo thực tập của Nhà trường và Doanh nghiệp.
                   </p>
                 </div>
               </div>

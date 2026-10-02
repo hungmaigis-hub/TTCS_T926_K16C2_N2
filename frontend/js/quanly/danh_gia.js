@@ -131,6 +131,19 @@ function xuLyLuuDanhGia() {
     hopThongBao.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, 500);
 }
+function capNhatHocKyDanhGia() {
+  const now = new Date();
+  const curY = now.getFullYear();
+  const startY = now.getMonth() >= 8 ? curY : curY - 1;
+  const nienKhoa = `${startY} - ${startY + 1}`;
+  const hocKy = now.getMonth() >= 8 || now.getMonth() <= 1 ? "Học kỳ I" : "Học kỳ II";
+  const elHocKy = document.getElementById("theHocKyDanhGia");
+  if (elHocKy) elHocKy.textContent = `${hocKy} (${nienKhoa})`;
+  const elMoTa = document.getElementById("moTaDotDanhGia");
+  if (elMoTa) elMoTa.textContent = `Dữ liệu đánh giá trực tiếp ${hocKy.toLowerCase()} năm học ${nienKhoa}`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  capNhatHocKyDanhGia();
   tinhDiemTrungBinh();
 });

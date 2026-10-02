@@ -289,7 +289,12 @@ async function taiHoSoGanDay() {
         const thoiGian =
           item.ngay_bat_dau && item.ngay_ket_thuc
             ? `${dinhDangNgay(item.ngay_bat_dau)} - ${dinhDangNgay(item.ngay_ket_thuc)}`
-            : "Học kỳ 2024 - 2025";
+            : (() => {
+                const now = new Date();
+                const curY = now.getFullYear();
+                const startY = now.getMonth() >= 8 ? curY : curY - 1;
+                return `Học kỳ ${startY} - ${startY + 1}`;
+              })();
 
         let badgeTrangThai = "";
         if (item.trang_thai_xet_duyet === "DaDuyet") {
@@ -346,7 +351,19 @@ function dinhDangNgay(chuoiNgay) {
   }
 }
 
+function capNhatNienKhoaHeThong() {
+  const now = new Date();
+  const curY = now.getFullYear();
+  const startY = now.getMonth() >= 8 ? curY : curY - 1;
+  const nienKhoa = `${startY} - ${startY + 1}`;
+  const elTieuDe = document.getElementById("theTieuDeNienKhoaThemHoSo");
+  if (elTieuDe) elTieuDe.textContent = `Hệ Thống Quản Lý Thực Tập ICTU - Niên Khóa ${nienKhoa}`;
+  const elBadge = document.getElementById("theNienKhoaHoSo");
+  if (elBadge) elBadge.textContent = `Niên khóa ${nienKhoa}`;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  capNhatNienKhoaHeThong();
   kiemTraVaNapHoSo();
   taiHoSoGanDay();
 });

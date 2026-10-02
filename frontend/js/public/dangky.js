@@ -134,6 +134,17 @@ async function handleRegistrationSubmit() {
     const data = await res.json().catch(() => ({}));
 
     if (res.ok && data.status_code === 201) {
+      const expireTime = Date.now() + 2 * 60 * 60 * 1000;
+      const regUser = {
+        ho_ten: fullName,
+        email: email,
+        vai_tro: "ThucTapSinh",
+        ma_sinh_vien: email.split("@")[0].toUpperCase(),
+        expires_at: expireTime
+      };
+      localStorage.setItem("ictu_student_session", JSON.stringify(regUser));
+      localStorage.setItem("user", JSON.stringify(regUser));
+      localStorage.setItem("currentUser", JSON.stringify(regUser));
       alert("Đăng ký tài khoản thực tập sinh thành công! Đang chuyển hướng sang trang đăng nhập.");
       window.location.href = "dangnhap.html";
       return;

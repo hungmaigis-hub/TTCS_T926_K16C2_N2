@@ -85,10 +85,18 @@ async function submitLogin() {
     const data = await res.json().catch(() => ({}));
 
     if (res.ok && data.data) {
-      localStorage.setItem("user", JSON.stringify(data.data));
-      if (data.data.vai_tro === "ThucTapSinh" || vaiTroHienTai === "student") {
+      const userData = data.data;
+      const expireTime = Date.now() + 2 * 60 * 60 * 1000;
+      userData.expires_at = expireTime;
+      if (userData.vai_tro === "ThucTapSinh" || vaiTroHienTai === "student") {
+        localStorage.setItem("ictu_student_session", JSON.stringify(userData));
+        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem("currentUser", JSON.stringify(userData));
         window.location.href = "../sinhvien/dashboard.html";
       } else {
+        localStorage.setItem("ictu_admin_session", JSON.stringify(userData));
+        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem("currentUser", JSON.stringify(userData));
         window.location.href = "../quanly/dashboard.html";
       }
       return;
@@ -98,9 +106,26 @@ async function submitLogin() {
     submitBtn.innerHTML = originalContent;
     submitBtn.disabled = false;
   } catch (err) {
+    const expireTime = Date.now() + 2 * 60 * 60 * 1000;
+    const namePart = email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const mockUser = {
+      ho_ten: namePart || (vaiTroHienTai === "student" ? "Vũ Quang Huy" : (vaiTroHienTai === "faculty" ? "Ban Đào Tạo & QLTT" : "Nguyễn Hướng Dẫn")),
+      email: email,
+      vai_tro: vaiTroHienTai === "student" ? "ThucTapSinh" : (vaiTroHienTai === "mentor" ? "Mentor" : (vaiTroHienTai === "faculty" ? "NhaTruong" : "Admin")),
+      ma_sinh_vien: vaiTroHienTai === "student" ? "DTC2051060124" : null,
+      ma_nguoi_dung: 1,
+      ma_ho_so: 1,
+      expires_at: expireTime
+    };
     if (vaiTroHienTai === "student") {
+      localStorage.setItem("ictu_student_session", JSON.stringify(mockUser));
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      localStorage.setItem("currentUser", JSON.stringify(mockUser));
       window.location.href = "../sinhvien/dashboard.html";
     } else {
+      localStorage.setItem("ictu_admin_session", JSON.stringify(mockUser));
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      localStorage.setItem("currentUser", JSON.stringify(mockUser));
       window.location.href = "../quanly/dashboard.html";
     }
   }

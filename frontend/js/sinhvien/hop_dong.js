@@ -104,3 +104,22 @@ async function thucHienKyHopDong() {
     nutKy.innerHTML = `<span>Thử ký lại</span>`;
   }
 }
+
+function capNhatThongTinHopDong() {
+  const now = new Date();
+  const curY = now.getFullYear();
+  const startY = now.getMonth() >= 8 ? curY : curY - 1;
+  const nienKhoa = `${startY} - ${startY + 1}`;
+  const elSidebar = document.getElementById("theHocKyHopDongSidebar");
+  if (elSidebar) elSidebar.textContent = `Học kỳ ${nienKhoa}`;
+  const elNgayKy = document.getElementById("ngayKyHopDongTop");
+  if (elNgayKy) elNgayKy.textContent = `Thái Nguyên, ngày ${now.getDate()} tháng ${now.getMonth() + 1} năm ${curY}`;
+  const elSoHd = document.getElementById("soHopDongText");
+  if (elSoHd) elSoHd.textContent = `Số: 01/${curY}/HĐTT-ICTU`;
+  const elMaHd = document.getElementById("maHopDongTop");
+  if (elMaHd) elMaHd.textContent = `ICTU-CONTRACT-${curY}/001`;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  capNhatThongTinHopDong();
+});

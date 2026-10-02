@@ -240,7 +240,7 @@ function hienThiThongBao(loai, tieuDe, noiDung) {
 
 function dongBoThongTinNguoiDung() {
   try {
-    const userStr = localStorage.getItem("currentUser");
+    const userStr = localStorage.getItem("ictu_student_session") || localStorage.getItem("user") || localStorage.getItem("currentUser");
     if (userStr) {
       const user = JSON.parse(userStr);
       const elTen = document.getElementById("sidebarTenSinhVien");
