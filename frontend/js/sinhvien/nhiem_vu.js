@@ -120,6 +120,11 @@ async function taiLichTrinhVaNhiemVu() {
       if (tenSinhVienEl) tenSinhVienEl.textContent = `Nhiệm vụ: ${data.ho_ten}`;
     }
 
+    if (data.ten_chuong_trinh) {
+      const bannerEl = document.getElementById("theHocKyNhiemVuBanner");
+      if (bannerEl) bannerEl.textContent = data.ten_chuong_trinh;
+    }
+
     const tasks = data.danh_sach_nhiem_vu || [];
     if (tasks.length > 0) {
       const danhSachEl = document.getElementById("danhSachNhiemVu");
@@ -136,6 +141,13 @@ async function taiLichTrinhVaNhiemVu() {
 
             const pDesc = card.querySelector("p");
             if (pDesc && task.mo_ta) pDesc.textContent = task.mo_ta;
+
+            const badgeHan = card.querySelector("div.shrink-0 span:last-child");
+            if (badgeHan && task.han_hoan_thanh) {
+              const pts = task.han_hoan_thanh.split("-");
+              const fDate = pts.length === 3 ? `${pts[2]}/${pts[1]}/${pts[0]}` : task.han_hoan_thanh;
+              badgeHan.textContent = `Hạn chót: ${fDate}`;
+            }
 
             const slider = card.querySelector(".thanh-tien-do");
             const labelChiSo = card.querySelector(".chi-so-tien-do");
@@ -154,7 +166,21 @@ async function taiLichTrinhVaNhiemVu() {
   } catch (e) {}
 }
 
+function capNhatNienKhoaNhiemVu() {
+  const now = new Date();
+  const curY = now.getFullYear();
+  const startY = now.getMonth() >= 8 ? curY : curY - 1;
+  const nienKhoa = `${startY} - ${startY + 1}`;
+  const elSidebar = document.getElementById("theHocKyNhiemVuSidebar");
+  if (elSidebar) elSidebar.textContent = `Học kỳ ${nienKhoa}`;
+  const elBanner = document.getElementById("theHocKyNhiemVuBanner");
+  if (elBanner && !elBanner.getAttribute("data-loaded-program")) {
+    elBanner.textContent = `Kỳ ${nienKhoa}`;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  capNhatNienKhoaNhiemVu();
   taiLichTrinhVaNhiemVu();
 
   const danhSach = document.getElementById("danhSachNhiemVu");

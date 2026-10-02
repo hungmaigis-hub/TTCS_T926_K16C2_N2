@@ -9,6 +9,78 @@ function layTenVietTat(hoTen) {
   return hoTen.substring(0, 2).toUpperCase();
 }
 
+function dinhDangNgayVn(ngayStr) {
+  if (!ngayStr) return "";
+  const parts = ngayStr.split("-");
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return ngayStr;
+}
+
+function capNhatThongTinDotThucTap(programData) {
+  const elHeader = document.getElementById("theDotThucTapHeader");
+  const elTieuDe = document.getElementById("tieuDeTienDoDot");
+  const elThoiGian = document.getElementById("thoiGianTienDoDot");
+  const elGiaiDoan = document.getElementById("theGiaiDoanDotText");
+  const elTienDoSo = document.getElementById("chuSoTienDoTongThe");
+  const elThanhTienDo = document.getElementById("thanhTienDoTongThe");
+
+  let ten = "";
+  let batDau = "";
+  let ketThuc = "";
+
+  if (programData && programData.ten_chuong_trinh) {
+    ten = programData.ten_chuong_trinh;
+    batDau = programData.ngay_bat_dau || "";
+    ketThuc = programData.ngay_ket_thuc || "";
+  } else {
+    const now = new Date();
+    const curY = now.getFullYear();
+    const startY = now.getMonth() >= 8 ? curY : curY - 1;
+    const nienKhoa = `${startY} - ${startY + 1}`;
+    const hocKy = now.getMonth() >= 8 || now.getMonth() <= 0 ? "Học kỳ I" : "Học kỳ II";
+    ten = `Đợt thực tập ${hocKy} (${nienKhoa})`;
+    batDau = `${startY}-09-01`;
+    ketThuc = `${startY}-12-31`;
+  }
+
+  if (elHeader) elHeader.textContent = ten;
+  if (elTieuDe) elTieuDe.textContent = `Tiến Độ: ${ten}`;
+
+  if (batDau && ketThuc) {
+    const dStart = new Date(batDau);
+    const dEnd = new Date(ketThuc);
+    const dNow = new Date();
+
+    const fStart = dinhDangNgayVn(batDau);
+    const fEnd = dinhDangNgayVn(ketThuc);
+
+    let tuan = 1;
+    let percent = 0;
+
+    if (dNow < dStart) {
+      if (elGiaiDoan) elGiaiDoan.textContent = "Sắp diễn ra";
+      if (elThoiGian) elThoiGian.textContent = `Thời gian dự kiến: ${fStart} - ${fEnd}`;
+      percent = 0;
+    } else if (dNow > dEnd) {
+      if (elGiaiDoan) elGiaiDoan.textContent = "Đã hoàn thành đợt";
+      if (elThoiGian) elThoiGian.textContent = `Thời gian thực tế: ${fStart} - ${fEnd} (Đã kết thúc)`;
+      percent = 100;
+    } else {
+      const diffMs = dNow.getTime() - dStart.getTime();
+      const totalMs = dEnd.getTime() - dStart.getTime();
+      tuan = Math.max(1, Math.ceil(diffMs / (7 * 24 * 60 * 60 * 1000)));
+      percent = totalMs > 0 ? Math.min(100, Math.max(0, Math.round((diffMs / totalMs) * 100))) : 0;
+      if (elGiaiDoan) elGiaiDoan.textContent = `Giai đoạn: Đang thực tập (Tuần ${tuan})`;
+      if (elThoiGian) elThoiGian.textContent = `Thời gian thực tế: ${fStart} - ${fEnd} (Tuần thứ ${tuan})`;
+    }
+
+    if (elTienDoSo) elTienDoSo.textContent = `${percent}% Hoàn tất`;
+    if (elThanhTienDo) elThanhTienDo.style.width = `${percent}%`;
+  }
+}
+
 function renderBangSinhVien(danhSach) {
   const bangTbody = document.getElementById("bangSinhVienHoatDong");
   if (!bangTbody || !danhSach || danhSach.length === 0) return;
@@ -19,7 +91,7 @@ function renderBangSinhVien(danhSach) {
     const email = sv.email || "sv@ictu.edu.vn";
     const initials = layTenVietTat(hoTen);
     const chuyenNganh = sv.chuyen_nganh || "Công nghệ thông tin";
-    const donVi = sv.ten_mentor ? `Mentor: ${sv.ten_mentor}` : (sv.ten_truong || "FPT Software Hà Nội");
+    const donVi = sv.ten_mentor ? `Mentor: ${sv.ten_mentor}` : (sv.ten_truong || "FPT Software");
     
     let badgeHtml = "";
     if (sv.trang_thai_xet_duyet === "ChoDuyet") {
@@ -81,7 +153,10 @@ function renderBangSinhVien(danhSach) {
 function napDuLieuCacheDashboard() {
   try {
     const raw = localStorage.getItem("ictu_dashboard_cache");
-    if (!raw) return;
+    if (!raw) {
+      capNhatThongTinDotThucTap(null);
+      return;
+    }
     const cache = JSON.parse(raw);
     const elTong = document.getElementById("kpiTongTTS");
     if (elTong && cache.tongSo !== undefined) elTong.textContent = cache.tongSo.toLocaleString("vi-VN");
@@ -93,10 +168,17 @@ function napDuLieuCacheDashboard() {
     if (elDoanhNghiep && cache.soDoanhNghiep !== undefined) elDoanhNghiep.textContent = cache.soDoanhNghiep.toLocaleString("vi-VN");
     const badgeSidebar = document.getElementById("sidebarBadgeChoDuyet");
     if (badgeSidebar && cache.choDuyet !== undefined) badgeSidebar.textContent = `${cache.choDuyet} chờ`;
+    if (cache.programData) {
+      capNhatThongTinDotThucTap(cache.programData);
+    } else {
+      capNhatThongTinDotThucTap(null);
+    }
     if (cache.danhSach && cache.danhSach.length > 0) {
       renderBangSinhVien(cache.danhSach);
     }
-  } catch {}
+  } catch {
+    capNhatThongTinDotThucTap(null);
+  }
 }
 
 async function taiDuLieuDashboard() {
@@ -134,6 +216,14 @@ async function taiDuLieuDashboard() {
       badgeSidebar.textContent = `${choDuyet} chờ`;
     }
 
+    const itemCoChuongTrinh = danhSach.find((x) => x.ten_chuong_trinh && x.ngay_bat_dau && x.ngay_ket_thuc);
+    const progData = itemCoChuongTrinh ? {
+      ten_chuong_trinh: itemCoChuongTrinh.ten_chuong_trinh,
+      ngay_bat_dau: itemCoChuongTrinh.ngay_bat_dau,
+      ngay_ket_thuc: itemCoChuongTrinh.ngay_ket_thuc
+    } : null;
+
+    capNhatThongTinDotThucTap(progData);
     renderBangSinhVien(danhSach);
 
     try {
@@ -142,6 +232,7 @@ async function taiDuLieuDashboard() {
         choDuyet,
         daKy,
         soDoanhNghiep,
+        programData: progData,
         danhSach: danhSach.slice(0, 6)
       }));
     } catch {}

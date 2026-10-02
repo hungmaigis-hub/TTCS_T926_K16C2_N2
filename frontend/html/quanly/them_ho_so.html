@@ -155,6 +155,17 @@
           >
         </a>
 
+        <a
+          href="cham_cong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >pending_actions</span
+          >
+          <span>Báo cáo chấm công</span>
+        </a>
+
         <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
           <p
             class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
@@ -224,6 +235,29 @@
         </div>
       </div>
     </aside>
+    <script>
+      (function(){
+        try {
+          const raw = localStorage.getItem("ictu_admin_session") || localStorage.getItem("currentUser") || localStorage.getItem("user");
+          if (!raw) return;
+          const u = JSON.parse(raw);
+          if (u.expires_at && Date.now() > u.expires_at) return;
+          const nameEl = document.getElementById("adminSidebarName");
+          const emailEl = document.getElementById("adminSidebarEmail");
+          const avatarEl = document.getElementById("adminAvatarInitials");
+          const roleEl = document.getElementById("adminSidebarRole");
+          if (nameEl && u.ho_ten) nameEl.textContent = u.ho_ten;
+          if (emailEl && u.email) emailEl.textContent = u.email;
+          if (roleEl && u.vai_tro) {
+            roleEl.textContent = u.vai_tro === "Admin" ? "Quản trị viên" : (u.vai_tro === "Mentor" ? "Người hướng dẫn" : "Thực tập sinh");
+          }
+          if (avatarEl && u.ho_ten) {
+            const parts = u.ho_ten.trim().split(/\s+/);
+            avatarEl.textContent = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+          }
+        } catch(e){}
+      })();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0">
       <header
@@ -294,9 +328,8 @@
               <span class="material-symbols-outlined text-[16px] text-ictu-600"
                 >person_add</span
               >
-              <span
-                >Hệ Thống Quản Lý Thực Tập ICTU - Cập Nhật Năm Học 2024 -
-                2025</span
+              <span id="theTieuDeNienKhoaThemHoSo"
+                >Cổng Tiếp Nhận Hồ Sơ Thực Tập Doanh Nghiệp</span
               >
             </div>
             <h1
@@ -399,9 +432,10 @@
               </div>
             </div>
             <span
+              id="theNienKhoaHoSo"
               class="text-xs font-semibold px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-600"
             >
-              Niên khóa 2021 - 2025
+              Hồ Sơ Thực Tập Doanh Nghiệp
             </span>
           </div>
 
@@ -727,9 +761,9 @@
                     </div>
                     Trần Thị Mai Anh
                   </td>
-                  <td class="py-3 text-slate-500">maianh.ictu@gmail.com</td>
+                  <td class="py-3 text-slate-500">maianh.tran@ictu.edu.vn</td>
                   <td class="py-3">Kỹ thuật phần mềm</td>
-                  <td class="py-3">15/09/2024 - 15/12/2024</td>
+                  <td class="py-3">15/09/2026 - 15/12/2026</td>
                   <td class="py-3 text-center">
                     <span
                       class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -748,9 +782,9 @@
                     </div>
                     Hoàng Minh Đức
                   </td>
-                  <td class="py-3 text-slate-500">duc.hoang@ictu.edu.vn</td>
+                  <td class="py-3 text-slate-500">minhduc.hoang@ictu.edu.vn</td>
                   <td class="py-3">Trí tuệ nhân tạo (AI)</td>
-                  <td class="py-3">01/10/2024 - 31/12/2024</td>
+                  <td class="py-3">01/10/2026 - 31/12/2026</td>
                   <td class="py-3 text-center">
                     <span
                       class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200"
@@ -765,6 +799,6 @@
       </div>
     </main>
 
-    <script src="../../js/them_ho_so.js"></script>
+    <script src="../../js/quanly/them_ho_so.js"></script>
   </body>
 </html>

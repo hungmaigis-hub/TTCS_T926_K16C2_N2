@@ -229,7 +229,7 @@
         <div class="flex items-center justify-between text-xs text-slate-500">
           <span class="flex items-center gap-1.5 font-medium">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            Học kỳ 2024 - 2025
+            <span id="theHocKyHopDongSidebar">Học kỳ hiện hành</span>
           </span>
           <a
             href="../public/index.html"
@@ -241,6 +241,20 @@
         </div>
       </div>
     </aside>
+    <script>
+      (function(){
+        try {
+          const now = new Date();
+          const curY = now.getFullYear();
+          const startY = now.getMonth() >= 8 ? curY : curY - 1;
+          const nienKhoa = startY + " - " + (startY + 1);
+          const elSidebar = document.getElementById("theHocKyHopDongSidebar");
+          if (elSidebar) elSidebar.textContent = "Học kỳ " + nienKhoa;
+          const elNgayKy = document.getElementById("ngayKyHopDongTop");
+          if (elNgayKy) elNgayKy.textContent = "Thái Nguyên, ngày " + now.getDate() + " tháng " + (now.getMonth() + 1) + " năm " + curY;
+        } catch(e){}
+      })();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0">
       <div class="flex flex-col w-full">
@@ -303,7 +317,7 @@
                 <span class="material-symbols-outlined text-primary text-base"
                   >tag</span
                 >
-                <span>ICTU-CONTRACT-2024/098</span>
+                <span id="maHopDongTop">HĐTT-ICTU/ONLINE</span>
               </div>
               <button
                 class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-surface-container-lowest text-on-surface shadow-sm hover:bg-surface-container transition-colors font-label-lg text-label-lg"
@@ -363,9 +377,10 @@
               </p>
               <div class="w-36 h-0.5 bg-outline-variant mx-auto my-3"></div>
               <p
+                id="ngayKyHopDongTop"
                 class="font-body-sm text-body-sm italic text-on-surface-variant"
               >
-                Thái Nguyên, ngày 15 tháng 10 năm 2024
+                Thái Nguyên, ngày lập hợp đồng điện tử
               </p>
             </div>
 
@@ -375,8 +390,8 @@
               >
                 HỢP ĐỒNG ĐÀO TẠO &amp; TIẾP NHẬN THỰC TẬP SINH
               </h2>
-              <p class="font-code text-code text-on-surface-variant mt-1.5">
-                Số: 88/2024/HĐTT-ICTU-TECH
+              <p id="soHopDongText" class="font-code text-code text-on-surface-variant mt-1.5">
+                Số: HĐTT-ICTU/ONLINE
               </p>
             </div>
 
@@ -549,9 +564,7 @@
                 <p>
                   2.1.
                   <strong class="font-semibold">Thời hạn hợp đồng:</strong> 03
-                  tháng, bắt đầu từ ngày
-                  <strong class="font-semibold">01/11/2024</strong> đến hết ngày
-                  <strong class="font-semibold">31/01/2025</strong>.
+                  tháng, theo kế hoạch và quyết định phân công tiếp nhận thực tập chính thức của Doanh nghiệp và Nhà trường.
                 </p>
                 <p>
                   2.2.
@@ -698,7 +711,7 @@
                     <p
                       class="font-code text-code text-on-surface-variant text-[10px]"
                     >
-                      Cert ID: VNPT-CA-88192-2024
+                      Cert ID: VNPT-CA-VERIFIED-DIGITAL
                     </p>
                   </div>
                 </div>
@@ -822,7 +835,7 @@
             </div>
           </div>
         </div>
-        <script src="../../js/hop_dong.js"></script>
+        <script src="../../js/sinhvien/hop_dong.js"></script>
       </div>
     </main>
   </body>

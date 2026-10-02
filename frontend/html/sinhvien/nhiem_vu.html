@@ -229,7 +229,7 @@
         <div class="flex items-center justify-between text-xs text-slate-500">
           <span class="flex items-center gap-1.5 font-medium">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            Học kỳ 2024 - 2025
+            <span id="theHocKyNhiemVuSidebar">Học kỳ hiện hành</span>
           </span>
           <a
             href="../public/index.html"
@@ -241,6 +241,20 @@
         </div>
       </div>
     </aside>
+    <script>
+      (function(){
+        try {
+          const now = new Date();
+          const curY = now.getFullYear();
+          const startY = now.getMonth() >= 8 ? curY : curY - 1;
+          const nienKhoa = startY + " - " + (startY + 1);
+          const elSidebar = document.getElementById("theHocKyNhiemVuSidebar");
+          if (elSidebar) elSidebar.textContent = "Học kỳ " + nienKhoa;
+          const elBanner = document.getElementById("theHocKyNhiemVuBanner");
+          if (elBanner) elBanner.textContent = "Kỳ " + nienKhoa;
+        } catch(e){}
+      })();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0">
       <div class="flex flex-col w-full">
@@ -379,9 +393,9 @@
                         Tiến Độ Kỳ Thực Tập
                       </h2>
                       <span
+                        id="theHocKyNhiemVuBanner"
                         class="font-label-sm px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-bold"
-                        >Kỳ 2024 - 2025</span
-                      >
+                        >Kỳ thực tập</span>
                     </div>
                     <p class="font-body-sm text-on-surface-variant">
                       Thời gian thực tế: Tuần 6 / 10 tuần tổng thể
@@ -543,7 +557,7 @@
                   <span class="material-symbols-outlined text-[17px]"
                     >event</span
                   >
-                  <span>Hạn chót: 18/11/2024 (còn 5 ngày)</span>
+                  <span>Hạn chót theo kế hoạch Sprint</span>
                 </div>
               </div>
 
@@ -658,7 +672,7 @@
                   <span class="material-symbols-outlined text-[17px]"
                     >event</span
                   >
-                  <span>Hạn chót: 25/11/2024 (còn 12 ngày)</span>
+                  <span>Hạn chót theo kế hoạch Sprint</span>
                 </div>
               </div>
 
@@ -773,7 +787,7 @@
                   <span class="material-symbols-outlined text-[17px]"
                     >event</span
                   >
-                  <span>Hạn chót: 15/12/2024 (còn 32 ngày)</span>
+                  <span>Hạn chót theo kế hoạch Sprint</span>
                 </div>
               </div>
 
@@ -912,7 +926,7 @@
           </div>
         </div>
 
-        <script src="../../js/nhiem_vu.js"></script>
+        <script src="../../js/sinhvien/nhiem_vu.js"></script>
       </div>
     </main>
   </body>

@@ -154,6 +154,17 @@
           >
         </a>
 
+        <a
+          href="cham_cong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >pending_actions</span
+          >
+          <span>Báo cáo chấm công</span>
+        </a>
+
         <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
           <p
             class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
@@ -223,6 +234,9 @@
         </div>
       </div>
     </aside>
+    <script>
+      if (typeof dongBoThongTinNguoiDung === "function") dongBoThongTinNguoiDung();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0">
       <div class="flex flex-col w-full">
@@ -306,16 +320,18 @@
               class="flex items-center gap-space-xs pl-2 border-l border-surface-container-high"
             >
               <div
+                id="adminHeaderAvatar"
                 class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-md"
               >
                 QL
               </div>
               <div class="hidden xl:flex flex-col text-left">
                 <span
+                  id="adminHeaderName"
                   class="text-label-sm text-on-surface leading-tight font-semibold"
                   >Admin QLTT</span
                 >
-                <span class="text-[10px] text-on-surface-variant leading-none"
+                <span id="adminHeaderRole" class="text-[10px] text-on-surface-variant leading-none"
                   >Hội đồng thẩm định</span
                 >
               </div>
@@ -334,7 +350,7 @@
                 <span class="material-symbols-outlined text-[15px]"
                   >verified_user</span
                 >
-                <span>Cổng Xét Duyệt Đợt Tuyển &amp; Thực Tập 2024 - 2025</span>
+                <span>Cổng Xét Duyệt Đợt Tuyển &amp; Thực Tập 2026 - 2027</span>
               </div>
               <h1
                 class="font-headline-lg text-headline-lg text-on-surface tracking-tight"
@@ -372,7 +388,7 @@
                 <span
                   class="font-headline-sm text-headline-sm text-amber-800 font-bold"
                   id="demChoDuyet"
-                  >5</span
+                  >0</span
                 >
               </div>
               <div
@@ -384,7 +400,7 @@
                 <span
                   class="font-headline-sm text-headline-sm text-secondary font-bold"
                   id="demDaDuyet"
-                  >6</span
+                  >0</span
                 >
               </div>
               <div
@@ -396,7 +412,7 @@
                 <span
                   class="font-headline-sm text-headline-sm text-error font-bold"
                   id="demTuChoi"
-                  >1</span
+                  >0</span
                 >
               </div>
             </div>
@@ -434,8 +450,9 @@
                 >
                   <span>Tất cả</span>
                   <span
+                    id="demNutLocTatCa"
                     class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-primary text-[10px]"
-                    >12</span
+                    >0</span
                   >
                 </button>
                 <button
@@ -445,8 +462,9 @@
                 >
                   <span>Chờ duyệt</span>
                   <span
+                    id="demNutLocChoDuyet"
                     class="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold"
-                    >5</span
+                    >0</span
                   >
                 </button>
                 <button
@@ -456,8 +474,9 @@
                 >
                   <span>Đã duyệt</span>
                   <span
+                    id="demNutLocDaDuyet"
                     class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-secondary text-[10px]"
-                    >6</span
+                    >0</span
                   >
                 </button>
                 <button
@@ -467,8 +486,9 @@
                 >
                   <span>Bị từ chối</span>
                   <span
+                    id="demNutLocTuChoi"
                     class="px-1.5 py-0.2 rounded-full bg-error-container text-on-error-container text-[10px]"
-                    >1</span
+                    >0</span
                   >
                 </button>
               </div>
@@ -553,9 +573,8 @@
               class="px-4 py-3 bg-surface-container-low/50 flex flex-col sm:flex-row items-center justify-between gap-space-sm text-body-sm text-on-surface-variant"
             >
               <div>
-                <span
-                  >Hiển thị <strong class="text-on-surface">1 - 3</strong> của
-                  <strong class="text-on-surface">12</strong> hồ sơ</span
+                <span id="phanTrangThongTin"
+                  >Đang tải dữ liệu hồ sơ...</span
                 >
               </div>
               <div class="flex items-center gap-1">
@@ -654,8 +673,7 @@
                   >info</span
                 >
                 <p id="moTaUngVienTuChoi">
-                  Bạn đang từ chối hồ sơ của ứng viên: Nguyễn Văn An (Mã:
-                  ICTU-2024-8842)
+                  Bạn đang thực hiện thao tác từ chối hồ sơ ứng viên.
                 </p>
               </div>
               <div class="flex flex-col gap-1">
@@ -695,7 +713,7 @@
                     class="px-2.5 py-1 rounded-md bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-label-sm transition-colors"
                     onclick="
                       ganLyDoNhanh(
-                        'CV chưa đạt chuẩn ICTU, yêu cầu cập nhật lại theo biểu mẫu đợt thực tập 2024.',
+                        'CV chưa đạt chuẩn ICTU, yêu cầu cập nhật lại theo biểu mẫu đợt thực tập 2026.',
                       )
                     "
                     type="button"
@@ -807,7 +825,7 @@
           </div>
         </div>
       </div>
-      <script src="../../js/xet_duyet_ho_so.js"></script>
+      <script src="../../js/quanly/xet_duyet_ho_so.js"></script>
     </main>
   </body>
 </html>

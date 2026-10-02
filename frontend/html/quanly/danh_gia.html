@@ -150,6 +150,17 @@
           >
         </a>
 
+        <a
+          href="cham_cong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >pending_actions</span
+          >
+          <span>Báo cáo chấm công</span>
+        </a>
+
         <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
           <p
             class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
@@ -219,6 +230,29 @@
         </div>
       </div>
     </aside>
+    <script>
+      (function(){
+        try {
+          const raw = localStorage.getItem("ictu_admin_session") || localStorage.getItem("currentUser") || localStorage.getItem("user");
+          if (!raw) return;
+          const u = JSON.parse(raw);
+          if (u.expires_at && Date.now() > u.expires_at) return;
+          const nameEl = document.getElementById("adminSidebarName");
+          const emailEl = document.getElementById("adminSidebarEmail");
+          const avatarEl = document.getElementById("adminAvatarInitials");
+          const roleEl = document.getElementById("adminSidebarRole");
+          if (nameEl && u.ho_ten) nameEl.textContent = u.ho_ten;
+          if (emailEl && u.email) emailEl.textContent = u.email;
+          if (roleEl && u.vai_tro) {
+            roleEl.textContent = u.vai_tro === "Admin" ? "Quản trị viên" : (u.vai_tro === "Mentor" ? "Người hướng dẫn" : "Thực tập sinh");
+          }
+          if (avatarEl && u.ho_ten) {
+            const parts = u.ho_ten.trim().split(/\s+/);
+            avatarEl.textContent = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+          }
+        } catch(e){}
+      })();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0 bg-slate-50">
       <header
@@ -250,9 +284,10 @@
                 Phiếu Đánh Giá Kết Quả Kỳ Thực Tập
               </h1>
               <span
+                id="theHocKyDanhGia"
                 class="bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2.5 py-0.5 rounded-full text-xs font-semibold"
               >
-                Học kỳ 2024 - 2025
+                Học kỳ doanh nghiệp
               </span>
             </div>
           </div>
@@ -687,8 +722,8 @@ Sinh viên nắm vững kiến thức thực tế, hoàn thành xuất sắc cá
               <h3 class="text-base font-bold text-slate-900">
                 Danh Sách Sinh Viên Đã Chấm Điểm Gần Đây
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5">
-                Dữ liệu đánh giá trực tiếp đợt 1 năm học 2024 - 2025
+              <p id="moTaDotDanhGia" class="text-xs text-slate-500 mt-0.5">
+                Dữ liệu đánh giá trực tiếp đợt thực tập hiện hành
               </p>
             </div>
             <span
@@ -817,6 +852,6 @@ Sinh viên nắm vững kiến thức thực tế, hoàn thành xuất sắc cá
       </div>
     </main>
 
-    <script src="../../js/danh_gia.js"></script>
+    <script src="../../js/quanly/danh_gia.js"></script>
   </body>
 </html>
