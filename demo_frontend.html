@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frontend Demo - Phân công Mentor cho Thực tập sinh (NV15)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    body {
+      background-color: #f8fafc;
+      color: #1e293b;
+      padding: 30px 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 24px;
+    }
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+    }
+    .alert-success {
+      background-color: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+    .alert-error {
+      background-color: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+    th {
+      background-color: #f1f5f9;
+      font-weight: 600;
+      color: #475569;
+    }
+    tr:hover {
+      background-color: #f8fafc;
+    }
+    select {
+      padding: 6px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      background-color: #ffffff;
+    }
+    select:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    .btn-save {
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-save:hover {
+      background-color: #1d4ed8;
+    }
+    .btn-save:disabled {
+      background-color: #94a3b8;
+      cursor: not-allowed;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 9999px;
+      background-color: #e0f2fe;
+      color: #0369a1;
+    }
+    .status-assigned {
+      color: #15803d;
+      font-weight: 600;
+    }
+    .status-none {
+      color: #94a3b8;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Danh sách Thực tập sinh & Phân công Mentor</h1>
+  <p class="subtitle">Tính năng theo Task NV15: Frontend chọn Mentor từ dropdown và bấm nút Lưu để gọi API <code>PATCH /api/v1/interns/{id}/assign-mentor</code></p>
+
+  <div id="alertBox" class="alert"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Mã TTS</th>
+        <th>Họ và Tên</th>
+        <th>Trường / Ngành</th>
+        <th>Vị trí</th>
+        <th>Mentor hiện tại</th>
+        <th>Chọn Mentor mới</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody id="internTableBody">
+      <tr>
+        <td colspan="8" style="text-align: center; color: #64748b;">Đang tải dữ liệu từ API...</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:8000/api/v1/interns";
+  let mentorList = [];
+
+  // Hiển thị thông báo
+  function showAlert(msg, isSuccess = true) {
+    const alertBox = document.getElementById("alertBox");
+    alertBox.textContent = msg;
+    alertBox.className = "alert " + (isSuccess ? "alert-success" : "alert-error");
+    alertBox.style.display = "block";
+    setTimeout(() => {
+      alertBox.style.display = "none";
+    }, 4000);
+  }
+
+  // 1. Tải danh sách Mentor hợp lệ từ API (GET /api/v1/interns/mentors)
+  async function fetchMentors() {
+    try {
+      const res = await fetch(`${API_BASE}/mentors`);
+      if (!res.ok) throw new Error("Không thể tải danh sách mentor");
+      mentorList = await res.json();
+    } catch (err) {
+      console.error(err);
+      showAlert("Lỗi khi tải danh sách mentor từ API", false);
+    }
+  }
+
+  // 2. Tải danh sách Thực tập sinh từ API (GET /api/v1/interns)
+  async function loadInterns() {
+    await fetchMentors();
+    try {
+      const res = await fetch(API_BASE);
+      if (!res.ok) throw new Error("Không thể tải danh sách thực tập sinh");
+      const interns = await res.json();
+      renderTable(interns);
+    } catch (err) {
+      console.error(err);
+      showAlert("Lỗi khi kết nối đến backend: " + err.message, false);
+    }
+  }
+
+  // 3. Render bảng HTML
+  function renderTable(interns) {
+    const tbody = document.getElementById("internTableBody");
+    tbody.innerHTML = "";
+
+    if (interns.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center;">Chưa có thực tập sinh nào.</td></tr>`;
+      return;
+    }
+
+    interns.forEach((item, index) => {
+      // Tìm tên mentor hiện tại nếu có
+      const currentMentor = mentorList.find(m => m.ma_mentor === item.ma_mentor);
+      const mentorDisplay = currentMentor 
+        ? `<span class="status-assigned">${currentMentor.ho_ten} (${item.ma_mentor})</span>` 
+        : (item.ma_mentor ? item.ma_mentor : `<span class="status-none">Chưa phân công</span>`);
+
+      // Tạo các option cho thẻ <select>
+      let mentorOptions = `<option value="">-- Chọn Mentor --</option>`;
+      mentorList.forEach(m => {
+        const isSelected = (m.ma_mentor === item.ma_mentor) ? "selected" : "";
+        mentorOptions += `<option value="${m.ma_mentor}" ${isSelected}>${m.ho_ten} (${m.ma_mentor})</option>`;
+      });
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td><span class="badge">${item.ma_thuc_tap_sinh}</span></td>
+        <td><strong>${item.ho_ten}</strong><br><small style="color: #64748b;">${item.email || ""}</small></td>
+        <td>${item.truong_dai_hoc || "-"}<br><small style="color: #64748b;">${item.chuyen_nganh || ""}</small></td>
+        <td>${item.vi_tri_thuc_tap || "-"}</td>
+        <td id="current-mentor-${item.id}">${mentorDisplay}</td>
+        <td>
+          <select id="select-mentor-${item.id}">
+            ${mentorOptions}
+          </select>
+        </td>
+        <td>
+          <button class="btn-save" onclick="saveAssignMentor(${item.id})">Lưu</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // 4. Gọi API PATCH /api/v1/interns/{id}/assign-mentor khi bấm Lưu
+  async function saveAssignMentor(internId) {
+    const selectElem = document.getElementById(`select-mentor-${internId}`);
+    const selectedMentor = selectElem.value;
+
+    if (!selectedMentor) {
+      alert("Vui lòng chọn một Mentor trước khi lưu!");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/${internId}/assign-mentor`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          ma_mentor: selectedMentor
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showAlert(data.detail || "Đã xảy ra lỗi khi gán mentor", false);
+        return;
+      }
+
+      showAlert(data.message || "Gán mentor thành công!", true);
+
+      // Cập nhật lại cột Mentor hiện tại trên giao diện
+      const currentMentorElem = document.getElementById(`current-mentor-${internId}`);
+      const matched = mentorList.find(m => m.ma_mentor === data.data.ma_mentor);
+      currentMentorElem.innerHTML = `<span class="status-assigned">${matched ? matched.ho_ten : data.data.ma_mentor} (${data.data.ma_mentor})</span>`;
+    } catch (err) {
+      console.error(err);
+      showAlert("Lỗi kết nối máy chủ backend: " + err.message, false);
+    }
+  }
+
+  // Khởi động khi tải trang
+  loadInterns();
+</script>
+
+</body>
+</html>
