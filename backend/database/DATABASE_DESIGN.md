@@ -132,6 +132,17 @@ erDiagram
         string ghi_chu
     }
 
+    CA_LAM_VIEC {
+        int ma_ca PK
+        string ten_ca
+        time gio_bat_dau
+        time gio_ket_thuc
+        string cac_ngay_trong_tuan
+        string ghi_chu
+        string trang_thai "HoatDong, TamNgung"
+        datetime ngay_tao
+    }
+
     DON_NGHI_PHEP {
         int ma_don PK
         int ma_ho_so FK
@@ -337,6 +348,22 @@ erDiagram
 
 ---
 
+### 2.11b. CA_LAM_VIEC (Ca làm việc / Lịch làm việc)
+*Quản lý danh mục các ca làm việc (giờ bắt đầu, giờ kết thúc, các ngày áp dụng trong tuần).*
+
+| Tên cột | Kiểu dữ liệu | Khóa | Ràng buộc / Giá trị cho phép | Mô tả |
+| :--- | :--- | :--- | :--- | :--- |
+| `ma_ca` | `INT` | **PK** | `AUTO_INCREMENT` | Mã định danh ca làm việc |
+| `ten_ca` | `VARCHAR(100)` | | `NOT NULL` | Tên ca làm việc (VD: Ca Sáng, Ca Chiều, Ca Fulltime) |
+| `gio_bat_dau` | `TIME` | | `NOT NULL` | Thời gian bắt đầu ca |
+| `gio_ket_thuc` | `TIME` | | `NOT NULL` (phải > `gio_bat_dau`) | Thời gian kết thúc ca |
+| `cac_ngay_trong_tuan` | `VARCHAR(255)` | | `NOT NULL` | Các ngày áp dụng trong tuần (VD: "Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6") |
+| `ghi_chu` | `VARCHAR(255)` | | `NULL` | Ghi chú thêm |
+| `trang_thai` | `VARCHAR(50)` | | `HoatDong`, `TamNgung` | Mặc định: `HoatDong` |
+| `ngay_tao` | `DATETIME` | | `DEFAULT CURRENT_TIMESTAMP` | Thời điểm tạo ca |
+
+---
+
 ### 2.12. DON_NGHI_PHEP (Đơn xin nghỉ phép)
 *Quản lý yêu cầu xin vắng mặt của sinh viên.*
 
@@ -459,6 +486,7 @@ erDiagram
 | **`BAO_CAO_TUAN`** | Thực tập sinh nộp báo cáo tuần và Mentor xem/phản hồi. | US 17, US 18 |
 | **`DANH_GIA`** | Ghi nhận điểm kỹ năng, thái độ, nhận xét cuối kỳ và tỷ lệ đề xuất tuyển chính thức. | US 19, US 20, US 33 |
 | **`CHAM_CONG`** | Ghi nhận Check-in/Check-out qua Web/QR/Thẻ. | US 21, US 22, US 38 |
+| **`CA_LAM_VIEC`** | Cấu hình ca làm việc, thời gian bắt đầu, kết thúc và các ngày áp dụng. | US 21, US 22 |
 | **`DON_NGHI_PHEP`** | Tạo và quản lý yêu cầu xin nghỉ phép. | US 22, US 24 |
 | **`PHU_CAP`** | Quản lý mức phụ cấp và lịch sử nhận tiền hàng tháng. | US 25, US 26 |
 | **`YEU_CAU_HO_TRO`** | Xử lý các xin xác nhận/chứng nhận thực tập. | US 27, US 28 |
