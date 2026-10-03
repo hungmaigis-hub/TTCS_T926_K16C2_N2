@@ -136,6 +136,18 @@ CREATE TABLE IF NOT EXISTS cham_cong (
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
 );
 
+-- 11b. BẢNG CA LÀM VIỆC (Work Shifts / Schedules)
+CREATE TABLE IF NOT EXISTS ca_lam_viec (
+    ma_ca INT AUTO_INCREMENT PRIMARY KEY,
+    ten_ca VARCHAR(100) NOT NULL,
+    gio_bat_dau TIME NOT NULL,
+    gio_ket_thuc TIME NOT NULL,
+    cac_ngay_trong_tuan VARCHAR(255) NOT NULL,
+    ghi_chu VARCHAR(255) NULL,
+    trang_thai VARCHAR(50) DEFAULT 'HoatDong' COMMENT 'HoatDong, TamNgung',
+    ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 12. BẢNG ĐƠN NGHỈ PHÉP (Leave Requests)
 CREATE TABLE IF NOT EXISTS don_nghi_phep (
     ma_don INT AUTO_INCREMENT PRIMARY KEY,
@@ -277,5 +289,13 @@ VALUES
 (2, 1, '2026-09-12', 'Việc bận gia đình', 'ChoDuyet'),
 (3, 2, '2026-09-08', 'Đi thi học phần ở trường', 'DaDuyet')
 ON DUPLICATE KEY UPDATE ngay_nghi = VALUES(ngay_nghi), ly_do = VALUES(ly_do), trang_thai = VALUES(trang_thai);
+
+INSERT INTO ca_lam_viec (ma_ca, ten_ca, gio_bat_dau, gio_ket_thuc, cac_ngay_trong_tuan, ghi_chu, trang_thai)
+VALUES
+(1, 'Ca Sáng', '08:00:00', '12:00:00', 'Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6', 'Ca làm việc buổi sáng', 'HoatDong'),
+(2, 'Ca Chiều', '13:30:00', '17:30:00', 'Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6', 'Ca làm việc buổi chiều', 'HoatDong'),
+(3, 'Ca Hành Chính', '08:00:00', '17:30:00', 'Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6', 'Ca làm việc cả ngày', 'HoatDong')
+ON DUPLICATE KEY UPDATE ten_ca = VALUES(ten_ca), gio_bat_dau = VALUES(gio_bat_dau), gio_ket_thuc = VALUES(gio_ket_thuc);
+
 
 

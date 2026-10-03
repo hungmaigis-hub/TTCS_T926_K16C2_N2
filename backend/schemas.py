@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
-from typing import Optional, List
-from datetime import date, datetime
+from typing import Optional, List, Union
+from datetime import date, datetime, time
 import re
 
 # ==============================================================
@@ -948,6 +948,66 @@ class TaskProgressResponse(BaseModel):
     status_code: int = 200
     message: str
     data: Optional[TaskDetailData] = None
+
+
+# ==============================================================
+# SCHEMAS CHO CA LÀM VIỆC (SCHEDULES / WORK SHIFTS API)
+# ==============================================================
+
+class ScheduleCreate(BaseModel):
+    """Schema tạo mới ca làm việc (POST /api/v1/schedules)"""
+    ten_ca: str = Field(..., min_length=1, max_length=100, description="Tên ca làm việc")
+    gio_bat_dau: time = Field(..., description="Thời gian bắt đầu ca làm việc (HH:MM hoặc HH:MM:SS)")
+    gio_ket_thuc: time = Field(..., description="Thời gian kết thúc ca làm việc (HH:MM hoặc HH:MM:SS)")
+    cac_ngay_trong_tuan: Union[List[str], str] = Field(..., description="Các ngày áp dụng trong tuần")
+    ghi_chu: Optional[str] = Field(default=None, max_length=255, description="Ghi chú thêm")
+    trang_thai: Optional[str] = Field(default="HoatDong", description="Trạng thái ca làm việc (HoatDong, TamNgung)")
+
+    @field_validator('ten_ca')
+    def validate_ten_ca(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Tên ca làm việc không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+    @field_validator('cac_ngay_trong_tuan')
+    def validate_cac_ngay(cls, value: Union[List[str], str]):
+        if isinstance(value, list):
+            cleaned_list = [str(day).strip() for day in value if str(day).strip()]
+            if not cleaned_list:
+                raise ValueError("Danh sách các ngày trong tuần không được để trống")
+            return ", ".join(cleaned_list)
+        elif isinstance(value, str):
+            cleaned = value.strip()
+            if not cleaned:
+                raise ValueError("Các ngày trong tuần không được để trống")
+            return cleaned
+        raise ValueError("Định dạng các ngày trong tuần không hợp lệ")
+
+    @model_validator(mode="after")
+    def validate_shift_times(self):
+        if self.gio_ket_thuc <= self.gio_bat_dau:
+            raise ValueError("Giờ kết thúc phải lớn hơn giờ bắt đầu (gio_ket_thuc > gio_bat_dau)")
+        return self
+
+
+class ScheduleData(BaseModel):
+    """Dữ liệu chi tiết của ca làm việc"""
+    ma_ca: int
+    ten_ca: str
+    gio_bat_dau: str
+    gio_ket_thuc: str
+    cac_ngay_trong_tuan: str
+    ghi_chu: Optional[str] = None
+    trang_thai: Optional[str] = "HoatDong"
+    ngay_tao: Optional[str] = None
+
+
+class ScheduleCreateResponse(BaseModel):
+    """Response trả về khi tạo ca làm việc thành công (HTTP 201)"""
+    status_code: int = 201
+    message: str = "Tạo ca làm việc thành công"
+    data: Optional[ScheduleData] = None
 
 
 

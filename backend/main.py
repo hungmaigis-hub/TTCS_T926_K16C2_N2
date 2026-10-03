@@ -53,6 +53,8 @@ from schemas import (
     LeaveRequestCreate,
     LeaveRequestCreateResponse,
     LeaveRequestItemData,
+    ScheduleCreate,
+    ScheduleCreateResponse,
 )
 from security import get_password_hash, verify_password
 
@@ -72,6 +74,7 @@ from database.models import (
     ChamCong,
     DonNghiPhep,
     DonXinNghi,
+    CaLamViec,
 )
 
 from services.export_service import export_evaluations_to_excel, export_evaluations_to_pdf
@@ -1773,6 +1776,41 @@ def update_task_progress(
         "message": "Cập nhật tiến độ nhiệm vụ thành công",
         "data": task.to_dict()
     }
+
+
+# ==============================================================
+# API QUẢN LÝ CA LÀM VIỆC (SCHEDULES / WORK SHIFTS API)
+# ==============================================================
+
+@app.post("/api/v1/schedules", status_code=201, response_model=ScheduleCreateResponse)
+def create_schedule(
+    schedule_data: ScheduleCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Tạo ca làm việc mới cho hệ thống.
+    Lưu các thông tin: ten_ca, gio_bat_dau, gio_ket_thuc, cac_ngay_trong_tuan.
+    Ràng buộc gio_ket_thuc > gio_bat_dau được tự động validate qua schema ScheduleCreate.
+    """
+    new_schedule = CaLamViec(
+        ten_ca=schedule_data.ten_ca,
+        gio_bat_dau=schedule_data.gio_bat_dau,
+        gio_ket_thuc=schedule_data.gio_ket_thuc,
+        cac_ngay_trong_tuan=schedule_data.cac_ngay_trong_tuan,
+        ghi_chu=schedule_data.ghi_chu,
+        trang_thai=schedule_data.trang_thai or "HoatDong",
+    )
+
+    db.add(new_schedule)
+    db.commit()
+    db.refresh(new_schedule)
+
+    return {
+        "status_code": 201,
+        "message": "Tạo ca làm việc thành công",
+        "data": new_schedule.to_dict()
+    }
+
 
 
 

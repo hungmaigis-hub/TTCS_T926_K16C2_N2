@@ -4,6 +4,30 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.19.0] - 2026-10-03
+
+### Đã hoàn thành (Added & Enhanced)
+- **Thiết kế Model Ca Làm Việc (`CaLamViec`)**:
+  - Tạo mới ORM model [ca_lam_viec.py](file:///d:/clone/ttcs/backend/database/models/ca_lam_viec.py) ánh xạ bảng `ca_lam_viec` với các trường: `ma_ca` (PK), `ten_ca`, `gio_bat_dau`, `gio_ket_thuc`, `cac_ngay_trong_tuan`, `ghi_chu`, `trang_thai`, `ngay_tao`.
+  - Cung cấp phương thức `to_dict()` chuẩn hóa định dạng thời gian `HH:MM:SS` trả về cho Client.
+  - Export tại [database/models/__init__.py](file:///d:/clone/ttcs/backend/database/models/__init__.py).
+- **Pydantic Schemas (`ScheduleCreate`, `ScheduleData`, `ScheduleCreateResponse`)**:
+  - Khai báo schema tại [schemas.py](file:///d:/clone/ttcs/backend/schemas.py).
+  - Tích hợp validator `@model_validator(mode="after")` kiểm tra logic `gio_ket_thuc > gio_bat_dau` (báo lỗi HTTP 422 nếu giờ kết thúc nhỏ hơn hoặc bằng giờ bắt đầu).
+  - Chuẩn hóa trường `ten_ca` (cấm chuỗi rỗng/chỉ chứa khoảng trắng) và trường `cac_ngay_trong_tuan` (hỗ trợ cả mảng `List[str]` và chuỗi `str`).
+- **Endpoint Tạo Mới Ca Làm Việc (`POST /api/v1/schedules`)**:
+  - Thêm route tại [main.py](file:///d:/clone/ttcs/backend/main.py) trả về mã `HTTP 201 Created` kèm thông tin ca làm việc vừa lưu vào CSDL.
+- **Đồng bộ Cơ sở dữ liệu & Database Design**:
+  - Cập nhật sơ đồ ERD mermaid và bổ sung mục `2.11b. CA_LAM_VIEC (Ca làm việc / Lịch làm việc)` vào [DATABASE_DESIGN.md](file:///d:/clone/ttcs/backend/database/DATABASE_DESIGN.md).
+  - Bổ sung câu lệnh DDL `CREATE TABLE IF NOT EXISTS ca_lam_viec` và Seed data mẫu vào [init_db.sql](file:///d:/clone/ttcs/script/database/init_db.sql).
+  - Cập nhật hàm `reseed_sqlite_db()` trong [conftest.py](file:///d:/clone/ttcs/backend/tests/conftest.py).
+  - Thực thi nạp thành công CSDL MySQL qua script `script/init_db.py`.
+- **Kiểm thử tự động (Unit Test & Integration Test)**:
+  - Tạo mới bộ test [tests/test_schedules.py](file:///d:/clone/ttcs/backend/tests/test_schedules.py) với 7 test cases kiểm tra thành công, validate logic giờ, tên rỗng, thiếu trường, sai format -> **7/7 PASS 100%**.
+  - Chạy kiểm thử hồi quy toàn diện toàn bộ test suite của Backend: **269/269 test cases PASS 100%** không có bất kỳ xung đột nào.
+
+---
+
 ## [1.18.0] - 2026-10-02
 
 ### Đã hoàn thành (Added & Enhanced)
