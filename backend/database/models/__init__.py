@@ -11,6 +11,7 @@ from database.models.danh_gia import DanhGia
 from database.models.cham_cong import ChamCong
 from database.models.don_nghi_phep import DonNghiPhep
 from database.models.don_xin_nghi import DonXinNghi
+from database.models.ca_lam_viec import CaLamViec
 
 __all__ = [
     "PhongBan",
@@ -26,5 +27,6 @@ __all__ = [
     "ChamCong",
     "DonNghiPhep",
     "DonXinNghi",
+    "CaLamViec",
 ]
 

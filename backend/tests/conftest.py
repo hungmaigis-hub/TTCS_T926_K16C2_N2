@@ -25,6 +25,7 @@ from database.models import (
     ChamCong,
     DonNghiPhep,
     DonXinNghi,
+    CaLamViec,
 )
 from main import app
 
@@ -122,6 +123,11 @@ def reseed_sqlite_db():
         dnp2 = DonNghiPhep(ma_don=2, ma_ho_so=1, ngay_nghi=date(2026, 9, 12), ly_do="Việc gia đình", trang_thai="ChoDuyet")
         dnp3 = DonNghiPhep(ma_don=3, ma_ho_so=2, ngay_nghi=date(2026, 9, 8), ly_do="Thi học phần", trang_thai="DaDuyet")
         session.add_all([dnp1, dnp2, dnp3])
+
+        clv1 = CaLamViec(ma_ca=1, ten_ca="Ca Sáng", gio_bat_dau=time(8, 0, 0), gio_ket_thuc=time(12, 0, 0), cac_ngay_trong_tuan="Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6", ghi_chu="Ca làm việc buổi sáng", trang_thai="HoatDong")
+        clv2 = CaLamViec(ma_ca=2, ten_ca="Ca Chiều", gio_bat_dau=time(13, 30, 0), gio_ket_thuc=time(17, 30, 0), cac_ngay_trong_tuan="Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6", ghi_chu="Ca làm việc buổi chiều", trang_thai="HoatDong")
+        clv3 = CaLamViec(ma_ca=3, ten_ca="Ca Hành Chính", gio_bat_dau=time(8, 0, 0), gio_ket_thuc=time(17, 30, 0), cac_ngay_trong_tuan="Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6", ghi_chu="Ca làm việc cả ngày", trang_thai="HoatDong")
+        session.add_all([clv1, clv2, clv3])
 
         session.commit()
     finally:
