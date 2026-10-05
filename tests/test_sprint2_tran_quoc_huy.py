@@ -1,42 +1,33 @@
 """
 =============================================================
 AUTOMATION TEST - SPRINT 2 - TRẦN QUỐC HUY
-Dự án: Hệ thống Quản lý Thực tập sinh (ICTU Internship)
 =============================================================
-Bao gồm 8 nhiệm vụ theo Product Backlog phân công cho Trần Quốc Huy:
-  Dòng 1  - TC-01: Chỉnh sửa / cập nhật hồ sơ thực tập sinh (kiểm tra DB)
-  Dòng 3  - TC-05: Xem và duyệt tài liệu (cập nhật trạng thái và badge)
-  Dòng 7  - TC-08: Gửi email thông báo kết quả xét duyệt (template HTML / SMTP)
-  Dòng 10 - TC-12: Tạo chương trình thực tập theo phòng ban (validate FK, tên rỗng)
-  Dòng 13 - TC-14: Xem lịch thực tập cá nhân (kiểm tra rò rỉ dữ liệu)
-  Dòng 16 - TC-18: Nộp báo cáo tuần (validate trường bắt buộc, tuần số, FK)
-  Dòng 19 - TC-21: Tổng hợp đánh giá cuối kỳ & xuất báo cáo (Excel, PDF, KPI)
-  Dòng 23 - TC-24: Báo cáo đi làm và nghỉ phép / chuyên cần (công thức, bộ lọc)
-
-Dữ liệu thật kiểm thử:
-  - Thực tập sinh: Trần Quốc Huy (DTC2051060124 - K16C2, CNTT - ICTU)
-  - Đơn vị đào tạo: Trường Đại học Công nghệ Thông tin & Truyền thông (ICTU)
-  - Đơn vị thực tập: Trung tâm Phát triển Phần mềm ICTU / Viettel Solutions
-  - Mentor: KTS. Lê Quang Hưng
+Bao gồm test key:
+  Dòng 1  - TC-01: Chỉnh sửa / cập nhật hồ sơ thực tập sinh
+  Dòng 5  - TC-05: Xem và duyệt tài liệu (cập nhật trạng thái và badge)
+  Dòng 8  - TC-08: Gửi email thông báo kết quả xét duyệt
+  Dòng 12 - TC-12: Tạo chương trình thực tập theo phòng ban
+  Dòng 14 - TC-14: Xem lịch thực tập cá nhân
+  Dòng 18 - TC-18: Nộp báo cáo tuần
+  Dòng 21 - TC-21: Tổng hợp đánh giá cuối kỳ & xuất báo cáo (Excel, PDF)
+  Dòng 24 - TC-24: Báo cáo đi làm và nghỉ phép / chuyên cần
 
 Cách chạy:
-  1. Khởi động Backend Server:
-     .\\dev.bat  (hoặc python -m uvicorn main:app --reload --port 8000 --app-dir backend)
-  2. Chạy kiểm thử tự động:
-     python -m pytest tests/test_sprint2_tran_quoc_huy.py -v
+  pip install pytest requests
+  pytest tests/test_sprint2_tran_quoc_huy.py -v
 =============================================================
 """
 
-import io
-import time
 import pytest
 import requests
+import io
+import time
 
 BASE_URL = "http://localhost:8000"
-EXISTING_HO_SO_ID = 1          # Hồ sơ thực tập sinh: Trần Quốc Huy
-EXISTING_DOC_ID = 1            # CV thực tập sinh: Trần Quốc Huy
-EXISTING_PHONG_BAN_ID = 1      # Trung tâm Phát triển Phần mềm ICTU
-EXISTING_TRUONG_ID = 1         # Đại học CNTT & Truyền thông (ICTU)
+EXISTING_HO_SO_ID = 1
+EXISTING_DOC_ID = 1
+EXISTING_PHONG_BAN_ID = 1
+EXISTING_TRUONG_ID = 1
 
 
 # ==============================================================
