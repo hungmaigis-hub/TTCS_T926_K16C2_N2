@@ -112,7 +112,7 @@
       const container = document.getElementById('timelineList');
       try {
         // Thay URL bằng API thực tế
-        const response = await fetch(`https://api.example.com/interns/${id}/roadmap`);
+        const response = await fetch(`http://127.0.0.1:8000/api/v1`);
         const roadmapData = await response.json();
 
         // Xóa nội dung chờ và đổ dữ liệu
@@ -150,7 +150,7 @@
     // 2. Gửi API cập nhật trạng thái của từng giai đoạn
     async function updateMilestoneStatus(milestoneId, newStatus) {
       try {
-        const response = await fetch(`https://api.example.com/roadmap/milestones/${milestoneId}`, {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'

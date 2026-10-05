@@ -240,7 +240,7 @@
     // 1. Load các danh mục bộ lọc (Đợt, Trường, Phòng ban) từ API
     async function loadFilterOptions() {
       try {
-        const response = await fetch('https://api.example.com/reports/filters');
+        const response = await fetch('http://127.0.0.1:8000/api/v1');
         const data = await response.json();
 
         // Đổ dữ liệu vào select Đợt
@@ -271,7 +271,7 @@
       try {
         // Gửi query param lên API
         const query = new URLSearchParams({ cohort, university, department }).toString();
-        const response = await fetch(`https://api.example.com/reports/interns-summary?${query}`);
+        const response = await fetch(`http://127.0.0.1:8000/api/v1`);
         const list = await response.json();
 
         if (!list || list.length === 0) {
@@ -312,7 +312,7 @@
 
       try {
         const query = new URLSearchParams({ cohort, university, department }).toString();
-        const response = await fetch(`https://api.example.com/reports/export-summary?${query}`, {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1`, {
           method: 'GET'
         });
 

@@ -186,7 +186,7 @@
     async function loadRelatedTasks() {
       try {
         // Thay URL bằng API thực tế
-        const response = await fetch('https://api.example.com/tasks');
+        const response = await fetch('http://127.0.0.1:8000/api/v1');
         const tasks = await response.json();
 
         // Đổ dữ liệu vào dropdown
@@ -215,7 +215,7 @@
       };
 
       try {
-        const response = await fetch('https://api.example.com/reports', {
+        const response = await fetch('http://127.0.0.1:8000/api/v1', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

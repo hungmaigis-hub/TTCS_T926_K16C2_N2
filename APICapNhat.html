@@ -89,7 +89,7 @@
 
       try {
         // Gửi request lấy dữ liệu cũ theo ID (thay URL bằng API thực tế)
-        const response = await fetch(`https://api.example.com/users/${id}`);
+        const response = await fetch(`http://127.0.0.1:8000/api/v1`);
         const data = await response.json();
 
         // Gán dữ liệu cũ vào từng ô input
@@ -121,7 +121,7 @@
 
       try {
         // Gửi API cập nhật (PUT/PATCH)
-        const response = await fetch(`https://api.example.com/users/${id}`, {
+        const response = await fetch("http://127.0.0.1:8000/api/v1}", {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
