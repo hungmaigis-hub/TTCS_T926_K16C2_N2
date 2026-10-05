@@ -23,6 +23,7 @@ erDiagram
     HO_SO_THUC_TAP ||--o{ DANH_GIA : "duoc_danh_gia"
     HO_SO_THUC_TAP ||--o{ CHAM_CONG : "ghi_nhan"
     HO_SO_THUC_TAP ||--o{ DON_NGHI_PHEP : "xin_nghi"
+    HO_SO_THUC_TAP ||--o{ DON_XIN_NGHI : "xin_nghi_theo_dot"
     HO_SO_THUC_TAP ||--o{ PHU_CAP : "nhan_hang_thang"
     HO_SO_THUC_TAP ||--o{ YEU_CAU_HO_TRO : "gui"
 
@@ -149,6 +150,16 @@ erDiagram
         date ngay_nghi
         string ly_do
         string trang_thai "ChoDuyet, DaDuyet, TuChoi"
+    }
+
+    DON_XIN_NGHI {
+        int ma_don PK
+        int ma_ho_so FK
+        date tu_ngay
+        date den_ngay
+        string ly_do
+        string trang_thai "Chờ duyệt, Đã duyệt, Từ chối"
+        datetime ngay_tao
     }
 
     PHU_CAP {
@@ -335,16 +346,20 @@ erDiagram
 ---
 
 ### 2.11. CHAM_CONG (Nhật ký chấm công hàng ngày)
-*Lưu vết giờ đến, giờ về của thực tập sinh.*
+*Lưu vết giờ đến, giờ về và trạng thái kỷ luật ca làm việc của thực tập sinh.*
 
 | Tên cột | Kiểu dữ liệu | Khóa | Ràng buộc / Giá trị cho phép | Mô tả |
 | :--- | :--- | :--- | :--- | :--- |
 | `ma_cham_cong` | `INT` | **PK** | `AUTO_INCREMENT` | Mã bản ghi chấm công |
 | `ma_ho_so` | `INT` | **FK** | `NOT NULL` | Chấm công cho hồ sơ (`HO_SO_THUC_TAP`) |
 | `ngay_cham_cong` | `DATE` | | `NOT NULL` | Ngày làm việc |
-| `gio_check_in` | `TIME` | | `NULL` | Giờ vào làm |
-| `gio_check_out` | `TIME` | | `NULL` | Giờ tan làm |
-| `phuong_thuc` | `VARCHAR(50)` | | `QR`, `The`, `Web` | Phương thức điểm danh |
+| `thoi_gian_checkin`| `DATETIME` | | `NULL` | Thời điểm quét/ghi nhận vào ca (ISO 8601) |
+| `thoi_gian_checkout`| `DATETIME` | | `NULL` | Thời điểm quét/ghi nhận kết thúc ca (ISO 8601) |
+| `gio_check_in` | `TIME` | | `NULL` | Giờ vào làm (Tương thích ngược) |
+| `gio_check_out` | `TIME` | | `NULL` | Giờ tan làm (Tương thích ngược) |
+| `trang_thai` | `VARCHAR(50)` | | `DungGio`, `DiMuon`, `VeSom`, `NghiCoPhep`, `NghiKhongPhep` | Trạng thái ca làm việc (Mặc định: `DungGio`) |
+| `phuong_thuc` | `VARCHAR(50)` | | `QR`, `The`, `Web` | Phương thức điểm danh (Mặc định: `Web`) |
+| `ghi_chu` | `VARCHAR(255)` | | `NULL` | Lý do, địa điểm công tác hoặc giải trình bổ sung |
 
 ---
 
@@ -466,6 +481,7 @@ erDiagram
 | `HO_SO_THUC_TAP` | 1 - N | `DANH_GIA` | `DANH_GIA.ma_ho_so` | Một hồ sơ có các đợt đánh giá giữa/cuối kỳ |
 | `HO_SO_THUC_TAP` | 1 - N | `CHAM_CONG` | `CHAM_CONG.ma_ho_so` | Một hồ sơ có lịch sử chấm công từng ngày |
 | `HO_SO_THUC_TAP` | 1 - N | `DON_NGHI_PHEP` | `DON_NGHI_PHEP.ma_ho_so` | Một hồ sơ nộp các đơn xin nghỉ phép |
+| `HO_SO_THUC_TAP` | 1 - N | `DON_XIN_NGHI` | `DON_XIN_NGHI.ma_ho_so` | Một hồ sơ nộp các đơn xin nghỉ phép theo đợt |
 | `HO_SO_THUC_TAP` | 1 - N | `PHU_CAP` | `PHU_CAP.ma_ho_so` | Một hồ sơ nhận phụ cấp từng tháng |
 | `HO_SO_THUC_TAP` | 1 - N | `YEU_CAU_HO_TRO` | `YEU_CAU_HO_TRO.ma_ho_so` | Một hồ sơ gửi các yêu cầu xin xác nhận |
 
@@ -487,7 +503,8 @@ erDiagram
 | **`DANH_GIA`** | Ghi nhận điểm kỹ năng, thái độ, nhận xét cuối kỳ và tỷ lệ đề xuất tuyển chính thức. | US 19, US 20, US 33 |
 | **`CHAM_CONG`** | Ghi nhận Check-in/Check-out qua Web/QR/Thẻ. | US 21, US 22, US 38 |
 | **`CA_LAM_VIEC`** | Cấu hình ca làm việc, thời gian bắt đầu, kết thúc và các ngày áp dụng. | US 21, US 22 |
-| **`DON_NGHI_PHEP`** | Tạo và quản lý yêu cầu xin nghỉ phép. | US 22, US 24 |
+| **`DON_NGHI_PHEP`** | Tạo và quản lý yêu cầu xin nghỉ phép đơn lẻ. | US 22, US 24 |
+| **`DON_XIN_NGHI`** | Tạo và quản lý yêu cầu xin nghỉ phép theo khoảng thời gian (từ ngày đến ngày). | US 22, US 24 |
 | **`PHU_CAP`** | Quản lý mức phụ cấp và lịch sử nhận tiền hàng tháng. | US 25, US 26 |
 | **`YEU_CAU_HO_TRO`** | Xử lý các xin xác nhận/chứng nhận thực tập. | US 27, US 28 |
 | **`THONG_BAO`** | Nhật ký gửi email/notification tự động đến người dùng. | US 8, US 35, US 36 |
@@ -495,20 +512,8 @@ erDiagram
 
 ---
 
-## 5. ĐỊNH HƯỚNG TÁI CẤU TRÚC (REFACTORING ROADMAP) CHO BƯỚC 2
+## 5. TIẾN ĐỘ TÁI CẤU TRÚC (REFACTORING ROADMAP) - ĐÃ HOÀN THÀNH
 
 > [!NOTE]
-> Phần ghi chú kỹ thuật này chuẩn bị cho Bước 2 (Sửa lại API GET và PUT):
-
-1. **Hiện trạng cũ (Bảng `interns`)**:
-   - Chỉ có 1 bảng đơn lẻ: `id`, `full_name`, `email`, `phone`, `university`, `major`, `status`, `start_date`, `end_date`, `created_at`.
-   - Các API `/api/interns/{id}` (GET, PUT) hiện đang thao tác trực tiếp trên bảng `interns` này.
-
-2. **Mô hình mới tương ứng**:
-   - Thông tin cá nhân (`ho_ten`, `email`, `so_dien_thoai`) thuộc về bảng **`NGUOI_DUNG`**.
-   - Trường học thuộc về bảng **`TRUONG_DAI_HOC`** (hoặc `ma_truong` trong `HO_SO_THUC_TAP`).
-   - Thời gian thực tập (`ngay_bat_dau`, `ngay_ket_thuc`) thuộc về **`CHUONG_TRINH_THUC_TAP`** hoặc kế thừa qua đợt.
-   - Trạng thái thực tập (`DangThucTap`, `HoanThanh`, `ThoiHoc`) và chuyên ngành (`chuyen_nganh`) thuộc về **`HO_SO_THUC_TAP`**.
-   - Khi thực hiện bước 2, ta sẽ xác định rõ chiến lược:
-     - **Chiến lược A (Khuyến nghị chuyển đổi toàn diện)**: Cập nhật SQLAlchemy Models theo đúng các bảng mới (`User`, `InternshipProfile`, `University`,...), đồng thời sửa API `GET /api/interns/{id}` và `PUT /api/interns/{id}` để query join `HO_SO_THUC_TAP` với `NGUOI_DUNG` và các quan hệ liên quan.
-     - **Chiến lược B (Adapter/View layer)**: Tạo DTO/Schema mapping giúp API bên ngoài giữ nguyên hợp đồng (contract) trong khi tầng database đã chuẩn hóa sang mô hình mới.
+> **Trạng thái:** ĐÃ HOÀN THÀNH (COMPLETED) trong Sprint 2.  
+> Toàn bộ hệ thống Backend, CSDL và các API (`GET`, `PUT`, `POST`) đã chuyển đổi thành công sang mô hình quan hệ 16 thực thể chuẩn hóa (`HoSoThucTap`, `NguoiDung`, `TruongDaiHoc`,...), thay thế hoàn toàn bảng đơn lẻ `interns` ban đầu. Mọi chức năng hiện tại đều hoạt động đồng bộ với 100% test cases tự động (269/269 unit tests PASS).
