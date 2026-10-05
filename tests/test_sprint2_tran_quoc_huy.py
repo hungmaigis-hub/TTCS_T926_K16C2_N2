@@ -117,7 +117,7 @@ class TestTC01_UpdateInternProfile:
 
 
 # ==============================================================
-# TC-05 | Dòng 3 (Product Backlog)
+# TC-05 | Dòng 5 (Product Backlog)
 # User Story: Là HR, tôi muốn xem và duyệt tài liệu của thực tập sinh
 #             để xác thực hồ sơ.
 # Nhiệm vụ:   Tester: Kiểm thử xem trước tài liệu, kiểm tra cập nhật
@@ -183,7 +183,7 @@ class TestTC05_ReviewDocumentsAndBadge:
 
 
 # ==============================================================
-# TC-08 | Dòng 7 (Product Backlog)
+# TC-08 | Dòng 8 (Product Backlog)
 # User Story: Là hệ thống, tôi muốn gửi email thông báo kết quả xét duyệt
 #             để thực tập sinh nhận được thông tin kịp thời.
 # Nhiệm vụ:   Tester: Kiểm thử nhận mail trên hòm thư thực tế,
@@ -226,7 +226,7 @@ class TestTC08_EmailNotification:
 
 
 # ==============================================================
-# TC-12 | Dòng 10 (Product Backlog)
+# TC-12 | Dòng 12 (Product Backlog)
 # User Story: Là HR, tôi muốn tạo chương trình thực tập theo phòng ban
 #             để tổ chức kế hoạch.
 # Nhiệm vụ:   Tester: Viết test case tạo chương trình: kiểm tra khóa
@@ -290,7 +290,7 @@ class TestTC12_CreateInternshipProgram:
 
 
 # ==============================================================
-# TC-14 | Dòng 13 (Product Backlog)
+# TC-14 | Dòng 14 (Product Backlog)
 # User Story: Là thực tập sinh, tôi muốn xem lịch thực tập cá nhân
 #             để biết kế hoạch.
 # Nhiệm vụ:   Tester: Kiểm thử hiển thị đúng lịch theo tài khoản
@@ -327,7 +327,7 @@ class TestTC14_MySchedule:
 
 
 # ==============================================================
-# TC-18 | Dòng 16 (Product Backlog)
+# TC-18 | Dòng 18 (Product Backlog)
 # User Story: Là thực tập sinh, tôi muốn nộp báo cáo tuần
 #             để báo cáo kết quả thực tập.
 # Nhiệm vụ:   Tester: Viết test case nộp báo cáo: kiểm tra các trường
@@ -396,7 +396,7 @@ class TestTC18_SubmitWeeklyReport:
 
 
 # ==============================================================
-# TC-21 | Dòng 19 (Product Backlog)
+# TC-21 | Dòng 21 (Product Backlog)
 # User Story: Là HR, tôi muốn tổng hợp đánh giá thành báo cáo cuối kỳ
 #             để gửi cho trường/ban lãnh đạo.
 # Nhiệm vụ:   Tester: Kiểm thử tính chính xác của dữ liệu tổng hợp
@@ -441,7 +441,7 @@ class TestTC21_EvaluationSummaryAndExport:
 
 
 # ==============================================================
-# TC-24 | Dòng 23 (Product Backlog)
+# TC-24 | Dòng 24 (Product Backlog)
 # User Story: Là HR, tôi muốn xem báo cáo đi làm và nghỉ phép
 #             để quản lý sự chuyên cần.
 # Nhiệm vụ:   Tester: Kiểm thử báo cáo chuyên cần: kiểm tra tính chính xác
