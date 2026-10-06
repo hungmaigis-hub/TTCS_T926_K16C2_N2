@@ -1010,6 +1010,47 @@ class ScheduleCreateResponse(BaseModel):
     data: Optional[ScheduleData] = None
 
 
+# ==============================================================
+# SCHEMAS CHO PHỤ CẤP THỰC TẬP SINH (ALLOWANCES API)
+# ==============================================================
+
+class AllowanceItem(BaseModel):
+    """Thông tin chi tiết một khoản phụ cấp"""
+    ma_phu_cap: int
+    ma_ho_so: int
+    thang_nam: str
+    so_tien: float
+    trang_thai_chi_tra: str
+
+
+class AllowanceSummary(BaseModel):
+    """Tổng hợp tài chính phụ cấp"""
+    tong_tien_da_nhan: float
+    tong_tien_cho_giai_ngan: float
+    tong_tien_phu_cap: float
+    so_khoan_da_nhan: int
+    so_khoan_cho_giai_ngan: int
+
+
+class AllowanceDetailData(BaseModel):
+    """Dữ liệu chi tiết danh sách phụ cấp trả về cho Client"""
+    ma_ho_so: int
+    ho_ten: Optional[str] = None
+    email: Optional[str] = None
+    summary: AllowanceSummary
+    danh_sach_phu_cap: List[AllowanceItem]
+    cac_khoan_da_nhan: List[AllowanceItem]
+    cac_khoan_cho_giai_ngan: List[AllowanceItem]
+
+
+class AllowanceResponse(BaseModel):
+    """Response chuẩn trả về khi truy vấn danh sách phụ cấp thành công (HTTP 200)"""
+    status_code: int = 200
+    message: str = "Lấy danh sách phụ cấp thành công"
+    data: Optional[AllowanceDetailData] = None
+
+
+
 
 
 
