@@ -2,13 +2,14 @@
 =============================================================
 AUTOMATION TEST - SPRINT 2 - LÊ QUANG HƯNG
 =============================================================
-Bao gồm test key:
-  Dòng 3  - TC-03: Lọc/tìm kiếm thực tập sinh theo nhiều tiêu chí
-  Dòng 6  - TC-06: Phê duyệt / từ chối hồ sơ (gửi email thông báo)
-  Dòng 11 - TC-11: Upload file hợp đồng / tài liệu, kiểm tra FK ma_ho_so
-  Dòng 17 - TC-17: Xác nhận ký hợp đồng điện tử
-  Dòng 22 - TC-22: Phân công nhiệm vụ cho thực tập sinh
-  Dòng 30 - TC-30: Mentor nộp / xem báo cáo tuần
+Bao gồm các Test Key tương ứng với nhiệm vụ trên Sprint 2 Backlog:
+  - TC-03 (Dòng 3) : Lọc/tìm kiếm thực tập sinh theo nhiều tiêu chí
+  - TC-06 (Dòng 6) : Đăng ký nộp hồ sơ & Phê duyệt/từ chối hồ sơ
+  - TC-11 (Dòng 11): Upload file hợp đồng / tài liệu, kiểm tra FK ma_ho_so
+  - TC-17 (Dòng 17): Xác nhận hợp đồng điện tử & kích hoạt trạng thái
+  - TC-22 (Dòng 22): Phân công nhiệm vụ cho thực tập sinh & tiến độ
+  - TC-30 (Dòng 30): Nộp, xem và quản lý báo cáo tuần thực tập sinh
+  - TC-45 (Dòng 45): Thiết lập ca làm việc linh hoạt (Validate giờ kết thúc > bắt đầu)
 
 Cách chạy:
   pip install pytest requests
@@ -19,6 +20,7 @@ Cách chạy:
 import pytest
 import requests
 import io
+import uuid
 
 BASE_URL = "http://localhost:8000"
 EXISTING_HO_SO_ID = 1
@@ -34,7 +36,7 @@ EXISTING_HOP_DONG_ID = 1
 class TestTC03_FilterInterns:
 
     def test_03_1_get_all_interns_no_filter(self):
-        """Lấy toàn bộ danh sách, không có filter → status 200"""
+        """Lấy toàn bộ danh sách, không có filter -> status 200"""
         r = requests.get(f"{BASE_URL}/api/v1/interns")
         assert r.status_code == 200
         body = r.json()
@@ -74,7 +76,7 @@ class TestTC03_FilterInterns:
             assert item["trang_thai_thuc_tap"] == "DangThucTap"
 
     def test_03_6_filter_gia_tri_khong_ton_tai_tra_rong(self):
-        """Lọc với giá trị không tồn tại → danh sách rỗng (không lỗi 500)"""
+        """Lọc với giá trị không tồn tại -> danh sách rỗng (không lỗi 500)"""
         r = requests.get(f"{BASE_URL}/api/v1/interns", params={"trang_thai_xet_duyet": "KHONG_TON_TAI"})
         assert r.status_code == 200
         assert r.json()["data"] == []
@@ -82,37 +84,44 @@ class TestTC03_FilterInterns:
 
 # ==============================================================
 # TC-06 | Dòng 6
-# User Story: Là HR, tôi muốn phê duyệt / từ chối hồ sơ
-#             và gửi email thông báo cho thực tập sinh
+# User Story: Kiểm thử đăng ký nộp hồ sơ & Phê duyệt / từ chối hồ sơ
 # ==============================================================
 
-class TestTC06_ApprovalStatus:
+class TestTC06_ApprovalAndRegister:
 
     def test_06_1_duyet_ho_so_thanh_cong(self):
-        """Duyệt hồ sơ hợp lệ → 200, trang_thai = DaDuyet"""
+        """Duyệt hồ sơ hợp lệ -> 200, trang_thai = DaDuyet"""
         r = requests.patch(f"{BASE_URL}/api/v1/interns/{EXISTING_HO_SO_ID}/approval",
             json={"trang_thai_xet_duyet": "DaDuyet", "ghi_chu": "Hồ sơ đầy đủ"})
         assert r.status_code == 200
         assert r.json()["data"]["trang_thai_xet_duyet"] == "DaDuyet"
 
     def test_06_2_tu_choi_ho_so(self):
-        """Từ chối hồ sơ → 200, trang_thai = TuChoi"""
+        """Từ chối hồ sơ -> 200, trang_thai = TuChoi"""
         r = requests.patch(f"{BASE_URL}/api/v1/interns/{EXISTING_HO_SO_ID}/approval",
             json={"trang_thai_xet_duyet": "TuChoi", "ghi_chu": "Thiếu giấy tờ"})
         assert r.status_code == 200
         assert r.json()["data"]["trang_thai_xet_duyet"] == "TuChoi"
 
     def test_06_3_id_khong_ton_tai_tra_ve_404(self):
-        """ID hồ sơ không tồn tại → 404"""
+        """ID hồ sơ không tồn tại -> 404"""
         r = requests.patch(f"{BASE_URL}/api/v1/interns/999999/approval",
             json={"trang_thai_xet_duyet": "DaDuyet"})
         assert r.status_code == 404
 
     def test_06_4_trang_thai_khong_hop_le_tra_ve_422(self):
-        """Trạng thái không hợp lệ → 400 hoặc 422"""
+        """Trạng thái không hợp lệ -> 400 hoặc 422"""
         r = requests.patch(f"{BASE_URL}/api/v1/interns/{EXISTING_HO_SO_ID}/approval",
             json={"trang_thai_xet_duyet": "INVALID_STATUS"})
         assert r.status_code in (400, 422)
+
+    def test_06_5_dang_ky_thieu_mat_khau_tra_422(self):
+        """Kiểm thử đăng ký thiếu mật khẩu -> 422"""
+        r = requests.post(f"{BASE_URL}/api/v1/auth/register", json={
+            "ho_ten": "Nguyen Van Test",
+            "email": f"test_{uuid.uuid4().hex[:6]}@example.com"
+        })
+        assert r.status_code == 422
 
 
 # ==============================================================
@@ -124,33 +133,33 @@ class TestTC06_ApprovalStatus:
 class TestTC11_UploadDocument:
 
     def test_11_1_upload_pdf_hop_le(self):
-        """Upload PDF hợp lệ → 201 Created"""
+        """Upload PDF hợp lệ -> 201 Created"""
         files = {"file": ("hop_dong.pdf", io.BytesIO(b"%PDF fake content"), "application/pdf")}
         data = {"ma_ho_so": EXISTING_HO_SO_ID, "loai_tai_lieu": "HopDong"}
         r = requests.post(f"{BASE_URL}/api/v1/documents/upload", files=files, data=data)
         assert r.status_code == 201
 
     def test_11_2_ma_ho_so_khong_ton_tai_tra_404(self):
-        """Upload với ma_ho_so không tồn tại → 404 (FK fail)"""
+        """Upload với ma_ho_so không tồn tại -> 404 (FK fail)"""
         files = {"file": ("test.pdf", io.BytesIO(b"%PDF fake"), "application/pdf")}
         data = {"ma_ho_so": 999999, "loai_tai_lieu": "HopDong"}
         r = requests.post(f"{BASE_URL}/api/v1/documents/upload", files=files, data=data)
         assert r.status_code == 404
 
     def test_11_3_dinh_dang_khong_cho_phep_tra_400(self):
-        """Upload file .exe → 400 (định dạng không hỗ trợ)"""
+        """Upload file .exe -> 400 (định dạng không hỗ trợ)"""
         files = {"file": ("virus.exe", io.BytesIO(b"MZ fake exe"), "application/octet-stream")}
         data = {"ma_ho_so": EXISTING_HO_SO_ID, "loai_tai_lieu": "HopDong"}
         r = requests.post(f"{BASE_URL}/api/v1/documents/upload", files=files, data=data)
         assert r.status_code == 400
 
     def test_11_4_lay_danh_sach_tai_lieu_cua_ho_so(self):
-        """Lấy danh sách tài liệu của hồ sơ → 200"""
+        """Lấy danh sách tài liệu của hồ sơ -> 200"""
         r = requests.get(f"{BASE_URL}/api/v1/documents/{EXISTING_HO_SO_ID}")
         assert r.status_code == 200
 
     def test_11_5_cap_nhat_trang_thai_tai_lieu(self):
-        """Cập nhật trạng thái tài liệu → 200"""
+        """Cập nhật trạng thái tài liệu -> 200"""
         r = requests.get(f"{BASE_URL}/api/v1/documents/{EXISTING_HO_SO_ID}")
         docs = r.json()
         items = docs if isinstance(docs, list) else docs.get("data", [])
@@ -158,32 +167,32 @@ class TestTC11_UploadDocument:
             pytest.skip("Không có tài liệu để test")
         doc_id = items[0].get("ma_tai_lieu") or items[0].get("id")
         r2 = requests.patch(f"{BASE_URL}/api/v1/documents/{doc_id}/status",
-            json={"trang_thai_duyet": "DaDuyet"})  # field đúng: trang_thai_duyet
+            json={"trang_thai_duyet": "DaDuyet"})
         assert r2.status_code == 200
 
 
 # ==============================================================
 # TC-17 | Dòng 17
 # User Story: Là HR/thực tập sinh, xác nhận ký hợp đồng điện tử
-#             → kích hoạt trạng thái DangThucTap
+#             -> kích hoạt trạng thái DangThucTap
 # ==============================================================
 
 class TestTC17_ConfirmContract:
 
     def test_17_1_xac_nhan_hop_dong_thanh_cong(self):
-        """Xác nhận hợp đồng → 200, trang_thai = DaXacNhan"""
+        """Xác nhận hợp đồng -> 200, trang_thai = DaXacNhan"""
         r = requests.patch(f"{BASE_URL}/api/v1/contracts/{EXISTING_HOP_DONG_ID}/confirm",
             json={"trang_thai": "DaXacNhan", "ngay_ky": "2026-10-01"})
         assert r.status_code == 200
         assert r.json()["data"]["trang_thai"] == "DaXacNhan"
 
     def test_17_2_id_khong_ton_tai_tra_404(self):
-        """ID hợp đồng không tồn tại → 404"""
+        """ID hợp đồng không tồn tại -> 404"""
         r = requests.patch(f"{BASE_URL}/api/v1/contracts/999999/confirm", json={})
         assert r.status_code == 404
 
     def test_17_3_body_rong_dung_gia_tri_mac_dinh(self):
-        """Không gửi body → dùng giá trị mặc định (DaXacNhan + ngày hôm nay)"""
+        """Không gửi body -> dùng giá trị mặc định (DaXacNhan + ngày hôm nay)"""
         r = requests.patch(f"{BASE_URL}/api/v1/contracts/{EXISTING_HOP_DONG_ID}/confirm", json={})
         assert r.status_code == 200
 
@@ -207,18 +216,18 @@ class TestTC17_ConfirmContract:
 class TestTC22_AssignTask:
 
     def test_22_1_tao_nhiem_vu_hop_le(self):
-        """Tạo nhiệm vụ hợp lệ → 201 Created"""
+        """Tạo nhiệm vụ hợp lệ -> 201 Created"""
         r = requests.post(f"{BASE_URL}/api/v1/tasks", json={
             "ma_ho_so": EXISTING_HO_SO_ID,
-            "tieu_de": "Hoàn thành module login",  # field đúng: tieu_de
+            "tieu_de": "Hoàn thành module login",
             "mo_ta": "Xây dựng form đăng nhập + JWT",
-            "han_hoan_thanh": "2026-12-01",        # field đúng: han_hoan_thanh
+            "han_hoan_thanh": "2026-12-01",
             "trang_thai": "Chưa bắt đầu"
         })
         assert r.status_code == 201
 
     def test_22_2_ma_ho_so_khong_ton_tai_tra_loi(self):
-        """ma_ho_so không tồn tại → 404"""
+        """ma_ho_so không tồn tại -> 404"""
         r = requests.post(f"{BASE_URL}/api/v1/tasks", json={
             "ma_ho_so": 999999,
             "tieu_de": "Task test",
@@ -229,7 +238,7 @@ class TestTC22_AssignTask:
         assert r.status_code == 404
 
     def test_22_3_thieu_truong_bat_buoc_tra_422(self):
-        """Thiếu tieu_de (bắt buộc) → 422"""
+        """Thiếu tieu_de (bắt buộc) -> 422"""
         r = requests.post(f"{BASE_URL}/api/v1/tasks", json={
             "ma_ho_so": EXISTING_HO_SO_ID,
             "mo_ta": "Không có tiêu đề"
@@ -237,7 +246,7 @@ class TestTC22_AssignTask:
         assert r.status_code == 422
 
     def test_22_4_cap_nhat_tien_do_nhiem_vu(self):
-        """Cập nhật tiến độ nhiệm vụ → 200"""
+        """Cập nhật tiến độ nhiệm vụ -> 200"""
         r_create = requests.post(f"{BASE_URL}/api/v1/tasks", json={
             "ma_ho_so": EXISTING_HO_SO_ID,
             "tieu_de": "Task for progress update",
@@ -252,7 +261,7 @@ class TestTC22_AssignTask:
         if not task_id:
             pytest.skip("Không lấy được ma_nhiem_vu")
         r_upd = requests.patch(f"{BASE_URL}/api/v1/tasks/{task_id}/progress",
-            json={"tien_do_phantram": 50})  # field đúng: tien_do_phantram (0-100%)
+            json={"tien_do_phantram": 50})
         assert r_upd.status_code == 200
 
 
@@ -264,7 +273,7 @@ class TestTC22_AssignTask:
 class TestTC30_WeeklyReport:
 
     def test_30_1_nop_bao_cao_tuan_hop_le(self):
-        """Nộp báo cáo tuần hợp lệ → 201 Created"""
+        """Nộp báo cáo tuần hợp lệ -> 201 Created"""
         r = requests.post(f"{BASE_URL}/api/v1/reports", json={
             "ma_ho_so": EXISTING_HO_SO_ID,
             "tuan_so": 1,
@@ -275,7 +284,7 @@ class TestTC30_WeeklyReport:
         assert r.json().get("status_code") == 201
 
     def test_30_2_ma_ho_so_khong_ton_tai_tra_404(self):
-        """ma_ho_so không tồn tại → 404"""
+        """ma_ho_so không tồn tại -> 404"""
         r = requests.post(f"{BASE_URL}/api/v1/reports", json={
             "ma_ho_so": 999999, "tuan_so": 1,
             "noi_dung_cong_viec": "Test", "ket_qua_dat_duoc": "Test"
@@ -283,7 +292,7 @@ class TestTC30_WeeklyReport:
         assert r.status_code == 404
 
     def test_30_3_nhiem_vu_khong_thuoc_ho_so_tra_400(self):
-        """ma_nhiem_vu không thuộc hồ sơ → 400"""
+        """ma_nhiem_vu không thuộc hồ sơ -> 400 hoặc 404"""
         r = requests.post(f"{BASE_URL}/api/v1/reports", json={
             "ma_ho_so": EXISTING_HO_SO_ID,
             "ma_nhiem_vu": 999999,
@@ -293,7 +302,7 @@ class TestTC30_WeeklyReport:
         assert r.status_code in (400, 404)
 
     def test_30_4_thieu_truong_bat_buoc_tra_422(self):
-        """Thiếu noi_dung_cong_viec → 422"""
+        """Thiếu noi_dung_cong_viec -> 422"""
         r = requests.post(f"{BASE_URL}/api/v1/reports", json={
             "ma_ho_so": EXISTING_HO_SO_ID, "tuan_so": 3
         })
@@ -309,3 +318,56 @@ class TestTC30_WeeklyReport:
         })
         assert r.status_code == 201
         assert r.json()["data"]["thoi_gian_nop"] is not None
+
+
+# ==============================================================
+# TC-45 | Dòng 45 (Nhiệm vụ mới gán cho Lê Quang Hưng)
+# User Story: Là HR, tôi muốn thiết lập lịch làm việc linh hoạt
+#             để phù hợp với từng nhóm (Validation gio_ket_thuc > gio_bat_dau)
+# ==============================================================
+
+class TestTC45_WorkShiftSchedule:
+
+    def test_45_1_tao_ca_lam_viec_hop_le(self):
+        """Tạo ca làm việc hợp lệ (gio_ket_thuc > gio_bat_dau) -> 201 Created"""
+        r = requests.post(f"{BASE_URL}/api/v1/schedules", json={
+            "ten_ca": f"Ca Sáng Tự Động {uuid.uuid4().hex[:4]}",
+            "gio_bat_dau": "08:00:00",
+            "gio_ket_thuc": "17:00:00",
+            "cac_ngay_trong_tuan": ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"],
+            "ghi_chu": "Ca làm việc chuẩn hành chính"
+        })
+        assert r.status_code == 201
+        body = r.json()
+        assert body["status_code"] == 201
+        assert "ma_ca" in body["data"]
+
+    def test_45_2_gio_ket_thuc_nho_hon_gio_bat_dau_tra_422(self):
+        """Nhập giờ kết thúc (07:00) nhỏ hơn giờ bắt đầu (08:00) -> 422 Validation Error"""
+        r = requests.post(f"{BASE_URL}/api/v1/schedules", json={
+            "ten_ca": "Ca Lỗi Thời Gian",
+            "gio_bat_dau": "08:00:00",
+            "gio_ket_thuc": "07:00:00",
+            "cac_ngay_trong_tuan": ["Thứ 2", "Thứ 3"]
+        })
+        assert r.status_code == 422
+
+    def test_45_3_gio_ket_thuc_bang_gio_bat_dau_tra_422(self):
+        """Nhập giờ kết thúc bằng giờ bắt đầu (08:00) -> 422 Validation Error"""
+        r = requests.post(f"{BASE_URL}/api/v1/schedules", json={
+            "ten_ca": "Ca Bằng Giờ",
+            "gio_bat_dau": "08:00:00",
+            "gio_ket_thuc": "08:00:00",
+            "cac_ngay_trong_tuan": ["Thứ 2"]
+        })
+        assert r.status_code == 422
+
+    def test_45_4_ten_ca_de_trong_tra_422(self):
+        """Bỏ trống tên ca làm việc -> 422 Validation Error"""
+        r = requests.post(f"{BASE_URL}/api/v1/schedules", json={
+            "ten_ca": "   ",
+            "gio_bat_dau": "08:00:00",
+            "gio_ket_thuc": "12:00:00",
+            "cac_ngay_trong_tuan": ["Thứ 2"]
+        })
+        assert r.status_code == 422
