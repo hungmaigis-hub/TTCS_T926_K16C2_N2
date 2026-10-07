@@ -55,6 +55,10 @@ from schemas import (
     LeaveRequestItemData,
     ScheduleCreate,
     ScheduleCreateResponse,
+    AllowanceItem,
+    AllowanceSummary,
+    AllowanceDetailData,
+    AllowanceResponse,
 )
 from security import get_password_hash, verify_password
 
@@ -75,6 +79,7 @@ from database.models import (
     DonNghiPhep,
     DonXinNghi,
     CaLamViec,
+    PhuCap,
 )
 
 from services.export_service import export_evaluations_to_excel, export_evaluations_to_pdf
@@ -392,6 +397,81 @@ def update_intern_approval_status(
         "message": "Cập nhật trạng thái xét duyệt hồ sơ thành công",
         "data": ho_so.to_dict()
     }
+
+
+# ==============================================================
+# API TRUY VẤN DANH SÁCH VÀ TÍNH TOÁN PHỤ CẤP THỰC TẬP SINH
+# ==============================================================
+
+@app.get("/api/v1/interns/{id}/allowances", response_model=AllowanceResponse)
+def get_intern_allowances(id: int, db: Session = Depends(get_db)):
+    """
+    Truy vấn danh sách các khoản phụ cấp đã được phê duyệt từ bảng phu_cap theo ma_ho_so (id).
+    Tự động tính toán tổng số tiền phụ cấp đã nhận (DaChiTra) và các khoản đang chờ giải ngân (ChuaChiTra)
+    trả về cho Client.
+    """
+    # 1. Kiểm tra hồ sơ thực tập sinh có tồn tại trong hệ thống không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == id).first()
+    if not ho_so:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy thực tập sinh ID: {id}")
+
+    # 2. Truy vấn danh sách các khoản phụ cấp của thực tập sinh
+    allowances = (
+        db.query(PhuCap)
+        .filter(PhuCap.ma_ho_so == id)
+        .order_by(PhuCap.thang_nam.desc(), PhuCap.ma_phu_cap.desc())
+        .all()
+    )
+
+    # 3. Phân loại và tự động tính toán tổng tiền
+    tong_tien_da_nhan = 0.0
+    tong_tien_cho_giai_ngan = 0.0
+    danh_sach_phu_cap = []
+    cac_khoan_da_nhan = []
+    cac_khoan_cho_giai_ngan = []
+
+    for item in allowances:
+        so_tien_val = float(item.so_tien or 0.0)
+        item_schema = AllowanceItem(
+            ma_phu_cap=item.ma_phu_cap,
+            ma_ho_so=item.ma_ho_so,
+            thang_nam=item.thang_nam,
+            so_tien=so_tien_val,
+            trang_thai_chi_tra=item.trang_thai_chi_tra,
+        )
+        danh_sach_phu_cap.append(item_schema)
+
+        if item.trang_thai_chi_tra == "DaChiTra":
+            tong_tien_da_nhan += so_tien_val
+            cac_khoan_da_nhan.append(item_schema)
+        else:
+            tong_tien_cho_giai_ngan += so_tien_val
+            cac_khoan_cho_giai_ngan.append(item_schema)
+
+    tong_tien_phu_cap = tong_tien_da_nhan + tong_tien_cho_giai_ngan
+
+    summary = AllowanceSummary(
+        tong_tien_da_nhan=round(tong_tien_da_nhan, 2),
+        tong_tien_cho_giai_ngan=round(tong_tien_cho_giai_ngan, 2),
+        tong_tien_phu_cap=round(tong_tien_phu_cap, 2),
+        so_khoan_da_nhan=len(cac_khoan_da_nhan),
+        so_khoan_cho_giai_ngan=len(cac_khoan_cho_giai_ngan),
+    )
+
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách phụ cấp thực tập sinh thành công",
+        "data": {
+            "ma_ho_so": ho_so.ma_ho_so,
+            "ho_ten": ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None,
+            "email": ho_so.thuc_tap_sinh.email if ho_so.thuc_tap_sinh else None,
+            "summary": summary,
+            "danh_sach_phu_cap": danh_sach_phu_cap,
+            "cac_khoan_da_nhan": cac_khoan_da_nhan,
+            "cac_khoan_cho_giai_ngan": cac_khoan_cho_giai_ngan,
+        }
+    }
+
 
 
 # api patch confirm contract

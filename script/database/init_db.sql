@@ -297,5 +297,15 @@ VALUES
 (3, 'Ca Hành Chính', '08:00:00', '17:30:00', 'Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6', 'Ca làm việc cả ngày', 'HoatDong')
 ON DUPLICATE KEY UPDATE ten_ca = VALUES(ten_ca), gio_bat_dau = VALUES(gio_bat_dau), gio_ket_thuc = VALUES(gio_ket_thuc);
 
+INSERT INTO phu_cap (ma_phu_cap, ma_ho_so, thang_nam, so_tien, trang_thai_chi_tra)
+VALUES
+(1, 1, '2026-09', 3000000.00, 'DaChiTra'),
+(2, 1, '2026-10', 3000000.00, 'DaChiTra'),
+(3, 1, '2026-11', 3500000.00, 'ChuaChiTra'),
+(4, 2, '2026-09', 2500000.00, 'DaChiTra'),
+(5, 2, '2026-10', 2500000.00, 'ChuaChiTra')
+ON DUPLICATE KEY UPDATE so_tien = VALUES(so_tien), trang_thai_chi_tra = VALUES(trang_thai_chi_tra);
+
+
 
 

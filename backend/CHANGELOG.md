@@ -4,6 +4,30 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.20.0] - 2026-10-06
+
+### Đã hoàn thành (Added & Enhanced)
+- **Thiết kế Model Phụ Cấp Thực Tập Sinh (`PhuCap`)**:
+  - Tạo mới ORM model [phu_cap.py](file:///d:/clone/ttcs/backend/database/models/phu_cap.py) ánh xạ bảng `phu_cap` với các trường: `ma_phu_cap` (PK), `ma_ho_so` (FK), `thang_nam` (`YYYY-MM`), `so_tien` (`Numeric(12, 2)`), `trang_thai_chi_tra` (`DaChiTra`, `ChuaChiTra`).
+  - Thiết lập quan hệ hai chiều `ho_so` và `danh_sach_phu_cap` với model [ho_so.py](file:///d:/clone/ttcs/backend/database/models/ho_so.py).
+  - Export tại [database/models/__init__.py](file:///d:/clone/ttcs/backend/database/models/__init__.py).
+- **Pydantic Schemas (`AllowanceItem`, `AllowanceSummary`, `AllowanceDetailData`, `AllowanceResponse`)**:
+  - Khai báo các schema tại [schemas.py](file:///d:/clone/ttcs/backend/schemas.py) chuẩn hóa dữ liệu tài chính cho Client.
+  - Cung cấp khối `summary` tự động thống kê tổng tiền đã nhận (`tong_tien_da_nhan`), tổng tiền đang chờ giải ngân (`tong_tien_cho_giai_ngan`), tổng toàn bộ (`tong_tien_phu_cap`) và số lượng khoản của mỗi loại.
+- **Endpoint Truy Vấn Danh Sách Phụ Cấp (`GET /api/v1/interns/{id}/allowances`)**:
+  - Thêm route tại [main.py](file:///d:/clone/ttcs/backend/main.py) truy vấn danh sách phụ cấp theo `ma_ho_so` (`id`).
+  - Tự động kiểm tra tính tồn tại của hồ sơ thực tập sinh (`HTTP 404 Not Found` nếu không tìm thấy).
+  - Tự động tính toán tổng số tiền đã nhận và các khoản đang chờ giải ngân trả về cho Client theo thứ tự tháng giảm dần.
+- **Đồng bộ Cơ sở dữ liệu & Seed Data**:
+  - Bổ sung lệnh INSERT dữ liệu mẫu cho bảng `phu_cap` vào [init_db.sql](file:///d:/clone/ttcs/script/database/init_db.sql).
+  - Nạp thành công CSDL MySQL thực tế thông qua `script/init_db.py`.
+  - Cập nhật hàm `reseed_sqlite_db()` trong [conftest.py](file:///d:/clone/ttcs/backend/tests/conftest.py).
+- **Kiểm thử tự động (Unit Test & Regression Test)**:
+  - Tạo mới bộ test [tests/test_intern_allowances.py](file:///d:/clone/ttcs/backend/tests/test_intern_allowances.py) với 5 test cases kiểm tra tính toán tổng tiền, danh sách rỗng, 404 not found, 422 validation -> **5/5 PASS 100%**.
+  - Kiểm tra hồi quy với các test cases liên quan -> **PASS 100%**.
+
+---
+
 ## [1.19.0] - 2026-10-03
 
 ### Đã hoàn thành (Added & Enhanced)
