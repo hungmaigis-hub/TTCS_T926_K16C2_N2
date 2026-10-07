@@ -1050,6 +1050,70 @@ class AllowanceResponse(BaseModel):
     data: Optional[AllowanceDetailData] = None
 
 
+# ==============================================================
+# SCHEMAS CHO QUẢN LÝ NGƯỜI HƯỚNG DẪN (MENTOR API)
+# ==============================================================
+
+class MentorCreate(BaseModel):
+    ho_ten: str = Field(..., min_length=1, max_length=100)
+    email: str = Field(..., min_length=1, max_length=100)
+    mat_khau: str = Field(..., min_length=6, max_length=100)
+    so_dien_thoai: Optional[str] = Field(default=None)
+    ma_phong_ban: Optional[int] = Field(default=None)
+
+    @field_validator('ho_ten')
+    def validate_ho_ten(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Họ tên không được để trống hoặc chỉ chứa khoảng trắng")
+        if not re.match(r"^[a-zA-Z\s\u00C0-\u1EF9]+$", cleaned):
+            raise ValueError("Họ tên không hợp lệ (chỉ được chứa chữ cái)")
+        return cleaned
+
+    @field_validator('email')
+    def validate_email(cls, value: str):
+        cleaned = value.strip().lower()
+        if not cleaned:
+            raise ValueError("Email không được để trống hoặc chỉ chứa khoảng trắng")
+        if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", cleaned):
+            raise ValueError("Email không đúng định dạng hợp lệ")
+        return cleaned
+
+    @field_validator('mat_khau')
+    def validate_mat_khau(cls, value: str):
+        cleaned = value.strip()
+        if len(cleaned) < 6:
+            raise ValueError("Mật khẩu phải chứa ít nhất 6 ký tự")
+        return cleaned
+
+    @field_validator('so_dien_thoai')
+    def validate_so_dien_thoai(cls, value: Optional[str]):
+        if not value or not value.strip():
+            return None
+        cleaned = value.strip()
+        if not re.match(r"^(0|\+84)[0-9]{9}$|^[0-9]{10}$", cleaned):
+            raise ValueError("Số điện thoại không hợp lệ (phải gồm 10 chữ số)")
+        return cleaned
+
+
+class MentorItemData(BaseModel):
+    ma_nguoi_dung: int
+    ho_ten: str
+    email: str
+    so_dien_thoai: Optional[str] = None
+    ma_phong_ban: Optional[int] = None
+    ten_phong_ban: Optional[str] = None
+    vai_tro: str = "Mentor"
+    trang_thai: str = "HoatDong"
+
+
+class MentorResponse(BaseModel):
+    status_code: int = 201
+    message: str = "Tạo tài khoản người hướng dẫn thành công"
+    data: MentorItemData
+
+
+
 
 
 

@@ -59,6 +59,8 @@ from schemas import (
     AllowanceSummary,
     AllowanceDetailData,
     AllowanceResponse,
+    MentorCreate,
+    MentorResponse,
 )
 from security import get_password_hash, verify_password
 
@@ -1890,6 +1892,74 @@ def create_schedule(
         "message": "Tạo ca làm việc thành công",
         "data": new_schedule.to_dict()
     }
+
+
+# ==============================================================
+# API QUẢN LÝ NGƯỜI HƯỚNG DẪN (MENTOR API)
+# ==============================================================
+
+@app.post("/api/v1/mentors", status_code=201, response_model=MentorResponse)
+def create_mentor(
+    data: MentorCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Tiếp nhận thông tin người hướng dẫn, tạo tài khoản mới vào bảng nguoi_dung với vai_tro = 'Mentor'.
+    """
+    email_normalized = data.email.strip().lower()
+
+    # Kiểm tra trùng email
+    existing_email = db.query(NguoiDung).filter(NguoiDung.email == email_normalized).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email này đã được sử dụng trong hệ thống")
+
+    # Kiểm tra trùng số điện thoại
+    phone_normalized = None
+    if data.so_dien_thoai:
+        phone_normalized = data.so_dien_thoai.strip()
+        existing_phone = db.query(NguoiDung).filter(NguoiDung.so_dien_thoai == phone_normalized).first()
+        if existing_phone:
+            raise HTTPException(status_code=400, detail="Số điện thoại này đã được sử dụng trong hệ thống")
+
+    # Kiểm tra phòng ban
+    department = None
+    if data.ma_phong_ban is not None:
+        department = db.query(PhongBan).filter(PhongBan.ma_phong_ban == data.ma_phong_ban).first()
+        if not department:
+            raise HTTPException(status_code=400, detail="Mã phòng ban không tồn tại trong hệ thống")
+
+    # Băm mật khẩu bằng bcrypt
+    hashed_password = get_password_hash(data.mat_khau)
+
+    new_mentor = NguoiDung(
+        ho_ten=data.ho_ten.strip(),
+        email=email_normalized,
+        mat_khau_hash=hashed_password,
+        so_dien_thoai=phone_normalized,
+        ma_phong_ban=data.ma_phong_ban,
+        vai_tro="Mentor",
+        trang_thai="HoatDong"
+    )
+
+    db.add(new_mentor)
+    db.commit()
+    db.refresh(new_mentor)
+
+    return {
+        "status_code": 201,
+        "message": "Tạo tài khoản người hướng dẫn thành công",
+        "data": {
+            "ma_nguoi_dung": new_mentor.ma_nguoi_dung,
+            "ho_ten": new_mentor.ho_ten,
+            "email": new_mentor.email,
+            "so_dien_thoai": new_mentor.so_dien_thoai,
+            "ma_phong_ban": new_mentor.ma_phong_ban,
+            "ten_phong_ban": department.ten_phong_ban if department else None,
+            "vai_tro": new_mentor.vai_tro,
+            "trang_thai": new_mentor.trang_thai
+        }
+    }
+
 
 
 
