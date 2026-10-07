@@ -4,6 +4,24 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.21.0] - 2026-10-07
+
+### Đã hoàn thành (Added & Enhanced)
+- **Pydantic Schemas (`MentorCreate`, `MentorItemData`, `MentorResponse`)**:
+  - Khai báo schema tại [schemas.py](file:///d:/clone/ttcs/backend/schemas.py).
+  - Tự động validate họ tên, chuẩn hóa email, ràng buộc mật khẩu (tối thiểu 6 ký tự), kiểm tra định dạng số điện thoại Việt Nam và hỗ trợ mã phòng ban.
+- **Endpoint Tạo Tài Khoản Người Hướng Dẫn (`POST /api/v1/mentors`)**:
+  - Thêm route tại [main.py](file:///d:/clone/ttcs/backend/main.py) tiếp nhận thông tin người hướng dẫn, tạo tài khoản vào bảng `nguoi_dung` với `vai_tro = "Mentor"`, `trang_thai = "HoatDong"`.
+  - Băm mật khẩu bảo mật bằng bcrypt thông qua `security.get_password_hash`.
+  - Kiểm tra chống trùng lặp email và số điện thoại trong hệ thống (`HTTP 400 Bad Request`).
+  - Kiểm tra tính tồn tại của phòng ban liên kết theo `ma_phong_ban` (`HTTP 400 Bad Request` nếu không tồn tại).
+  - Trả về mã `HTTP 201 Created` kèm thông tin tài khoản (ẩn mật khẩu băm).
+- **Kiểm thử tự động (Unit Test & Regression Test)**:
+  - Tạo mới bộ test [tests/test_mentors.py](file:///d:/clone/ttcs/backend/tests/test_mentors.py) với 11 test cases bao phủ tạo thành công (đủ trường / tối giản), băm mật khẩu & đăng nhập, trùng email, trùng SĐT, sai phòng ban và các lỗi validation -> **11/11 PASS 100%**.
+  - Kiểm thử hồi quy toàn bộ test suite của Backend: **285/285 test cases PASS 100%**.
+
+---
+
 ## [1.20.0] - 2026-10-06
 
 ### Đã hoàn thành (Added & Enhanced)
