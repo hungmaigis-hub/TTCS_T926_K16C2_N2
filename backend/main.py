@@ -978,14 +978,20 @@ def register_intern(data: InternRegisterRequest, db: Session = Depends(get_db)):
 
 @app.post("/api/v1/auth/login", status_code=200, response_model=AuthResponse)
 def login_user(data: LoginRequest, db: Session = Depends(get_db)):
-    email_normalized = data.email.strip().lower()
+    raw_ident = data.email.strip().lower()
 
-    user = db.query(NguoiDung).filter(NguoiDung.email == email_normalized).first()
+    user = db.query(NguoiDung).filter(
+        or_(
+            NguoiDung.email == raw_ident,
+            NguoiDung.email == f"{raw_ident}@ictu.edu.vn",
+            NguoiDung.so_dien_thoai == data.email.strip()
+        )
+    ).first()
     if not user:
-        raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không chính xác")
+        raise HTTPException(status_code=401, detail="Tài khoản không tồn tại trong cơ sở dữ liệu")
 
     if not user.mat_khau_hash or not verify_password(data.mat_khau, user.mat_khau_hash):
-        raise HTTPException(status_code=401, detail="Email hoặc mật khẩu không chính xác")
+        raise HTTPException(status_code=401, detail="Mật khẩu không chính xác")
 
     if user.trang_thai == "Khoa":
         raise HTTPException(status_code=403, detail="Tài khoản này đang bị khóa")
@@ -1830,13 +1836,23 @@ def get_attendance_records(
 
 
 @app.get("/api/v1/attendance/shifts", status_code=200)
-def get_attendance_shifts(db: Session = Depends(get_db)):
+def get_attendance_shifts(ngay: Optional[str] = None, db: Session = Depends(get_db)):
     """
-    Lấy danh mục ca làm việc (Shift / Schedule) phục vụ việc Mentor chọn ca điểm danh.
+    Lấy danh mục ca làm việc (Shift / Schedule / Mentoring Session) phục vụ việc Mentor chọn ca điểm danh.
+    Hỗ trợ lọc theo ngày cụ thể nếu có truyền query param `ngay=YYYY-MM-DD`.
     """
-    shifts = db.query(CaLamViec).filter(CaLamViec.trang_thai == "HoatDong").order_by(CaLamViec.gio_bat_dau.asc()).all()
-    if not shifts:
-        shifts = db.query(CaLamViec).all()
+    query = db.query(CaLamViec).filter(CaLamViec.trang_thai == "HoatDong")
+    if ngay:
+        try:
+            d_filter = datetime.strptime(ngay, "%Y-%m-%d").date()
+            # Lấy ca có ngày diễn ra đúng bằng d_filter HOẶC ca lặp lại không gán ngày cố định
+            query = query.filter(
+                (CaLamViec.ngay_dien_ra == d_filter) | (CaLamViec.ngay_dien_ra.is_(None))
+            )
+        except Exception:
+            pass
+
+    shifts = query.order_by(CaLamViec.gio_bat_dau.asc()).all()
     return {
         "status_code": 200,
         "message": "Lấy danh mục ca làm việc thành công",
@@ -1848,18 +1864,30 @@ def get_attendance_shifts(db: Session = Depends(get_db)):
 def create_attendance_shift(req: ShiftCreateRequest, db: Session = Depends(get_db)):
     """
     Endpoint tạo mới ca làm việc / buổi gặp mặt (Mentoring session linh hoạt):
-    - Kiểm tra tên ca không trùng lặp trong hệ thống (HTTP 409 Conflict).
+    - Hỗ trợ lưu ngày diễn ra cụ thể, lớp/chuyên ngành tham gia, khóa thực tập.
+    - Kiểm tra tên ca không trùng lặp trong cùng ngày / hệ thống (HTTP 409 Conflict).
     - Validate giờ kết thúc > giờ bắt đầu (xử lý qua Pydantic schema).
     - Lưu bản ghi vào bảng ca_lam_viec trong cơ sở dữ liệu.
     """
-    existing = db.query(CaLamViec).filter(
+    d_dien_ra = None
+    if req.ngay_dien_ra:
+        try:
+            d_dien_ra = datetime.strptime(req.ngay_dien_ra[:10], "%Y-%m-%d").date()
+        except Exception:
+            pass
+
+    existing_query = db.query(CaLamViec).filter(
         CaLamViec.ten_ca == req.ten_ca,
         CaLamViec.trang_thai == "HoatDong"
-    ).first()
+    )
+    if d_dien_ra:
+        existing_query = existing_query.filter(CaLamViec.ngay_dien_ra == d_dien_ra)
+
+    existing = existing_query.first()
     if existing:
         raise HTTPException(
             status_code=409,
-            detail=f"Ca làm việc hoặc buổi gặp mang tên '{req.ten_ca}' đã tồn tại trong hệ thống."
+            detail=f"Ca làm việc hoặc buổi gặp mang tên '{req.ten_ca}' đã tồn tại trong ngày đã chọn."
         )
 
     t_start = datetime.strptime(req.gio_bat_dau[:5], "%H:%M").time()
@@ -1870,6 +1898,9 @@ def create_attendance_shift(req: ShiftCreateRequest, db: Session = Depends(get_d
         gio_bat_dau=t_start,
         gio_ket_thuc=t_end,
         cac_ngay_trong_tuan=req.cac_ngay_trong_tuan or "Tất cả các ngày",
+        ngay_dien_ra=d_dien_ra,
+        chuyen_nganh=req.chuyen_nganh or None,
+        ma_chuong_trinh=req.ma_chuong_trinh or None,
         ghi_chu=req.ghi_chu or "",
         trang_thai="HoatDong"
     )
@@ -1888,12 +1919,19 @@ def create_attendance_shift(req: ShiftCreateRequest, db: Session = Depends(get_d
 def mentor_roll_call(req: RollCallRequest, db: Session = Depends(get_db)):
     """
     Endpoint tiếp nhận sổ điểm danh từ Mentor theo ngày, ca làm việc, khóa và lớp:
+    - Chặn điểm danh trước cho ngày trong tương lai (Business Rule Validation).
     - Mentor chọn ngày, ca làm việc, khóa và lớp sinh viên.
     - Duyệt qua từng sinh viên trong danh sách:
       + Tạo mới hoặc cập nhật bản ghi trong bảng ChamCong với phuong_thuc="Mentor".
       + Đảm bảo sinh viên có đơn nghỉ phép đã duyệt được giữ trạng thái vắng/nghỉ phép.
       + Tự động tính toán giờ vào/giờ ra theo ca làm việc nếu client không truyền.
     """
+    if req.ngay_cham_cong > datetime.now().date():
+        raise HTTPException(
+            status_code=400,
+            detail=f"Không thể điểm danh trước cho ngày trong tương lai ({req.ngay_cham_cong.strftime('%d/%m/%Y')}). Chỉ có thể điểm danh khi đến ngày diễn ra ca họp."
+        )
+
     if not req.records:
         raise HTTPException(status_code=400, detail="Danh sách điểm danh không được để trống")
 

@@ -132,15 +132,15 @@ function selectRole(role, targetButton) {
   if (role === "student") {
     inputLabel.innerHTML =
       'Email hoặc Mã sinh viên <span class="text-error">*</span>';
-    inputField.placeholder = "sv.nguyenvana@ictu.edu.vn";
+    inputField.placeholder = "Ví dụ: an.nguyen@ictu.edu.vn hoặc quanghuy.dtc@ictu.edu.vn";
   } else if (role === "mentor") {
     inputLabel.innerHTML =
       'Email Doanh nghiệp / Mã Mentor <span class="text-error">*</span>';
-    inputField.placeholder = "mentor.career@fpt-software.com";
+    inputField.placeholder = "Ví dụ: mentor@example.com hoặc tuantq@fsoft.com.vn";
   } else if (role === "faculty") {
     inputLabel.innerHTML =
       'Email Giảng viên / Quản lý khoa <span class="text-error">*</span>';
-    inputField.placeholder = "gv.truongkhoa@ictu.edu.vn";
+    inputField.placeholder = "Ví dụ: admin@ictu.edu.vn hoặc mailtq@ictu.edu.vn";
   }
 }
 
@@ -244,7 +244,7 @@ async function submitLogin() {
       return;
     }
 
-    let errorMsg = "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản và mật khẩu.";
+    let errorMsg = "Tài khoản hoặc mật khẩu không chính xác trong hệ thống cơ sở dữ liệu.";
     if (data.detail) {
       if (typeof data.detail === "string") {
         errorMsg = data.detail;
@@ -257,7 +257,7 @@ async function submitLogin() {
     submitBtn.disabled = false;
   } catch (err) {
     showToast(
-      "Không thể kết nối tới máy chủ. Vui lòng kiểm tra lại đường truyền mạng hoặc thử lại sau.",
+      "Không thể kết nối đến máy chủ cơ sở dữ liệu (Backend: 127.0.0.1:8000). Vui lòng đảm bảo máy chủ FastAPI và MySQL đang chạy!",
       "error",
       "Mất kết nối máy chủ"
     );

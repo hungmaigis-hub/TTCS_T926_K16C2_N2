@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Báo Cáo Chấm Công &amp; Chuyên Cần - ICTU Internship</title>
+    <title>Điểm Danh &amp; Chuyên Cần - ICTU Internship</title>
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
@@ -107,7 +107,7 @@
           class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
         >
           <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">calendar_month</span>
-          <span>Lịch thực tập</span>
+          <span>Kế hoạch &amp; Đợt thực tập</span>
         </a>
 
         <a
@@ -126,8 +126,8 @@
           class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-ictu-50 text-ictu-700 shadow-sm border border-ictu-100 transition-colors"
         >
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-[20px] text-ictu-600 fill">pending_actions</span>
-            <span>Báo cáo chấm công</span>
+            <span class="material-symbols-outlined text-[20px] text-ictu-600 fill">fact_check</span>
+            <span>Điểm danh &amp; Chuyên cần</span>
           </div>
           <span class="text-[10px] bg-ictu-600 text-white font-bold px-2 py-0.5 rounded-full">Active</span>
         </a>
@@ -225,7 +225,7 @@
             <span>Quản lý</span>
           </a>
           <span class="material-symbols-outlined text-[16px] text-slate-300">chevron_right</span>
-          <span class="text-slate-800 font-semibold">8. Báo cáo chấm công &amp; Chuyên cần</span>
+          <span class="text-slate-800 font-semibold">8. Điểm danh &amp; Chuyên cần</span>
         </nav>
 
         <div class="flex items-center gap-3">
@@ -256,9 +256,9 @@
                 <span class="material-symbols-outlined text-[15px]">event_available</span>
                 <span id="theHocKyChamCong">Niên khóa 2026 - 2027 • Sprint 2</span>
               </div>
-              <h1 class="text-2xl font-extrabold tracking-tight">Quản Lý &amp; Báo Cáo Chuyên Cần Thực Tập Sinh</h1>
+              <h1 class="text-2xl font-extrabold tracking-tight">Quản Lý Điểm Danh &amp; Chuyên Cần Thực Tập Sinh</h1>
               <p class="text-sm text-ictu-100 mt-1 max-w-2xl leading-relaxed">
-                Theo dõi nhật ký chấm công vào/ra hàng ngày, thống kê tỷ lệ đúng giờ, phát hiện đi muộn và quản lý sự chuyên cần của thực tập sinh tại doanh nghiệp.
+                Theo dõi sổ điểm danh từng ca làm việc và buổi gặp mặt, thống kê tỷ lệ đúng giờ, phát hiện vắng mặt và quản lý sự chuyên cần của thực tập sinh tại doanh nghiệp.
               </p>
             </div>
           </div>
@@ -267,7 +267,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
             <div>
-              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Tổng Ca Chấm</span>
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Tổng Lượt Điểm Danh</span>
               <div class="text-2xl font-extrabold text-slate-900 font-mono mt-1" id="cardTong">0</div>
               <span class="text-[11px] text-slate-500 mt-0.5 block" id="subtextTong">Dữ liệu tháng hiện tại</span>
             </div>
@@ -333,16 +333,25 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
-                <span class="material-symbols-outlined text-[15px] text-ictu-600">calendar_today</span>
-                <span>1. Ngày Điểm Danh <span class="text-rose-500">*</span></span>
+              <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[15px] text-ictu-600">calendar_today</span>
+                  <span>1. Ngày Điểm Danh <span class="text-rose-500">*</span></span>
+                </span>
+                <span id="nhanThuHienTai" class="text-[11px] font-bold text-ictu-700 bg-ictu-50 px-2 py-0.5 rounded-md border border-ictu-200">Thứ Năm</span>
               </label>
-              <input
-                type="date"
-                id="boLocNgay"
-                onchange="doiPhienDiemDanh()"
-                class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 bg-white"
-              />
+              <div class="relative group cursor-pointer" onclick="moHopChonNgay('boLocNgay')">
+                <div class="w-full h-10 border border-slate-300 rounded-xl px-3.5 text-xs font-bold text-slate-800 bg-white flex items-center justify-between group-hover:border-ictu-500 transition-colors shadow-2xs">
+                  <span id="hienThiNgayDinhDang" class="font-mono text-sm tracking-wide text-slate-900">08/10/2026</span>
+                  <span class="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-ictu-600 transition-colors">calendar_month</span>
+                </div>
+                <input
+                  type="date"
+                  id="boLocNgay"
+                  onchange="capNhatHienThiNgayVN(); doiPhienDiemDanh();"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
             </div>
 
             <div>
@@ -363,7 +372,7 @@
               </label>
               <select
                 id="boLocCaLamViec"
-                onchange="doiPhienDiemDanh()"
+                onchange="doiPhienDiemDanh(true)"
                 class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 bg-white"
               >
                 <option value="Ca Sáng" selected>Ca Sáng (08:00 - 12:00)</option>
@@ -613,9 +622,42 @@
               type="text"
               id="tenCaMoi"
               required
-              placeholder="Ví dụ: Họp Review Sprint 2, Workshop Docker & CI/CD..."
+              placeholder="Ví dụ: Họp Review Sprint 2 - Lớp KTPM, Workshop Cloud..."
               class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none"
             />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="ngayDienRaMoi" class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                <span>Ngày diễn ra <span class="text-rose-500">*</span></span>
+                <span id="nhanThuModalMoi" class="text-[10px] font-bold text-ictu-700 bg-ictu-50 px-1.5 py-0.5 rounded border border-ictu-200">Thứ Năm</span>
+              </label>
+              <div class="relative group cursor-pointer" onclick="moHopChonNgay('ngayDienRaMoi')">
+                <div class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs font-bold text-slate-800 bg-white flex items-center justify-between group-hover:border-ictu-500 transition-colors shadow-2xs">
+                  <span id="hienThiNgayModalDinhDang" class="font-mono text-xs text-slate-900">08/10/2026</span>
+                  <span class="material-symbols-outlined text-[17px] text-slate-400 group-hover:text-ictu-600 transition-colors">calendar_month</span>
+                </div>
+                <input
+                  type="date"
+                  id="ngayDienRaMoi"
+                  required
+                  onchange="capNhatHienThiNgayModalVN()"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
+            </div>
+            <div>
+              <label for="chuyenNganhCaMoi" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Lớp / Chuyên ngành <span class="text-rose-500">*</span>
+              </label>
+              <select
+                id="chuyenNganhCaMoi"
+                class="w-full h-10 px-3 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none bg-white"
+              >
+                <option value="tat-ca" selected>Tất cả các lớp / sinh viên</option>
+              </select>
+            </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">

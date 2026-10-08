@@ -239,25 +239,14 @@ async function handleRegistrationSubmit() {
     const data = await res.json().catch(() => ({}));
 
     if (res.ok && data.status_code === 201) {
-      const expireTime = Date.now() + 2 * 60 * 60 * 1000;
-      const regUser = {
-        ho_ten: fullName,
-        email: email,
-        vai_tro: "ThucTapSinh",
-        ma_sinh_vien: email.split("@")[0].toUpperCase(),
-        expires_at: expireTime
-      };
-      localStorage.setItem("ictu_student_session", JSON.stringify(regUser));
-      localStorage.setItem("user", JSON.stringify(regUser));
-      localStorage.setItem("currentUser", JSON.stringify(regUser));
       showToast(
-        "Đăng ký tài khoản thực tập sinh thành công! Đang chuyển hướng sang trang đăng nhập...",
+        "Đăng ký tài khoản thực tập sinh thành công vào cơ sở dữ liệu! Đang chuyển hướng sang trang đăng nhập...",
         "success",
         "Đăng ký thành công"
       );
       setTimeout(() => {
         window.location.href = "dangnhap.html";
-      }, 1000);
+      }, 1200);
       return;
     }
 
@@ -276,7 +265,7 @@ async function handleRegistrationSubmit() {
     }
   } catch (err) {
     showToast(
-      "Không thể kết nối tới máy chủ. Vui lòng kiểm tra lại đường truyền mạng hoặc thử lại sau.",
+      "Không thể kết nối đến máy chủ cơ sở dữ liệu (Backend: 127.0.0.1:8000). Vui lòng đảm bảo máy chủ FastAPI và MySQL đang chạy!",
       "error",
       "Mất kết nối máy chủ"
     );

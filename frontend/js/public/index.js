@@ -34,11 +34,5 @@ function togglePasswordVisibility() {
 }
 
 function submitLogin() {
-  const nutDangNhap = document.querySelector(".btn-login");
-  nutDangNhap.textContent = "Đang xác thực bảo mật...";
-  nutDangNhap.disabled = true;
-
-  setTimeout(() => {
-    window.location.href = "../quanly/dashboard.html";
-  }, 900);
+  window.location.href = "dangnhap.html";
 }

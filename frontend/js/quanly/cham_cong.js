@@ -35,6 +35,87 @@ function layNgayHomNayYMD() {
   return `${y}-${m}-${day}`;
 }
 
+function dinhDangNgayVN(ngayYMD) {
+  if (!ngayYMD) return { dmy: "--/--/----", thu: "" };
+  const parts = ngayYMD.split("-").map(Number);
+  const d = new Date(parts[0], parts[1] - 1, parts[2]);
+  const dayIdx = d.getDay();
+  const mapThuVN = {
+    0: "Chủ nhật",
+    1: "Thứ Hai",
+    2: "Thứ Ba",
+    3: "Thứ Tư",
+    4: "Thứ Năm",
+    5: "Thứ Sáu",
+    6: "Thứ Bảy"
+  };
+  const tenThu = mapThuVN[dayIdx] || "Thứ Hai";
+  const ngayStr = String(parts[2]).padStart(2, "0");
+  const thangStr = String(parts[1]).padStart(2, "0");
+  const namStr = String(parts[0]);
+  return {
+    dmy: `${ngayStr}/${thangStr}/${namStr}`,
+    thu: tenThu
+  };
+}
+
+function capNhatHienThiNgayVN() {
+  const el = document.getElementById("boLocNgay");
+  const val = el && el.value ? el.value : layNgayHomNayYMD();
+  const info = dinhDangNgayVN(val);
+  const span = document.getElementById("hienThiNgayDinhDang");
+  if (span) span.textContent = info.dmy;
+  const badgeThu = document.getElementById("nhanThuHienTai");
+  if (badgeThu) badgeThu.textContent = info.thu;
+}
+
+function capNhatHienThiNgayModalVN() {
+  const el = document.getElementById("ngayDienRaMoi");
+  const val = el && el.value ? el.value : layNgayHomNayYMD();
+  const info = dinhDangNgayVN(val);
+  const span = document.getElementById("hienThiNgayModalDinhDang");
+  if (span) span.textContent = info.dmy;
+  const badgeThu = document.getElementById("nhanThuModalMoi");
+  if (badgeThu) badgeThu.textContent = info.thu;
+}
+
+function moHopChonNgay(idInput) {
+  const el = document.getElementById(idInput);
+  if (!el) return;
+  if (el.showPicker) {
+    el.showPicker();
+  } else {
+    el.focus();
+  }
+}
+
+function kiemTraSinhVienThuocChuyenNganh(svChuyenNganh, caChuyenNganh) {
+  if (!caChuyenNganh || caChuyenNganh === "tat-ca" || caChuyenNganh.toLowerCase() === "tất cả") return true;
+  if (!svChuyenNganh) return false;
+  const svCn = svChuyenNganh.toLowerCase().trim();
+  const caCn = caChuyenNganh.toLowerCase().trim();
+
+  if (svCn === caCn) return true;
+
+  if (caCn.includes("ktpm") || caCn.includes("phần mềm")) {
+    return svCn.includes("phần mềm") || svCn.includes("ktpm");
+  }
+  if (caCn.includes("cntt") || caCn.includes("công nghệ thông tin")) {
+    return svCn.includes("công nghệ thông tin") || svCn.includes("cntt");
+  }
+  if (caCn.includes("ai") || caCn.includes("trí tuệ nhân tạo") || caCn.includes("khoa học máy tính") || caCn.includes("khmt")) {
+    return svCn.includes("khoa học máy tính") || svCn.includes("khmt") || svCn.includes("trí tuệ nhân tạo") || svCn.includes("ai");
+  }
+  if (caCn.includes("attt") || caCn.includes("an toàn") || caCn.includes("an ninh")) {
+    return svCn.includes("an toàn") || svCn.includes("an ninh") || svCn.includes("attt");
+  }
+  if (caCn.includes("httt") || caCn.includes("hệ thống thông tin")) {
+    return svCn.includes("hệ thống thông tin") || svCn.includes("httt");
+  }
+
+  return svCn.includes(caCn) || caCn.includes(svCn);
+}
+
 function layKhungGioCa(tenCa) {
   if (Array.isArray(danhSachCaLamViec) && danhSachCaLamViec.length > 0) {
     const timCa = danhSachCaLamViec.find(ca => ca.ten_ca === tenCa);
@@ -172,6 +253,7 @@ async function taiDanhSachSinhVienVaLop() {
 function capNhatDanhSachLopTheoKhoa() {
   const selectKhoa = document.getElementById("boLocKhoaThucTap");
   const selectLop = document.getElementById("boLocLop");
+  const caEl = document.getElementById("boLocCaLamViec");
   if (!selectLop) return;
 
   const khoaVal = selectKhoa ? selectKhoa.value : "tat-ca";
@@ -181,13 +263,33 @@ function capNhatDanhSachLopTheoKhoa() {
     pool = pool.filter(sv => sv.ma_chuong_trinh === kId);
   }
 
+  const tenCa = caEl ? caEl.value : "";
+  const caHienTai = Array.isArray(danhSachCaLamViec) ? danhSachCaLamViec.find(c => c.ten_ca === tenCa) : null;
+  if (caHienTai && caHienTai.chuyen_nganh && caHienTai.chuyen_nganh !== "tat-ca") {
+    pool = pool.filter(sv => kiemTraSinhVienThuocChuyenNganh(sv.chuyen_nganh, caHienTai.chuyen_nganh));
+  }
+  if (caHienTai && caHienTai.ma_chuong_trinh) {
+    pool = pool.filter(sv => sv.ma_chuong_trinh === caHienTai.ma_chuong_trinh);
+  }
+
   const dsLop = Array.from(new Set(pool.map(sv => sv.chuyen_nganh).filter(Boolean)));
-  let html = `<option value="tat-ca">Tất cả các lớp / chuyên ngành (${pool.length} SV)</option>`;
+  const nhanTatCa = caHienTai && caHienTai.chuyen_nganh && caHienTai.chuyen_nganh !== "tat-ca"
+    ? `Tất cả các lớp trong ca họp (${pool.length} SV)`
+    : `Tất cả các lớp / chuyên ngành (${pool.length} SV)`;
+
+  const giaTriHienTai = selectLop.value;
+  let html = `<option value="tat-ca">${nhanTatCa}</option>`;
   dsLop.forEach(lop => {
     const count = pool.filter(sv => sv.chuyen_nganh === lop).length;
     html += `<option value="${lop}">Lớp ${lop} (${count} SV)</option>`;
   });
   selectLop.innerHTML = html;
+
+  if (giaTriHienTai && dsLop.includes(giaTriHienTai)) {
+    selectLop.value = giaTriHienTai;
+  } else {
+    selectLop.value = "tat-ca";
+  }
 }
 
 async function taiDanhSachDonNghiPhep(ngayYMD) {
@@ -224,7 +326,7 @@ async function taiBanGhiChamCongTheoNgay(ngayYMD) {
       const json = await res.json();
       if (json && json.data && Array.isArray(json.data.items)) {
         json.data.items.forEach(it => {
-          if (it.ma_ho_so) {
+          if (it.ma_ho_so && it.phuong_thuc !== "Đơn nghỉ phép") {
             banGhiChamCongHienTai[it.ma_ho_so] = it;
           }
         });
@@ -233,20 +335,149 @@ async function taiBanGhiChamCongTheoNgay(ngayYMD) {
   } catch (e) {}
 }
 
-async function doiPhienDiemDanh() {
+function kiemTraCaCoHoatDongKhong(tenCa, ngayYMD) {
+  if (!ngayYMD) return { hopLe: false, daLuu: false, laTuongLai: false, lyDo: "Vui lòng chọn ngày điểm danh." };
+
+  const ca = Array.isArray(danhSachCaLamViec) ? danhSachCaLamViec.find(c => c.ten_ca === tenCa) : null;
+  if (!tenCa || !ca || danhSachCaLamViec.length === 0) {
+    return {
+      hopLe: false,
+      daLuu: false,
+      laTuongLai: false,
+      lyDo: "Ngày này chưa có ca làm việc hoặc buổi gặp nào được lên lịch trên hệ thống."
+    };
+  }
+
+  const homNayYMD = layNgayHomNayYMD();
+  const laTuongLai = ngayYMD > homNayYMD;
+
+  if (laTuongLai) {
+    return {
+      hopLe: true,
+      daLuu: false,
+      laTuongLai: true,
+      lyDo: "Buổi gặp / ca làm việc này được lên lịch trong tương lai. Chưa đến thời điểm điểm danh."
+    };
+  }
+
+  if (banGhiChamCongHienTai && Object.keys(banGhiChamCongHienTai).length > 0) {
+    return {
+      hopLe: true,
+      daLuu: true,
+      laTuongLai: false,
+      lyDo: "Đã có dữ liệu điểm danh lưu trên hệ thống"
+    };
+  }
+
+  return {
+    hopLe: true,
+    daLuu: false,
+    laTuongLai: false,
+    lyDo: "Ca làm việc sẵn sàng điểm danh"
+  };
+}
+
+function renderGiaoDienKhongCoLich(kiemTra) {
+  const cardTong = document.getElementById("cardTong");
+  const cardDungGio = document.getElementById("cardDungGio");
+  const cardDiMuon = document.getElementById("cardDiMuon");
+  const cardVang = document.getElementById("cardVang");
+
+  if (cardTong) cardTong.textContent = "0";
+  if (cardDungGio) cardDungGio.textContent = "0";
+  if (cardDiMuon) cardDiMuon.textContent = "0";
+  if (cardVang) cardVang.textContent = "0";
+
+  const subtextTong = document.getElementById("subtextTong");
+  if (subtextTong) subtextTong.textContent = "Không có ca hoạt động";
+
+  const theDem = document.getElementById("theDemBanGhi");
+  if (theDem) theDem.textContent = "(0 sinh viên)";
+
   const ngayEl = document.getElementById("boLocNgay");
-  const caEl = document.getElementById("boLocCaLamViec");
+  const ngay = ngayEl && ngayEl.value ? ngayEl.value : layNgayHomNayYMD();
+  const [y, m, d] = ngay.split("-");
+
+  const moTa = document.getElementById("moTaKetQuaBang");
+  if (moTa) {
+    moTa.textContent = `Ngày ${d}/${m}/${y} • Phiên không có lịch làm việc`;
+  }
+
+  const thePhien = document.getElementById("theHienThiPhien");
   const nhanPhien = document.getElementById("nhanPhienHienTai");
+  if (thePhien && nhanPhien) {
+    thePhien.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-300";
+    nhanPhien.textContent = `Phiên: (Không có ca) • ${d}/${m}/${y}`;
+  }
+
+  const btnLuu = document.getElementById("btnLuuDiemDanh");
+  const btnDiemDanh = document.getElementById("btnDiemDanhTatCa");
+  if (btnLuu) {
+    btnLuu.disabled = true;
+    btnLuu.classList.add("opacity-40", "cursor-not-allowed");
+    btnLuu.title = "Ngày này không có buổi làm việc hoặc ca họp";
+  }
+  if (btnDiemDanh) {
+    btnDiemDanh.disabled = true;
+    btnDiemDanh.classList.add("opacity-40", "cursor-not-allowed");
+    btnDiemDanh.title = "Ngày này không có buổi làm việc hoặc ca họp";
+  }
+
+  const tbody = document.getElementById("bangChamCongBody");
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="py-16 px-6 text-center">
+          <div class="max-w-md mx-auto flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 rounded-3xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4 shadow-inner">
+              <span class="material-symbols-outlined text-3xl">event_busy</span>
+            </div>
+            <h4 class="text-base font-extrabold text-slate-800 mb-1.5">Ngày ${d}/${m}/${y} không có ca làm việc hoặc buổi gặp nào</h4>
+            <p class="text-xs text-slate-500 leading-relaxed mb-5">${kiemTra.lyDo}</p>
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                onclick="moModalThemCa()"
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ictu-600 hover:bg-ictu-700 text-white text-xs font-bold transition-all shadow-md shadow-ictu-600/20 cursor-pointer active:scale-95"
+              >
+                <span class="material-symbols-outlined text-[17px]">more_time</span>
+                <span>+ Tạo ca họp / buổi gặp cho ngày này</span>
+              </button>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+  const infoEl = document.getElementById("phanTrangThongTin");
+  if (infoEl) infoEl.textContent = "Không có sinh viên cần điểm danh";
+  const navEl = document.getElementById("phanTrangNutDieuHuong");
+  if (navEl) navEl.innerHTML = "";
+}
+
+async function doiPhienDiemDanh(chiDoiCa = false) {
+  const ngayEl = document.getElementById("boLocNgay");
   const ngayYMD = ngayEl && ngayEl.value ? ngayEl.value : layNgayHomNayYMD();
-  const tenCa = caEl ? caEl.value : "Ca Sáng";
+
+  capNhatHienThiNgayVN();
+
+  if (!chiDoiCa) {
+    await taiDanhSachCaLamViec(ngayYMD);
+  }
+
+  const caEl = document.getElementById("boLocCaLamViec");
+  const tenCa = caEl ? caEl.value : "";
+  const nhanPhien = document.getElementById("nhanPhienHienTai");
 
   if (nhanPhien) {
     const [y, m, d] = ngayYMD.split("-");
-    nhanPhien.textContent = `Phiên: ${tenCa} • ${d}/${m}/${y}`;
+    nhanPhien.textContent = tenCa ? `Phiên: ${tenCa} • ${d}/${m}/${y}` : `Phiên: (Không có ca) • ${d}/${m}/${y}`;
   }
 
   await taiDanhSachDonNghiPhep(ngayYMD);
   await taiBanGhiChamCongTheoNgay(ngayYMD);
+  capNhatDanhSachLopTheoKhoa();
   locDuLieu();
 }
 
@@ -267,15 +498,66 @@ function locDuLieu() {
   const lopVal = lopEl ? lopEl.value : "tat-ca";
   const ttVal = ttEl ? ttEl.value : "tat-ca";
   const kw = kwEl ? kwEl.value.trim().toLowerCase() : "";
-  const tenCa = caEl ? caEl.value : "Ca Sáng";
+  const tenCa = caEl ? caEl.value : "";
   const khungGio = layKhungGioCa(tenCa);
   const ngayYMD = ngayEl && ngayEl.value ? ngayEl.value : layNgayHomNayYMD();
+
+  const kiemTra = kiemTraCaCoHoatDongKhong(tenCa, ngayYMD);
+  if (!kiemTra.hopLe) {
+    danhSachHienThi = [];
+    renderGiaoDienKhongCoLich(kiemTra);
+    return;
+  }
+
+  const btnLuu = document.getElementById("btnLuuDiemDanh");
+  const btnDiemDanh = document.getElementById("btnDiemDanhTatCa");
+  if (kiemTra.laTuongLai) {
+    if (btnLuu) {
+      btnLuu.disabled = true;
+      btnLuu.classList.add("opacity-40", "cursor-not-allowed");
+      btnLuu.title = "Buổi gặp trong tương lai, chưa đến thời điểm điểm danh";
+    }
+    if (btnDiemDanh) {
+      btnDiemDanh.disabled = true;
+      btnDiemDanh.classList.add("opacity-40", "cursor-not-allowed");
+      btnDiemDanh.title = "Buổi gặp trong tương lai, chưa đến thời điểm điểm danh";
+    }
+  } else {
+    if (btnLuu) {
+      btnLuu.disabled = false;
+      btnLuu.classList.remove("opacity-40", "cursor-not-allowed");
+      btnLuu.title = "";
+    }
+    if (btnDiemDanh) {
+      btnDiemDanh.disabled = false;
+      btnDiemDanh.classList.remove("opacity-40", "cursor-not-allowed");
+      btnDiemDanh.title = "";
+    }
+  }
+
+  const thePhien = document.getElementById("theHienThiPhien");
+  const nhanPhien = document.getElementById("nhanPhienHienTai");
+  const [y, m, d] = ngayYMD.split("-");
+  if (thePhien && nhanPhien) {
+    if (kiemTra.laTuongLai) {
+      thePhien.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-800 border border-sky-300";
+      nhanPhien.innerHTML = `<span class="material-symbols-outlined text-[14px] text-sky-600">upcoming</span> Phiên: ${tenCa} • ${d}/${m}/${y} (⏳ Sắp diễn ra • Chưa đến thời điểm điểm danh)`;
+    } else if (kiemTra.daLuu) {
+      thePhien.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300";
+      nhanPhien.innerHTML = `<span class="material-symbols-outlined text-[14px] text-emerald-600">verified</span> Phiên: ${tenCa} • ${d}/${m}/${y} (Đã lưu CSDL)`;
+    } else {
+      thePhien.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300";
+      nhanPhien.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Phiên: ${tenCa} • ${d}/${m}/${y} (Chưa lưu điểm danh)`;
+    }
+  }
+
+  const caHienTai = Array.isArray(danhSachCaLamViec) ? danhSachCaLamViec.find(c => c.ten_ca === tenCa) : null;
 
   let list = danhSachTatCaSinhVien.map(sv => {
     const donNghi = danhSachDonNghiHienTai[sv.ma_ho_so];
     const daCham = banGhiChamCongHienTai[sv.ma_ho_so];
 
-    let trangThai = "DungGio";
+    let trangThai = null;
     let ghiChu = "";
     let gioVao = khungGio.in;
     let gioRa = khungGio.out;
@@ -301,6 +583,15 @@ function locDuLieu() {
       gio_ra: gioRa
     };
   });
+
+  if (caHienTai) {
+    if (caHienTai.chuyen_nganh && caHienTai.chuyen_nganh !== "tat-ca") {
+      list = list.filter(sv => kiemTraSinhVienThuocChuyenNganh(sv.chuyen_nganh, caHienTai.chuyen_nganh));
+    }
+    if (caHienTai.ma_chuong_trinh) {
+      list = list.filter(sv => sv.ma_chuong_trinh === caHienTai.ma_chuong_trinh);
+    }
+  }
 
   if (khoaVal !== "tat-ca") {
     const kId = parseInt(khoaVal, 10);
@@ -357,6 +648,13 @@ function renderGiaoDien(list) {
   const cardDiMuon = document.getElementById("cardDiMuon");
   const cardVang = document.getElementById("cardVang");
 
+  const caEl = document.getElementById("boLocCaLamViec");
+  const ngayEl = document.getElementById("boLocNgay");
+  const ngayYMD = ngayEl && ngayEl.value ? ngayEl.value : layNgayHomNayYMD();
+  const tenCa = caEl ? caEl.value : "";
+  const kiemTra = kiemTraCaCoHoatDongKhong(tenCa, ngayYMD);
+  const laTuongLai = kiemTra.laTuongLai;
+
   const tong = list.length;
   const dungGio = list.filter(i => i.trang_thai === "DungGio").length;
   const diMuon = list.filter(i => i.trang_thai === "DiMuon").length;
@@ -367,23 +665,28 @@ function renderGiaoDien(list) {
   if (cardDiMuon) cardDiMuon.textContent = diMuon;
   if (cardVang) cardVang.textContent = vang;
 
+  const subtextTong = document.getElementById("subtextTong");
+  if (subtextTong) {
+    if (laTuongLai) {
+      subtextTong.textContent = "Dự kiến tham gia";
+    } else {
+      subtextTong.textContent = "100% sinh viên";
+    }
+  }
+
   const theDem = document.getElementById("theDemBanGhi");
   if (theDem) theDem.textContent = `(${list.length} sinh viên)`;
 
   const moTa = document.getElementById("moTaKetQuaBang");
   if (moTa) {
-    const ngayEl = document.getElementById("boLocNgay");
-    const caEl = document.getElementById("boLocCaLamViec");
     const khoaEl = document.getElementById("boLocKhoaThucTap");
     const lopEl = document.getElementById("boLocLop");
 
-    const ngay = ngayEl && ngayEl.value ? ngayEl.value : layNgayHomNayYMD();
-    const [y, m, d] = ngay.split("-");
-    const ca = caEl ? caEl.value : "Ca Sáng";
+    const [y, m, d] = ngayYMD.split("-");
     const khoaTxt = khoaEl && khoaEl.selectedIndex >= 0 ? khoaEl.options[khoaEl.selectedIndex].text : "Tất cả các khóa";
     const lopTxt = lopEl && lopEl.selectedIndex >= 0 ? lopEl.options[lopEl.selectedIndex].text : "Tất cả các lớp";
 
-    moTa.textContent = `Ngày ${d}/${m}/${y} • ${ca} • ${khoaTxt} • ${lopTxt}`;
+    moTa.textContent = `Ngày ${d}/${m}/${y} • ${tenCa || "Ca làm việc"} • ${khoaTxt} • ${lopTxt}${laTuongLai ? " (Chưa đến thời điểm điểm danh)" : ""}`;
   }
 
   const tongBanGhi = list.length;
@@ -493,6 +796,10 @@ function renderGiaoDien(list) {
     const isDiMuon = item.trang_thai === "DiMuon";
     const isVang = item.trang_thai === "VangMat";
 
+    const pillWrapperClass = laTuongLai
+      ? "inline-flex items-center p-0.5 rounded-xl bg-slate-100/90 border border-slate-200 gap-0.5 text-[11px] pointer-events-none opacity-60 cursor-not-allowed"
+      : "inline-flex items-center p-0.5 rounded-xl bg-slate-100/90 border border-slate-200 gap-0.5 text-[11px]";
+
     return `
       <tr class="hover:bg-slate-50/70 transition-colors" id="hang-sv-${item.ma_ho_so}">
         <td class="px-3 py-2.5 text-center font-mono font-bold text-ictu-600 text-xs">${item.ma_sv}</td>
@@ -515,43 +822,55 @@ function renderGiaoDien(list) {
           ${donNghiHtml}
         </td>
         <td class="px-3 py-2.5 text-center">
-          <div class="inline-flex items-center p-0.5 rounded-xl bg-slate-100/90 border border-slate-200 gap-0.5 text-[11px]">
-            <label class="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer transition-colors ${isDungGio ? "bg-emerald-600 text-white font-bold shadow-xs" : "text-slate-600 hover:text-emerald-700"}">
+          <div class="${pillWrapperClass}">
+            <label
+              id="lbl-dung-gio-${item.ma_ho_so}"
+              onclick="thayDoiTrangThaiDong(${item.ma_ho_so}, 'DungGio')"
+              class="flex items-center gap-1 px-2 py-1 rounded-lg ${laTuongLai ? "cursor-not-allowed" : "cursor-pointer"} transition-all ${isDungGio ? "bg-emerald-600 text-white font-bold shadow-xs active:scale-95" : "text-slate-600 hover:text-emerald-700 hover:bg-slate-200/50"}"
+            >
               <input
                 type="radio"
                 name="trang_thai_${item.ma_ho_so}"
                 value="DungGio"
                 ${isDungGio ? "checked" : ""}
-                onchange="thayDoiTrangThaiDong(${item.ma_ho_so}, 'DungGio')"
+                ${laTuongLai ? "disabled" : ""}
                 class="sr-only"
               />
-              <span class="w-1.5 h-1.5 rounded-full ${isDungGio ? "bg-white" : "bg-emerald-500"}"></span>
+              <span id="dot-dung-gio-${item.ma_ho_so}" class="w-1.5 h-1.5 rounded-full ${isDungGio ? "bg-white" : "bg-emerald-500"}"></span>
               <span>Đúng giờ</span>
             </label>
 
-            <label class="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer transition-colors ${isDiMuon ? "bg-amber-500 text-white font-bold shadow-xs" : "text-slate-600 hover:text-amber-700"}">
+            <label
+              id="lbl-di-muon-${item.ma_ho_so}"
+              onclick="thayDoiTrangThaiDong(${item.ma_ho_so}, 'DiMuon')"
+              class="flex items-center gap-1 px-2 py-1 rounded-lg ${laTuongLai ? "cursor-not-allowed" : "cursor-pointer"} transition-all ${isDiMuon ? "bg-amber-500 text-white font-bold shadow-xs active:scale-95" : "text-slate-600 hover:text-amber-700 hover:bg-slate-200/50"}"
+            >
               <input
                 type="radio"
                 name="trang_thai_${item.ma_ho_so}"
                 value="DiMuon"
                 ${isDiMuon ? "checked" : ""}
-                onchange="thayDoiTrangThaiDong(${item.ma_ho_so}, 'DiMuon')"
+                ${laTuongLai ? "disabled" : ""}
                 class="sr-only"
               />
-              <span class="w-1.5 h-1.5 rounded-full ${isDiMuon ? "bg-white" : "bg-amber-500"}"></span>
+              <span id="dot-di-muon-${item.ma_ho_so}" class="w-1.5 h-1.5 rounded-full ${isDiMuon ? "bg-white" : "bg-amber-500"}"></span>
               <span>Đi muộn</span>
             </label>
 
-            <label class="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer transition-colors ${isVang ? "bg-rose-600 text-white font-bold shadow-xs" : "text-slate-600 hover:text-rose-700"}">
+            <label
+              id="lbl-vang-mat-${item.ma_ho_so}"
+              onclick="thayDoiTrangThaiDong(${item.ma_ho_so}, 'VangMat')"
+              class="flex items-center gap-1 px-2 py-1 rounded-lg ${laTuongLai ? "cursor-not-allowed" : "cursor-pointer"} transition-all ${isVang ? "bg-rose-600 text-white font-bold shadow-xs active:scale-95" : "text-slate-600 hover:text-rose-700 hover:bg-slate-200/50"}"
+            >
               <input
                 type="radio"
                 name="trang_thai_${item.ma_ho_so}"
                 value="VangMat"
                 ${isVang ? "checked" : ""}
-                onchange="thayDoiTrangThaiDong(${item.ma_ho_so}, 'VangMat')"
+                ${laTuongLai ? "disabled" : ""}
                 class="sr-only"
               />
-              <span class="w-1.5 h-1.5 rounded-full ${isVang ? "bg-white" : "bg-rose-500"}"></span>
+              <span id="dot-vang-mat-${item.ma_ho_so}" class="w-1.5 h-1.5 rounded-full ${isVang ? "bg-white" : "bg-rose-500"}"></span>
               <span>Vắng mặt</span>
             </label>
           </div>
@@ -566,9 +885,9 @@ function renderGiaoDien(list) {
             type="text"
             id="ghi-chu-${item.ma_ho_so}"
             value="${item.ghi_chu || ""}"
-            oninput="capNhatGhiChu(${item.ma_ho_so}, this.value)"
-            placeholder="Ghi chú đánh giá..."
-            class="w-full h-7 px-2 border border-slate-200 rounded-lg text-xs text-slate-700 focus:ring-1 focus:ring-ictu-500 focus:border-ictu-500 bg-white"
+            ${laTuongLai ? "disabled readonly" : `oninput="capNhatGhiChu(${item.ma_ho_so}, this.value)"`}
+            placeholder="${laTuongLai ? "Chưa đến giờ họp..." : "Ghi chú đánh giá..."}"
+            class="w-full h-7 px-2 border border-slate-200 rounded-lg text-xs ${laTuongLai ? "text-slate-400 bg-slate-50 cursor-not-allowed" : "text-slate-700 focus:ring-1 focus:ring-ictu-500 focus:border-ictu-500 bg-white"}"
           />
         </td>
       </tr>
@@ -576,7 +895,55 @@ function renderGiaoDien(list) {
   }).join("");
 }
 
+function capNhatGiaoDienTrangThaiPill(maHoSo, trangThaiMoi) {
+  const lblDung = document.getElementById(`lbl-dung-gio-${maHoSo}`);
+  const dotDung = document.getElementById(`dot-dung-gio-${maHoSo}`);
+  const lblMuon = document.getElementById(`lbl-di-muon-${maHoSo}`);
+  const dotMuon = document.getElementById(`dot-di-muon-${maHoSo}`);
+  const lblVang = document.getElementById(`lbl-vang-mat-${maHoSo}`);
+  const dotVang = document.getElementById(`dot-vang-mat-${maHoSo}`);
+
+  const isDung = trangThaiMoi === "DungGio";
+  const isMuon = trangThaiMoi === "DiMuon";
+  const isVang = trangThaiMoi === "VangMat";
+
+  if (lblDung) {
+    lblDung.className = `flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer transition-all ${isDung ? "bg-emerald-600 text-white font-bold shadow-xs active:scale-95" : "text-slate-600 hover:text-emerald-700 hover:bg-slate-200/50"}`;
+  }
+  if (dotDung) {
+    dotDung.className = `w-1.5 h-1.5 rounded-full ${isDung ? "bg-white" : "bg-emerald-500"}`;
+  }
+
+  if (lblMuon) {
+    lblMuon.className = `flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer transition-all ${isMuon ? "bg-amber-500 text-white font-bold shadow-xs active:scale-95" : "text-slate-600 hover:text-amber-700 hover:bg-slate-200/50"}`;
+  }
+  if (dotMuon) {
+    dotMuon.className = `w-1.5 h-1.5 rounded-full ${isMuon ? "bg-white" : "bg-amber-500"}`;
+  }
+
+  if (lblVang) {
+    lblVang.className = `flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer transition-all ${isVang ? "bg-rose-600 text-white font-bold shadow-xs active:scale-95" : "text-slate-600 hover:text-rose-700 hover:bg-slate-200/50"}`;
+  }
+  if (dotVang) {
+    dotVang.className = `w-1.5 h-1.5 rounded-full ${isVang ? "bg-white" : "bg-rose-500"}`;
+  }
+
+  const radio = document.querySelector(`input[name="trang_thai_${maHoSo}"][value="${trangThaiMoi}"]`);
+  if (radio) {
+    radio.checked = true;
+  }
+}
+
 function thayDoiTrangThaiDong(maHoSo, trangThaiMoi) {
+  const ngayEl = document.getElementById("boLocNgay");
+  const caEl = document.getElementById("boLocCaLamViec");
+  const ngayYMD = ngayEl && ngayEl.value ? ngayEl.value : layNgayHomNayYMD();
+  const tenCa = caEl ? caEl.value : "";
+  if (kiemTraCaCoHoatDongKhong(tenCa, ngayYMD).laTuongLai) {
+    hienThiThongBao("Buổi gặp này diễn ra trong tương lai, chưa đến thời điểm điểm danh.", "error");
+    return;
+  }
+
   const item = danhSachHienThi.find(it => it.ma_ho_so === maHoSo);
   if (item) {
     item.trang_thai = trangThaiMoi;
@@ -586,10 +953,10 @@ function thayDoiTrangThaiDong(maHoSo, trangThaiMoi) {
     fullItem.trang_thai = trangThaiMoi;
   }
 
+  capNhatGiaoDienTrangThaiPill(maHoSo, trangThaiMoi);
+
   const gioEl = document.getElementById(`gio-ca-${maHoSo}`);
   if (gioEl) {
-    const caEl = document.getElementById("boLocCaLamViec");
-    const tenCa = caEl ? caEl.value : "Ca Sáng";
     const khungGio = layKhungGioCa(tenCa);
     if (trangThaiMoi === "VangMat") {
       gioEl.textContent = "--:--";
@@ -612,6 +979,15 @@ function thayDoiTrangThaiDong(maHoSo, trangThaiMoi) {
 }
 
 function diemDanhTatCaCoMat() {
+  const ngayEl = document.getElementById("boLocNgay");
+  const caEl = document.getElementById("boLocCaLamViec");
+  const ngayYMD = ngayEl && ngayEl.value ? ngayEl.value : layNgayHomNayYMD();
+  const tenCa = caEl ? caEl.value : "";
+  if (kiemTraCaCoHoatDongKhong(tenCa, ngayYMD).laTuongLai) {
+    hienThiThongBao("Buổi gặp này diễn ra trong tương lai, chưa đến thời điểm điểm danh.", "error");
+    return;
+  }
+
   let countThayDoi = 0;
   let countGiuNguyenVang = 0;
 
@@ -622,9 +998,24 @@ function diemDanhTatCaCoMat() {
     }
     item.trang_thai = "DungGio";
     countThayDoi++;
+    capNhatGiaoDienTrangThaiPill(item.ma_ho_so, "DungGio");
+    const gioEl = document.getElementById(`gio-ca-${item.ma_ho_so}`);
+    if (gioEl) {
+      const khungGio = layKhungGioCa(tenCa);
+      gioEl.textContent = `${khungGio.in} - ${khungGio.out}`;
+      gioEl.className = "font-semibold text-slate-700";
+    }
   });
 
-  renderGiaoDien(danhSachHienThi);
+  const cardTong = document.getElementById("cardTong");
+  const cardDungGio = document.getElementById("cardDungGio");
+  const cardDiMuon = document.getElementById("cardDiMuon");
+  const cardVang = document.getElementById("cardVang");
+
+  if (cardTong) cardTong.textContent = danhSachHienThi.length;
+  if (cardDungGio) cardDungGio.textContent = danhSachHienThi.filter(i => i.trang_thai === "DungGio").length;
+  if (cardDiMuon) cardDiMuon.textContent = danhSachHienThi.filter(i => i.trang_thai === "DiMuon").length;
+  if (cardVang) cardVang.textContent = danhSachHienThi.filter(i => i.trang_thai === "VangMat").length;
 
   let msg = `Đã đánh dấu Đúng giờ cho ${countThayDoi} sinh viên đang có mặt.`;
   if (countGiuNguyenVang > 0) {
@@ -643,13 +1034,24 @@ async function luuSoDiemDanh() {
   const lopEl = document.getElementById("boLocLop");
 
   const ngayYMD = ngayEl && ngayEl.value ? ngayEl.value : layNgayHomNayYMD();
-  const tenCa = caEl ? caEl.value : "Ca Sáng";
+  const tenCa = caEl ? caEl.value : "";
   const khungGio = layKhungGioCa(tenCa);
   const maChuongTrinh = khoaEl && khoaEl.value !== "tat-ca" ? parseInt(khoaEl.value, 10) : null;
   const chuyenNganh = lopEl && lopEl.value !== "tat-ca" ? lopEl.value : null;
 
+  if (kiemTraCaCoHoatDongKhong(tenCa, ngayYMD).laTuongLai) {
+    hienThiThongBao("Không thể điểm danh trước cho ngày trong tương lai.", "error");
+    return;
+  }
+
   if (danhSachHienThi.length === 0) {
     hienThiThongBao("Không có sinh viên nào trong danh sách để lưu điểm danh", "error");
+    return;
+  }
+
+  const chuaDiemDanh = danhSachHienThi.filter(it => !it.trang_thai);
+  if (chuaDiemDanh.length > 0) {
+    hienThiThongBao(`Còn ${chuaDiemDanh.length} sinh viên chưa được chọn trạng thái điểm danh. Vui lòng chọn cho từng bạn hoặc bấm 'Điểm danh tất cả có mặt'.`, "error");
     return;
   }
 
@@ -696,6 +1098,7 @@ async function luuSoDiemDanh() {
       const data = await res.json();
       hienThiThongBao(`Lưu sổ điểm danh thành công! Đã ghi nhận ${data.total_saved || payloadRecords.length} sinh viên cho ${tenCa}.`, "success");
       await taiBanGhiChamCongTheoNgay(ngayYMD);
+      locDuLieu();
     } else {
       const err = await res.json().catch(() => ({}));
       const msg = err.detail || err.message || "Lỗi khi lưu điểm danh lên máy chủ";
@@ -927,37 +1330,47 @@ async function xuLyDuyetDonNghi(maDon, trangThaiMoi) {
   }
 }
 
-async function taiDanhSachCaLamViec() {
+async function taiDanhSachCaLamViec(ngayYMD) {
   const select = document.getElementById("boLocCaLamViec");
   if (!select) return;
+
+  const ngayParam = ngayYMD || (document.getElementById("boLocNgay") ? document.getElementById("boLocNgay").value : layNgayHomNayYMD());
+
   try {
-    const res = await fetch(`${duongDanApi}/attendance/shifts`);
+    const url = ngayParam ? `${duongDanApi}/attendance/shifts?ngay=${ngayParam}` : `${duongDanApi}/attendance/shifts`;
+    const res = await fetch(url);
     if (res.ok) {
       const json = await res.json();
       const ds = Array.isArray(json) ? json : (json.data || []);
-      if (Array.isArray(ds) && ds.length > 0) {
+      if (Array.isArray(ds)) {
         danhSachCaLamViec = ds;
+        if (ds.length === 0) {
+          select.innerHTML = `<option value="">(Không có ca họp nào)</option>`;
+          select.value = "";
+          return;
+        }
+
         const giaTriHienTai = select.value;
         select.innerHTML = ds.map(ca => {
           const bd = String(ca.gio_bat_dau || "").slice(0, 5);
           const kt = String(ca.gio_ket_thuc || "").slice(0, 5);
-          return `<option value="${ca.ten_ca}">${ca.ten_ca} (${bd} - ${kt})</option>`;
+          const target = ca.chuyen_nganh ? ` • ${ca.chuyen_nganh}` : "";
+          return `<option value="${ca.ten_ca}">${ca.ten_ca} (${bd} - ${kt}${target})</option>`;
         }).join("");
+
         if (giaTriHienTai && ds.some(ca => ca.ten_ca === giaTriHienTai)) {
           select.value = giaTriHienTai;
         } else {
-          const caMacDinh = ds.find(ca => ca.ten_ca === "Ca Sáng") || ds[0];
-          select.value = caMacDinh.ten_ca;
+          select.value = ds[0].ten_ca;
         }
         return;
       }
     }
   } catch (e) {}
-  danhSachCaLamViec = [
-    { ma_ca: 1, ten_ca: "Ca Sáng", gio_bat_dau: "08:00:00", gio_ket_thuc: "12:00:00" },
-    { ma_ca: 2, ten_ca: "Ca Chiều", gio_bat_dau: "13:30:00", gio_ket_thuc: "17:30:00" },
-    { ma_ca: 3, ten_ca: "Ca Hành chính", gio_bat_dau: "08:00:00", gio_ket_thuc: "17:30:00" }
-  ];
+
+  danhSachCaLamViec = [];
+  select.innerHTML = `<option value="">(Không có ca họp nào)</option>`;
+  select.value = "";
 }
 
 function moModalThemCa() {
@@ -971,6 +1384,33 @@ function moModalThemCa() {
   if (ktInput) ktInput.value = "16:30";
   const ghiChuInput = document.getElementById("ghiChuCaMoi");
   if (ghiChuInput) ghiChuInput.value = "";
+
+  const ngayEl = document.getElementById("boLocNgay");
+  const ngay = ngayEl && ngayEl.value ? ngayEl.value : layNgayHomNayYMD();
+
+  const ngayInput = document.getElementById("ngayDienRaMoi");
+  if (ngayInput) {
+    ngayInput.value = ngay;
+    capNhatHienThiNgayModalVN();
+  }
+
+  const selectCn = document.getElementById("chuyenNganhCaMoi");
+  if (selectCn) {
+    const dsLop = Array.from(new Set(danhSachTatCaSinhVien.map(sv => sv.chuyen_nganh).filter(Boolean)));
+    let opts = `<option value="tat-ca" selected>Tất cả các lớp / sinh viên</option>`;
+    opts += `<option value="KTPM">Kỹ thuật Phần mềm (KTPM)</option>`;
+    opts += `<option value="Công nghệ thông tin">Công nghệ thông tin (CNTT)</option>`;
+    opts += `<option value="Khoa học máy tính">Khoa học máy tính (AI / Data)</option>`;
+    opts += `<option value="An toàn Thông tin & An ninh Mạng">An toàn Thông tin & An ninh Mạng</option>`;
+    opts += `<option value="Hệ thống Thông tin Quản lý (BA)">Hệ thống Thông tin Quản lý (BA)</option>`;
+    dsLop.forEach(l => {
+      if (!opts.includes(`value="${l}"`)) {
+        opts += `<option value="${l}">${l}</option>`;
+      }
+    });
+    selectCn.innerHTML = opts;
+  }
+
   tinhThoiLuongCaMoi();
   modal.classList.remove("hidden");
   if (tenInput) tenInput.focus();
@@ -978,7 +1418,8 @@ function moModalThemCa() {
 
 function dongModalThemCa() {
   const modal = document.getElementById("modalThemCaMoi");
-  if (modal) modal.classList.add("hidden");
+  if (!modal) return;
+  modal.classList.add("hidden");
 }
 
 function tinhThoiLuongCaMoi() {
@@ -1013,6 +1454,8 @@ async function taoCaLamViecMoi() {
   const tenInput = document.getElementById("tenCaMoi");
   const bdInput = document.getElementById("gioBatDauMoi");
   const ktInput = document.getElementById("gioKetThucMoi");
+  const ngayDienRaInput = document.getElementById("ngayDienRaMoi");
+  const chuyenNganhInput = document.getElementById("chuyenNganhCaMoi");
   const ghiChuInput = document.getElementById("ghiChuCaMoi");
   const btn = document.getElementById("btnLuuCaMoi");
   const icon = document.getElementById("iconLuuCaMoi");
@@ -1021,6 +1464,8 @@ async function taoCaLamViecMoi() {
   const tenCa = tenInput ? tenInput.value.trim() : "";
   const bd = bdInput ? bdInput.value.trim() : "";
   const kt = ktInput ? ktInput.value.trim() : "";
+  const ngayDienRa = ngayDienRaInput && ngayDienRaInput.value ? ngayDienRaInput.value : layNgayHomNayYMD();
+  const chuyenNganh = chuyenNganhInput && chuyenNganhInput.value !== "tat-ca" ? chuyenNganhInput.value : null;
   const ghiChu = ghiChuInput ? ghiChuInput.value.trim() : "";
 
   if (!tenCa) {
@@ -1060,6 +1505,8 @@ async function taoCaLamViecMoi() {
         gio_bat_dau: bd,
         gio_ket_thuc: kt,
         cac_ngay_trong_tuan: "Linh hoạt",
+        ngay_dien_ra: ngayDienRa,
+        chuyen_nganh: chuyenNganh,
         ghi_chu: ghiChu || null
       })
     });
@@ -1069,12 +1516,16 @@ async function taoCaLamViecMoi() {
     if (res.ok) {
       hienThiThongBao(`Đã tạo ca làm việc / buổi gặp '${tenCa}' thành công!`, "success");
       dongModalThemCa();
-      await taiDanhSachCaLamViec();
+      const ngayEl = document.getElementById("boLocNgay");
+      if (ngayEl && ngayDienRa) {
+        ngayEl.value = ngayDienRa;
+      }
+      await taiDanhSachCaLamViec(ngayDienRa);
       const select = document.getElementById("boLocCaLamViec");
       if (select) {
         select.value = tenCa;
       }
-      await doiPhienDiemDanh();
+      await doiPhienDiemDanh(true);
     } else {
       let msg = "Không thể tạo ca làm việc";
       if (typeof data.detail === "string") {
@@ -1107,13 +1558,15 @@ async function taiDuLieuChamCong() {
 document.addEventListener("DOMContentLoaded", async () => {
   capNhatHocKyChamCong();
   const ngayEl = document.getElementById("boLocNgay");
+  const homNay = layNgayHomNayYMD();
   if (ngayEl) {
-    ngayEl.value = layNgayHomNayYMD();
+    ngayEl.value = homNay;
+    capNhatHienThiNgayVN();
   }
   await kiemTraKetNoiApi();
   await taiDanhSachKhoaThucTap();
   await taiDanhSachSinhVienVaLop();
-  await taiDanhSachCaLamViec();
-  await doiPhienDiemDanh();
+  await taiDanhSachCaLamViec(homNay);
+  await doiPhienDiemDanh(true);
   await taiDanhSachTatCaDonNghi();
 });

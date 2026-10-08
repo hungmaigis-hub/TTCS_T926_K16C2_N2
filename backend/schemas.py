@@ -890,6 +890,9 @@ class ShiftCreateRequest(BaseModel):
     gio_bat_dau: str = Field(..., description="Giờ bắt đầu (định dạng HH:MM hoặc HH:MM:SS)")
     gio_ket_thuc: str = Field(..., description="Giờ kết thúc (định dạng HH:MM hoặc HH:MM:SS)")
     cac_ngay_trong_tuan: Optional[str] = Field(default="Tất cả các ngày", description="Các ngày áp dụng trong tuần")
+    ngay_dien_ra: Optional[str] = Field(default=None, description="Ngày diễn ra cụ thể (định dạng YYYY-MM-DD)")
+    chuyen_nganh: Optional[str] = Field(default=None, description="Lớp hoặc chuyên ngành áp dụng")
+    ma_chuong_trinh: Optional[int] = Field(default=None, description="Mã chương trình thực tập")
     ghi_chu: Optional[str] = Field(default="", description="Ghi chú chi tiết ca làm việc")
     trang_thai: Optional[str] = Field(default="HoatDong", description="Trạng thái hoạt động")
 
