@@ -187,7 +187,7 @@
             <span class="material-symbols-outlined text-[19px] text-slate-400"
               >upload_file</span
             >
-            <span>1. Nộp tài liệu &amp; CV</span>
+            <span>Nộp tài liệu &amp; CV</span>
           </a>
           <a
             href="../sinhvien/hop_dong.html"
@@ -196,7 +196,7 @@
             <span class="material-symbols-outlined text-[19px] text-slate-400"
               >history_edu</span
             >
-            <span>2. Ký kết hợp đồng</span>
+            <span>Hợp đồng thực tập</span>
           </a>
           <a
             href="../sinhvien/nhiem_vu.html"
@@ -205,7 +205,7 @@
             <span class="material-symbols-outlined text-[19px] text-slate-400"
               >checklist</span
             >
-            <span>3. Nhiệm vụ &amp; Tiến độ</span>
+            <span>Nhiệm vụ &amp; Tiến độ</span>
           </a>
           <a
             href="../public/thamquan.html"
@@ -559,7 +559,7 @@
                           class="inline-block w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin"
                         ></span>
                         <span class="text-sm font-medium"
-                          >Đang kết nối API Backend và tải danh sách hồ
+                          >Đang kết nối máy chủ và tải danh sách hồ
                           sơ...</span
                         >
                       </div>
@@ -764,7 +764,7 @@
           id="hopThoaiTaiLieu"
         >
           <div
-            class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all border border-slate-200 animate-in fade-in zoom-in-95"
+            class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden transform transition-all border border-slate-200 animate-in fade-in zoom-in-95"
           >
             <div
               class="p-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between"
@@ -785,17 +785,29 @@
                     Hồ Sơ &amp; Tài Liệu Đính Kèm
                   </h3>
                   <span class="text-xs text-slate-500" id="moTaTaiLieuHoSo"
-                    >Dữ liệu đồng bộ trực tiếp từ API Backend</span
+                    >Dữ liệu đồng bộ trực tiếp từ máy chủ</span
                   >
                 </div>
               </div>
-              <button
-                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
-                onclick="dongHopThoaiTaiLieu()"
-                type="button"
-              >
-                <span class="material-symbols-outlined text-[20px]">close</span>
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  id="btnDuyetTatCaTaiLieu"
+                  onclick="duyetTatCaTaiLieuTrongModal()"
+                  class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  title="Phê duyệt toàn bộ các tài liệu đính kèm của hồ sơ này"
+                >
+                  <span class="material-symbols-outlined text-[16px]" id="iconDuyetTatCaTaiLieu">done_all</span>
+                  <span id="textDuyetTatCaTaiLieu">Duyệt tất cả</span>
+                </button>
+                <button
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+                  onclick="dongHopThoaiTaiLieu()"
+                  type="button"
+                >
+                  <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
             </div>
 
             <div class="p-6 space-y-4">
@@ -821,6 +833,51 @@
               >
                 Đóng
               </button>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm hidden transition-opacity"
+          id="hopThoaiXemPdf"
+        >
+          <div
+            class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[90vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95"
+          >
+            <div
+              class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                  <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                </div>
+                <div>
+                  <h3 class="font-bold text-slate-900 text-sm" id="tieuDeXemPdf">Xem Tài Liệu / CV</h3>
+                  <span class="text-xs text-slate-500 font-mono" id="duongDanXemPdf">uploads/cv.pdf</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <a
+                  id="nutMoTabMoi"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors shadow-xs"
+                >
+                  <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+                  <span>Mở tab mới</span>
+                </a>
+                <button
+                  type="button"
+                  onclick="dongHopThoaiXemPdf()"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+                >
+                  <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+            </div>
+            <div class="flex-1 bg-slate-100 p-2 overflow-hidden">
+              <iframe id="khungXemPdf" src="" class="w-full h-full rounded-xl border border-slate-200 bg-white"></iframe>
             </div>
           </div>
         </div>

@@ -51,3 +51,45 @@ aside {
   height: 100vh !important;
   align-self: flex-start !important;
 }
+
+#toastContainer {
+  position: fixed !important;
+  top: 84px !important;
+  right: 1.5rem !important;
+  z-index: 999999 !important;
+  pointer-events: none !important;
+}
+
+@media (max-width: 640px) {
+  #toastContainer {
+    top: 76px !important;
+    right: 1rem !important;
+    left: 1rem !important;
+  }
+}
+
+.bang-cham-cong-scroll::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.bang-cham-cong-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 4px !important;
+}
+
+.bang-cham-cong-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 4px !important;
+}
+
+.bang-cham-cong-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+.bang-cham-cong-scroll {
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 #f1f5f9 !important;
+}
+

@@ -183,7 +183,7 @@
             <span class="material-symbols-outlined text-[19px] text-slate-400"
               >upload_file</span
             >
-            <span>1. Nộp tài liệu &amp; CV</span>
+            <span>Nộp tài liệu &amp; CV</span>
           </a>
           <a
             href="../sinhvien/hop_dong.html"
@@ -192,7 +192,7 @@
             <span class="material-symbols-outlined text-[19px] text-slate-400"
               >history_edu</span
             >
-            <span>2. Ký kết hợp đồng</span>
+            <span>Hợp đồng thực tập</span>
           </a>
           <a
             href="../sinhvien/nhiem_vu.html"
@@ -201,7 +201,7 @@
             <span class="material-symbols-outlined text-[19px] text-slate-400"
               >checklist</span
             >
-            <span>3. Nhiệm vụ &amp; Tiến độ</span>
+            <span>Nhiệm vụ &amp; Tiến độ</span>
           </a>
           <a
             href="../public/thamquan.html"
@@ -304,12 +304,19 @@
             </button>
             <button
               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-ictu-50 hover:bg-ictu-100 text-ictu-700 border border-ictu-200 text-xs font-semibold shadow-sm transition-colors"
+              onclick="xuatBaoCaoDanhGia('pdf')"
               type="button"
             >
-              <span class="material-symbols-outlined text-[18px]"
-                >picture_as_pdf</span
-              >
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
               Xuất PDF
+            </button>
+            <button
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold shadow-sm transition-colors"
+              onclick="xuatBaoCaoDanhGia('excel')"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[18px]">table_chart</span>
+              Xuất Excel
             </button>
           </div>
         </div>

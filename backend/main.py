@@ -1,3 +1,4 @@
+import json
 import math
 import os
 import uuid
@@ -20,6 +21,8 @@ from schemas import (
     DocumentUploadResponse,
     ProgramCreate,
     ProgramResponse,
+    ProgramListItem,
+    ProgramListResponse,
     InternRegisterRequest,
     LoginRequest,
     AuthResponse,
@@ -50,9 +53,15 @@ from schemas import (
     CheckOutRequest,
     CheckInResponse,
     CheckOutResponse,
+    RollCallRequest,
+    RollCallResponse,
+    ShiftCreateRequest,
+    ShiftCreateResponse,
     LeaveRequestCreate,
     LeaveRequestCreateResponse,
     LeaveRequestItemData,
+    LeaveStatusUpdateRequest,
+    LeaveStatusUpdateResponse,
     ScheduleCreate,
     ScheduleCreateResponse,
 )
@@ -122,12 +131,14 @@ def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
     # 1. Kiểm tra trùng lặp email với người dùng đã có
     existing_email = db.query(NguoiDung).filter(NguoiDung.email == intern_data.email).first()
     if existing_email:
-        raise HTTPException(status_code=400, detail="Email này đã được sử dụng")
+        existing_hs = db.query(HoSoThucTap).filter(HoSoThucTap.ma_nguoi_dung == existing_email.ma_nguoi_dung).first()
+        if existing_hs:
+            raise HTTPException(status_code=400, detail="Email này đã được sử dụng")
 
     # 2. Kiểm tra trùng lặp số điện thoại nếu có gửi lên
     if intern_data.so_dien_thoai:
         existing_phone = db.query(NguoiDung).filter(NguoiDung.so_dien_thoai == intern_data.so_dien_thoai).first()
-        if existing_phone:
+        if existing_phone and (not existing_email or existing_phone.ma_nguoi_dung != existing_email.ma_nguoi_dung):
             raise HTTPException(status_code=400, detail="Số điện thoại này đã được sử dụng")
 
     # 3. Kiểm tra mã trường đại học nếu có gửi lên
@@ -136,29 +147,42 @@ def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
         if not truong:
             raise HTTPException(status_code=400, detail="Mã trường đại học không tồn tại trong hệ thống")
 
-    # 4. Kiểm tra mã chương trình thực tập nếu có gửi lên
+    # 4. Kiểm tra mã chương trình thực tập nếu có gửi lên và kiểm tra chỉ tiêu
     if intern_data.ma_chuong_trinh:
         chuong_trinh = db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh == intern_data.ma_chuong_trinh).first()
         if not chuong_trinh:
             raise HTTPException(status_code=400, detail="Mã chương trình thực tập không tồn tại trong hệ thống")
+        count_prog = db.query(HoSoThucTap).filter(HoSoThucTap.ma_chuong_trinh == intern_data.ma_chuong_trinh).count()
+        if count_prog >= 50:
+            raise HTTPException(status_code=400, detail="Chương trình thực tập đã đủ chỉ tiêu sinh viên (50/50), không thể tiếp nhận thêm")
 
-    # 5. Kiểm tra mã mentor nếu có gửi lên
+    # 5. Kiểm tra mã mentor nếu có gửi lên và kiểm tra chỉ tiêu hướng dẫn
     if intern_data.ma_mentor:
         mentor = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == intern_data.ma_mentor).first()
         if not mentor:
             raise HTTPException(status_code=400, detail="Mã người hướng dẫn (mentor) không tồn tại trong hệ thống")
+        count_mentor = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == intern_data.ma_mentor).count()
+        if count_mentor >= 5:
+            raise HTTPException(status_code=400, detail="Mentor đã đủ chỉ tiêu hướng dẫn (tối đa 5 sinh viên)")
 
     try:
-        # 6. Khởi tạo tài khoản người dùng cho thực tập sinh (bảng NGUOI_DUNG)
-        new_user = NguoiDung(
-            ho_ten=intern_data.ho_ten,
-            email=intern_data.email,
-            so_dien_thoai=intern_data.so_dien_thoai,
-            vai_tro="ThucTapSinh",
-            trang_thai="HoatDong"
-        )
-        db.add(new_user)
-        db.flush()  # Sinh mã new_user.ma_nguoi_dung cho khóa ngoại
+        # 6. Khởi tạo tài khoản người dùng hoặc tái sử dụng tài khoản sinh viên đã đăng ký
+        if existing_email:
+            new_user = existing_email
+            if intern_data.ho_ten:
+                new_user.ho_ten = intern_data.ho_ten
+            if intern_data.so_dien_thoai:
+                new_user.so_dien_thoai = intern_data.so_dien_thoai
+        else:
+            new_user = NguoiDung(
+                ho_ten=intern_data.ho_ten,
+                email=intern_data.email,
+                so_dien_thoai=intern_data.so_dien_thoai,
+                vai_tro="ThucTapSinh",
+                trang_thai="HoatDong"
+            )
+            db.add(new_user)
+            db.flush()
 
         # 7. Khởi tạo hồ sơ thực tập sinh (bảng HO_SO_THUC_TAP)
         new_ho_so = HoSoThucTap(
@@ -232,18 +256,88 @@ def get_my_schedule(
     }
 
 
+@app.get("/api/v1/students", status_code=200)
+def get_students_for_assignment(db: Session = Depends(get_db)):
+    students = db.query(NguoiDung).filter(NguoiDung.vai_tro == "ThucTapSinh").order_by(NguoiDung.ma_nguoi_dung.asc()).all()
+    result = []
+    for s in students:
+        hs = db.query(HoSoThucTap).filter(HoSoThucTap.ma_nguoi_dung == s.ma_nguoi_dung).first()
+        prog = None
+        mentor = None
+        truong = None
+        if hs:
+            if hs.ma_chuong_trinh:
+                prog = db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh == hs.ma_chuong_trinh).first()
+            if hs.ma_mentor:
+                mentor = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == hs.ma_mentor).first()
+            if hs.ma_truong:
+                truong = db.query(TruongDaiHoc).filter(TruongDaiHoc.ma_truong == hs.ma_truong).first()
+        
+        email_prefix = s.email.split("@")[0].upper() if "@" in s.email else f"DTC{s.ma_nguoi_dung:04d}"
+        result.append({
+            "ma_nguoi_dung": s.ma_nguoi_dung,
+            "ho_ten": s.ho_ten,
+            "email": s.email,
+            "so_dien_thoai": s.so_dien_thoai or "",
+            "ma_sinh_vien": email_prefix,
+            "ma_ho_so": hs.ma_ho_so if hs else None,
+            "chuyen_nganh": (hs.chuyen_nganh if hs else None) or "Kỹ thuật phần mềm",
+            "ma_truong": hs.ma_truong if hs else 1,
+            "ten_truong": truong.ten_truong if truong else "Đại học Công nghệ Thông tin & Truyền thông (ICTU)",
+            "ma_chuong_trinh": hs.ma_chuong_trinh if hs else None,
+            "ten_chuong_trinh": prog.ten_chuong_trinh if prog else None,
+            "ngay_bat_dau": str(prog.ngay_bat_dau) if (prog and prog.ngay_bat_dau) else "2026-09-01",
+            "ngay_ket_thuc": str(prog.ngay_ket_thuc) if (prog and prog.ngay_ket_thuc) else "2026-12-31",
+            "ma_mentor": hs.ma_mentor if hs else None,
+            "ten_mentor": mentor.ho_ten if mentor else None,
+            "trang_thai_xet_duyet": hs.trang_thai_xet_duyet if hs else "ChoDuyet",
+            "trang_thai_thuc_tap": hs.trang_thai_thuc_tap if hs else "DangThucTap"
+        })
+    return {
+        "status_code": 200,
+        "total": len(result),
+        "data": result
+    }
+
+
+@app.get("/api/v1/mentors", status_code=200)
+def get_mentor_list(db: Session = Depends(get_db)):
+    mentors = db.query(NguoiDung).filter(NguoiDung.vai_tro.in_(["Mentor", "GiangVien"])).order_by(NguoiDung.ma_nguoi_dung.asc()).all()
+    result = []
+    for m in mentors:
+        count = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == m.ma_nguoi_dung).count()
+        result.append({
+            "ma_nguoi_dung": m.ma_nguoi_dung,
+            "ho_ten": m.ho_ten,
+            "email": m.email,
+            "so_dien_thoai": m.so_dien_thoai or "",
+            "chuc_vu": "Mentor Doanh nghiệp" if m.vai_tro == "Mentor" else "Giảng viên hướng dẫn",
+            "so_sinh_vien_huong_dan": count,
+            "chi_tieu_huong_dan": 5,
+            "da_du_chi_tieu": count >= 5
+        })
+    return {
+        "status_code": 200,
+        "total": len(result),
+        "data": result
+    }
+
+
 # api get intern list
 @app.get("/api/v1/interns", status_code=200)
 def get_interns_list(
     trang_thai_xet_duyet: Optional[str] = None,
     trang_thai_thuc_tap: Optional[str] = None,
+    ma_chuong_trinh: Optional[int] = None,
+    chuyen_nganh: Optional[str] = None,
+    ma_mentor: Optional[int] = None,
     limit: int = 100,
     offset: int = 0,
     db: Session = Depends(get_db)
 ):
     """
     Lấy danh sách hồ sơ thực tập sinh từ cơ sở dữ liệu.
-    Hỗ trợ lọc theo trạng thái xét duyệt (ChoDuyet, DaDuyet, TuChoi) và trạng thái thực tập (DangThucTap, HoanThanh, ThoiHoc).
+    Hỗ trợ lọc theo trạng thái xét duyệt, trạng thái thực tập, khóa thực tập, chuyên ngành/lớp, mentor.
     Sắp xếp theo mã hồ sơ mới nhất (desc).
     """
     query = db.query(HoSoThucTap)
@@ -251,6 +345,12 @@ def get_interns_list(
         query = query.filter(HoSoThucTap.trang_thai_xet_duyet == trang_thai_xet_duyet)
     if trang_thai_thuc_tap:
         query = query.filter(HoSoThucTap.trang_thai_thuc_tap == trang_thai_thuc_tap)
+    if ma_chuong_trinh:
+        query = query.filter(HoSoThucTap.ma_chuong_trinh == ma_chuong_trinh)
+    if chuyen_nganh and chuyen_nganh != "tat-ca":
+        query = query.filter(HoSoThucTap.chuyen_nganh == chuyen_nganh)
+    if ma_mentor:
+        query = query.filter(HoSoThucTap.ma_mentor == ma_mentor)
 
     total = query.count()
     items = query.order_by(HoSoThucTap.ma_ho_so.desc()).offset(offset).limit(limit).all()
@@ -261,6 +361,7 @@ def get_interns_list(
         "total": total,
         "data": [item.to_dict() for item in items]
     }
+
 
 
 # api get intern detail
@@ -328,6 +429,20 @@ def update_intern(id: int, intern_data: InternUpdate, db: Session = Depends(get_
     # 6. Cập nhật thông tin vào bảng HO_SO_THUC_TAP
     ho_so.chuyen_nganh = intern_data.chuyen_nganh
     ho_so.ma_truong = intern_data.ma_truong
+    if intern_data.ma_chuong_trinh is not None:
+        if intern_data.ma_chuong_trinh != ho_so.ma_chuong_trinh:
+            count_prog = db.query(HoSoThucTap).filter(HoSoThucTap.ma_chuong_trinh == intern_data.ma_chuong_trinh).count()
+            if count_prog >= 50:
+                raise HTTPException(status_code=400, detail="Chương trình thực tập đã đủ chỉ tiêu sinh viên (50/50), không thể tiếp nhận thêm")
+        ho_so.ma_chuong_trinh = intern_data.ma_chuong_trinh
+    if intern_data.ma_mentor is not None:
+        if intern_data.ma_mentor != ho_so.ma_mentor:
+            count_mentor = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == intern_data.ma_mentor).count()
+            if count_mentor >= 5:
+                raise HTTPException(status_code=400, detail="Mentor đã đủ chỉ tiêu hướng dẫn (tối đa 5 sinh viên)")
+        ho_so.ma_mentor = intern_data.ma_mentor
+    if intern_data.trang_thai_xet_duyet:
+        ho_so.trang_thai_xet_duyet = intern_data.trang_thai_xet_duyet
     if intern_data.trang_thai_thuc_tap:
         ho_so.trang_thai_thuc_tap = intern_data.trang_thai_thuc_tap
 
@@ -370,6 +485,25 @@ def update_intern_approval_status(
 
     # 3. Cập nhật trường trạng thái xét duyệt
     ho_so.trang_thai_xet_duyet = new_status
+
+    # Tự động đồng bộ trạng thái duyệt cho toàn bộ tài liệu đính kèm của hồ sơ
+    if new_status == "DaDuyet":
+        pending_docs = db.query(TaiLieuHoSo).filter(
+            TaiLieuHoSo.ma_ho_so == id,
+            TaiLieuHoSo.trang_thai_duyet != "DaDuyet"
+        ).all()
+        for doc in pending_docs:
+            doc.trang_thai_duyet = "DaDuyet"
+    elif new_status == "TuChoi":
+        pending_docs = db.query(TaiLieuHoSo).filter(
+            TaiLieuHoSo.ma_ho_so == id,
+            TaiLieuHoSo.trang_thai_duyet == "ChoDuyet"
+        ).all()
+        for doc in pending_docs:
+            doc.trang_thai_duyet = "TuChoi"
+            if approval_data.ghi_chu:
+                doc.ghi_chu = approval_data.ghi_chu
+
     db.commit()
     db.refresh(ho_so)
 
@@ -587,6 +721,31 @@ def update_document_status(
     }
 
 
+# api post approve all documents of profile
+@app.post("/api/v1/documents/{ho_so_id}/approve-all", status_code=200)
+def approve_all_documents_of_profile(ho_so_id: int, db: Session = Depends(get_db)):
+    """
+    Phê duyệt đồng loạt toàn bộ tài liệu đính kèm của hồ sơ thực tập.
+    """
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == ho_so_id).first()
+    if not ho_so:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ ID: {ho_so_id}")
+
+    docs = db.query(TaiLieuHoSo).filter(TaiLieuHoSo.ma_ho_so == ho_so_id).all()
+    count = 0
+    for doc in docs:
+        if doc.trang_thai_duyet != "DaDuyet":
+            doc.trang_thai_duyet = "DaDuyet"
+            count += 1
+    db.commit()
+    return {
+        "status_code": 200,
+        "message": f"Đã phê duyệt {count} tài liệu của hồ sơ #{ho_so_id}",
+        "data": [d.to_dict() for d in docs]
+    }
+
+
+
 # ==============================================================
 # API QUẢN LÝ CHƯƠNG TRÌNH THỰC TẬP (PROGRAMS)
 # ==============================================================
@@ -635,6 +794,123 @@ def create_program(program_data: ProgramCreate, db: Session = Depends(get_db)):
         "message": "Tạo chương trình thực tập thành công",
         "data": new_program.to_dict()
     }
+
+
+# api get all departments
+@app.get("/api/v1/departments", status_code=200)
+def get_departments(db: Session = Depends(get_db)):
+    """
+    Lấy danh sách các phòng ban tiếp nhận thực tập sinh.
+    """
+    departments = db.query(PhongBan).all()
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách phòng ban thành công",
+        "data": [
+            {
+                "ma_phong_ban": pb.ma_phong_ban,
+                "ten_phong_ban": pb.ten_phong_ban,
+                "mo_ta": pb.mo_ta
+            } for pb in departments
+        ]
+    }
+
+
+# api get all universities
+@app.get("/api/v1/universities", status_code=200)
+def get_universities(db: Session = Depends(get_db)):
+    """
+    Lấy danh mục các trường đại học đối tác / liên kết từ bảng truong_dai_hoc trong cơ sở dữ liệu.
+    """
+    universities = db.query(TruongDaiHoc).order_by(TruongDaiHoc.ma_truong.asc()).all()
+    data = []
+    for t in universities:
+        chuyen_nganh_list = []
+        if getattr(t, "danh_sach_nganh", None):
+            try:
+                chuyen_nganh_list = json.loads(t.danh_sach_nganh)
+            except Exception:
+                chuyen_nganh_list = [n.strip() for n in t.danh_sach_nganh.split(",") if n.strip()]
+        data.append({
+            "ma_truong": t.ma_truong,
+            "ten_truong": t.ten_truong,
+            "dia_chi": t.dia_chi,
+            "nguoi_lien_he": t.nguoi_lien_he,
+            "email_lien_he": t.email_lien_he,
+            "chuyen_nganh": chuyen_nganh_list
+        })
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách trường đại học thành công",
+        "data": data
+    }
+
+
+
+# api get all programs
+@app.get("/api/v1/programs", status_code=200, response_model=ProgramListResponse)
+def get_programs(
+    ma_phong_ban: Optional[int] = Query(None, description="Lọc theo mã phòng ban"),
+    tu_khoa: Optional[str] = Query(None, description="Tìm kiếm theo tên chương trình"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh sách các chương trình thực tập.
+    Hỗ trợ lọc theo phòng ban, tìm kiếm từ khóa, tính toán thời lượng tuần và số lượng sinh viên tham gia.
+    """
+    query = db.query(ChuongTrinhThucTap)
+
+    if ma_phong_ban is not None:
+        if ma_phong_ban <= 0:
+            raise HTTPException(status_code=422, detail="Mã phòng ban phải là số nguyên dương")
+        query = query.filter(ChuongTrinhThucTap.ma_phong_ban == ma_phong_ban)
+
+    if tu_khoa and tu_khoa.strip():
+        kw = f"%{tu_khoa.strip()}%"
+        query = query.filter(ChuongTrinhThucTap.ten_chuong_trinh.ilike(kw))
+
+    total = query.count()
+    programs = query.order_by(ChuongTrinhThucTap.ma_chuong_trinh.desc()).offset(skip).limit(limit).all()
+
+    today = date.today()
+    results = []
+    for p in programs:
+        weeks = None
+        if p.ngay_bat_dau and p.ngay_ket_thuc:
+            diff_days = (p.ngay_ket_thuc - p.ngay_bat_dau).days
+            weeks = max(1, round(diff_days / 7))
+
+        intern_count = db.query(HoSoThucTap).filter(HoSoThucTap.ma_chuong_trinh == p.ma_chuong_trinh).count()
+
+        status = "Đang diễn ra"
+        if p.ngay_bat_dau and today < p.ngay_bat_dau:
+            status = "Sắp bắt đầu"
+        elif p.ngay_ket_thuc and today > p.ngay_ket_thuc:
+            status = "Đã kết thúc"
+
+        results.append({
+            "ma_chuong_trinh": p.ma_chuong_trinh,
+            "ma_phong_ban": p.ma_phong_ban,
+            "ten_phong_ban": p.phong_ban.ten_phong_ban if p.phong_ban else None,
+            "ten_chuong_trinh": p.ten_chuong_trinh,
+            "ngay_bat_dau": p.ngay_bat_dau.isoformat() if p.ngay_bat_dau else None,
+            "ngay_ket_thuc": p.ngay_ket_thuc.isoformat() if p.ngay_ket_thuc else None,
+            "mo_ta": p.mo_ta,
+            "thoi_luong_tuan": weeks,
+            "so_luong_sinh_vien": intern_count,
+            "chi_tieu_sinh_vien": 50,
+            "trang_thai": status
+        })
+
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách chương trình thực tập thành công",
+        "total": total,
+        "data": results
+    }
+
 
 
 @app.post("/api/v1/auth/register", status_code=201, response_model=AuthResponse)
@@ -713,6 +989,15 @@ def login_user(data: LoginRequest, db: Session = Depends(get_db)):
 
     if user.trang_thai == "Khoa":
         raise HTTPException(status_code=403, detail="Tài khoản này đang bị khóa")
+
+    if data.vai_tro:
+        portal = data.vai_tro.strip().lower()
+        if portal == "student" and user.vai_tro != "ThucTapSinh":
+            raise HTTPException(status_code=403, detail="Tài khoản này không thuộc vai trò Sinh viên")
+        elif portal == "mentor" and user.vai_tro == "ThucTapSinh":
+            raise HTTPException(status_code=403, detail="Tài khoản sinh viên không có quyền đăng nhập vào cổng Doanh nghiệp / Mentor")
+        elif portal == "faculty" and user.vai_tro == "ThucTapSinh":
+            raise HTTPException(status_code=403, detail="Tài khoản sinh viên không có quyền đăng nhập vào cổng Nhà trường / Quản lý")
 
     profile = db.query(HoSoThucTap).filter(HoSoThucTap.ma_nguoi_dung == user.ma_nguoi_dung).first()
 
@@ -1355,6 +1640,353 @@ def attendance_check_out(req: CheckOutRequest, db: Session = Depends(get_db)):
     }
 
 
+@app.get("/api/v1/attendance/records")
+def get_attendance_records(
+    ma_ho_so: Optional[int] = Query(None, description="Lọc theo mã hồ sơ"),
+    ngay: Optional[str] = Query(None, description="Lọc theo ngày cụ thể (YYYY-MM-DD)"),
+    thang: Optional[int] = Query(None, ge=1, le=12, description="Lọc theo tháng (1 - 12)"),
+    nam: Optional[int] = Query(None, ge=2000, description="Lọc theo năm"),
+    ma_chuong_trinh: Optional[int] = Query(None, description="Lọc theo khóa thực tập"),
+    chuyen_nganh: Optional[str] = Query(None, description="Lọc theo lớp / chuyên ngành"),
+    trang_thai: Optional[str] = Query(None, description="Lọc theo trạng thái"),
+    page: int = Query(1, ge=1, description="Trang hiện tại"),
+    page_size: int = Query(50, ge=1, le=200, description="Số lượng bản ghi mỗi trang"),
+    db: Session = Depends(get_db)
+):
+    query = (
+        db.query(ChamCong)
+        .join(HoSoThucTap, ChamCong.ma_ho_so == HoSoThucTap.ma_ho_so)
+        .join(NguoiDung, HoSoThucTap.ma_nguoi_dung == NguoiDung.ma_nguoi_dung)
+    )
+
+    if ma_ho_so:
+        query = query.filter(ChamCong.ma_ho_so == ma_ho_so)
+    if ma_chuong_trinh:
+        query = query.filter(HoSoThucTap.ma_chuong_trinh == ma_chuong_trinh)
+    if chuyen_nganh and chuyen_nganh != "tat-ca":
+        query = query.filter(HoSoThucTap.chuyen_nganh == chuyen_nganh)
+
+    target_year = nam if nam else datetime.now().year
+    if ngay:
+        try:
+            d_filter = datetime.strptime(ngay, "%Y-%m-%d").date()
+            query = query.filter(ChamCong.ngay_cham_cong == d_filter)
+        except Exception:
+            pass
+    elif thang:
+        start_d = date(target_year, thang, 1)
+        end_d = date(target_year + 1, 1, 1) if thang == 12 else date(target_year, thang + 1, 1)
+        query = query.filter(ChamCong.ngay_cham_cong >= start_d, ChamCong.ngay_cham_cong < end_d)
+    elif nam:
+        start_d = date(target_year, 1, 1)
+        end_d = date(target_year + 1, 1, 1)
+        query = query.filter(ChamCong.ngay_cham_cong >= start_d, ChamCong.ngay_cham_cong < end_d)
+
+    if trang_thai and trang_thai not in ["tat-ca", "VangMat"]:
+        query = query.filter(ChamCong.trang_thai == trang_thai)
+
+    query = query.order_by(ChamCong.ngay_cham_cong.desc(), ChamCong.gio_check_in.desc())
+    records = query.all()
+
+    items = []
+    dung_gio_count = 0
+    di_muon_count = 0
+    ve_som_count = 0
+
+    for cc in records:
+        hs = cc.ho_so
+        user = hs.thuc_tap_sinh if hs else None
+
+        gio_float = 0.0
+        if cc.gio_check_in and cc.gio_check_out:
+            t1 = datetime.combine(cc.ngay_cham_cong, cc.gio_check_in)
+            t2 = datetime.combine(cc.ngay_cham_cong, cc.gio_check_out)
+            diff_hours = (t2 - t1).total_seconds() / 3600.0
+            gio_float = round(max(0.0, diff_hours), 1)
+        elif cc.gio_check_in:
+            gio_float = 8.5
+
+        st = cc.trang_thai or "DungGio"
+        if st == "DungGio":
+            dung_gio_count += 1
+        elif st == "DiMuon":
+            di_muon_count += 1
+        elif st == "VeSom":
+            ve_som_count += 1
+
+        pb_name = "Trung tâm Phát triển Phần mềm ICTU"
+        if hs and hs.chuong_trinh and hs.chuong_trinh.phong_ban:
+            pb_name = hs.chuong_trinh.phong_ban.ten_phong_ban
+        elif user and user.phong_ban:
+            pb_name = user.phong_ban.ten_phong_ban
+
+        student_code = f"DTC20510{1000 + (hs.ma_ho_so if hs else 0)}"[-13:]
+
+        items.append({
+            "ma_cham_cong": cc.ma_cham_cong,
+            "ma_ho_so": cc.ma_ho_so,
+            "ma_sv": student_code,
+            "ho_ten": user.ho_ten if user else f"Thực tập sinh #{cc.ma_ho_so}",
+            "email": user.email if user else "",
+            "phong_ban": pb_name,
+            "chuyen_nganh": hs.chuyen_nganh if hs else "Công nghệ thông tin",
+            "ngay": cc.ngay_cham_cong.strftime("%d/%m/%Y") if cc.ngay_cham_cong else "",
+            "ngay_iso": cc.ngay_cham_cong.isoformat() if cc.ngay_cham_cong else "",
+            "vao": cc.gio_check_in.strftime("%H:%M") if cc.gio_check_in else "--:--",
+            "ra": cc.gio_check_out.strftime("%H:%M") if cc.gio_check_out else "--:--",
+            "gio": gio_float,
+            "trang_thai": st,
+            "phuong_thuc": cc.phuong_thuc or "Web",
+            "ghi_chu": cc.ghi_chu or ("Đúng giờ ca làm việc" if st == "DungGio" else ("Đi muộn" if st == "DiMuon" else "Về sớm")),
+        })
+
+    vang_count = 0
+    if not trang_thai or trang_thai in ["tat-ca", "VangMat"]:
+        dnp_query = (
+            db.query(DonNghiPhep)
+            .join(HoSoThucTap, DonNghiPhep.ma_ho_so == HoSoThucTap.ma_ho_so)
+            .join(NguoiDung, HoSoThucTap.ma_nguoi_dung == NguoiDung.ma_nguoi_dung)
+            .filter(DonNghiPhep.trang_thai == "DaDuyet")
+        )
+        if ma_ho_so:
+            dnp_query = dnp_query.filter(DonNghiPhep.ma_ho_so == ma_ho_so)
+        if ma_chuong_trinh:
+            dnp_query = dnp_query.filter(HoSoThucTap.ma_chuong_trinh == ma_chuong_trinh)
+        if chuyen_nganh and chuyen_nganh != "tat-ca":
+            dnp_query = dnp_query.filter(HoSoThucTap.chuyen_nganh == chuyen_nganh)
+
+        if ngay:
+            try:
+                d_filter = datetime.strptime(ngay, "%Y-%m-%d").date()
+                dnp_query = dnp_query.filter(DonNghiPhep.ngay_nghi == d_filter)
+            except Exception:
+                pass
+        elif thang:
+            start_d = date(target_year, thang, 1)
+            end_d = date(target_year + 1, 1, 1) if thang == 12 else date(target_year, thang + 1, 1)
+            dnp_query = dnp_query.filter(DonNghiPhep.ngay_nghi >= start_d, DonNghiPhep.ngay_nghi < end_d)
+        elif nam:
+            start_d = date(target_year, 1, 1)
+            end_d = date(target_year + 1, 1, 1)
+            dnp_query = dnp_query.filter(DonNghiPhep.ngay_nghi >= start_d, DonNghiPhep.ngay_nghi < end_d)
+
+        leaves = dnp_query.order_by(DonNghiPhep.ngay_nghi.desc()).all()
+        vang_count = len(leaves)
+        for lv in leaves:
+            hs = lv.ho_so
+            user = hs.thuc_tap_sinh if hs else None
+            pb_name = "Trung tâm Phát triển Phần mềm ICTU"
+            if hs and hs.chuong_trinh and hs.chuong_trinh.phong_ban:
+                pb_name = hs.chuong_trinh.phong_ban.ten_phong_ban
+            elif user and user.phong_ban:
+                pb_name = user.phong_ban.ten_phong_ban
+
+            student_code = f"DTC20510{1000 + (hs.ma_ho_so if hs else 0)}"[-13:]
+            items.append({
+                "ma_cham_cong": None,
+                "ma_ho_so": lv.ma_ho_so,
+                "ma_sv": student_code,
+                "ho_ten": user.ho_ten if user else f"Thực tập sinh #{lv.ma_ho_so}",
+                "email": user.email if user else "",
+                "phong_ban": pb_name,
+                "chuyen_nganh": hs.chuyen_nganh if hs else "Công nghệ thông tin",
+                "ngay": lv.ngay_nghi.strftime("%d/%m/%Y") if lv.ngay_nghi else "",
+                "ngay_iso": lv.ngay_nghi.isoformat() if lv.ngay_nghi else "",
+                "vao": "--:--",
+                "ra": "--:--",
+                "gio": 0.0,
+                "trang_thai": "VangMat",
+                "phuong_thuc": "Đơn nghỉ phép",
+                "ghi_chu": f"Nghỉ phép có lý do: {lv.ly_do}",
+            })
+
+    items.sort(key=lambda x: x.get("ngay_iso", ""), reverse=True)
+    total_count = len(items)
+
+    start_idx = (page - 1) * page_size
+    end_idx = start_idx + page_size
+    paginated_items = items[start_idx:end_idx]
+
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách bản ghi chấm công thành công",
+        "data": {
+            "summary": {
+                "tong": total_count,
+                "dung_gio": dung_gio_count,
+                "di_muon": di_muon_count,
+                "ve_som": ve_som_count,
+                "vang": vang_count,
+            },
+            "items": paginated_items,
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total_items": total_count,
+                "total_pages": (total_count + page_size - 1) // page_size if total_count > 0 else 0,
+            },
+        },
+    }
+
+
+@app.get("/api/v1/attendance/shifts", status_code=200)
+def get_attendance_shifts(db: Session = Depends(get_db)):
+    """
+    Lấy danh mục ca làm việc (Shift / Schedule) phục vụ việc Mentor chọn ca điểm danh.
+    """
+    shifts = db.query(CaLamViec).filter(CaLamViec.trang_thai == "HoatDong").order_by(CaLamViec.gio_bat_dau.asc()).all()
+    if not shifts:
+        shifts = db.query(CaLamViec).all()
+    return {
+        "status_code": 200,
+        "message": "Lấy danh mục ca làm việc thành công",
+        "data": [s.to_dict() for s in shifts]
+    }
+
+
+@app.post("/api/v1/attendance/shifts", status_code=201, response_model=ShiftCreateResponse)
+def create_attendance_shift(req: ShiftCreateRequest, db: Session = Depends(get_db)):
+    """
+    Endpoint tạo mới ca làm việc / buổi gặp mặt (Mentoring session linh hoạt):
+    - Kiểm tra tên ca không trùng lặp trong hệ thống (HTTP 409 Conflict).
+    - Validate giờ kết thúc > giờ bắt đầu (xử lý qua Pydantic schema).
+    - Lưu bản ghi vào bảng ca_lam_viec trong cơ sở dữ liệu.
+    """
+    existing = db.query(CaLamViec).filter(
+        CaLamViec.ten_ca == req.ten_ca,
+        CaLamViec.trang_thai == "HoatDong"
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Ca làm việc hoặc buổi gặp mang tên '{req.ten_ca}' đã tồn tại trong hệ thống."
+        )
+
+    t_start = datetime.strptime(req.gio_bat_dau[:5], "%H:%M").time()
+    t_end = datetime.strptime(req.gio_ket_thuc[:5], "%H:%M").time()
+
+    new_shift = CaLamViec(
+        ten_ca=req.ten_ca,
+        gio_bat_dau=t_start,
+        gio_ket_thuc=t_end,
+        cac_ngay_trong_tuan=req.cac_ngay_trong_tuan or "Tất cả các ngày",
+        ghi_chu=req.ghi_chu or "",
+        trang_thai="HoatDong"
+    )
+    db.add(new_shift)
+    db.commit()
+    db.refresh(new_shift)
+
+    return {
+        "status_code": 201,
+        "message": "Tạo ca làm việc / buổi gặp thành công",
+        "data": new_shift.to_dict()
+    }
+
+
+@app.post("/api/v1/attendance/roll-call", status_code=200, response_model=RollCallResponse)
+def mentor_roll_call(req: RollCallRequest, db: Session = Depends(get_db)):
+    """
+    Endpoint tiếp nhận sổ điểm danh từ Mentor theo ngày, ca làm việc, khóa và lớp:
+    - Mentor chọn ngày, ca làm việc, khóa và lớp sinh viên.
+    - Duyệt qua từng sinh viên trong danh sách:
+      + Tạo mới hoặc cập nhật bản ghi trong bảng ChamCong với phuong_thuc="Mentor".
+      + Đảm bảo sinh viên có đơn nghỉ phép đã duyệt được giữ trạng thái vắng/nghỉ phép.
+      + Tự động tính toán giờ vào/giờ ra theo ca làm việc nếu client không truyền.
+    """
+    if not req.records:
+        raise HTTPException(status_code=400, detail="Danh sách điểm danh không được để trống")
+
+    default_in = time(8, 0, 0)
+    default_out = time(17, 30, 0)
+
+    # Ưu tiên tìm đúng ca làm việc trong cơ sở dữ liệu
+    shift_record = db.query(CaLamViec).filter(CaLamViec.ten_ca == req.ca_lam_viec).first()
+    if shift_record:
+        default_in = shift_record.gio_bat_dau
+        default_out = shift_record.gio_ket_thuc
+    else:
+        ca_str = (req.ca_lam_viec or "").lower()
+        if "sáng" in ca_str:
+            default_in = time(8, 0, 0)
+            default_out = time(12, 0, 0)
+        elif "chiều" in ca_str:
+            default_in = time(13, 30, 0)
+            default_out = time(17, 30, 0)
+
+    saved_items = []
+    for item in req.records:
+        ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == item.ma_ho_so).first()
+        if not ho_so:
+            continue
+
+        t_in = default_in
+        t_out = default_out
+        if item.gio_check_in:
+            try:
+                parts = item.gio_check_in.split(":")
+                t_in = time(int(parts[0]), int(parts[1]), int(parts[2]) if len(parts) > 2 else 0)
+            except Exception:
+                pass
+        if item.gio_check_out:
+            try:
+                parts = item.gio_check_out.split(":")
+                t_out = time(int(parts[0]), int(parts[1]), int(parts[2]) if len(parts) > 2 else 0)
+            except Exception:
+                pass
+
+        if item.trang_thai == "VangMat":
+            t_in = None
+            t_out = None
+
+        existing = db.query(ChamCong).filter(
+            ChamCong.ma_ho_so == item.ma_ho_so,
+            ChamCong.ngay_cham_cong == req.ngay_cham_cong
+        ).first()
+
+        note_prefix = f"[{req.ca_lam_viec}] " if req.ca_lam_viec else ""
+        full_note = f"{note_prefix}{item.ghi_chu or ''}".strip()
+
+        dt_in = datetime.combine(req.ngay_cham_cong, t_in) if t_in else None
+        dt_out = datetime.combine(req.ngay_cham_cong, t_out) if t_out else None
+
+        if existing:
+            existing.trang_thai = item.trang_thai
+            existing.gio_check_in = t_in
+            existing.gio_check_out = t_out
+            existing.thoi_gian_checkin = dt_in
+            existing.thoi_gian_checkout = dt_out
+            existing.phuong_thuc = "Mentor"
+            if full_note:
+                existing.ghi_chu = full_note
+            saved_items.append(existing.to_dict())
+        else:
+            new_record = ChamCong(
+                ma_ho_so=item.ma_ho_so,
+                ngay_cham_cong=req.ngay_cham_cong,
+                thoi_gian_checkin=dt_in,
+                thoi_gian_checkout=dt_out,
+                gio_check_in=t_in,
+                gio_check_out=t_out,
+                trang_thai=item.trang_thai,
+                phuong_thuc="Mentor",
+                ghi_chu=full_note
+            )
+            db.add(new_record)
+            db.flush()
+            saved_items.append(new_record.to_dict())
+
+    db.commit()
+    return {
+        "status_code": 200,
+        "message": f"Lưu thành công sổ điểm danh cho {len(saved_items)} thực tập sinh",
+        "total_saved": len(saved_items),
+        "data": saved_items
+    }
+
+
+
+
 # ==============================================================
 # API QUẢN LÝ ĐƠN XIN NGHỈ PHÉP (LEAVE REQUESTS)
 # ==============================================================
@@ -1366,8 +1998,8 @@ def create_leave_request(req: LeaveRequestCreate, db: Session = Depends(get_db))
     - Tiếp nhận: ma_ho_so, tu_ngay, den_ngay, ly_do, trang_thai (mặc định 'Chờ duyệt').
     - Validate mã hồ sơ thực tập sinh (404 Not Found nếu không tìm thấy).
     - Validate tu_ngay >= ngày hiện tại và den_ngay >= tu_ngay (xử lý qua schema validator).
+    - Kiểm tra quỹ nghỉ phép tối đa 3 ngày của thực tập sinh.
     - Lưu bản ghi vào bảng don_xin_nghi.
-    - Trả về mã HTTP 201 Created cùng dữ liệu đơn xin nghỉ vừa tạo.
     """
     # 1. Kiểm tra hồ sơ thực tập sinh có tồn tại trong hệ thống không
     ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == req.ma_ho_so).first()
@@ -1377,7 +2009,61 @@ def create_leave_request(req: LeaveRequestCreate, db: Session = Depends(get_db))
             detail=f"Không tìm thấy hồ sơ thực tập sinh với mã ID: {req.ma_ho_so}"
         )
 
-    # 2. Khởi tạo bản ghi đơn xin nghỉ mới
+    # 2. Kiểm tra hạn mức quỹ phép tối đa 3 ngày
+    so_ngay_xin = (req.den_ngay - req.tu_ngay).days + 1
+    if so_ngay_xin > 3:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Số ngày xin nghỉ ({so_ngay_xin} ngày) vượt quá hạn mức tối đa 3 ngày phép của toàn bộ kỳ thực tập."
+        )
+
+    # Chặn nộp trùng lặp khoảng thời gian đã xin trước đó (ngoại trừ đơn đã bị Từ chối)
+    overlapping = db.query(DonXinNghi).filter(
+        DonXinNghi.ma_ho_so == req.ma_ho_so,
+        DonXinNghi.trang_thai.notin_(["Từ chối", "TuChoi"]),
+        DonXinNghi.tu_ngay <= req.den_ngay,
+        DonXinNghi.den_ngay >= req.tu_ngay
+    ).first()
+    if overlapping:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Bạn đã có đơn nghỉ phép (mã NP-{overlapping.ma_don:03d}, trạng thái: {overlapping.trang_thai}) trùng hoặc giao thoa với khoảng thời gian này ({overlapping.tu_ngay.strftime('%d/%m/%Y')} - {overlapping.den_ngay.strftime('%d/%m/%Y')})."
+        )
+
+    # Chỉ tính các đơn đã được duyệt chính thức vào số ngày đã trừ
+    approved_leaves = db.query(DonXinNghi).filter(
+        DonXinNghi.ma_ho_so == req.ma_ho_so,
+        DonXinNghi.trang_thai.in_(["Đã duyệt", "DaDuyet"])
+    ).all()
+
+    so_ngay_da_duyet = sum((d.den_ngay - d.tu_ngay).days + 1 for d in approved_leaves)
+    so_ngay_con_lai = max(0, 3 - so_ngay_da_duyet)
+
+    if so_ngay_con_lai <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Bạn đã sử dụng hết hạn mức 3 ngày nghỉ phép quy định của kỳ thực tập (đã duyệt 3/3 ngày). Không thể nộp thêm đơn mới."
+        )
+
+    if so_ngay_xin > so_ngay_con_lai:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Số ngày xin nghỉ ({so_ngay_xin} ngày) vượt quá hạn mức nghỉ phép còn lại của bạn ({so_ngay_con_lai} ngày còn lại trên tổng 3 ngày)."
+        )
+
+    # Kiểm tra tổng số ngày chờ duyệt để chặn nộp dồn dập vượt quá quỹ phép
+    pending_leaves = db.query(DonXinNghi).filter(
+        DonXinNghi.ma_ho_so == req.ma_ho_so,
+        DonXinNghi.trang_thai.in_(["Chờ duyệt", "ChoDuyet"])
+    ).all()
+    so_ngay_cho_duyet = sum((d.den_ngay - d.tu_ngay).days + 1 for d in pending_leaves)
+    if so_ngay_xin > (so_ngay_con_lai - so_ngay_cho_duyet):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Bạn hiện có {so_ngay_cho_duyet} ngày nghỉ đang chờ xét duyệt và {so_ngay_da_duyet} ngày đã duyệt (tổng {so_ngay_da_duyet + so_ngay_cho_duyet}/3 ngày). Bạn chỉ có thể nộp thêm tối đa {max(0, so_ngay_con_lai - so_ngay_cho_duyet)} ngày nghỉ nữa."
+        )
+
+    # 3. Khởi tạo bản ghi đơn xin nghỉ mới
     new_request = DonXinNghi(
         ma_ho_so=req.ma_ho_so,
         tu_ngay=req.tu_ngay,
@@ -1395,6 +2081,145 @@ def create_leave_request(req: LeaveRequestCreate, db: Session = Depends(get_db))
         "message": "Tạo đơn xin nghỉ thành công",
         "data": new_request.to_dict()
     }
+
+
+@app.get("/api/v1/leave-requests")
+def get_leave_requests(
+    ma_ho_so: Optional[int] = Query(None, description="Lọc theo mã hồ sơ"),
+    trang_thai: Optional[str] = Query(None, description="Lọc theo trạng thái đơn"),
+    db: Session = Depends(get_db)
+):
+    query = db.query(DonXinNghi)
+    if ma_ho_so:
+        query = query.filter(DonXinNghi.ma_ho_so == ma_ho_so)
+    if trang_thai and trang_thai != "tat-ca":
+        query = query.filter(DonXinNghi.trang_thai == trang_thai)
+
+    rows = query.order_by(DonXinNghi.ngay_tao.desc(), DonXinNghi.ma_don.desc()).all()
+
+    data = []
+    for r in rows:
+        hs = r.ho_so
+        user = hs.thuc_tap_sinh if hs else None
+
+        # Tính tổng số ngày đã duyệt của sinh viên này
+        approved_leaves = [
+            x for x in (hs.danh_sach_don_xin_nghi if hs else [])
+            if x.trang_thai in ["Đã duyệt", "DaDuyet"]
+        ]
+        so_ngay_da_duyet = sum((x.den_ngay - x.tu_ngay).days + 1 for x in approved_leaves)
+
+        item_dict = r.to_dict()
+        item_dict["ho_ten"] = user.ho_ten if user else f"Thực tập sinh #{r.ma_ho_so}"
+        item_dict["email"] = user.email if user else ""
+        item_dict["ma_sv"] = f"DTC20510{1000 + r.ma_ho_so}"[-13:]
+        item_dict["chuyen_nganh"] = hs.chuyen_nganh if hs else "Công nghệ thông tin"
+        item_dict["so_ngay_da_duyet"] = so_ngay_da_duyet
+        item_dict["so_ngay_con_lai"] = max(0, 3 - so_ngay_da_duyet)
+        data.append(item_dict)
+
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách đơn xin nghỉ thành công",
+        "data": data
+    }
+
+
+@app.patch("/api/v1/leave-requests/{id}/status", status_code=200, response_model=LeaveStatusUpdateResponse)
+def update_leave_request_status(
+    id: int,
+    req: LeaveStatusUpdateRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint phê duyệt hoặc từ chối đơn xin nghỉ phép của Mentor/HR:
+    - Nếu duyệt: kiểm tra không vượt quá hạn mức 3 ngày phép của sinh viên, đồng bộ vào danh sách nghỉ phép.
+    - Nếu từ chối: không trừ ngày phép của sinh viên.
+    """
+    don = db.query(DonXinNghi).filter(DonXinNghi.ma_don == id).first()
+    if not don:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy đơn xin nghỉ phép với ID: {id}")
+
+    if req.trang_thai in ["Đã duyệt", "DaDuyet"]:
+        # Kiểm tra quỹ phép nếu duyệt đơn này
+        other_approved = db.query(DonXinNghi).filter(
+            DonXinNghi.ma_ho_so == don.ma_ho_so,
+            DonXinNghi.ma_don != don.ma_don,
+            DonXinNghi.trang_thai.in_(["Đã duyệt", "DaDuyet"])
+        ).all()
+
+        so_ngay_da_duyet = sum((d.den_ngay - d.tu_ngay).days + 1 for d in other_approved)
+        so_ngay_don_nay = (don.den_ngay - don.tu_ngay).days + 1
+
+        if so_ngay_da_duyet + so_ngay_don_nay > 3:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Không thể duyệt: Đơn này ({so_ngay_don_nay} ngày) khiến tổng số ngày nghỉ vượt quá hạn mức tối đa 3 ngày (sinh viên đã được duyệt {so_ngay_da_duyet} ngày trước đó)."
+            )
+
+        don.trang_thai = "Đã duyệt"
+
+        # Đồng bộ sang bảng don_nghi_phep theo từng ngày để liên thông với sổ điểm danh
+        curr = don.tu_ngay
+        while curr <= don.den_ngay:
+            dnp = db.query(DonNghiPhep).filter(
+                DonNghiPhep.ma_ho_so == don.ma_ho_so,
+                DonNghiPhep.ngay_nghi == curr
+            ).first()
+            if not dnp:
+                db.add(DonNghiPhep(
+                    ma_ho_so=don.ma_ho_so,
+                    ngay_nghi=curr,
+                    ly_do=don.ly_do,
+                    trang_thai="DaDuyet"
+                ))
+            else:
+                dnp.trang_thai = "DaDuyet"
+            curr += timedelta(days=1)
+
+        # Tự động cập nhật các đơn chờ duyệt khác của sinh viên nếu không còn đủ quỹ phép
+        so_ngay_sau_duyet = so_ngay_da_duyet + so_ngay_don_nay
+        so_ngay_con_lai_moi = max(0, 3 - so_ngay_sau_duyet)
+
+        other_pending = db.query(DonXinNghi).filter(
+            DonXinNghi.ma_ho_so == don.ma_ho_so,
+            DonXinNghi.ma_don != don.ma_don,
+            DonXinNghi.trang_thai.in_(["Chờ duyệt", "ChoDuyet"])
+        ).all()
+
+        for op in other_pending:
+            op_so_ngay = (op.den_ngay - op.tu_ngay).days + 1
+            if so_ngay_con_lai_moi == 0:
+                op.trang_thai = "Từ chối"
+                op.ly_do = f"{op.ly_do} [Hệ thống tự động từ chối: Sinh viên đã dùng hết 3/3 ngày phép]"
+            elif op_so_ngay > so_ngay_con_lai_moi:
+                op.trang_thai = "Từ chối"
+                op.ly_do = f"{op.ly_do} [Hệ thống tự động từ chối: Số ngày xin ({op_so_ngay} ngày) vượt quá quỹ còn lại ({so_ngay_con_lai_moi} ngày)]"
+
+    elif req.trang_thai in ["Từ chối", "TuChoi"]:
+        don.trang_thai = "Từ chối"
+        curr = don.tu_ngay
+        while curr <= don.den_ngay:
+            dnp = db.query(DonNghiPhep).filter(
+                DonNghiPhep.ma_ho_so == don.ma_ho_so,
+                DonNghiPhep.ngay_nghi == curr
+            ).first()
+            if dnp:
+                dnp.trang_thai = "TuChoi"
+            curr += timedelta(days=1)
+    else:
+        don.trang_thai = req.trang_thai
+
+    db.commit()
+    db.refresh(don)
+
+    return {
+        "status_code": 200,
+        "message": f"Đơn xin nghỉ phép đã được chuyển sang trạng thái: {don.trang_thai}",
+        "data": don.to_dict()
+    }
+
+
 
 
 # ==============================================================

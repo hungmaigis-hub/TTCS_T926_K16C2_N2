@@ -17,12 +17,16 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def clean_created_test_programs():
     """Dọn dẹp các chương trình được tạo trong quá trình test sau mỗi test case"""
+    db = SessionLocal() if MYSQL_AVAILABLE else TestSessionLocal()
+    initial_ids = [row[0] for row in db.query(ChuongTrinhThucTap.ma_chuong_trinh).all()]
+    db.close()
     yield
     db = SessionLocal() if MYSQL_AVAILABLE else TestSessionLocal()
     try:
-        # Xóa các chương trình test có mã lớn hơn 1 (dữ liệu mẫu ban đầu là 1)
-        db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh > 1).delete()
-        # Khôi phục mốc thời gian ban đầu của chương trình mẫu 1
+        if initial_ids:
+            db.query(ChuongTrinhThucTap).filter(~ChuongTrinhThucTap.ma_chuong_trinh.in_(initial_ids)).delete(synchronize_session=False)
+        else:
+            db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh > 1).delete()
         prog1 = db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh == 1).first()
         if prog1:
             prog1.ngay_bat_dau = date(2026, 9, 1)

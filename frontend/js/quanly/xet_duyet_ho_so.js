@@ -19,7 +19,7 @@ async function taiDanhSachHoSo(hienThongBaoKetNoi = false) {
 
   try {
     const phanHoi = await fetch(`${duongDanApi}/interns`);
-    if (!phanHoi.ok) throw new Error("Không thể kết nối đến API danh sách hồ sơ");
+    if (!phanHoi.ok) throw new Error("Không thể tải danh sách hồ sơ từ máy chủ");
 
     const ketQua = await phanHoi.json();
     const hoSoApi = ketQua.data || [];
@@ -28,7 +28,7 @@ async function taiDanhSachHoSo(hienThongBaoKetNoi = false) {
     if (badgeEl) {
       badgeEl.className =
         "hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200";
-      badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>API Backend: Đang kết nối (${hoSoApi.length} hồ sơ)</span>`;
+      badgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Máy chủ: Đang kết nối (${hoSoApi.length} hồ sơ)</span>`;
     }
 
     danhSachHoSo = hoSoApi.map((h, index) => ({
@@ -52,7 +52,7 @@ async function taiDanhSachHoSo(hienThongBaoKetNoi = false) {
 
     if (hienThongBaoKetNoi) {
       hienThongBao(
-        `Đã tải thành công ${danhSachHoSo.length} hồ sơ trực tiếp từ cơ sở dữ liệu Backend qua API!`,
+        `Đã tải thành công ${danhSachHoSo.length} hồ sơ trực tiếp từ máy chủ!`,
         "success",
       );
     }
@@ -176,13 +176,13 @@ function hienThiDanhSach(danhSach) {
               <span>Từ chối</span>
             </button>
             <button
-              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors"
+              class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-colors"
               onclick="moHopThoaiTaiLieu(${item.ma_ho_so}, '${item.ho_ten.replace(/'/g, "\\'")}')"
-              title="Xem tài liệu thẩm định"
+              title="Xem CV và tài liệu thẩm định"
               type="button"
             >
-              <span class="material-symbols-outlined text-[15px]">description</span>
-              <span class="hidden xl:inline">Tài liệu</span>
+              <span class="material-symbols-outlined text-[15px] text-primary">visibility</span>
+              <span>Xem CV</span>
             </button>
           </div>
         `;
@@ -194,12 +194,13 @@ function hienThiDanhSach(danhSach) {
               <span>Chờ phân công GVHD</span>
             </span>
             <button
-              class="inline-flex items-center p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-slate-600 hover:text-primary hover:bg-slate-100 transition-colors text-xs font-medium"
               onclick="moHopThoaiTaiLieu(${item.ma_ho_so}, '${item.ho_ten.replace(/'/g, "\\'")}')"
-              title="Xem lại tài liệu"
+              title="Xem lại CV & tài liệu"
               type="button"
             >
-              <span class="material-symbols-outlined text-[16px]">folder_open</span>
+              <span class="material-symbols-outlined text-[15px] text-primary">visibility</span>
+              <span>Xem CV</span>
             </button>
           </div>
         `;
@@ -208,12 +209,13 @@ function hienThiDanhSach(danhSach) {
           <div class="flex items-center justify-center gap-2">
             <span class="text-xs text-slate-400 italic">Đã gửi lý do phản hồi</span>
             <button
-              class="inline-flex items-center p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-slate-600 hover:text-primary hover:bg-slate-100 transition-colors text-xs font-medium"
               onclick="moHopThoaiTaiLieu(${item.ma_ho_so}, '${item.ho_ten.replace(/'/g, "\\'")}')"
-              title="Xem lại tài liệu"
+              title="Xem lại CV & tài liệu"
               type="button"
             >
-              <span class="material-symbols-outlined text-[16px]">folder_open</span>
+              <span class="material-symbols-outlined text-[15px] text-primary">visibility</span>
+              <span>Xem CV</span>
             </button>
           </div>
         `;
@@ -293,25 +295,40 @@ async function duyetHoSo(maHoSo, maTaiLieu) {
       },
     );
 
-    if (phanHoi.ok) {
-      item.trang_thai_xet_duyet = "DaDuyet";
-      hienThiDanhSach(danhSachHoSo);
-      capNhatBoDem();
-      hienThongBao(
-        `Đã phê duyệt hồ sơ của sinh viên <strong>${item.ho_ten}</strong> (#${maHoSo})! Hệ thống Backend đã tự động gửi email thông báo kết quả tới <strong>${item.email}</strong>.`,
-        "success",
-      );
+    const resData = await phanHoi.json().catch(() => ({}));
+
+    if (!phanHoi.ok) {
+      let errorMsg = "Không thể phê duyệt hồ sơ này.";
+      if (typeof resData.detail === "string") {
+        errorMsg = resData.detail;
+      } else if (Array.isArray(resData.detail)) {
+        errorMsg = resData.detail.map((e) => e.msg || e.message).join(", ");
+      }
+      hienThongBao(`Lỗi phê duyệt hồ sơ #${maHoSo}: ${errorMsg}`, "error");
       return;
     }
-  } catch (err) {}
 
-  item.trang_thai_xet_duyet = "DaDuyet";
-  hienThiDanhSach(danhSachHoSo);
-  capNhatBoDem();
-  hienThongBao(
-    `Đã phê duyệt thành công hồ sơ của sinh viên <strong>${item.ho_ten}</strong> (#${maHoSo})!`,
-    "success",
-  );
+    item.trang_thai_xet_duyet = "DaDuyet";
+    hienThiDanhSach(danhSachHoSo);
+    capNhatBoDem();
+    if (dangChonMa === maHoSo) {
+      await taiLaiTaiLieuTrongModal(maHoSo);
+    }
+    hienThongBao(
+      `Đã phê duyệt hồ sơ của sinh viên <strong>${item.ho_ten}</strong> (#${maHoSo}) và toàn bộ tài liệu đính kèm! Hệ thống đã tự động gửi email thông báo kết quả tới <strong>${item.email}</strong>.`,
+      "success",
+    );
+  } catch (err) {
+    hienThongBao(
+      `Mất kết nối tới máy chủ khi phê duyệt hồ sơ #${maHoSo} (${err.message || "Lỗi mạng"}). Vui lòng kiểm tra lại dịch vụ Backend.`,
+      "error",
+    );
+  } finally {
+    if (nutDuyet) {
+      nutDuyet.disabled = false;
+      nutDuyet.innerHTML = `<span class="material-symbols-outlined text-[15px]">check_circle</span> <span>Duyệt</span>`;
+    }
+  }
 }
 
 function moHopThoaiTuChoi(maHoSo, tenUngVien, maTaiLieu, email) {
@@ -354,7 +371,7 @@ async function xacNhanTuChoiHoSo() {
   const lyDo = lyDoInput?.value.trim();
 
   if (!lyDo) {
-    alert("Vui lòng nhập lý do từ chối hồ sơ.");
+    hienThongBao("Vui lòng nhập lý do từ chối hồ sơ.", "error");
     lyDoInput?.focus();
     return;
   }
@@ -380,36 +397,43 @@ async function xacNhanTuChoiHoSo() {
       },
     );
 
-    if (phanHoi.ok) {
-      if (item) item.trang_thai_xet_duyet = "TuChoi";
-      dongHopThoaiTuChoi();
-      hienThiDanhSach(danhSachHoSo);
-      capNhatBoDem();
-      hienThongBao(
-        `Đã từ chối hồ sơ của <strong>${dangChonTen}</strong>. Email thông báo lý do đã được tự động gửi qua BackgroundTasks tới <strong>${dangChonEmail || "thực tập sinh"}</strong>!`,
-        "error",
-      );
+    const resData = await phanHoi.json().catch(() => ({}));
+
+    if (!phanHoi.ok) {
+      let errorMsg = "Không thể từ chối hồ sơ này.";
+      if (typeof resData.detail === "string") {
+        errorMsg = resData.detail;
+      } else if (Array.isArray(resData.detail)) {
+        errorMsg = resData.detail.map((e) => e.msg || e.message).join(", ");
+      }
+      hienThongBao(`Lỗi từ chối hồ sơ #${dangChonMa}: ${errorMsg}`, "error");
       return;
     }
+
+    if (item) item.trang_thai_xet_duyet = "TuChoi";
+    dongHopThoaiTuChoi();
+    hienThiDanhSach(danhSachHoSo);
+    capNhatBoDem();
+    hienThongBao(
+      `Đã từ chối hồ sơ của <strong>${dangChonTen}</strong>. Email thông báo lý do đã được tự động gửi qua BackgroundTasks tới <strong>${dangChonEmail || "thực tập sinh"}</strong>!`,
+      "error",
+    );
   } catch (err) {
+    hienThongBao(
+      `Mất kết nối tới máy chủ khi gửi lý do từ chối (${err.message || "Lỗi mạng"}). Vui lòng thử lại sau.`,
+      "error",
+    );
   } finally {
     if (nutXacNhan) {
       nutXacNhan.disabled = false;
       nutXacNhan.innerHTML = noiDungGoc;
     }
   }
-
-  if (item) item.trang_thai_xet_duyet = "TuChoi";
-  dongHopThoaiTuChoi();
-  hienThiDanhSach(danhSachHoSo);
-  capNhatBoDem();
-  hienThongBao(
-    `Đã từ chối hồ sơ của ứng viên <strong>${dangChonTen}</strong>.`,
-    "error",
-  );
 }
 
 async function moHopThoaiTaiLieu(maHoSo, tenUngVien) {
+  dangChonMa = maHoSo;
+  dangChonTen = tenUngVien;
   const modal = document.getElementById("hopThoaiTaiLieu");
   const tieuDe = document.getElementById("tieuDeTaiLieuHoSo");
   const moTa = document.getElementById("moTaTaiLieuHoSo");
@@ -424,7 +448,7 @@ async function moHopThoaiTaiLieu(maHoSo, tenUngVien) {
   container.innerHTML = `
     <div class="py-8 text-center text-slate-400">
       <span class="inline-block w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></span>
-      <p class="mt-2 text-xs">Đang tải danh sách tài liệu từ API Backend...</p>
+      <p class="mt-2 text-xs">Đang tải danh sách tài liệu từ máy chủ...</p>
     </div>
   `;
 
@@ -452,6 +476,20 @@ function hienThiDanhSachTaiLieuTrongModal(docs, maHoSo) {
   const container = document.getElementById("danhSachTaiLieuContainer");
   if (!container) return;
 
+  const btnDuyetTatCa = document.getElementById("btnDuyetTatCaTaiLieu");
+  const chuaDuyet = docs.filter((d) => d.trang_thai_duyet !== "DaDuyet").length;
+  if (btnDuyetTatCa) {
+    if (chuaDuyet === 0 && docs.length > 0) {
+      btnDuyetTatCa.disabled = true;
+      btnDuyetTatCa.className = "px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs flex items-center gap-1.5 border border-slate-200 cursor-not-allowed";
+      btnDuyetTatCa.innerHTML = `<span class="material-symbols-outlined text-[16px]">verified</span> <span>Đã duyệt tất cả</span>`;
+    } else {
+      btnDuyetTatCa.disabled = false;
+      btnDuyetTatCa.className = "px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95";
+      btnDuyetTatCa.innerHTML = `<span class="material-symbols-outlined text-[16px]">done_all</span> <span>Duyệt tất cả (${chuaDuyet})</span>`;
+    }
+  }
+
   container.innerHTML = docs
     .map((doc) => {
       let statusColor = "bg-amber-100 text-amber-800";
@@ -464,37 +502,100 @@ function hienThiDanhSachTaiLieuTrongModal(docs, maHoSo) {
         statusText = "Bị từ chối";
       }
 
+      const fileUrl = doc.duong_dan_file.startsWith("http")
+        ? doc.duong_dan_file
+        : `http://127.0.0.1:8000/${doc.duong_dan_file.replace(/^\/+/, "")}`;
+
+      let actionButtons = "";
+      if (doc.trang_thai_duyet === "DaDuyet") {
+        actionButtons = `
+          <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
+            <span class="material-symbols-outlined text-[15px]">verified</span>
+            <span>Đã duyệt</span>
+          </span>
+          <button
+            type="button"
+            onclick="tuChoiTaiLieu(${maHoSo}, ${doc.ma_tai_lieu}, this)"
+            class="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-500 hover:text-rose-600 text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer active:scale-95"
+            title="Từ chối tài liệu này"
+          >
+            <span class="material-symbols-outlined text-[14px]">close</span>
+            <span>Từ chối</span>
+          </button>
+        `;
+      } else if (doc.trang_thai_duyet === "TuChoi") {
+        actionButtons = `
+          <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200">
+            <span class="material-symbols-outlined text-[15px]">cancel</span>
+            <span>Bị từ chối</span>
+          </span>
+          <button
+            type="button"
+            onclick="duyetTaiLieu(${maHoSo}, ${doc.ma_tai_lieu}, this)"
+            class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1 shadow-xs cursor-pointer active:scale-95"
+            title="Phê duyệt lại tài liệu này"
+          >
+            <span class="material-symbols-outlined text-[14px]">check</span>
+            <span>Duyệt lại</span>
+          </button>
+        `;
+      } else {
+        actionButtons = `
+          <button
+            type="button"
+            onclick="duyetTaiLieu(${maHoSo}, ${doc.ma_tai_lieu}, this)"
+            class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors flex items-center gap-1 shadow-xs whitespace-nowrap cursor-pointer active:scale-95"
+            title="Phê duyệt tài liệu này"
+          >
+            <span class="material-symbols-outlined text-[14px]">check</span>
+            <span>Duyệt</span>
+          </button>
+          <button
+            type="button"
+            onclick="tuChoiTaiLieu(${maHoSo}, ${doc.ma_tai_lieu}, this)"
+            class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer active:scale-95"
+            title="Từ chối tài liệu này"
+          >
+            <span class="material-symbols-outlined text-[14px]">close</span>
+            <span>Từ chối</span>
+          </button>
+        `;
+      }
+
       return `
-        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
+        <div class="p-3.5 sm:p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 overflow-hidden">
+          <div class="flex items-center gap-3 min-w-0 flex-1">
             <div class="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-primary shadow-sm shrink-0">
               <span class="material-symbols-outlined text-[22px]">description</span>
             </div>
-            <div>
-              <div class="flex items-center gap-2">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs font-bold text-slate-900">${doc.loai_tai_lieu}</span>
                 <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${statusColor}">${statusText}</span>
               </div>
-              <p class="text-[11px] text-slate-500 font-mono mt-0.5 truncate max-w-xs">${doc.duong_dan_file}</p>
+              <p class="text-[11px] text-slate-500 font-mono mt-0.5 truncate">${doc.duong_dan_file}</p>
             </div>
           </div>
-          <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
-            <a
-              href="javascript:void(0)"
-              onclick="thongBaoDangCapNhat('Xem trực tuyến file ${doc.loai_tai_lieu}')"
-              class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-medium transition-colors flex items-center gap-1"
-            >
-              <span class="material-symbols-outlined text-[14px]">visibility</span>
-              <span>Xem file</span>
-            </a>
+          <div class="flex items-center gap-1.5 self-end sm:self-auto shrink-0 flex-wrap">
             <button
               type="button"
-              onclick="duyetHoSo(${maHoSo}, ${doc.ma_tai_lieu}); dongHopThoaiTaiLieu();"
-              class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition-colors flex items-center gap-1"
+              onclick="xemTrucTuyen('${fileUrl}', '${doc.loai_tai_lieu}')"
+              class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-medium transition-colors flex items-center gap-1 shadow-xs whitespace-nowrap cursor-pointer"
             >
-              <span class="material-symbols-outlined text-[14px]">check</span>
-              <span>Duyệt</span>
+              <span class="material-symbols-outlined text-[15px] text-primary">visibility</span>
+              <span>Xem</span>
             </button>
+            <a
+              href="${fileUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition-colors flex items-center gap-1 whitespace-nowrap"
+              title="Mở tài liệu trong tab mới"
+            >
+              <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+              <span>Tab mới</span>
+            </a>
+            ${actionButtons}
           </div>
         </div>
       `;
@@ -502,9 +603,133 @@ function hienThiDanhSachTaiLieuTrongModal(docs, maHoSo) {
     .join("");
 }
 
+function xemTrucTuyen(duongDan, tieuDe) {
+  const modal = document.getElementById("hopThoaiXemPdf");
+  const iframe = document.getElementById("khungXemPdf");
+  const tieuDeEl = document.getElementById("tieuDeXemPdf");
+  const linkEl = document.getElementById("nutMoTabMoi");
+  const duongDanEl = document.getElementById("duongDanXemPdf");
+
+  const fullUrl = duongDan.startsWith("http")
+    ? duongDan
+    : `http://127.0.0.1:8000/${duongDan.replace(/^\/+/, "")}`;
+
+  if (tieuDeEl) tieuDeEl.textContent = `Xem ${tieuDe || "Tài Liệu / CV"}`;
+  if (duongDanEl) duongDanEl.textContent = duongDan;
+  if (linkEl) linkEl.href = fullUrl;
+  if (iframe) iframe.src = fullUrl;
+  if (modal) modal.classList.remove("hidden");
+}
+
+function dongHopThoaiXemPdf() {
+  const modal = document.getElementById("hopThoaiXemPdf");
+  const iframe = document.getElementById("khungXemPdf");
+  if (iframe) iframe.src = "";
+  if (modal) modal.classList.add("hidden");
+}
+
 function dongHopThoaiTaiLieu() {
   const modal = document.getElementById("hopThoaiTaiLieu");
   if (modal) modal.classList.add("hidden");
+  dangChonMa = null;
+  dangChonTen = "";
+}
+
+async function taiLaiTaiLieuTrongModal(maHoSo) {
+  try {
+    const phanHoi = await fetch(`${duongDanApi}/documents/${maHoSo}`);
+    if (phanHoi.ok) {
+      const resData = await phanHoi.json();
+      const docs = resData.data || [];
+      hienThiDanhSachTaiLieuTrongModal(docs, maHoSo);
+    }
+  } catch (e) {}
+}
+
+async function duyetTaiLieu(maHoSo, maTaiLieu, nutBam) {
+  if (nutBam) {
+    nutBam.disabled = true;
+    nutBam.innerHTML = `<span class="inline-block w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin"></span>`;
+  }
+  try {
+    const res = await fetch(`${duongDanApi}/documents/${maTaiLieu}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        trang_thai_duyet: "DaDuyet",
+        ghi_chu: "Đã thẩm định và duyệt tài liệu."
+      })
+    });
+    const resData = await res.json().catch(() => ({}));
+    if (res.ok) {
+      hienThongBao("Đã phê duyệt tài liệu thành công!", "success");
+      await taiLaiTaiLieuTrongModal(maHoSo);
+    } else {
+      const msg = resData.detail || "Không thể duyệt tài liệu này";
+      hienThongBao(`Lỗi duyệt tài liệu: ${msg}`, "error");
+      if (nutBam) nutBam.disabled = false;
+    }
+  } catch (err) {
+    hienThongBao(`Mất kết nối máy chủ: ${err.message || err}`, "error");
+    if (nutBam) nutBam.disabled = false;
+  }
+}
+
+async function tuChoiTaiLieu(maHoSo, maTaiLieu, nutBam) {
+  if (nutBam) {
+    nutBam.disabled = true;
+  }
+  try {
+    const res = await fetch(`${duongDanApi}/documents/${maTaiLieu}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        trang_thai_duyet: "TuChoi",
+        ghi_chu: "Tài liệu chưa đạt yêu cầu quy chuẩn."
+      })
+    });
+    const resData = await res.json().catch(() => ({}));
+    if (res.ok) {
+      hienThongBao("Đã từ chối tài liệu.", "error");
+      await taiLaiTaiLieuTrongModal(maHoSo);
+    } else {
+      const msg = resData.detail || "Không thể từ chối tài liệu";
+      hienThongBao(`Lỗi từ chối tài liệu: ${msg}`, "error");
+      if (nutBam) nutBam.disabled = false;
+    }
+  } catch (err) {
+    hienThongBao(`Mất kết nối máy chủ: ${err.message || err}`, "error");
+    if (nutBam) nutBam.disabled = false;
+  }
+}
+
+async function duyetTatCaTaiLieuTrongModal() {
+  if (!dangChonMa) return;
+  const btn = document.getElementById("btnDuyetTatCaTaiLieu");
+  const noiDungCu = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin"></span> <span>Đang duyệt...</span>`;
+  }
+  try {
+    const res = await fetch(`${duongDanApi}/documents/${dangChonMa}/approve-all`, {
+      method: "POST"
+    });
+    const resData = await res.json().catch(() => ({}));
+    if (res.ok) {
+      hienThongBao(`Đã phê duyệt toàn bộ tài liệu đính kèm của hồ sơ #${dangChonMa}!`, "success");
+      await taiLaiTaiLieuTrongModal(dangChonMa);
+    } else {
+      const msg = resData.detail || "Không thể duyệt toàn bộ tài liệu";
+      hienThongBao(`Lỗi: ${msg}`, "error");
+    }
+  } catch (err) {
+    hienThongBao(`Mất kết nối máy chủ: ${err.message || err}`, "error");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+    }
+  }
 }
 
 function locDanhSach(trangThai, nutBam) {
@@ -587,7 +812,7 @@ function duyetHangLoat() {
     (h) => h.trang_thai_xet_duyet === "ChoDuyet",
   );
   if (cacHoSoCho.length === 0) {
-    alert("Không còn hồ sơ nào đang chờ xét duyệt!");
+    hienThongBao("Không còn hồ sơ nào đang chờ xét duyệt!", "warning");
     return;
   }
   if (
@@ -603,8 +828,9 @@ function duyetHangLoat() {
 }
 
 function xuatDanhSachExcel() {
-  alert(
+  hienThongBao(
     `Đang kết xuất danh sách ${danhSachHoSo.length} hồ sơ ứng tuyển ra định dạng Microsoft Excel (.xlsx)...`,
+    "info"
   );
 }
 

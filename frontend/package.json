@@ -1,0 +1,11 @@
+{
+  "name": "ictu-internship-frontend",
+  "version": "1.0.0",
+  "description": "Frontend module for ICTU Internship System",
+  "scripts": {
+    "dev": "npx -y live-server --port=5500 .. --open=frontend/html/index.html",
+    "dev:local": "npx -y live-server --port=5500 --open=html/index.html",
+    "serve": "npx -y serve -p 5500 ..",
+    "start": "npx -y live-server --port=5500 .. --open=frontend/html/index.html"
+  }
+}
