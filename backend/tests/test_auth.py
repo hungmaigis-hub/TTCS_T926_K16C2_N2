@@ -89,7 +89,7 @@ def test_login_wrong_password():
     }
     response = client.post("/api/v1/auth/login", json=payload)
     assert response.status_code == 401
-    assert "Email hoặc mật khẩu không chính xác" in response.json()["detail"]
+    assert "Mật khẩu không chính xác" in response.json()["detail"]
 
 def test_login_nonexistent_email():
     payload = {
@@ -98,7 +98,7 @@ def test_login_nonexistent_email():
     }
     response = client.post("/api/v1/auth/login", json=payload)
     assert response.status_code == 401
-    assert "Email hoặc mật khẩu không chính xác" in response.json()["detail"]
+    assert "Tài khoản không tồn tại" in response.json()["detail"]
 
 def test_login_student_blocked_on_mentor_portal():
     payload = {

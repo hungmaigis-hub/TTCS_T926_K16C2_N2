@@ -230,11 +230,13 @@ async function submitLogin() {
 
       setTimeout(() => {
         if (userData.vai_tro === "ThucTapSinh") {
+          localStorage.removeItem("ictu_admin_session");
           localStorage.setItem("ictu_student_session", JSON.stringify(userData));
           localStorage.setItem("user", JSON.stringify(userData));
           localStorage.setItem("currentUser", JSON.stringify(userData));
           window.location.href = "../sinhvien/dashboard.html";
         } else {
+          localStorage.removeItem("ictu_student_session");
           localStorage.setItem("ictu_admin_session", JSON.stringify(userData));
           localStorage.setItem("user", JSON.stringify(userData));
           localStorage.setItem("currentUser", JSON.stringify(userData));
