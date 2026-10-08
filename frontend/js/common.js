@@ -65,7 +65,7 @@ function dongBoThongTinNguoiDung() {
 
   if (isStudentPage) {
     let student = layThongTinSession("student");
-    if (!student) {
+    if (!student || student.vai_tro !== "ThucTapSinh") {
       window.location.href = "../public/dangnhap.html";
       return;
     }
@@ -127,7 +127,7 @@ function dongBoThongTinNguoiDung() {
 
   if (isManagerPage) {
     let admin = layThongTinSession("manager");
-    if (!admin) {
+    if (!admin || admin.vai_tro === "ThucTapSinh") {
       window.location.href = "../public/dangnhap.html";
       return;
     }
