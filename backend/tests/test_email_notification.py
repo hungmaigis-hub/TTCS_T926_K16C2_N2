@@ -36,14 +36,20 @@ from database.models import HoSoThucTap
 
 def _get_target_email_for_doc_1() -> str:
     """Lấy email thực tế của thực tập sinh sở hữu tài liệu 1 từ CSDL"""
-    db = SessionLocal() if MYSQL_AVAILABLE else TestSessionLocal()
     try:
+        from database.session import get_db
+        override_fn = app.dependency_overrides.get(get_db)
+        if override_fn:
+            db_gen = override_fn()
+            db = next(db_gen)
+        else:
+            db = SessionLocal() if MYSQL_AVAILABLE else TestSessionLocal()
         ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == 1).first()
         if ho_so and ho_so.thuc_tap_sinh and ho_so.thuc_tap_sinh.email:
             return ho_so.thuc_tap_sinh.email
-        return "vana@example.com"
-    finally:
-        db.close()
+    except Exception:
+        pass
+    return "vana@example.com"
 
 
 def test_patch_document_status_triggers_email_daduyet():

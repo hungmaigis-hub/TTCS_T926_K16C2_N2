@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.orm import relationship
 from database.session import Base
 
@@ -10,6 +10,7 @@ class TruongDaiHoc(Base):
     dia_chi = Column(String(255), nullable=True)
     nguoi_lien_he = Column(String(100), nullable=True)
     email_lien_he = Column(String(100), nullable=True)
+    danh_sach_nganh = Column(Text, nullable=True)
 
     # Quan hệ
     ho_so = relationship("HoSoThucTap", back_populates="truong")
