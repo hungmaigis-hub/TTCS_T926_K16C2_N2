@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Báo Cáo Chấm Công &amp; Chuyên Cần - ICTU Internship</title>
+    <title>Điểm Danh &amp; Chuyên Cần - ICTU Internship</title>
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
@@ -72,15 +72,15 @@
 
       <div class="px-3 flex-1 overflow-y-auto space-y-1">
         <p class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-          Menu Quản Trị
+          Hệ Thống Quản Lý
         </p>
 
         <a
           href="dashboard.html"
           class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
         >
-          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">space_dashboard</span>
-          <span>Tổng quan</span>
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">dashboard</span>
+          <span>Tổng quan hệ thống</span>
         </a>
 
         <a
@@ -88,7 +88,7 @@
           class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
         >
           <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">person_add</span>
-          <span>1. Thêm hồ sơ thực tập</span>
+          <span>Thêm hồ sơ thực tập</span>
         </a>
 
         <a
@@ -97,7 +97,7 @@
         >
           <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">how_to_reg</span>
-            <span>3. Xét duyệt hồ sơ</span>
+            <span>Xét duyệt hồ sơ</span>
           </div>
           <span id="sidebarBadgeChoDuyet" class="text-[11px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-md">5 chờ</span>
         </a>
@@ -107,15 +107,18 @@
           class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
         >
           <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">calendar_month</span>
-          <span>5. Thiết lập lịch trình</span>
+          <span>Kế hoạch &amp; Đợt thực tập</span>
         </a>
 
         <a
           href="danh_gia.html"
-          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
         >
-          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">rate_review</span>
-          <span>7. Đánh giá cuối kỳ</span>
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">rate_review</span>
+            <span>Báo cáo &amp; Đánh giá</span>
+          </div>
+          <span class="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-md">Mới</span>
         </a>
 
         <a
@@ -123,8 +126,8 @@
           class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-ictu-50 text-ictu-700 shadow-sm border border-ictu-100 transition-colors"
         >
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-[20px] text-ictu-600 fill">pending_actions</span>
-            <span>8. Báo cáo chấm công</span>
+            <span class="material-symbols-outlined text-[20px] text-ictu-600 fill">fact_check</span>
+            <span>Điểm danh &amp; Chuyên cần</span>
           </div>
           <span class="text-[10px] bg-ictu-600 text-white font-bold px-2 py-0.5 rounded-full">Active</span>
         </a>
@@ -145,28 +148,21 @@
             class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
           >
             <span class="material-symbols-outlined text-[19px] text-slate-400">upload_file</span>
-            <span>2. Nộp tài liệu &amp; CV</span>
+            <span>Nộp tài liệu &amp; CV</span>
           </a>
           <a
             href="../sinhvien/hop_dong.html"
             class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
           >
             <span class="material-symbols-outlined text-[19px] text-slate-400">history_edu</span>
-            <span>4. Xác nhận hợp đồng</span>
+            <span>Hợp đồng thực tập</span>
           </a>
           <a
             href="../sinhvien/nhiem_vu.html"
             class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
           >
             <span class="material-symbols-outlined text-[19px] text-slate-400">checklist</span>
-            <span>6. Cập nhật tiến độ</span>
-          </a>
-          <a
-            href="../sinhvien/cham_cong.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[19px] text-slate-400">touch_app</span>
-            <span>Điểm danh sinh viên</span>
+            <span>Nhiệm vụ &amp; Tiến độ</span>
           </a>
           <a
             href="../public/thamquan.html"
@@ -180,11 +176,13 @@
 
       <div class="p-4 border-t border-slate-100 bg-slate-50/50">
         <div class="flex items-center justify-between text-xs text-slate-500">
-          <span>Phiên bản v2.0</span>
+          <span class="flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Máy chủ: ICTU Cloud
+          </span>
           <a
-            href="../public/dangnhap.html"
-            onclick="localStorage.removeItem('ictu_admin_session'); localStorage.removeItem('ictu_user');"
-            class="text-red-600 hover:text-red-700 font-semibold flex items-center gap-1"
+            href="../public/index.html"
+            class="text-slate-400 hover:text-rose-600 transition-colors p-1"
             title="Đăng xuất"
           >
             <span class="material-symbols-outlined text-[18px]">logout</span>
@@ -227,7 +225,7 @@
             <span>Quản lý</span>
           </a>
           <span class="material-symbols-outlined text-[16px] text-slate-300">chevron_right</span>
-          <span class="text-slate-800 font-semibold">8. Báo cáo chấm công &amp; Chuyên cần</span>
+          <span class="text-slate-800 font-semibold">8. Điểm danh &amp; Chuyên cần</span>
         </nav>
 
         <div class="flex items-center gap-3">
@@ -236,7 +234,7 @@
             class="hidden inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs"
           >
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Backend API: Sẵn sàng
+            Máy chủ: Đang kết nối
           </span>
           <button
             type="button"
@@ -258,9 +256,9 @@
                 <span class="material-symbols-outlined text-[15px]">event_available</span>
                 <span id="theHocKyChamCong">Niên khóa 2026 - 2027 • Sprint 2</span>
               </div>
-              <h1 class="text-2xl font-extrabold tracking-tight">Quản Lý &amp; Báo Cáo Chuyên Cần Thực Tập Sinh</h1>
+              <h1 class="text-2xl font-extrabold tracking-tight">Quản Lý Điểm Danh &amp; Chuyên Cần Thực Tập Sinh</h1>
               <p class="text-sm text-ictu-100 mt-1 max-w-2xl leading-relaxed">
-                Theo dõi nhật ký chấm công vào/ra hàng ngày, thống kê tỷ lệ đúng giờ, phát hiện đi muộn và quản lý sự chuyên cần của thực tập sinh tại doanh nghiệp.
+                Theo dõi sổ điểm danh từng ca làm việc và buổi gặp mặt, thống kê tỷ lệ đúng giờ, phát hiện vắng mặt và quản lý sự chuyên cần của thực tập sinh tại doanh nghiệp.
               </p>
             </div>
           </div>
@@ -269,7 +267,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
             <div>
-              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Tổng Ca Chấm</span>
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Tổng Lượt Điểm Danh</span>
               <div class="text-2xl font-extrabold text-slate-900 font-mono mt-1" id="cardTong">0</div>
               <span class="text-[11px] text-slate-500 mt-0.5 block" id="subtextTong">Dữ liệu tháng hiện tại</span>
             </div>
@@ -312,45 +310,109 @@
           </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div id="hopThongBaoToast" class="hidden transition-all duration-300"></div>
+
+        <div class="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-xl bg-ictu-50 text-ictu-600 flex items-center justify-center font-bold">
+                <span class="material-symbols-outlined text-[20px]">tune</span>
+              </span>
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Thiết Lập Phiên Điểm Danh Của Mentor</h3>
+                <p class="text-xs text-slate-500">Chọn chính xác ngày, ca làm việc, khóa thực tập và lớp sinh viên cần điểm danh</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-ictu-50 text-ictu-700 border border-ictu-200" id="theHienThiPhien">
+                <span class="w-2 h-2 rounded-full bg-ictu-600 animate-pulse"></span>
+                <span id="nhanPhienHienTai">Phiên: Ca Sáng</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Chọn Tháng</label>
+              <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[15px] text-ictu-600">calendar_today</span>
+                  <span>1. Ngày Điểm Danh <span class="text-rose-500">*</span></span>
+                </span>
+                <span id="nhanThuHienTai" class="text-[11px] font-bold text-ictu-700 bg-ictu-50 px-2 py-0.5 rounded-md border border-ictu-200">Thứ Năm</span>
+              </label>
+              <div class="relative group cursor-pointer" onclick="moHopChonNgay('boLocNgay')">
+                <div class="w-full h-10 border border-slate-300 rounded-xl px-3.5 text-xs font-bold text-slate-800 bg-white flex items-center justify-between group-hover:border-ictu-500 transition-colors shadow-2xs">
+                  <span id="hienThiNgayDinhDang" class="font-mono text-sm tracking-wide text-slate-900">08/10/2026</span>
+                  <span class="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-ictu-600 transition-colors">calendar_month</span>
+                </div>
+                <input
+                  type="date"
+                  id="boLocNgay"
+                  onchange="capNhatHienThiNgayVN(); doiPhienDiemDanh();"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[15px] text-ictu-600">schedule</span>
+                  <span>2. Ca Làm Việc / Buổi Gặp <span class="text-rose-500">*</span></span>
+                </span>
+                <button
+                  type="button"
+                  onclick="moModalThemCa()"
+                  class="text-[11px] font-bold text-ictu-600 hover:text-ictu-800 hover:underline flex items-center gap-0.5 cursor-pointer"
+                  title="Mentor tự tạo buổi gặp, review hoặc ca họp linh hoạt"
+                >
+                  <span class="material-symbols-outlined text-[14px]">add_circle</span>
+                  <span>Tạo ca</span>
+                </button>
+              </label>
               <select
-                id="boLocThang"
-                onchange="locDuLieu()"
-                class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs font-semibold focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 bg-white"
+                id="boLocCaLamViec"
+                onchange="doiPhienDiemDanh(true)"
+                class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 bg-white"
               >
-                <option value="1">Tháng 1</option>
-                <option value="2">Tháng 2</option>
-                <option value="3">Tháng 3</option>
-                <option value="4">Tháng 4</option>
-                <option value="5">Tháng 5</option>
-                <option value="6">Tháng 6</option>
-                <option value="7">Tháng 7</option>
-                <option value="8">Tháng 8</option>
-                <option value="9">Tháng 9</option>
-                <option value="10" selected>Tháng 10</option>
-                <option value="11">Tháng 11</option>
-                <option value="12">Tháng 12</option>
+                <option value="Ca Sáng" selected>Ca Sáng (08:00 - 12:00)</option>
+                <option value="Ca Chiều">Ca Chiều (13:30 - 17:30)</option>
+                <option value="Ca Hành chính">Ca Hành Chính / Cả Ngày (08:00 - 17:30)</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Chọn Năm Học</label>
+              <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[15px] text-ictu-600">school</span>
+                <span>3. Khóa / Đợt Thực Tập <span class="text-rose-500">*</span></span>
+              </label>
               <select
-                id="boLocNam"
-                onchange="locDuLieu()"
-                class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs font-semibold focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 bg-white"
+                id="boLocKhoaThucTap"
+                onchange="doiKhoaThucTap()"
+                class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 bg-white"
               >
-                <option value="2025">Năm 2025</option>
-                <option value="2026" selected>Năm 2026</option>
-                <option value="2027">Năm 2027</option>
+                <option value="tat-ca">Tất cả các khóa thực tập</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Trạng Thái Chuyên Cần</label>
+              <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[15px] text-ictu-600">group</span>
+                <span>4. Lớp / Chuyên Ngành <span class="text-rose-500">*</span></span>
+              </label>
+              <select
+                id="boLocLop"
+                onchange="locDuLieu()"
+                class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 bg-white"
+              >
+                <option value="tat-ca">Tất cả các lớp / chuyên ngành</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 pt-2 border-t border-slate-100">
+            <div class="sm:col-span-4">
+              <label class="block text-xs font-bold text-slate-700 mb-1">Lọc Trạng Thái Hiển Thị</label>
               <select
                 id="boLocTrangThai"
                 onchange="locDuLieu()"
@@ -363,14 +425,14 @@
               </select>
             </div>
 
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Tìm Kiếm</label>
+            <div class="sm:col-span-8">
+              <label class="block text-xs font-bold text-slate-700 mb-1">Tìm Kiếm Sinh Viên</label>
               <div class="relative">
                 <span class="material-symbols-outlined text-[18px] text-slate-400 absolute left-3 top-2.5">search</span>
                 <input
                   id="timKiem"
                   type="text"
-                  placeholder="Tên, mã sinh viên, email..."
+                  placeholder="Nhập tên, mã SV, chuyên ngành, email..."
                   oninput="locDuLieu()"
                   class="w-full h-10 border border-slate-300 rounded-xl pl-9 pr-3 text-xs focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500"
                 />
@@ -379,40 +441,291 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50">
             <div>
               <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <span class="material-symbols-outlined text-ictu-600 text-[20px]">table_chart</span>
-                <span>Danh Sách Bản Ghi Chấm Công</span>
+                <span class="material-symbols-outlined text-ictu-600 text-[20px]">how_to_reg</span>
+                <span>Sổ Điểm Danh Lớp Thực Tập</span>
+                <span class="text-xs text-slate-400 font-normal font-mono" id="theDemBanGhi">(0 sinh viên)</span>
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5" id="moTaKetQuaBang">Đang tải danh sách dữ liệu...</p>
+              <p class="text-xs text-slate-500 mt-0.5" id="moTaKetQuaBang">Đang tải danh sách sinh viên...</p>
             </div>
-            <span class="text-xs text-slate-400 font-mono" id="theDemBanGhi">0 bản ghi</span>
+
+            <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+              <button
+                type="button"
+                id="btnMoModalNghiPhep"
+                onclick="moModalDuyetNghiPhep()"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-800 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-[0.98]"
+                title="Xem và xét duyệt đơn xin nghỉ phép của thực tập sinh"
+              >
+                <span class="material-symbols-outlined text-[17px] text-purple-600">event_busy</span>
+                <span>Đơn xin nghỉ</span>
+                <span id="badgeSoDonChoDuyet" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-600 text-white">0</span>
+              </button>
+
+              <button
+                type="button"
+                id="btnDiemDanhTatCa"
+                onclick="diemDanhTatCaCoMat()"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold transition-all shadow-2xs cursor-pointer active:scale-[0.98]"
+                title="Tự động chọn Đúng giờ cho sinh viên đang có mặt (trừ sinh viên đã tích vắng hoặc có phép)"
+              >
+                <span class="material-symbols-outlined text-[17px] text-emerald-600">done_all</span>
+                <span>Điểm danh tất cả có mặt</span>
+              </button>
+
+              <button
+                type="button"
+                id="btnLuuDiemDanh"
+                onclick="luuSoDiemDanh()"
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-ictu-600 hover:bg-ictu-700 text-white text-xs font-bold transition-all shadow-md shadow-ictu-600/20 cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span class="material-symbols-outlined text-[17px]" id="iconLuuDiemDanh">save</span>
+                <span id="textLuuDiemDanh">Lưu sổ điểm danh</span>
+              </button>
+            </div>
           </div>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[11px] tracking-wider">
-                  <th class="p-3.5 text-center">Mã SV</th>
-                  <th class="p-3.5">Họ và Tên</th>
-                  <th class="p-3.5">Phòng Ban / Chuyên Ngành</th>
-                  <th class="p-3.5 text-center">Ngày Chấm</th>
-                  <th class="p-3.5 text-center">Giờ Vào</th>
-                  <th class="p-3.5 text-center">Giờ Ra</th>
-                  <th class="p-3.5 text-center">Số Giờ</th>
-                  <th class="p-3.5 text-center">Trạng Thái</th>
-                  <th class="p-3.5">Ghi Chú</th>
+          <div class="overflow-x-auto bang-cham-cong-scroll max-h-[580px] overflow-y-auto relative">
+            <table class="w-full text-left border-collapse text-xs min-w-[960px]">
+              <thead class="sticky top-0 bg-slate-50/95 backdrop-blur-xs z-10 border-b border-slate-200 shadow-2xs">
+                <tr class="text-slate-700 font-bold uppercase text-[11px] tracking-wider">
+                  <th class="px-3 py-3 text-center w-28">Mã SV</th>
+                  <th class="px-3 py-3 min-w-[190px] max-w-[220px]">Sinh Viên</th>
+                  <th class="px-3 py-3 min-w-[150px] max-w-[190px]">Khóa &amp; Lớp</th>
+                  <th class="px-3 py-3 text-center w-32">Đơn Nghỉ Phép</th>
+                  <th class="px-3 py-3 text-center w-[220px]">Trạng Thái Điểm Danh</th>
+                  <th class="px-3 py-3 text-center w-24">Giờ Ca</th>
+                  <th class="px-3 py-3 min-w-[150px]">Ghi Chú Đánh Giá</th>
                 </tr>
               </thead>
               <tbody id="bangChamCongBody" class="divide-y divide-slate-100 text-slate-700 font-medium">
               </tbody>
             </table>
           </div>
+
+          <div class="px-6 py-3.5 bg-slate-50/70 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+            <div class="flex items-center gap-3 flex-wrap">
+              <span id="phanTrangThongTin" class="font-medium text-slate-600">Hiển thị 0 sinh viên</span>
+              <div class="flex items-center gap-1.5 text-xs text-slate-500">
+                <span>Số dòng:</span>
+                <select
+                  id="soBanGhiMoiTrang"
+                  onchange="doiSoBanGhiMoiTrang(this.value)"
+                  class="h-7 px-2 border border-slate-200 rounded-lg bg-white text-slate-700 text-xs font-semibold focus:ring-1 focus:ring-ictu-500 outline-none cursor-pointer"
+                >
+                  <option value="10" selected>10 / trang</option>
+                  <option value="15">15 / trang</option>
+                  <option value="25">25 / trang</option>
+                  <option value="50">50 / trang</option>
+                  <option value="all">Tất cả</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1" id="phanTrangNutDieuHuong">
+            </div>
+          </div>
         </div>
       </div>
     </main>
+
+    <div id="modalDuyetNghiPhep" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col border border-slate-100 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center">
+              <span class="material-symbols-outlined text-2xl">event_busy</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900">Xét Duyệt Đơn Nghỉ Phép Thực Tập Sinh</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Hạn mức tối đa 03 ngày phép. Chỉ các đơn được duyệt mới trừ vào quỹ phép.</p>
+            </div>
+          </div>
+          <button type="button" onclick="dongModalDuyetNghiPhep()" class="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-colors">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto flex-1 space-y-4">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-2">
+              <button type="button" id="tabDonChoDuyet" onclick="chuyenTabDonNghi('ChoDuyet')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-purple-600 text-white shadow-xs">
+                Chờ xét duyệt (<span id="demDonChoDuyetTab">0</span>)
+              </button>
+              <button type="button" id="tabDonTatCa" onclick="chuyenTabDonNghi('tat-ca')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
+                Tất cả đơn (<span id="demDonTatCaTab">0</span>)
+              </button>
+            </div>
+            <span class="text-xs text-slate-400 font-mono">Hạn mức: 03 ngày phép / sinh viên</span>
+          </div>
+
+          <div class="border border-slate-200 rounded-2xl overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[11px] tracking-wider">
+                    <th class="p-3 text-center">Mã Đơn</th>
+                    <th class="p-3">Sinh Viên</th>
+                    <th class="p-3">Thời Gian Nghỉ</th>
+                    <th class="p-3 text-center">Số Ngày</th>
+                    <th class="p-3 text-center">Quỹ Phép</th>
+                    <th class="p-3">Lý Do Nghỉ</th>
+                    <th class="p-3 text-center">Trạng Thái</th>
+                    <th class="p-3 text-center min-w-[130px]">Hành Động</th>
+                  </tr>
+                </thead>
+                <tbody id="bangDonNghiPhepBody" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1.5 font-medium text-emerald-700">
+            <span class="material-symbols-outlined text-[16px] text-emerald-600">verified</span>
+            <span>Đơn được duyệt sẽ tự động cập nhật vào sổ điểm danh hôm đó.</span>
+          </span>
+          <button type="button" onclick="dongModalDuyetNghiPhep()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalThemCaMoi" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full flex flex-col border border-slate-100 overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-ictu-100 text-ictu-700 flex items-center justify-center">
+              <span class="material-symbols-outlined text-2xl">more_time</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900">Tạo Ca Làm Việc / Buổi Gặp Linh Hoạt</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Dành cho Mentor lên lịch review sprint, workshop hoặc họp nhóm.</p>
+            </div>
+          </div>
+          <button type="button" onclick="dongModalThemCa()" class="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-colors cursor-pointer">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+
+        <form id="formThemCaMoi" onsubmit="event.preventDefault(); taoCaLamViecMoi();" class="p-6 space-y-4">
+          <div>
+            <label for="tenCaMoi" class="block text-xs font-bold text-slate-700 mb-1.5">
+              Tên ca / Buổi gặp mặt <span class="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="tenCaMoi"
+              required
+              placeholder="Ví dụ: Họp Review Sprint 2 - Lớp KTPM, Workshop Cloud..."
+              class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="ngayDienRaMoi" class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                <span>Ngày diễn ra <span class="text-rose-500">*</span></span>
+                <span id="nhanThuModalMoi" class="text-[10px] font-bold text-ictu-700 bg-ictu-50 px-1.5 py-0.5 rounded border border-ictu-200">Thứ Năm</span>
+              </label>
+              <div class="relative group cursor-pointer" onclick="moHopChonNgay('ngayDienRaMoi')">
+                <div class="w-full h-10 border border-slate-300 rounded-xl px-3 text-xs font-bold text-slate-800 bg-white flex items-center justify-between group-hover:border-ictu-500 transition-colors shadow-2xs">
+                  <span id="hienThiNgayModalDinhDang" class="font-mono text-xs text-slate-900">08/10/2026</span>
+                  <span class="material-symbols-outlined text-[17px] text-slate-400 group-hover:text-ictu-600 transition-colors">calendar_month</span>
+                </div>
+                <input
+                  type="date"
+                  id="ngayDienRaMoi"
+                  required
+                  onchange="capNhatHienThiNgayModalVN()"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
+            </div>
+            <div>
+              <label for="chuyenNganhCaMoi" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Lớp / Chuyên ngành <span class="text-rose-500">*</span>
+              </label>
+              <select
+                id="chuyenNganhCaMoi"
+                class="w-full h-10 px-3 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none bg-white"
+              >
+                <option value="tat-ca" selected>Tất cả các lớp / sinh viên</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="gioBatDauMoi" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Giờ bắt đầu <span class="text-rose-500">*</span>
+              </label>
+              <input
+                type="time"
+                id="gioBatDauMoi"
+                required
+                value="14:00"
+                onchange="tinhThoiLuongCaMoi()"
+                class="w-full h-10 px-3 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none"
+              />
+            </div>
+            <div>
+              <label for="gioKetThucMoi" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Giờ kết thúc <span class="text-rose-500">*</span>
+              </label>
+              <input
+                type="time"
+                id="gioKetThucMoi"
+                required
+                value="16:30"
+                onchange="tinhThoiLuongCaMoi()"
+                class="w-full h-10 px-3 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="p-3 bg-ictu-50/70 border border-ictu-100 rounded-xl flex items-center justify-between text-xs">
+            <span class="text-slate-600 font-medium">Thời lượng buổi gặp:</span>
+            <span id="nhanThoiLuongCa" class="font-extrabold font-mono text-ictu-700">2.5 giờ</span>
+          </div>
+
+          <div>
+            <label for="ghiChuCaMoi" class="block text-xs font-bold text-slate-700 mb-1.5">
+              Ghi chú / Mục tiêu buổi gặp (tùy chọn)
+            </label>
+            <textarea
+              id="ghiChuCaMoi"
+              rows="2"
+              placeholder="Ghi chú nội dung hướng dẫn, phòng họp online (Google Meet) hoặc phòng thực hành..."
+              class="w-full p-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none resize-none"
+            ></textarea>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-100">
+            <button
+              type="button"
+              onclick="dongModalThemCa()"
+              class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              id="btnLuuCaMoi"
+              class="px-4 py-2 rounded-xl bg-ictu-600 hover:bg-ictu-700 text-white font-bold text-xs shadow-md shadow-ictu-600/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span class="material-symbols-outlined text-[17px]" id="iconLuuCaMoi">save</span>
+              <span id="textLuuCaMoi">Tạo buổi gặp</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <script src="../../js/quanly/cham_cong.js"></script>
   </body>

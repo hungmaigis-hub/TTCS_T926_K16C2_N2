@@ -13,6 +13,7 @@ Hiếu 2/
 
 # Test artifacts & SQLite
 *.sqlite
+*.db
 .pytest_cache/
 
 # Uploaded files

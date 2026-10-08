@@ -26,16 +26,65 @@ function dongModalBaoCao() {
   if (modal) modal.classList.add("hidden");
 }
 
+function hienThiThongBaoChung(loai, tieuDe, noiDung) {
+  const hopThongBao = document.getElementById("hopThongBao");
+  if (!hopThongBao) return;
+
+  let bgClass = "bg-emerald-50 text-emerald-950 border border-emerald-200";
+  let iconColor = "bg-emerald-600 text-white";
+  let iconName = "check_circle";
+
+  if (loai === "error") {
+    bgClass = "bg-rose-50 text-rose-950 border border-rose-200";
+    iconColor = "bg-rose-600 text-white";
+    iconName = "error";
+  } else if (loai === "warning") {
+    bgClass = "bg-amber-50 text-amber-950 border border-amber-200";
+    iconColor = "bg-amber-600 text-white";
+    iconName = "warning";
+  } else if (loai === "info") {
+    bgClass = "bg-blue-50 text-blue-950 border border-blue-200";
+    iconColor = "bg-blue-600 text-white";
+    iconName = "info";
+  }
+
+  hopThongBao.className = `rounded-xl ${bgClass} p-4 shadow-sm flex items-start gap-3.5 transition-all`;
+  hopThongBao.innerHTML = `
+    <div class="w-8 h-8 rounded-lg ${iconColor} flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+      <span class="material-symbols-outlined text-[20px]">${iconName}</span>
+    </div>
+    <div class="flex-1 text-body-sm">
+      <div class="flex items-center justify-between">
+        <span class="font-label-lg font-bold text-body-md">${tieuDe}</span>
+        <span class="font-label-sm text-outline">Vừa xong</span>
+      </div>
+      <p class="mt-1 leading-relaxed text-sm">
+        ${noiDung}
+      </p>
+    </div>
+    <button type="button" onclick="document.getElementById('hopThongBao').classList.add('hidden')" class="text-outline hover:text-on-surface p-1 rounded-md transition-colors" title="Đóng">
+      <span class="material-symbols-outlined text-[18px]">close</span>
+    </button>
+  `;
+  hopThongBao.classList.remove("hidden");
+  hopThongBao.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
 async function guiBaoCaoTuan() {
   const maHoSo = layMaHoSoHienTai();
-  const tuanSo = parseInt(document.getElementById("baoCaoTuanSo")?.value || "1");
+  const tuanSoEl = document.getElementById("baoCaoTuanSo");
+  const tuanSo = parseInt(tuanSoEl?.value || "1", 10);
   const noiDung = document.getElementById("baoCaoNoiDung")?.value.trim();
   const ketQua = document.getElementById("baoCaoKetQua")?.value.trim();
   const nutGui = document.getElementById("nutGuiBaoCao");
-  const hopThongBao = document.getElementById("hopThongBao");
 
-  if (!noiDung) {
-    alert("Vui lòng nhập nội dung công việc đã thực hiện trong tuần.");
+  if (isNaN(tuanSo) || tuanSo < 1 || tuanSo > 52) {
+    hienThiThongBaoChung("warning", "Tuần báo cáo không hợp lệ", "Vui lòng chọn tuần báo cáo hợp lệ trong khoảng từ tuần 1 đến tuần 52.");
+    return;
+  }
+
+  if (!noiDung || noiDung.length < 10) {
+    hienThiThongBaoChung("warning", "Nội dung báo cáo quá ngắn", "Vui lòng nhập nội dung chi tiết công việc đã thực hiện trong tuần (tối thiểu 10 ký tự).");
     return;
   }
 
@@ -59,44 +108,27 @@ async function guiBaoCaoTuan() {
       body: JSON.stringify(payload),
     });
 
-    const resJson = await res.json();
+    const resJson = await res.json().catch(() => ({}));
 
     if (res.ok) {
       dongModalBaoCao();
       document.getElementById("formNopBaoCao")?.reset();
-
-      if (hopThongBao) {
-        hopThongBao.className =
-          "rounded-xl bg-secondary-container text-on-secondary-container p-4 shadow-sm flex items-start gap-3.5 transition-all";
-        hopThongBao.innerHTML = `
-          <div class="w-8 h-8 rounded-lg bg-secondary text-on-secondary flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-            <span class="material-symbols-outlined text-[20px]">check_circle</span>
-          </div>
-          <div class="flex-1 text-body-sm text-on-surface">
-            <div class="flex items-center justify-between">
-              <span class="font-label-lg text-secondary text-body-md font-bold">Nộp báo cáo tuần ${tuanSo} thành công!</span>
-              <span class="font-label-sm text-outline">Vừa xong</span>
-            </div>
-            <p class="text-on-surface-variant mt-1 leading-relaxed">
-              Báo cáo tiến độ tuần ${tuanSo} của bạn đã được lưu vào hệ thống CSDL Backend. Mentor phụ trách sẽ nhận thông báo để thẩm định và cho nhận xét.
-            </p>
-          </div>
-          <button type="button" onclick="document.getElementById('hopThongBao').classList.add('hidden')" class="text-outline hover:text-on-surface p-1 rounded-md transition-colors" title="Đóng">
-            <span class="material-symbols-outlined text-[18px]">close</span>
-          </button>
-        `;
-        hopThongBao.classList.remove("hidden");
-        hopThongBao.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
+      hienThiThongBaoChung(
+        "success",
+        `Nộp báo cáo tuần ${tuanSo} thành công!`,
+        `Báo cáo tiến độ tuần ${tuanSo} của bạn đã được ghi nhận vào cơ sở dữ liệu. Mentor phụ trách sẽ nhận thông báo để thẩm định và nhận xét.`
+      );
     } else {
-      const errMsg =
-        typeof resJson.detail === "string"
-          ? resJson.detail
-          : resJson.detail?.[0]?.msg || "Không thể gửi báo cáo tuần!";
-      alert(`Lỗi nộp báo cáo: ${errMsg}`);
+      let errMsg = "Không thể gửi báo cáo tuần!";
+      if (typeof resJson.detail === "string") {
+        errMsg = resJson.detail;
+      } else if (Array.isArray(resJson.detail) && resJson.detail[0]?.msg) {
+        errMsg = resJson.detail[0].msg;
+      }
+      hienThiThongBaoChung("error", "Lỗi nộp báo cáo", errMsg);
     }
   } catch (err) {
-    alert("Không thể kết nối đến máy chủ Backend (http://127.0.0.1:8000). Vui lòng đảm bảo server đang chạy!");
+    hienThiThongBaoChung("error", "Mất kết nối máy chủ", "Không thể kết nối tới máy chủ. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau.");
   } finally {
     if (nutGui) {
       nutGui.disabled = false;
@@ -198,12 +230,12 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       badge.className =
         "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs";
-      badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Backend: Đã kết nối API`;
+      badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Máy chủ: Đã kết nối`;
       badge.classList.remove("hidden");
     } catch {
       badge.className =
         "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs";
-      badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Chế độ Thử nghiệm (Offline)`;
+      badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Ngoại tuyến`;
       badge.classList.remove("hidden");
     }
   }
@@ -240,7 +272,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const tenNhiemVu =
         card?.querySelector("h4")?.textContent.trim() || "Nhiệm vụ";
       const thanhTienDo = card?.querySelector(".thanh-tien-do");
-      const tienDo = parseInt(thanhTienDo ? thanhTienDo.value : "0", 10);
+      const rawTienDo = parseInt(thanhTienDo ? thanhTienDo.value : "0", 10);
+      const tienDo = Math.min(100, Math.max(0, isNaN(rawTienDo) ? 0 : rawTienDo));
       const badgeTrangThai = card?.querySelector(".trang-thai-chu");
 
       const originalContent = nutLuu.innerHTML;
@@ -259,18 +292,26 @@ document.addEventListener("DOMContentLoaded", () => {
           }),
         });
 
+        const resJson = await response.json().catch(() => ({}));
+
         if (!response.ok) {
-          throw new Error(`Máy chủ phản hồi mã lỗi HTTP ${response.status}`);
+          let errMsg = "Không thể cập nhật tiến độ công việc!";
+          if (typeof resJson.detail === "string") {
+            errMsg = resJson.detail;
+          } else if (Array.isArray(resJson.detail) && resJson.detail[0]?.msg) {
+            errMsg = resJson.detail[0].msg;
+          }
+          hienThiThongBaoChung("error", "Lỗi cập nhật tiến độ", errMsg);
+          return;
         }
 
-        const resJson = await response.json();
         const taskData = resJson.data;
 
         if (badgeTrangThai && taskData && taskData.trang_thai) {
           badgeTrangThai.textContent = `Trạng thái: ${taskData.trang_thai}`;
         }
 
-        hienThiThongBao(
+        hienThiThongBaoChung(
           "success",
           "Cập nhật tiến độ thành công!",
           `Đã lưu mức hoàn thành <strong>${tienDo}%</strong> cho nhiệm vụ: <em>"${tenNhiemVu}"</em> lên cơ sở dữ liệu. Trạng thái hiện tại: <strong>${
@@ -278,60 +319,15 @@ document.addEventListener("DOMContentLoaded", () => {
           }</strong>.`
         );
       } catch (err) {
-        console.warn("Backend offline hoặc gặp lỗi, sử dụng fallback:", err);
-
-        let fallbackStatus = "Đang thực hiện";
-        if (tienDo === 100) fallbackStatus = "Hoàn thành";
-        else if (tienDo === 0) fallbackStatus = "Chưa bắt đầu";
-
-        if (badgeTrangThai) {
-          badgeTrangThai.textContent = `Trạng thái: ${fallbackStatus}`;
-        }
-
-        hienThiThongBao(
-          "info",
-          "Đã ghi nhận tiến độ (Chế độ mô phỏng)!",
-          `Đã lưu mức hoàn thành <strong>${tienDo}%</strong> cho nhiệm vụ: <em>"${tenNhiemVu}"</em>. (Lưu ý: Đang chạy ở chế độ thử nghiệm cục bộ do server Backend chưa bật).`
+        hienThiThongBaoChung(
+          "error",
+          "Mất kết nối máy chủ",
+          `Không thể lưu tiến độ cho nhiệm vụ: <em>"${tenNhiemVu}"</em>. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại sau.`
         );
       } finally {
         nutLuu.innerHTML = originalContent;
         nutLuu.disabled = false;
       }
     });
-  }
-
-  function hienThiThongBao(loai, tieuDe, noiDung) {
-    if (!hopThongBao) return;
-
-    const isSuccess = loai === "success";
-    const bgClass = isSuccess
-      ? "bg-emerald-50 text-emerald-950 border border-emerald-200"
-      : "bg-surface-container-low text-on-surface border border-outline-variant";
-    const iconColor = isSuccess
-      ? "bg-emerald-600 text-white"
-      : "bg-secondary text-on-secondary";
-
-    hopThongBao.className = `rounded-xl ${bgClass} p-4 shadow-sm flex items-start gap-3.5 transition-all`;
-    hopThongBao.innerHTML = `
-      <div class="w-8 h-8 rounded-lg ${iconColor} flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-        <span class="material-symbols-outlined text-[20px]">${
-          isSuccess ? "check_circle" : "info"
-        }</span>
-      </div>
-      <div class="flex-1 text-body-sm">
-        <div class="flex items-center justify-between">
-          <span class="font-label-lg font-bold text-body-md">${tieuDe}</span>
-          <span class="font-label-sm text-outline">Vừa xong</span>
-        </div>
-        <p class="mt-1 leading-relaxed text-sm">
-          ${noiDung}
-        </p>
-      </div>
-      <button type="button" onclick="document.getElementById('hopThongBao').classList.add('hidden')" class="text-outline hover:text-on-surface p-1 rounded-md transition-colors" title="Đóng">
-        <span class="material-symbols-outlined text-[18px]">close</span>
-      </button>
-    `;
-    hopThongBao.classList.remove("hidden");
-    hopThongBao.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 });

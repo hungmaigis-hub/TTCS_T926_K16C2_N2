@@ -135,7 +135,7 @@
               class="material-symbols-outlined text-[20px] text-ictu-600 fill"
               >calendar_month</span
             >
-            <span>Lịch thực tập</span>
+            <span>Kế hoạch &amp; Đợt thực tập</span>
           </div>
           <span
             class="text-[10px] bg-ictu-600 text-white font-bold px-2 py-0.5 rounded-full"
@@ -166,9 +166,9 @@
         >
           <span
             class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
-            >pending_actions</span
+            >fact_check</span
           >
-          <span>Báo cáo chấm công</span>
+          <span>Điểm danh &amp; Chuyên cần</span>
         </a>
 
         <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
@@ -193,7 +193,7 @@
             <span class="material-symbols-outlined text-[19px] text-slate-400"
               >upload_file</span
             >
-            <span>1. Nộp tài liệu &amp; CV</span>
+            <span>Nộp tài liệu &amp; CV</span>
           </a>
           <a
             href="../sinhvien/hop_dong.html"
@@ -202,7 +202,7 @@
             <span class="material-symbols-outlined text-[19px] text-slate-400"
               >history_edu</span
             >
-            <span>2. Ký kết hợp đồng</span>
+            <span>Hợp đồng thực tập</span>
           </a>
           <a
             href="../sinhvien/nhiem_vu.html"
@@ -211,7 +211,7 @@
             <span class="material-symbols-outlined text-[19px] text-slate-400"
               >checklist</span
             >
-            <span>3. Nhiệm vụ &amp; Tiến độ</span>
+            <span>Nhiệm vụ &amp; Tiến độ</span>
           </a>
           <a
             href="../public/thamquan.html"
@@ -291,7 +291,7 @@
                 >chevron_right</span
               >
               <span class="text-primary font-semibold"
-                >Thiết lập lịch thực tập</span
+                >Kế hoạch &amp; Đợt thực tập</span
               >
             </nav>
             <div class="flex items-center gap-2 mt-0.5">
@@ -346,7 +346,7 @@
               <h1
                 class="font-headline-lg text-headline-lg text-on-surface tracking-tight"
               >
-                Thiết Lập Lịch Trình Chương Trình Thực Tập
+                Thiết Lập Kế Hoạch &amp; Đợt Thực Tập
               </h1>
               <p class="font-body-md text-body-md text-on-surface-variant mt-1">
                 HR cấu hình thời gian bắt đầu và kết thúc cho các đợt thực tập
@@ -451,6 +451,7 @@
                     <span class="w-2.5 h-6 bg-primary rounded-full"></span>
                     <h2
                       class="font-headline-sm text-headline-sm text-on-surface"
+                      id="tieuDeFormThongTin"
                     >
                       Thông Tin Đợt Thực Tập
                     </h2>
@@ -469,7 +470,7 @@
                     return false;
                   "
                 >
-                  <input type="hidden" id="maChuongTrinh" value="1" />
+                  <input type="hidden" id="maChuongTrinh" value="" />
 
                   <div>
                     <label
@@ -493,7 +494,7 @@
                         placeholder="Ví dụ: Kỳ thực tập K16 Công nghệ Thông tin đợt 2"
                         required=""
                         type="text"
-                        value="Kỳ thực tập K16 Công nghệ Thông tin đợt 2"
+                        value=""
                       />
                     </div>
                   </div>
@@ -518,17 +519,9 @@
                           class="w-full h-10 pl-10 pr-8 rounded-lg bg-surface font-body-md text-body-md text-on-surface focus:bg-surface-container-lowest focus:outline-none transition-all appearance-none cursor-pointer"
                           id="phongBan"
                         >
-                          <option
-                            selected=""
-                            value="Trung tâm Phát triển Phần mềm"
-                          >
-                            Trung tâm Phát triển Phần mềm
-                          </option>
-                          <option value="Phòng QA/QC">Phòng QA/QC</option>
-                          <option value="Khối Dữ liệu &amp; AI">
-                            Khối Dữ liệu &amp; AI
-                          </option>
-                          <option value="Phòng Nhân sự">Phòng Nhân sự</option>
+                          <option value="1" selected>Trung tâm Phát triển Phần mềm ICTU</option>
+                          <option value="2">Phòng Đảm bảo Chất lượng &amp; An toàn Thông tin</option>
+                          <option value="3">Viện Trí tuệ Nhân tạo &amp; Khoa học Dữ liệu</option>
                         </select>
                         <span
                           class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-on-surface-variant"
@@ -868,6 +861,8 @@
                     class="h-9 pl-9 pr-3 rounded-lg bg-surface font-body-sm text-body-sm text-on-surface focus:bg-surface-container-lowest focus:outline-none transition-all w-60"
                     placeholder="Tìm theo mã hoặc tên đợt..."
                     type="text"
+                    id="oTimKiemChuongTrinh"
+                    oninput="locChuongTrinh()"
                   />
                 </div>
                 <button
@@ -901,351 +896,14 @@
                   </tr>
                 </thead>
                 <tbody
+                  id="danhSachChuongTrinhBody"
                   class="divide-y divide-surface-container font-body-md text-body-md text-on-surface"
                 >
-                  <tr class="hover:bg-surface/60 transition-colors">
-                    <td
-                      class="py-4 px-6 font-code text-label-md text-primary font-semibold"
-                    >
-                      ICTU-INT-2026-K19-01
-                    </td>
-                    <td class="py-4 px-4 font-semibold text-on-surface">
-                      Thực tập chuyên sâu Web &amp; Cloud K19
-                      <span
-                        class="block font-body-sm text-body-sm text-on-surface-variant font-normal"
-                        >Kỳ tốt nghiệp mùa Thu</span
-                      >
-                    </td>
-                    <td class="py-4 px-4">
-                      <span
-                        class="inline-flex items-center gap-1.5 text-on-surface-variant"
-                      >
-                        <span
-                          class="material-symbols-outlined text-base text-primary"
-                          >hub</span
-                        >
-                        Trung tâm Phát triển Phần mềm
-                      </span>
-                    </td>
-                    <td class="py-4 px-4 font-code text-body-sm">
-                      01/08/2026 - 31/10/2026
-                    </td>
-                    <td class="py-4 px-4 text-center">
-                      <span
-                        class="px-2.5 py-1 rounded-md bg-surface-container font-code text-label-sm font-semibold"
-                      >
-                        12 tuần
-                      </span>
-                    </td>
-                    <td class="py-4 px-4">
-                      <div class="flex items-center gap-2">
-                        <span class="font-code font-bold text-secondary"
-                          >45/50</span
-                        >
-                        <span class="text-on-surface-variant font-body-sm"
-                          >SV</span
-                        >
-                      </div>
-                      <div
-                        class="w-20 bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-1"
-                      >
-                        <div
-                          class="bg-secondary h-full"
-                          style="width: 90%"
-                        ></div>
-                      </div>
-                    </td>
-                    <td class="py-4 px-4">
-                      <span
-                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm"
-                      >
-                        <span
-                          class="w-1.5 h-1.5 rounded-full bg-secondary"
-                        ></span>
-                        Đang diễn ra
-                      </span>
-                    </td>
-                    <td class="py-4 px-6 text-right">
-                      <div class="inline-flex items-center gap-1">
-                        <button
-                          class="p-1.5 rounded-md hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors"
-                          title="Chỉnh sửa"
-                          type="button"
-                        >
-                          <span class="material-symbols-outlined text-lg"
-                            >edit</span
-                          >
-                        </button>
-                        <button
-                          class="p-1.5 rounded-md hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors"
-                          title="Chi tiết"
-                          type="button"
-                        >
-                          <span class="material-symbols-outlined text-lg"
-                            >visibility</span
-                          >
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr
-                    class="hover:bg-surface/60 transition-colors bg-surface/30"
-                  >
-                    <td
-                      class="py-4 px-6 font-code text-label-md text-primary font-semibold"
-                    >
-                      ICTU-INT-2026-K20-02
-                    </td>
-                    <td class="py-4 px-4 font-semibold text-on-surface">
-                      Thực tập cơ sở doanh nghiệp K20
-                      <span
-                        class="block font-body-sm text-body-sm text-on-surface-variant font-normal"
-                        >Đợt thực hành thực tế 1</span
-                      >
-                    </td>
-                    <td class="py-4 px-4">
-                      <span
-                        class="inline-flex items-center gap-1.5 text-on-surface-variant"
-                      >
-                        <span
-                          class="material-symbols-outlined text-base text-tertiary"
-                          >verified_user</span
-                        >
-                        Phòng QA/QC
-                      </span>
-                    </td>
-                    <td class="py-4 px-4 font-code text-body-sm">
-                      15/09/2026 - 15/12/2026
-                    </td>
-                    <td class="py-4 px-4 text-center">
-                      <span
-                        class="px-2.5 py-1 rounded-md bg-surface-container font-code text-label-sm font-semibold"
-                      >
-                        8 tuần
-                      </span>
-                    </td>
-                    <td class="py-4 px-4">
-                      <div class="flex items-center gap-2">
-                        <span class="font-code font-bold text-on-surface"
-                          >30/30</span
-                        >
-                        <span class="text-on-surface-variant font-body-sm"
-                          >SV</span
-                        >
-                      </div>
-                      <div
-                        class="w-20 bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-1"
-                      >
-                        <div
-                          class="bg-primary h-full"
-                          style="width: 100%"
-                        ></div>
-                      </div>
-                    </td>
-                    <td class="py-4 px-4">
-                      <span
-                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm"
-                      >
-                        <span
-                          class="w-1.5 h-1.5 rounded-full bg-secondary"
-                        ></span>
-                        Đang diễn ra
-                      </span>
-                    </td>
-                    <td class="py-4 px-6 text-right">
-                      <div class="inline-flex items-center gap-1">
-                        <button
-                          class="p-1.5 rounded-md hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors"
-                          title="Chỉnh sửa"
-                          type="button"
-                        >
-                          <span class="material-symbols-outlined text-lg"
-                            >edit</span
-                          >
-                        </button>
-                        <button
-                          class="p-1.5 rounded-md hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors"
-                          title="Chi tiết"
-                          type="button"
-                        >
-                          <span class="material-symbols-outlined text-lg"
-                            >visibility</span
-                          >
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr class="hover:bg-surface/60 transition-colors">
-                    <td
-                      class="py-4 px-6 font-code text-label-md text-primary font-semibold"
-                    >
-                      ICTU-INT-2026-AI-01
-                    </td>
-                    <td class="py-4 px-4 font-semibold text-on-surface">
-                      Chương trình thực tập Tài năng Trí tuệ Nhân tạo
-                      <span
-                        class="block font-body-sm text-body-sm text-on-surface-variant font-normal"
-                        >Hợp tác Viện Công nghệ &amp; AI Lab</span
-                      >
-                    </td>
-                    <td class="py-4 px-4">
-                      <span
-                        class="inline-flex items-center gap-1.5 text-on-surface-variant"
-                      >
-                        <span
-                          class="material-symbols-outlined text-base text-primary"
-                          >neurology</span
-                        >
-                        Khối Dữ liệu &amp; AI
-                      </span>
-                    </td>
-                    <td
-                      class="py-4 px-4 font-code text-body-sm text-primary font-semibold"
-                    >
-                      01/11/2026 - 31/01/2027
-                    </td>
-                    <td class="py-4 px-4 text-center">
-                      <span
-                        class="px-2.5 py-1 rounded-md bg-surface-container-highest font-code text-label-sm font-semibold text-primary"
-                      >
-                        13 tuần
-                      </span>
-                    </td>
-                    <td class="py-4 px-4">
-                      <div class="flex items-center gap-2">
-                        <span class="font-code font-bold text-primary"
-                          >60/80</span
-                        >
-                        <span class="text-on-surface-variant font-body-sm"
-                          >SV</span
-                        >
-                      </div>
-                      <div
-                        class="w-20 bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-1"
-                      >
-                        <div class="bg-primary h-full" style="width: 75%"></div>
-                      </div>
-                    </td>
-                    <td class="py-4 px-4">
-                      <span
-                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm"
-                      >
-                        <span
-                          class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"
-                        ></span>
-                        Sắp bắt đầu
-                      </span>
-                    </td>
-                    <td class="py-4 px-6 text-right">
-                      <div class="inline-flex items-center gap-1">
-                        <button
-                          class="p-1.5 rounded-md hover:bg-surface-container text-primary hover:text-primary transition-colors"
-                          title="Chỉnh sửa"
-                          type="button"
-                        >
-                          <span class="material-symbols-outlined text-lg"
-                            >edit</span
-                          >
-                        </button>
-                        <button
-                          class="p-1.5 rounded-md hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors"
-                          title="Chi tiết"
-                          type="button"
-                        >
-                          <span class="material-symbols-outlined text-lg"
-                            >visibility</span
-                          >
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-
-                  <tr
-                    class="hover:bg-surface/60 transition-colors bg-surface/30"
-                  >
-                    <td
-                      class="py-4 px-6 font-code text-label-md text-primary font-semibold"
-                    >
-                      ICTU-INT-2027-SPRING
-                    </td>
-                    <td class="py-4 px-4 font-semibold text-on-surface">
-                      Kỳ thực tập Mùa Xuân 2027 (Doanh nghiệp Quốc tế)
-                      <span
-                        class="block font-body-sm text-body-sm text-on-surface-variant font-normal"
-                        >Chương trình liên kết Nhật Bản - Hàn Quốc</span
-                      >
-                    </td>
-                    <td class="py-4 px-4">
-                      <span
-                        class="inline-flex items-center gap-1.5 text-on-surface-variant"
-                      >
-                        <span
-                          class="material-symbols-outlined text-base text-secondary"
-                          >badge</span
-                        >
-                        Phòng Nhân sự
-                      </span>
-                    </td>
-                    <td class="py-4 px-4 font-code text-body-sm">
-                      15/02/2027 - 15/05/2027
-                    </td>
-                    <td class="py-4 px-4 text-center">
-                      <span
-                        class="px-2.5 py-1 rounded-md bg-surface-container font-code text-label-sm font-semibold"
-                      >
-                        12 tuần
-                      </span>
-                    </td>
-                    <td class="py-4 px-4">
-                      <div class="flex items-center gap-2">
-                        <span class="font-code font-bold text-tertiary"
-                          >15/40</span
-                        >
-                        <span class="text-on-surface-variant font-body-sm"
-                          >SV</span
-                        >
-                      </div>
-                      <div
-                        class="w-20 bg-surface-container-highest h-1.5 rounded-full overflow-hidden mt-1"
-                      >
-                        <div
-                          class="bg-tertiary h-full"
-                          style="width: 37.5%"
-                        ></div>
-                      </div>
-                    </td>
-                    <td class="py-4 px-4">
-                      <span
-                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm"
-                      >
-                        <span
-                          class="w-1.5 h-1.5 rounded-full bg-tertiary"
-                        ></span>
-                        Đang mở đăng ký
-                      </span>
-                    </td>
-                    <td class="py-4 px-6 text-right">
-                      <div class="inline-flex items-center gap-1">
-                        <button
-                          class="p-1.5 rounded-md hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors"
-                          title="Chỉnh sửa"
-                          type="button"
-                        >
-                          <span class="material-symbols-outlined text-lg"
-                            >edit</span
-                          >
-                        </button>
-                        <button
-                          class="p-1.5 rounded-md hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors"
-                          title="Chi tiết"
-                          type="button"
-                        >
-                          <span class="material-symbols-outlined text-lg"
-                            >visibility</span
-                          >
-                        </button>
+                  <tr>
+                    <td colspan="8" class="py-8 text-center text-on-surface-variant">
+                      <div class="inline-flex items-center gap-2">
+                        <span class="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                        <span>Đang tải danh sách chương trình thực tập từ máy chủ...</span>
                       </div>
                     </td>
                   </tr>

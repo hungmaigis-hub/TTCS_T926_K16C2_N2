@@ -4,6 +4,8 @@
   "description": "ICTU Internship Management System",
   "scripts": {
     "dev": "python -m uvicorn main:app --reload --port 8000 --app-dir backend",
+    "backend": "python -m uvicorn main:app --reload --port 8000 --app-dir backend",
+    "frontend": "npx -y live-server --port=5500 . --open=frontend/html/quanly/them_ho_so.html",
     "start": "python -m uvicorn main:app --reload --port 8000 --app-dir backend",
     "test": "python -m pytest backend/tests"
   }

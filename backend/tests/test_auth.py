@@ -99,3 +99,23 @@ def test_login_nonexistent_email():
     response = client.post("/api/v1/auth/login", json=payload)
     assert response.status_code == 401
     assert "Email hoặc mật khẩu không chính xác" in response.json()["detail"]
+
+def test_login_student_blocked_on_mentor_portal():
+    payload = {
+        "email": "vana@example.com",
+        "mat_khau": "123456",
+        "vai_tro": "mentor"
+    }
+    response = client.post("/api/v1/auth/login", json=payload)
+    assert response.status_code == 403
+    assert "không có quyền đăng nhập vào cổng Doanh nghiệp / Mentor" in response.json()["detail"]
+
+def test_login_student_allowed_on_student_portal():
+    payload = {
+        "email": "vana@example.com",
+        "mat_khau": "123456",
+        "vai_tro": "student"
+    }
+    response = client.post("/api/v1/auth/login", json=payload)
+    assert response.status_code == 200
+    assert response.json()["data"]["vai_tro"] == "ThucTapSinh"
