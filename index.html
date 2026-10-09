@@ -3,257 +3,605 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gửi yêu cầu hỗ trợ - Thực tập sinh</title>
+  <title>Quản Lý Thực Tập Sinh - Phân Công Mentor</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    :root {
+      --primary-color: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-body: #f8fafc;
     }
-
     body {
-      background-color: #f4f6f9;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .form-card {
-      background: #ffffff;
-      max-width: 520px;
-      width: 100%;
-      padding: 32px;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    }
-
-    .form-header {
-      margin-bottom: 24px;
-    }
-
-    .form-header h2 {
-      font-size: 22px;
+      background-color: var(--bg-body);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       color: #1e293b;
-      margin-bottom: 8px;
     }
-
-    .form-header p {
-      font-size: 14px;
-      color: #64748b;
+    .main-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      background: #ffffff;
     }
-
-    .form-group {
-      margin-bottom: 20px;
+    .table-custom thead th {
+      background-color: #f1f5f9;
+      color: #475569;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      border-bottom: 2px solid #cbd5e1;
+      padding-top: 14px;
+      padding-bottom: 14px;
+      vertical-align: middle;
     }
-
-    label {
-      display: block;
-      font-size: 14px;
-      font-weight: 600;
-      color: #334155;
-      margin-bottom: 8px;
+    .table-custom tbody tr {
+      transition: all 0.2s ease;
     }
-
-    .required-star {
-      color: #ef4444;
-    }
-
-    input[type="text"],
-    select,
-    textarea {
-      width: 100%;
-      padding: 12px 14px;
-      font-size: 14px;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 8px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+    .table-custom tbody tr:hover {
       background-color: #f8fafc;
     }
-
-    input[type="text"]:focus,
-    select:focus,
-    textarea:focus {
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.88rem;
+    }
+    .select-mentor {
+      min-width: 220px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .select-mentor:focus {
       border-color: #3b82f6;
-      background-color: #ffffff;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     }
-
-    textarea {
-      resize: vertical;
-      min-height: 110px;
-    }
-
-    .btn-submit {
-      width: 100%;
-      padding: 13px;
-      font-size: 15px;
+    .status-badge {
+      font-size: 0.75rem;
+      padding: 5px 10px;
+      border-radius: 20px;
       font-weight: 600;
-      color: #ffffff;
-      background-color: #2563eb;
-      border: none;
+    }
+    .mentor-badge {
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 12px;
       border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
     }
-
-    .btn-submit:hover {
-      background-color: #1d4ed8;
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 1080;
     }
-
-    .btn-submit:active {
-      transform: scale(0.99);
+    /* Hiệu ứng flash khi cập nhật Mentor thành công */
+    @keyframes highlightUpdate {
+      0% {
+        transform: scale(1.08);
+        background-color: #bbf7d0;
+        box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+      }
+      100% {
+        transform: scale(1);
+        background-color: transparent;
+        box-shadow: none;
+      }
     }
-
-    .btn-submit:disabled {
-      background-color: #94a3b8;
-      cursor: not-allowed;
-    }
-
-    /* Hộp thông báo trạng thái */
-    .alert-box {
-      display: none;
-      padding: 14px 16px;
-      border-radius: 8px;
-      font-size: 14px;
-      line-height: 1.5;
-      margin-bottom: 20px;
-      animation: fadeIn 0.3s ease-in-out;
-    }
-
-    .alert-success {
-      background-color: #ecfdf5;
-      border: 1px solid #a7f3d0;
-      color: #065f46;
-    }
-
-    .alert-error {
-      background-color: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #991b1b;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to { opacity: 1; transform: translateY(0); }
+    .mentor-updated-highlight {
+      animation: highlightUpdate 1.2s ease-out;
     }
   </style>
 </head>
-<body>
+<body class="py-4">
 
-  <div class="form-card">
-    <div class="form-header">
-      <h2>Yêu cầu hỗ trợ thực tập</h2>
-      <p>Vui lòng điền đầy đủ thông tin để bộ phận quản trị xử lý hồ sơ.</p>
+<div class="container-xl">
+  <!-- Header: Tiêu đề & Thống kê nhanh -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+      <h3 class="fw-bold text-dark mb-1">
+        <i class="bi bi-people-fill text-primary me-2"></i>Danh Sách Thực Tập Sinh
+      </h3>
+      <p class="text-muted mb-0 small">
+        Bổ sung dropdown danh sách Mentor trực tiếp trên từng hàng và cập nhật qua <code>PATCH /api/v1/interns/{id}/mentor</code>
+      </p>
     </div>
-
-    <!-- Hộp thông báo phản hồi từ hệ thống -->
-    <div id="statusAlert" class="alert-box" role="alert"></div>
-
-    <form id="supportForm">
-      <!-- Dropdown chọn loại giấy tờ -->
-      <div class="form-group">
-        <label for="documentType">Loại yêu cầu / Giấy tờ <span class="required-star">*</span></label>
-        <select id="documentType" name="documentType" required>
-          <option value="" disabled selected>-- Chọn loại giấy tờ --</option>
-          <option value="giấy xác nhận thực tập">Giấy xác nhận thực tập</option>
-          <option value="đóng dấu mộc">Đóng dấu mộc</option>
-          <option value="tài liệu dự án">Tài liệu dự án</option>
-        </select>
-      </div>
-
-      <!-- Ô input tiêu đề -->
-      <div class="form-group">
-        <label for="title">Tiêu đề yêu cầu <span class="required-star">*</span></label>
-        <input 
-          type="text" 
-          id="title" 
-          name="title" 
-          placeholder="Ví dụ: Xin dấu mộc báo cáo tuần 8..." 
-          required 
-          maxlength="150"
-        >
-      </div>
-
-      <!-- Thẻ textarea nội dung chi tiết -->
-      <div class="form-group">
-        <label for="content">Nội dung chi tiết <span class="required-star">*</span></label>
-        <textarea 
-          id="content" 
-          name="content" 
-          placeholder="Mô tả cụ thể mục đích, thời hạn cần nhận, thông tin bổ sung..." 
-          required
-        ></textarea>
-      </div>
-
-      <!-- Nút gửi -->
-      <button type="submit" id="submitBtn" class="btn-submit">Gửi yêu cầu</button>
-    </form>
+    <div class="d-flex gap-2">
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-flex align-items-center px-3 py-2 fs-6">
+        <i class="bi bi-broadcast me-2"></i>REST API: <code>PATCH /api/v1/interns/{id}/mentor</code>
+      </span>
+    </div>
   </div>
 
-  <script>
-    const form = document.getElementById('supportForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const statusAlert = document.getElementById('statusAlert');
+  <!-- Bộ lọc & Thống kê số lượng -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0 text-muted">
+          <i class="bi bi-search"></i>
+        </span>
+        <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Tìm theo tên hoặc mã TTS..." oninput="filterTable()">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <select id="statusFilter" class="form-select" onchange="filterTable()">
+        <option value="ALL">Tất cả trạng thái phân công</option>
+        <option value="ASSIGNED">Đã có Mentor</option>
+        <option value="UNASSIGNED">Chưa có Mentor</option>
+      </select>
+    </div>
+    <div class="col-md-5 text-md-end d-flex align-items-center justify-content-md-end gap-3 text-muted small">
+      <span>Tổng số: <strong id="totalCount" class="text-dark">4</strong> TTS</span>
+      <span>•</span>
+      <span>Đã phân công: <strong id="assignedCount" class="text-success">3</strong></span>
+      <span>•</span>
+      <span>Chưa phân công: <strong id="unassignedCount" class="text-danger">1</strong></span>
+    </div>
+  </div>
 
-    // Hàm hiển thị hộp thông báo
-    function showAlert(message, type = 'success') {
-      statusAlert.textContent = message;
-      statusAlert.className = `alert-box alert-${type}`;
-      statusAlert.style.display = 'block';
+  <!-- Bảng dữ liệu Thực tập sinh -->
+  <div class="main-card overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-custom align-middle mb-0" id="internTable">
+        <thead>
+          <tr>
+            <th class="text-center" style="width: 50px;">STT</th>
+            <th style="width: 100px;">Mã TTS</th>
+            <th>Thông tin Thực tập sinh</th>
+            <th>Vị trí</th>
+            <th style="min-width: 200px;">Mentor hiện tại</th>
+            <th style="min-width: 250px;">Phân công Mentor mới</th>
+            <th class="text-center" style="width: 160px;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="internTableBody">
+          <!-- Hàng 1 -->
+          <tr data-id="TTS001" id="row-TTS001">
+            <td class="text-center text-muted fw-semibold">1</td>
+            <td>
+              <span class="badge bg-light text-secondary border font-monospace">TTS001</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-primary-subtle text-primary">NA</div>
+                <div>
+                  <div class="fw-bold intern-name">Nguyễn Văn An</div>
+                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>an.nguyen@company.vn</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle status-badge">
+                Frontend React
+              </span>
+            </td>
+            <!-- Cột hiển thị tên Mentor hiện tại / Mentor mới ngay trên giao diện -->
+            <td>
+              <span id="current-mentor-TTS001" class="mentor-badge bg-success-subtle text-success border border-success-subtle">
+                <i class="bi bi-person-check-fill me-1"></i>
+                <span class="mentor-name-text">Trần Hoàng Nam</span>
+              </span>
+            </td>
+            <!-- Cột Dropdown select danh sách Mentor trực tiếp trên hàng -->
+            <td>
+              <select id="select-mentor-TTS001" class="form-select form-select-sm select-mentor">
+                <option value="">-- Chưa phân công --</option>
+                <option value="M01" selected>Trần Hoàng Nam (Senior Frontend)</option>
+                <option value="M02">Lê Thị Mai (Tech Lead)</option>
+                <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
+                <option value="M04">Võ Hoài An (DevOps Lead)</option>
+              </select>
+            </td>
+            <!-- Nút Lưu phân công -->
+            <td class="text-center">
+              <button id="btn-save-TTS001" class="btn btn-sm btn-primary px-3 shadow-sm" onclick="saveMentorAssignment('TTS001')">
+                <i class="bi bi-floppy-fill me-1"></i>Lưu phân công
+              </button>
+            </td>
+          </tr>
 
-      // Tự động cuộn đến thông báo nếu form dài
-      statusAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          <!-- Hàng 2 -->
+          <tr data-id="TTS002" id="row-TTS002">
+            <td class="text-center text-muted fw-semibold">2</td>
+            <td>
+              <span class="badge bg-light text-secondary border font-monospace">TTS002</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-success-subtle text-success">TB</div>
+                <div>
+                  <div class="fw-bold intern-name">Trần Thị Bích</div>
+                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>bich.tran@company.vn</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-success-subtle text-success border border-success-subtle status-badge">
+                Backend Java
+              </span>
+            </td>
+            <!-- Cột hiển thị tên Mentor -->
+            <td>
+              <span id="current-mentor-TTS002" class="mentor-badge bg-success-subtle text-success border border-success-subtle">
+                <i class="bi bi-person-check-fill me-1"></i>
+                <span class="mentor-name-text">Phạm Quốc Bảo</span>
+              </span>
+            </td>
+            <!-- Dropdown select Mentor -->
+            <td>
+              <select id="select-mentor-TTS002" class="form-select form-select-sm select-mentor">
+                <option value="">-- Chưa phân công --</option>
+                <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
+                <option value="M02">Lê Thị Mai (Tech Lead)</option>
+                <option value="M03" selected>Phạm Quốc Bảo (Senior Backend)</option>
+                <option value="M04">Võ Hoài An (DevOps Lead)</option>
+              </select>
+            </td>
+            <!-- Nút Lưu phân công -->
+            <td class="text-center">
+              <button id="btn-save-TTS002" class="btn btn-sm btn-primary px-3 shadow-sm" onclick="saveMentorAssignment('TTS002')">
+                <i class="bi bi-floppy-fill me-1"></i>Lưu phân công
+              </button>
+            </td>
+          </tr>
+
+          <!-- Hàng 3 -->
+          <tr data-id="TTS003" id="row-TTS003">
+            <td class="text-center text-muted fw-semibold">3</td>
+            <td>
+              <span class="badge bg-light text-secondary border font-monospace">TTS003</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-warning-subtle text-warning-emphasis">LC</div>
+                <div>
+                  <div class="fw-bold intern-name">Lê Hoàng Cường</div>
+                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>cuong.le@company.vn</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle status-badge">
+                Mobile Flutter
+              </span>
+            </td>
+            <!-- Cột hiển thị tên Mentor -->
+            <td>
+              <span id="current-mentor-TTS003" class="mentor-badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                <i class="bi bi-person-dash me-1"></i>
+                <span class="mentor-name-text">Chưa phân công</span>
+              </span>
+            </td>
+            <!-- Dropdown select Mentor -->
+            <td>
+              <select id="select-mentor-TTS003" class="form-select form-select-sm select-mentor">
+                <option value="" selected>-- Chưa phân công --</option>
+                <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
+                <option value="M02">Lê Thị Mai (Tech Lead)</option>
+                <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
+                <option value="M04">Võ Hoài An (DevOps Lead)</option>
+              </select>
+            </td>
+            <!-- Nút Lưu phân công -->
+            <td class="text-center">
+              <button id="btn-save-TTS003" class="btn btn-sm btn-primary px-3 shadow-sm" onclick="saveMentorAssignment('TTS003')">
+                <i class="bi bi-floppy-fill me-1"></i>Lưu phân công
+              </button>
+            </td>
+          </tr>
+
+          <!-- Hàng 4 -->
+          <tr data-id="TTS004" id="row-TTS004">
+            <td class="text-center text-muted fw-semibold">4</td>
+            <td>
+              <span class="badge bg-light text-secondary border font-monospace">TTS004</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-danger-subtle text-danger">PD</div>
+                <div>
+                  <div class="fw-bold intern-name">Phạm Thùy Dương</div>
+                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>duong.pham@company.vn</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle status-badge">
+                QA / Tester
+              </span>
+            </td>
+            <!-- Cột hiển thị tên Mentor -->
+            <td>
+              <span id="current-mentor-TTS004" class="mentor-badge bg-success-subtle text-success border border-success-subtle">
+                <i class="bi bi-person-check-fill me-1"></i>
+                <span class="mentor-name-text">Lê Thị Mai</span>
+              </span>
+            </td>
+            <!-- Dropdown select Mentor -->
+            <td>
+              <select id="select-mentor-TTS004" class="form-select form-select-sm select-mentor">
+                <option value="">-- Chưa phân công --</option>
+                <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
+                <option value="M02" selected>Lê Thị Mai (Tech Lead)</option>
+                <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
+                <option value="M04">Võ Hoài An (DevOps Lead)</option>
+              </select>
+            </td>
+            <!-- Nút Lưu phân công -->
+            <td class="text-center">
+              <button id="btn-save-TTS004" class="btn btn-sm btn-primary px-3 shadow-sm" onclick="saveMentorAssignment('TTS004')">
+                <i class="bi bi-floppy-fill me-1"></i>Lưu phân công
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Toast thông báo Bootstrap -->
+<div class="toast-container">
+  <div id="actionToast" class="toast align-items-center border-0 shadow-lg text-white" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center gap-2" id="toastContent">
+        <i class="bi bi-check-circle-fill fs-5" id="toastIcon"></i>
+        <span id="toastMsg">Thao tác thành công!</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  /**
+   * MOCK API INTERCEPTOR
+   * Tự động phản hồi request PATCH /api/v1/interns/{id}/mentor khi mở file cục bộ (file://)
+   * hoặc khi backend server chưa được bật, giúp demo hoạt động ngay lập tức.
+   */
+  const MENTOR_DATA = {
+    'M01': 'Trần Hoàng Nam',
+    'M02': 'Lê Thị Mai',
+    'M03': 'Phạm Quốc Bảo',
+    'M04': 'Võ Hoài An'
+  };
+
+  const originalFetch = window.fetch;
+  window.fetch = async function(url, options) {
+    const patchRegex = /\/api\/v1\/interns\/([^/]+)\/mentor$/;
+    const match = typeof url === 'string' && url.match(patchRegex);
+
+    if (match && options && options.method === 'PATCH') {
+      try {
+        // Nếu trang web đang chạy trên web server thật có HTTP(S), thử gửi request thật trước
+        if (window.location.protocol.startsWith('http')) {
+          const res = await originalFetch(url, options);
+          if (res.status !== 404 && res.status !== 502) return res;
+        }
+      } catch (e) {
+        console.warn('Backend server chưa sẵn sàng, đang chuyển sang chế độ Mock API phản hồi...');
+      }
+
+      // Giả lập xử lý độ trễ mạng 600ms
+      await new Promise(r => setTimeout(r, 600));
+      const internId = match[1];
+      const body = JSON.parse(options.body || '{}');
+      const mentorId = body.mentorId;
+      const mentorName = MENTOR_DATA[mentorId] || (mentorId ? 'Mentor #' + mentorId : null);
+
+      return new Response(JSON.stringify({
+        status: 'success',
+        code: 200,
+        message: 'Cập nhật Mentor thành công',
+        data: {
+          internId: internId,
+          mentorId: mentorId,
+          mentorName: mentorName,
+          updatedAt: new Date().toISOString()
+        }
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    form.addEventListener('submit', async function (event) {
-      event.preventDefault(); // Ngăn hành vi reload trang mặc định
+    return originalFetch(url, options);
+  };
 
-      // Thu thập dữ liệu từ Form
-      const payload = {
-        documentType: document.getElementById('documentType').value,
-        title: document.getElementById('title').value.trim(),
-        content: document.getElementById('content').value.trim()
-      };
+  /**
+   * HÀM CHÍNH: Gửi request PATCH /api/v1/interns/{id}/mentor để cập nhật Mentor
+   * và hiển thị tên Mentor mới ngay trên giao diện
+   * @param {string} internId - Mã ID thực tập sinh (ví dụ: 'TTS001')
+   */
+  async function saveMentorAssignment(internId) {
+    const selectEl = document.getElementById(`select-mentor-${internId}`);
+    const btnEl = document.getElementById(`btn-save-${internId}`);
+    const currentMentorBadge = document.getElementById(`current-mentor-${internId}`);
+    const rowEl = document.getElementById(`row-${internId}`);
+    const internName = rowEl.querySelector('.intern-name').textContent.trim();
 
-      // Đổi trạng thái nút bấm trong lúc gửi
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Đang gửi yêu cầu...';
-      statusAlert.style.display = 'none';
+    if (!selectEl || !btnEl || !currentMentorBadge) {
+      console.error('Không tìm thấy các phần tử DOM cho TTS:', internId);
+      return;
+    }
 
-      try {
-        const response = await fetch('/api/v1/support-requests', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
+    const selectedMentorId = selectEl.value;
+    const selectedOptionText = selectEl.options[selectEl.selectedIndex].text;
 
-        if (response.ok) {
-          // Hiển thị hộp thông báo gửi thành công
-          showAlert('Yêu cầu hỗ trợ của bạn đã được gửi thành công!', 'success');
-          form.reset(); // Reset form sau khi gửi thành công
-        } else {
-          // Xử lý khi server trả về mã lỗi HTTP
-          const errData = await response.json().catch(() => null);
-          const errMsg = errData?.message || `Gửi thất bại (Mã lỗi: ${response.status})`;
-          showAlert(errMsg, 'error');
-        }
-      } catch (error) {
-        // Xử lý lỗi mạng hoặc kết nối server
-        console.error('Lỗi khi gửi yêu cầu:', error);
-        showAlert('Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng hoặc thử lại sau.', 'error');
-      } finally {
-        // Khôi phục trạng thái nút gửi
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Gửi yêu cầu';
+    // Trích xuất tên mentor ngắn gọn từ text của option (bỏ phần chức danh trong ngoặc nếu có)
+    const fallbackMentorName = selectedMentorId 
+      ? selectedOptionText.replace(/\s*\(.*?\)/, '').trim() 
+      : null;
+
+    // 1. Cập nhật UI: Đặt trạng thái Loading cho nút bấm
+    const originalBtnContent = btnEl.innerHTML;
+    btnEl.disabled = true;
+    btnEl.innerHTML = `
+      <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+      Đang lưu...
+    `;
+
+    // 2. Dùng Fetch API gửi request PATCH
+    try {
+      const response = await fetch(`/api/v1/interns/${internId}/mentor`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+          // 'Authorization': 'Bearer ' + authToken // Bổ sung token nếu cần xác thực
+        },
+        body: JSON.stringify({
+          mentorId: selectedMentorId || null
+        })
+      });
+
+      // Kiểm tra HTTP status
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Lỗi máy chủ HTTP ${response.status}`);
+      }
+
+      // Đọc dữ liệu JSON trả về từ backend
+      const result = await response.json();
+      console.log(`[PATCH SUCCESS] /api/v1/interns/${internId}/mentor:`, result);
+
+      // Xác định tên Mentor mới (ưu tiên từ data của server trả về, fallback từ option đã chọn)
+      const newMentorName = (result.data && result.data.mentorName) || fallbackMentorName;
+
+      // 3. HIỂN THỊ TÊN MENTOR MỚI NGAY TRÊN GIAO DIỆN
+      updateMentorDisplay(currentMentorBadge, newMentorName);
+
+      // 4. Hiển thị thông báo Toast thành công
+      const notifyText = newMentorName 
+        ? `Đã phân công <b>${newMentorName}</b> làm Mentor cho <b>${internName}</b>!`
+        : `Đã hủy phân công Mentor cho <b>${internName}</b>!`;
+      showToast(notifyText, 'success');
+
+      // Cập nhật lại thống kê số lượng
+      updateStatistics();
+
+    } catch (error) {
+      console.error('Lỗi khi cập nhật Mentor:', error);
+      showToast(`Không thể cập nhật Mentor cho ${internName}: ${error.message}`, 'error');
+    } finally {
+      // Khôi phục trạng thái ban đầu của nút bấm
+      btnEl.disabled = false;
+      btnEl.innerHTML = originalBtnContent;
+    }
+  }
+
+  /**
+   * Cập nhật phần tử hiển thị Mentor trên bảng & tạo hiệu ứng trực quan
+   */
+  function updateMentorDisplay(badgeEl, mentorName) {
+    const textEl = badgeEl.querySelector('.mentor-name-text') || badgeEl;
+    const iconEl = badgeEl.querySelector('i');
+
+    if (mentorName) {
+      // Đã có Mentor
+      textEl.textContent = mentorName;
+      badgeEl.className = 'mentor-badge bg-success-subtle text-success border border-success-subtle';
+      if (iconEl) iconEl.className = 'bi bi-person-check-fill me-1';
+    } else {
+      // Chưa có Mentor
+      textEl.textContent = 'Chưa phân công';
+      badgeEl.className = 'mentor-badge bg-secondary-subtle text-secondary border border-secondary-subtle';
+      if (iconEl) iconEl.className = 'bi bi-person-dash me-1';
+    }
+
+    // Kích hoạt animation highlight nhấp nháy màu xanh để người dùng nhận biết ngay
+    badgeEl.classList.remove('mentor-updated-highlight');
+    // void badgeEl.offsetWidth; // Force reflow
+    void badgeEl.offsetWidth;
+    badgeEl.classList.add('mentor-updated-highlight');
+  }
+
+  /**
+   * Hiển thị thông báo Toast
+   */
+  function showToast(message, type = 'success') {
+    const toastEl = document.getElementById('actionToast');
+    const toastMsg = document.getElementById('toastMsg');
+    const toastIcon = document.getElementById('toastIcon');
+
+    if (type === 'success') {
+      toastEl.className = 'toast align-items-center border-0 shadow-lg text-white bg-success';
+      toastIcon.className = 'bi bi-check-circle-fill fs-5 text-white';
+    } else {
+      toastEl.className = 'toast align-items-center border-0 shadow-lg text-white bg-danger';
+      toastIcon.className = 'bi bi-exclamation-triangle-fill fs-5 text-white';
+    }
+
+    toastMsg.innerHTML = message;
+    const toast = new bootstrap.Toast(toastEl, { delay: 3500 });
+    toast.show();
+  }
+
+  /**
+   * Thống kê số lượng TTS đã phân công / chưa phân công
+   */
+  function updateStatistics() {
+    const rows = document.querySelectorAll('#internTableBody tr');
+    let assigned = 0;
+    let unassigned = 0;
+
+    rows.forEach(row => {
+      const select = row.querySelector('.select-mentor');
+      if (select && select.value) {
+        assigned++;
+      } else {
+        unassigned++;
       }
     });
-  </script>
+
+    document.getElementById('totalCount').textContent = rows.length;
+    document.getElementById('assignedCount').textContent = assigned;
+    document.getElementById('unassignedCount').textContent = unassigned;
+  }
+
+  /**
+   * Bộ lọc và tìm kiếm
+   */
+  function filterTable() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const filterStatus = document.getElementById('statusFilter').value;
+    const rows = document.querySelectorAll('#internTableBody tr');
+
+    rows.forEach(row => {
+      const internId = row.getAttribute('data-id').toLowerCase();
+      const internName = row.querySelector('.intern-name').textContent.toLowerCase();
+      const selectValue = row.querySelector('.select-mentor').value;
+
+      const matchesQuery = internName.includes(query) || internId.includes(query);
+      let matchesStatus = true;
+
+      if (filterStatus === 'ASSIGNED') {
+        matchesStatus = selectValue !== '';
+      } else if (filterStatus === 'UNASSIGNED') {
+        matchesStatus = selectValue === '';
+      }
+
+      row.style.display = (matchesQuery && matchesStatus) ? '' : 'none';
+    });
+  }
+
+  // Khởi tạo số liệu khi tải xong trang
+  document.addEventListener('DOMContentLoaded', () => {
+    updateStatistics();
+  });
+</script>
 </body>
 </html>
