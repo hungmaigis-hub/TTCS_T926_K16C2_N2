@@ -3,605 +3,306 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản Lý Thực Tập Sinh - Phân Công Mentor</title>
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <style>
-    :root {
-      --primary-color: #2563eb;
-      --primary-hover: #1d4ed8;
-      --bg-body: #f8fafc;
-    }
-    body {
-      background-color: var(--bg-body);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      color: #1e293b;
-    }
-    .main-card {
-      border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-      background: #ffffff;
-    }
-    .table-custom thead th {
-      background-color: #f1f5f9;
-      color: #475569;
-      font-size: 0.82rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 700;
-      border-bottom: 2px solid #cbd5e1;
-      padding-top: 14px;
-      padding-bottom: 14px;
-      vertical-align: middle;
-    }
-    .table-custom tbody tr {
-      transition: all 0.2s ease;
-    }
-    .table-custom tbody tr:hover {
-      background-color: #f8fafc;
-    }
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 0.88rem;
-    }
-    .select-mentor {
-      min-width: 220px;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .select-mentor:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    }
-    .status-badge {
-      font-size: 0.75rem;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-weight: 600;
-    }
-    .mentor-badge {
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 6px 12px;
-      border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.3s ease;
-    }
-    .toast-container {
-      position: fixed;
-      top: 24px;
-      right: 24px;
-      z-index: 1080;
-    }
-    /* Hiệu ứng flash khi cập nhật Mentor thành công */
-    @keyframes highlightUpdate {
-      0% {
-        transform: scale(1.08);
-        background-color: #bbf7d0;
-        box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
-      }
-      100% {
-        transform: scale(1);
-        background-color: transparent;
-        box-shadow: none;
-      }
-    }
-    .mentor-updated-highlight {
-      animation: highlightUpdate 1.2s ease-out;
-    }
-  </style>
+  <title>Dashboard Quản Lý Sinh Viên - Báo Cáo KPI Thời Gian Thực</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body class="py-4">
+<body>
+  <div class="dashboard-container">
+    <!-- Top Header -->
+    <header class="dashboard-header">
+      <div class="header-left">
+        <div class="logo-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="header-title">Thống Kê Sinh Viên & Chỉ Số KPI</h1>
+          <p class="header-subtitle">Hệ thống theo dõi tiến độ đào tạo và phân loại trạng thái học tập</p>
+        </div>
+      </div>
 
-<div class="container-xl">
-  <!-- Header: Tiêu đề & Thống kê nhanh -->
-  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-    <div>
-      <h3 class="fw-bold text-dark mb-1">
-        <i class="bi bi-people-fill text-primary me-2"></i>Danh Sách Thực Tập Sinh
-      </h3>
-      <p class="text-muted mb-0 small">
-        Bổ sung dropdown danh sách Mentor trực tiếp trên từng hàng và cập nhật qua <code>PATCH /api/v1/interns/{id}/mentor</code>
-      </p>
-    </div>
-    <div class="d-flex gap-2">
-      <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-flex align-items-center px-3 py-2 fs-6">
-        <i class="bi bi-broadcast me-2"></i>REST API: <code>PATCH /api/v1/interns/{id}/mentor</code>
-      </span>
-    </div>
-  </div>
+      <div class="header-right">
+        <!-- Trạng thái kết nối Realtime -->
+        <div class="realtime-status-pill" id="realtimeStatusPill">
+          <span class="pulse-dot"></span>
+          <span class="status-text" id="connectionStatusText">Thời gian thực (Live)</span>
+        </div>
 
-  <!-- Bộ lọc & Thống kê số lượng -->
-  <div class="row g-3 mb-3">
-    <div class="col-md-4">
-      <div class="input-group">
-        <span class="input-group-text bg-white border-end-0 text-muted">
-          <i class="bi bi-search"></i>
-        </span>
-        <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Tìm theo tên hoặc mã TTS..." oninput="filterTable()">
+        <!-- Bộ chọn chế độ Nguồn dữ liệu (API Thật vs Giả lập Realtime để demo) -->
+        <div class="data-source-selector">
+          <label for="dataSourceMode" class="source-label">Nguồn dữ liệu:</label>
+          <select id="dataSourceMode" class="form-select">
+            <option value="api" selected>API Thật (/api/v1/...)</option>
+            <option value="mock">Mô phỏng Realtime (Demo)</option>
+          </select>
+        </div>
+
+        <!-- Tần suất cập nhật tự động -->
+        <div class="refresh-control">
+          <label for="refreshIntervalSelect" class="source-label">Tự động làm mới:</label>
+          <select id="refreshIntervalSelect" class="form-select">
+            <option value="5000">Mỗi 5 giây</option>
+            <option value="10000" selected>Mỗi 10 giây</option>
+            <option value="30000">Mỗi 30 giây</option>
+            <option value="0">Tắt tự động</option>
+          </select>
+        </div>
+
+        <!-- Nút Refresh thủ công -->
+        <button id="btnManualRefresh" class="btn-refresh" title="Cập nhật ngay">
+          <svg class="refresh-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M23 4v6h-6"/>
+            <path d="M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          <span>Làm mới</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Thanh thông tin thời gian cập nhật -->
+    <div class="sync-meta-bar">
+      <div class="meta-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>Lần cập nhật cuối: <strong id="lastUpdatedTime">Đang tải...</strong></span>
+      </div>
+      <div class="meta-item">
+        <span class="api-tag">GET /api/v1/reports/completion-rate</span>
       </div>
     </div>
-    <div class="col-md-3">
-      <select id="statusFilter" class="form-select" onchange="filterTable()">
-        <option value="ALL">Tất cả trạng thái phân công</option>
-        <option value="ASSIGNED">Đã có Mentor</option>
-        <option value="UNASSIGNED">Chưa có Mentor</option>
-      </select>
-    </div>
-    <div class="col-md-5 text-md-end d-flex align-items-center justify-content-md-end gap-3 text-muted small">
-      <span>Tổng số: <strong id="totalCount" class="text-dark">4</strong> TTS</span>
-      <span>•</span>
-      <span>Đã phân công: <strong id="assignedCount" class="text-success">3</strong></span>
-      <span>•</span>
-      <span>Chưa phân công: <strong id="unassignedCount" class="text-danger">1</strong></span>
-    </div>
-  </div>
 
-  <!-- Bảng dữ liệu Thực tập sinh -->
-  <div class="main-card overflow-hidden">
-    <div class="table-responsive">
-      <table class="table table-custom align-middle mb-0" id="internTable">
-        <thead>
-          <tr>
-            <th class="text-center" style="width: 50px;">STT</th>
-            <th style="width: 100px;">Mã TTS</th>
-            <th>Thông tin Thực tập sinh</th>
-            <th>Vị trí</th>
-            <th style="min-width: 200px;">Mentor hiện tại</th>
-            <th style="min-width: 250px;">Phân công Mentor mới</th>
-            <th class="text-center" style="width: 160px;">Thao tác</th>
-          </tr>
-        </thead>
-        <tbody id="internTableBody">
-          <!-- Hàng 1 -->
-          <tr data-id="TTS001" id="row-TTS001">
-            <td class="text-center text-muted fw-semibold">1</td>
-            <td>
-              <span class="badge bg-light text-secondary border font-monospace">TTS001</span>
-            </td>
-            <td>
-              <div class="d-flex align-items-center gap-3">
-                <div class="avatar bg-primary-subtle text-primary">NA</div>
-                <div>
-                  <div class="fw-bold intern-name">Nguyễn Văn An</div>
-                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>an.nguyen@company.vn</small>
+    <!-- KHỐI KPI CHÍNH & VÒNG TRÒN PHẦN TRĂM TIẾN ĐỘ -->
+    <div class="kpi-main-grid">
+      <!-- 1. KHỐI NỔI BẬT: VÒNG TRÒN TIẾN ĐỘ HOÀN THÀNH -->
+      <section class="card kpi-hero-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="badge badge-primary">Chỉ số trọng tâm</span>
+            <h2 class="card-title">Tiến Độ Hoàn Thành & Tốt Nghiệp</h2>
+          </div>
+          <div class="trend-badge" id="completionTrendBadge">
+            <span class="trend-arrow">▲</span>
+            <span id="completionTrendText">+0.0%</span>
+          </div>
+        </div>
+
+        <div class="hero-content">
+          <!-- Vòng tròn phần trăm tiến độ hoàn thành SVG -->
+          <div class="circular-progress-wrapper">
+            <div class="svg-container">
+              <svg class="circular-chart" viewBox="0 0 160 160">
+                <defs>
+                  <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4F46E5" />
+                    <stop offset="50%" stop-color="#06B6D4" />
+                    <stop offset="100%" stop-color="#10B981" />
+                  </linearGradient>
+                  <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+                <!-- Vòng tròn nền (Track) -->
+                <circle class="circle-bg" cx="80" cy="80" r="68" />
+                <!-- Vòng tròn tiến độ động (Value Indicator) -->
+                <circle
+                  id="circularProgressBar"
+                  class="circle-progress"
+                  cx="80"
+                  cy="80"
+                  r="68"
+                  stroke-dasharray="427.26"
+                  stroke-dashoffset="427.26"
+                />
+              </svg>
+              <!-- Nội dung phần trăm bên trong tâm vòng tròn -->
+              <div class="circular-inner-content">
+                <div class="percentage-value-group">
+                  <span id="completionRateValue" class="percentage-number">0.0</span>
+                  <span class="percentage-unit">%</span>
                 </div>
+                <span class="progress-subtext" id="completionStatusLabel">Tỷ lệ hoàn thành</span>
               </div>
-            </td>
-            <td>
-              <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle status-badge">
-                Frontend React
-              </span>
-            </td>
-            <!-- Cột hiển thị tên Mentor hiện tại / Mentor mới ngay trên giao diện -->
-            <td>
-              <span id="current-mentor-TTS001" class="mentor-badge bg-success-subtle text-success border border-success-subtle">
-                <i class="bi bi-person-check-fill me-1"></i>
-                <span class="mentor-name-text">Trần Hoàng Nam</span>
-              </span>
-            </td>
-            <!-- Cột Dropdown select danh sách Mentor trực tiếp trên hàng -->
-            <td>
-              <select id="select-mentor-TTS001" class="form-select form-select-sm select-mentor">
-                <option value="">-- Chưa phân công --</option>
-                <option value="M01" selected>Trần Hoàng Nam (Senior Frontend)</option>
-                <option value="M02">Lê Thị Mai (Tech Lead)</option>
-                <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
-                <option value="M04">Võ Hoài An (DevOps Lead)</option>
-              </select>
-            </td>
-            <!-- Nút Lưu phân công -->
-            <td class="text-center">
-              <button id="btn-save-TTS001" class="btn btn-sm btn-primary px-3 shadow-sm" onclick="saveMentorAssignment('TTS001')">
-                <i class="bi bi-floppy-fill me-1"></i>Lưu phân công
-              </button>
-            </td>
-          </tr>
+            </div>
+          </div>
 
-          <!-- Hàng 2 -->
-          <tr data-id="TTS002" id="row-TTS002">
-            <td class="text-center text-muted fw-semibold">2</td>
-            <td>
-              <span class="badge bg-light text-secondary border font-monospace">TTS002</span>
-            </td>
-            <td>
-              <div class="d-flex align-items-center gap-3">
-                <div class="avatar bg-success-subtle text-success">TB</div>
-                <div>
-                  <div class="fw-bold intern-name">Trần Thị Bích</div>
-                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>bich.tran@company.vn</small>
-                </div>
+          <!-- Thông tin phân tích chi tiết tiến độ -->
+          <div class="progress-details-panel">
+            <div class="stat-milestone">
+              <div class="milestone-label">Mục tiêu kỳ này (KPI Target)</div>
+              <div class="milestone-value"><span id="targetRateValue">85.0</span>%</div>
+              <div class="target-progress-bar-bg">
+                <div id="targetProgressBarFill" class="target-progress-bar-fill" style="width: 0%;"></div>
               </div>
-            </td>
-            <td>
-              <span class="badge bg-success-subtle text-success border border-success-subtle status-badge">
-                Backend Java
-              </span>
-            </td>
-            <!-- Cột hiển thị tên Mentor -->
-            <td>
-              <span id="current-mentor-TTS002" class="mentor-badge bg-success-subtle text-success border border-success-subtle">
-                <i class="bi bi-person-check-fill me-1"></i>
-                <span class="mentor-name-text">Phạm Quốc Bảo</span>
-              </span>
-            </td>
-            <!-- Dropdown select Mentor -->
-            <td>
-              <select id="select-mentor-TTS002" class="form-select form-select-sm select-mentor">
-                <option value="">-- Chưa phân công --</option>
-                <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
-                <option value="M02">Lê Thị Mai (Tech Lead)</option>
-                <option value="M03" selected>Phạm Quốc Bảo (Senior Backend)</option>
-                <option value="M04">Võ Hoài An (DevOps Lead)</option>
-              </select>
-            </td>
-            <!-- Nút Lưu phân công -->
-            <td class="text-center">
-              <button id="btn-save-TTS002" class="btn btn-sm btn-primary px-3 shadow-sm" onclick="saveMentorAssignment('TTS002')">
-                <i class="bi bi-floppy-fill me-1"></i>Lưu phân công
-              </button>
-            </td>
-          </tr>
+            </div>
 
-          <!-- Hàng 3 -->
-          <tr data-id="TTS003" id="row-TTS003">
-            <td class="text-center text-muted fw-semibold">3</td>
-            <td>
-              <span class="badge bg-light text-secondary border font-monospace">TTS003</span>
-            </td>
-            <td>
-              <div class="d-flex align-items-center gap-3">
-                <div class="avatar bg-warning-subtle text-warning-emphasis">LC</div>
-                <div>
-                  <div class="fw-bold intern-name">Lê Hoàng Cường</div>
-                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>cuong.le@company.vn</small>
-                </div>
+            <div class="stats-mini-list">
+              <div class="mini-stat-row">
+                <span class="dot dot-success"></span>
+                <span class="stat-name">Tốt nghiệp đúng hạn:</span>
+                <span class="stat-number" id="onTimeGraduationCount">0</span>
               </div>
-            </td>
-            <td>
-              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle status-badge">
-                Mobile Flutter
-              </span>
-            </td>
-            <!-- Cột hiển thị tên Mentor -->
-            <td>
-              <span id="current-mentor-TTS003" class="mentor-badge bg-secondary-subtle text-secondary border border-secondary-subtle">
-                <i class="bi bi-person-dash me-1"></i>
-                <span class="mentor-name-text">Chưa phân công</span>
-              </span>
-            </td>
-            <!-- Dropdown select Mentor -->
-            <td>
-              <select id="select-mentor-TTS003" class="form-select form-select-sm select-mentor">
-                <option value="" selected>-- Chưa phân công --</option>
-                <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
-                <option value="M02">Lê Thị Mai (Tech Lead)</option>
-                <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
-                <option value="M04">Võ Hoài An (DevOps Lead)</option>
-              </select>
-            </td>
-            <!-- Nút Lưu phân công -->
-            <td class="text-center">
-              <button id="btn-save-TTS003" class="btn btn-sm btn-primary px-3 shadow-sm" onclick="saveMentorAssignment('TTS003')">
-                <i class="bi bi-floppy-fill me-1"></i>Lưu phân công
-              </button>
-            </td>
-          </tr>
-
-          <!-- Hàng 4 -->
-          <tr data-id="TTS004" id="row-TTS004">
-            <td class="text-center text-muted fw-semibold">4</td>
-            <td>
-              <span class="badge bg-light text-secondary border font-monospace">TTS004</span>
-            </td>
-            <td>
-              <div class="d-flex align-items-center gap-3">
-                <div class="avatar bg-danger-subtle text-danger">PD</div>
-                <div>
-                  <div class="fw-bold intern-name">Phạm Thùy Dương</div>
-                  <small class="text-muted"><i class="bi bi-envelope me-1"></i>duong.pham@company.vn</small>
-                </div>
+              <div class="mini-stat-row">
+                <span class="dot dot-warning"></span>
+                <span class="stat-name">Gia hạn luận văn/kỳ:</span>
+                <span class="stat-number" id="delayedGraduationCount">0</span>
               </div>
-            </td>
-            <td>
-              <span class="badge bg-primary-subtle text-primary border border-primary-subtle status-badge">
-                QA / Tester
-              </span>
-            </td>
-            <!-- Cột hiển thị tên Mentor -->
-            <td>
-              <span id="current-mentor-TTS004" class="mentor-badge bg-success-subtle text-success border border-success-subtle">
-                <i class="bi bi-person-check-fill me-1"></i>
-                <span class="mentor-name-text">Lê Thị Mai</span>
-              </span>
-            </td>
-            <!-- Dropdown select Mentor -->
-            <td>
-              <select id="select-mentor-TTS004" class="form-select form-select-sm select-mentor">
-                <option value="">-- Chưa phân công --</option>
-                <option value="M01">Trần Hoàng Nam (Senior Frontend)</option>
-                <option value="M02" selected>Lê Thị Mai (Tech Lead)</option>
-                <option value="M03">Phạm Quốc Bảo (Senior Backend)</option>
-                <option value="M04">Võ Hoài An (DevOps Lead)</option>
-              </select>
-            </td>
-            <!-- Nút Lưu phân công -->
-            <td class="text-center">
-              <button id="btn-save-TTS004" class="btn btn-sm btn-primary px-3 shadow-sm" onclick="saveMentorAssignment('TTS004')">
-                <i class="bi bi-floppy-fill me-1"></i>Lưu phân công
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+              <div class="mini-stat-row">
+                <span class="dot dot-danger"></span>
+                <span class="stat-name">Cảnh báo học vụ:</span>
+                <span class="stat-number" id="academicWarningCount">0</span>
+              </div>
+            </div>
 
-<!-- Toast thông báo Bootstrap -->
-<div class="toast-container">
-  <div id="actionToast" class="toast align-items-center border-0 shadow-lg text-white" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="d-flex">
-      <div class="toast-body d-flex align-items-center gap-2" id="toastContent">
-        <i class="bi bi-check-circle-fill fs-5" id="toastIcon"></i>
-        <span id="toastMsg">Thao tác thành công!</span>
+            <div class="evaluation-box" id="kpiEvaluationBox">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+              <span id="kpiEvaluationText">Đang phân tích tiến độ KPI...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. KHỐI THẺ TỔNG SỐ SINH VIÊN -->
+      <div class="card kpi-card kpi-card-total">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Tổng Sinh Viên</span>
+          <div class="kpi-icon-bubble bubble-indigo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number-row">
+          <span class="kpi-counter" id="kpiTotalStudents">0</span>
+          <span class="kpi-badge badge-neutral" id="totalTrendBadge">+0%</span>
+        </div>
+        <div class="kpi-footer-metric">
+          <span class="footer-label">Quy mô toàn trường</span>
+          <span class="footer-subtext">Đã đồng bộ</span>
+        </div>
       </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+
+      <!-- 3. KHỐI THẺ SINH VIÊN ĐANG THEO HỌC -->
+      <div class="card kpi-card kpi-card-active">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Đang Theo Học</span>
+          <div class="kpi-icon-bubble bubble-cyan">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <path d="M8 7h8M8 11h6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number-row">
+          <span class="kpi-counter counter-active" id="kpiActiveStudents">0</span>
+          <span class="kpi-ratio-pill" id="activeRatioPill">0% tổng số</span>
+        </div>
+        <div class="linear-progress-track">
+          <div class="linear-progress-fill fill-cyan" id="activeProgressFill" style="width: 0%;"></div>
+        </div>
+        <div class="kpi-footer-metric">
+          <span class="footer-label">Trạng thái: Hoạt động bình thường</span>
+        </div>
+      </div>
+
+      <!-- 4. KHỐI THẺ SINH VIÊN ĐÃ HOÀN THÀNH / TỐT NGHIỆP -->
+      <div class="card kpi-card kpi-card-completed">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Đã Hoàn Thành / Tốt Nghiệp</span>
+          <div class="kpi-icon-bubble bubble-emerald">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number-row">
+          <span class="kpi-counter counter-emerald" id="kpiCompletedStudents">0</span>
+          <span class="kpi-badge badge-success">Đạt chuẩn</span>
+        </div>
+        <div class="linear-progress-track">
+          <div class="linear-progress-fill fill-emerald" id="completedProgressFill" style="width: 0%;"></div>
+        </div>
+        <div class="kpi-footer-metric">
+          <span class="footer-label">Đủ điều kiện nhận văn bằng</span>
+        </div>
+      </div>
+
+      <!-- 5. KHỐI THẺ SINH VIÊN BẢO LƯU / CHỜ XỬ LÝ -->
+      <div class="card kpi-card kpi-card-onleave">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Bảo Lưu / Chờ Xử Lý</span>
+          <div class="kpi-icon-bubble bubble-amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number-row">
+          <span class="kpi-counter counter-amber" id="kpiOnLeaveStudents">0</span>
+          <span class="kpi-ratio-pill text-amber" id="onLeaveRatioPill">0%</span>
+        </div>
+        <div class="linear-progress-track">
+          <div class="linear-progress-fill fill-amber" id="onLeaveProgressFill" style="width: 0%;"></div>
+        </div>
+        <div class="kpi-footer-metric">
+          <span class="footer-label">Dự kiến tái nhập học kỳ tới</span>
+        </div>
+      </div>
+
+      <!-- 6. KHỐI THẺ CẢNH BÁO / NGUY CƠ BỎ HỌC -->
+      <div class="card kpi-card kpi-card-dropped">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Thôi Học / Cảnh Báo Buộc Thôi</span>
+          <div class="kpi-icon-bubble bubble-rose">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number-row">
+          <span class="kpi-counter counter-rose" id="kpiDroppedStudents">0</span>
+          <span class="kpi-badge badge-danger" id="riskBadge">Cần can thiệp</span>
+        </div>
+        <div class="linear-progress-track">
+          <div class="linear-progress-fill fill-rose" id="droppedProgressFill" style="width: 0%;"></div>
+        </div>
+        <div class="kpi-footer-metric">
+          <span class="footer-label">Cố vấn học tập đang xử lý</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thông báo trạng thái / Thông báo kết nối (Toast/Banner) -->
+    <div id="toastMessage" class="toast-notification hidden">
+      <div class="toast-content">
+        <span class="toast-icon">ℹ️</span>
+        <span class="toast-text" id="toastText">Nội dung thông báo</span>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Bootstrap 5 JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-  /**
-   * MOCK API INTERCEPTOR
-   * Tự động phản hồi request PATCH /api/v1/interns/{id}/mentor khi mở file cục bộ (file://)
-   * hoặc khi backend server chưa được bật, giúp demo hoạt động ngay lập tức.
-   */
-  const MENTOR_DATA = {
-    'M01': 'Trần Hoàng Nam',
-    'M02': 'Lê Thị Mai',
-    'M03': 'Phạm Quốc Bảo',
-    'M04': 'Võ Hoài An'
-  };
-
-  const originalFetch = window.fetch;
-  window.fetch = async function(url, options) {
-    const patchRegex = /\/api\/v1\/interns\/([^/]+)\/mentor$/;
-    const match = typeof url === 'string' && url.match(patchRegex);
-
-    if (match && options && options.method === 'PATCH') {
-      try {
-        // Nếu trang web đang chạy trên web server thật có HTTP(S), thử gửi request thật trước
-        if (window.location.protocol.startsWith('http')) {
-          const res = await originalFetch(url, options);
-          if (res.status !== 404 && res.status !== 502) return res;
-        }
-      } catch (e) {
-        console.warn('Backend server chưa sẵn sàng, đang chuyển sang chế độ Mock API phản hồi...');
-      }
-
-      // Giả lập xử lý độ trễ mạng 600ms
-      await new Promise(r => setTimeout(r, 600));
-      const internId = match[1];
-      const body = JSON.parse(options.body || '{}');
-      const mentorId = body.mentorId;
-      const mentorName = MENTOR_DATA[mentorId] || (mentorId ? 'Mentor #' + mentorId : null);
-
-      return new Response(JSON.stringify({
-        status: 'success',
-        code: 200,
-        message: 'Cập nhật Mentor thành công',
-        data: {
-          internId: internId,
-          mentorId: mentorId,
-          mentorName: mentorName,
-          updatedAt: new Date().toISOString()
-        }
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    return originalFetch(url, options);
-  };
-
-  /**
-   * HÀM CHÍNH: Gửi request PATCH /api/v1/interns/{id}/mentor để cập nhật Mentor
-   * và hiển thị tên Mentor mới ngay trên giao diện
-   * @param {string} internId - Mã ID thực tập sinh (ví dụ: 'TTS001')
-   */
-  async function saveMentorAssignment(internId) {
-    const selectEl = document.getElementById(`select-mentor-${internId}`);
-    const btnEl = document.getElementById(`btn-save-${internId}`);
-    const currentMentorBadge = document.getElementById(`current-mentor-${internId}`);
-    const rowEl = document.getElementById(`row-${internId}`);
-    const internName = rowEl.querySelector('.intern-name').textContent.trim();
-
-    if (!selectEl || !btnEl || !currentMentorBadge) {
-      console.error('Không tìm thấy các phần tử DOM cho TTS:', internId);
-      return;
-    }
-
-    const selectedMentorId = selectEl.value;
-    const selectedOptionText = selectEl.options[selectEl.selectedIndex].text;
-
-    // Trích xuất tên mentor ngắn gọn từ text của option (bỏ phần chức danh trong ngoặc nếu có)
-    const fallbackMentorName = selectedMentorId 
-      ? selectedOptionText.replace(/\s*\(.*?\)/, '').trim() 
-      : null;
-
-    // 1. Cập nhật UI: Đặt trạng thái Loading cho nút bấm
-    const originalBtnContent = btnEl.innerHTML;
-    btnEl.disabled = true;
-    btnEl.innerHTML = `
-      <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-      Đang lưu...
-    `;
-
-    // 2. Dùng Fetch API gửi request PATCH
-    try {
-      const response = await fetch(`/api/v1/interns/${internId}/mentor`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-          // 'Authorization': 'Bearer ' + authToken // Bổ sung token nếu cần xác thực
-        },
-        body: JSON.stringify({
-          mentorId: selectedMentorId || null
-        })
-      });
-
-      // Kiểm tra HTTP status
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Lỗi máy chủ HTTP ${response.status}`);
-      }
-
-      // Đọc dữ liệu JSON trả về từ backend
-      const result = await response.json();
-      console.log(`[PATCH SUCCESS] /api/v1/interns/${internId}/mentor:`, result);
-
-      // Xác định tên Mentor mới (ưu tiên từ data của server trả về, fallback từ option đã chọn)
-      const newMentorName = (result.data && result.data.mentorName) || fallbackMentorName;
-
-      // 3. HIỂN THỊ TÊN MENTOR MỚI NGAY TRÊN GIAO DIỆN
-      updateMentorDisplay(currentMentorBadge, newMentorName);
-
-      // 4. Hiển thị thông báo Toast thành công
-      const notifyText = newMentorName 
-        ? `Đã phân công <b>${newMentorName}</b> làm Mentor cho <b>${internName}</b>!`
-        : `Đã hủy phân công Mentor cho <b>${internName}</b>!`;
-      showToast(notifyText, 'success');
-
-      // Cập nhật lại thống kê số lượng
-      updateStatistics();
-
-    } catch (error) {
-      console.error('Lỗi khi cập nhật Mentor:', error);
-      showToast(`Không thể cập nhật Mentor cho ${internName}: ${error.message}`, 'error');
-    } finally {
-      // Khôi phục trạng thái ban đầu của nút bấm
-      btnEl.disabled = false;
-      btnEl.innerHTML = originalBtnContent;
-    }
-  }
-
-  /**
-   * Cập nhật phần tử hiển thị Mentor trên bảng & tạo hiệu ứng trực quan
-   */
-  function updateMentorDisplay(badgeEl, mentorName) {
-    const textEl = badgeEl.querySelector('.mentor-name-text') || badgeEl;
-    const iconEl = badgeEl.querySelector('i');
-
-    if (mentorName) {
-      // Đã có Mentor
-      textEl.textContent = mentorName;
-      badgeEl.className = 'mentor-badge bg-success-subtle text-success border border-success-subtle';
-      if (iconEl) iconEl.className = 'bi bi-person-check-fill me-1';
-    } else {
-      // Chưa có Mentor
-      textEl.textContent = 'Chưa phân công';
-      badgeEl.className = 'mentor-badge bg-secondary-subtle text-secondary border border-secondary-subtle';
-      if (iconEl) iconEl.className = 'bi bi-person-dash me-1';
-    }
-
-    // Kích hoạt animation highlight nhấp nháy màu xanh để người dùng nhận biết ngay
-    badgeEl.classList.remove('mentor-updated-highlight');
-    // void badgeEl.offsetWidth; // Force reflow
-    void badgeEl.offsetWidth;
-    badgeEl.classList.add('mentor-updated-highlight');
-  }
-
-  /**
-   * Hiển thị thông báo Toast
-   */
-  function showToast(message, type = 'success') {
-    const toastEl = document.getElementById('actionToast');
-    const toastMsg = document.getElementById('toastMsg');
-    const toastIcon = document.getElementById('toastIcon');
-
-    if (type === 'success') {
-      toastEl.className = 'toast align-items-center border-0 shadow-lg text-white bg-success';
-      toastIcon.className = 'bi bi-check-circle-fill fs-5 text-white';
-    } else {
-      toastEl.className = 'toast align-items-center border-0 shadow-lg text-white bg-danger';
-      toastIcon.className = 'bi bi-exclamation-triangle-fill fs-5 text-white';
-    }
-
-    toastMsg.innerHTML = message;
-    const toast = new bootstrap.Toast(toastEl, { delay: 3500 });
-    toast.show();
-  }
-
-  /**
-   * Thống kê số lượng TTS đã phân công / chưa phân công
-   */
-  function updateStatistics() {
-    const rows = document.querySelectorAll('#internTableBody tr');
-    let assigned = 0;
-    let unassigned = 0;
-
-    rows.forEach(row => {
-      const select = row.querySelector('.select-mentor');
-      if (select && select.value) {
-        assigned++;
-      } else {
-        unassigned++;
-      }
-    });
-
-    document.getElementById('totalCount').textContent = rows.length;
-    document.getElementById('assignedCount').textContent = assigned;
-    document.getElementById('unassignedCount').textContent = unassigned;
-  }
-
-  /**
-   * Bộ lọc và tìm kiếm
-   */
-  function filterTable() {
-    const query = document.getElementById('searchInput').value.toLowerCase().trim();
-    const filterStatus = document.getElementById('statusFilter').value;
-    const rows = document.querySelectorAll('#internTableBody tr');
-
-    rows.forEach(row => {
-      const internId = row.getAttribute('data-id').toLowerCase();
-      const internName = row.querySelector('.intern-name').textContent.toLowerCase();
-      const selectValue = row.querySelector('.select-mentor').value;
-
-      const matchesQuery = internName.includes(query) || internId.includes(query);
-      let matchesStatus = true;
-
-      if (filterStatus === 'ASSIGNED') {
-        matchesStatus = selectValue !== '';
-      } else if (filterStatus === 'UNASSIGNED') {
-        matchesStatus = selectValue === '';
-      }
-
-      row.style.display = (matchesQuery && matchesStatus) ? '' : 'none';
-    });
-  }
-
-  // Khởi tạo số liệu khi tải xong trang
-  document.addEventListener('DOMContentLoaded', () => {
-    updateStatistics();
-  });
-</script>
+  <!-- Script điều khiển -->
+  <script src="app.js"></script>
 </body>
 </html>

@@ -1,733 +1,445 @@
 /**
- * Quản lý Form Ca Làm Việc & Modal Chọn Thực Tập Sinh Áp Dụng
+ * ==============================================================================
+ * DASHBOARD KPI MANAGEMENT & REAL-TIME UPDATES VIA FETCH API
+ * Endpoint: GET /api/v1/reports/completion-rate
+ * ==============================================================================
  */
 
-// 1. Dữ liệu mẫu danh sách thực tập sinh
-const INITIAL_INTERNS = [
-  {
-    id: 1,
-    name: "Nguyễn Văn An",
-    code: "TTS-2026-001",
-    department: "Frontend",
-    role: "Frontend React Intern",
-    email: "vanan.nguyen@company.vn",
-    phone: "0912 345 678",
-    avatarColor: "bg-avatar-frontend",
-    initials: "NA"
-  },
-  {
-    id: 2,
-    name: "Trần Thị Mai",
-    code: "TTS-2026-002",
-    department: "UI/UX",
-    role: "UI/UX Product Designer",
-    email: "mai.tran@company.vn",
-    phone: "0988 123 456",
-    avatarColor: "bg-avatar-uiux",
-    initials: "TM"
-  },
-  {
-    id: 3,
-    name: "Lê Hoàng Long",
-    code: "TTS-2026-003",
-    department: "Backend",
-    role: "Backend Node.js/Go Intern",
-    email: "long.le@company.vn",
-    phone: "0905 789 123",
-    avatarColor: "bg-avatar-backend",
-    initials: "HL"
-  },
-  {
-    id: 4,
-    name: "Phạm Minh Đức",
-    code: "TTS-2026-004",
-    department: "QA",
-    role: "QA / Automation Tester",
-    email: "duc.pham@company.vn",
-    phone: "0934 567 890",
-    avatarColor: "bg-avatar-qa",
-    initials: "MD"
-  },
-  {
-    id: 5,
-    name: "Đỗ Thu Hà",
-    code: "TTS-2026-005",
-    department: "Frontend",
-    role: "Frontend Vue/Nuxt Intern",
-    email: "ha.do@company.vn",
-    phone: "0977 654 321",
-    avatarColor: "bg-avatar-frontend",
-    initials: "TH"
-  },
-  {
-    id: 6,
-    name: "Vũ Hải Đăng",
-    code: "TTS-2026-006",
-    department: "Mobile",
-    role: "Mobile Flutter/iOS Intern",
-    email: "dang.vu@company.vn",
-    phone: "0922 334 455",
-    avatarColor: "bg-avatar-mobile",
-    initials: "HD"
-  },
-  {
-    id: 7,
-    name: "Bùi Quốc Bảo",
-    code: "TTS-2026-007",
-    department: "Backend",
-    role: "Backend Java Spring Boot",
-    email: "bao.bui@company.vn",
-    phone: "0944 556 677",
-    avatarColor: "bg-avatar-backend",
-    initials: "QB"
-  },
-  {
-    id: 8,
-    name: "Hoàng Thùy Linh",
-    code: "TTS-2026-008",
-    department: "DevOps",
-    role: "DevOps & Cloud Intern",
-    email: "linh.hoang@company.vn",
-    phone: "0966 778 899",
-    avatarColor: "bg-avatar-devops",
-    initials: "TL"
-  },
-  {
-    id: 9,
-    name: "Đặng Tuấn Kiệt",
-    code: "TTS-2026-009",
-    department: "QA",
-    role: "Manual QA Tester Intern",
-    email: "kiet.dang@company.vn",
-    phone: "0918 223 344",
-    avatarColor: "bg-avatar-qa",
-    initials: "TK"
-  },
-  {
-    id: 10,
-    name: "Ngô Bảo Trâm",
-    code: "TTS-2026-010",
-    department: "HR",
-    role: "HR Recruitment Intern",
-    email: "tram.ngo@company.vn",
-    phone: "0989 334 455",
-    avatarColor: "bg-avatar-hr",
-    initials: "BT"
+// Cấu hình hằng số
+const API_CONFIG = {
+  ENDPOINT: '/api/v1/reports/completion-rate',
+  DEFAULT_INTERVAL_MS: 10000, // Mặc định 10 giây gọi API 1 lần
+  CIRCUMFERENCE: 2 * Math.PI * 68, // Bán kính r = 68 => ~427.26
+};
+
+// State lưu trữ dữ liệu hiện tại để chạy animation số nhảy mượt mà
+const dashboardState = {
+  timerId: null,
+  isFetching: false,
+  previousData: {
+    totalStudents: 0,
+    active: 0,
+    completed: 0,
+    onLeave: 0,
+    dropped: 0,
+    completionRate: 0,
+    onTime: 0,
+    delayed: 0,
+    warning: 0
   }
-];
+};
 
-// 2. Dữ liệu mẫu ca làm việc ban đầu
-let shiftsList = [
-  {
-    id: "SHIFT-001",
-    name: "Ca Sáng - Đội ngũ Frontend & UI/UX",
-    startTime: "08:30",
-    endTime: "12:00",
-    daysOfWeek: ["T2", "T3", "T4", "T5", "T6"],
-    internIds: [1, 2, 5],
-    notes: "Họp daily standup vào 08:45"
-  },
-  {
-    id: "SHIFT-002",
-    name: "Ca Chiều - Đội ngũ Kỹ Thuật Backend & QA",
-    startTime: "13:30",
-    endTime: "17:30",
-    daysOfWeek: ["T2", "T4", "T6"],
-    internIds: [3, 4, 7],
-    notes: "Review code định kỳ thứ Sáu hàng tuần"
-  }
-];
+// Bộ tham chiếu DOM Elements
+const elements = {
+  // Trạng thái & Điều khiển
+  realtimeStatusPill: document.getElementById('realtimeStatusPill'),
+  connectionStatusText: document.getElementById('connectionStatusText'),
+  dataSourceMode: document.getElementById('dataSourceMode'),
+  refreshIntervalSelect: document.getElementById('refreshIntervalSelect'),
+  btnManualRefresh: document.getElementById('btnManualRefresh'),
+  lastUpdatedTime: document.getElementById('lastUpdatedTime'),
 
-// Trạng thái ứng dụng
-let selectedInternIds = new Set([1, 2]); // Mặc định chọn 2 TTS ban đầu để demo
-let tempModalSelectedIds = new Set();
-let internModalInstance = null;
-let toastInstance = null;
+  // Vòng tròn tiến độ hoàn thành SVG
+  circularProgressBar: document.getElementById('circularProgressBar'),
+  completionRateValue: document.getElementById('completionRateValue'),
+  completionTrendBadge: document.getElementById('completionTrendBadge'),
+  completionTrendText: document.getElementById('completionTrendText'),
+  completionStatusLabel: document.getElementById('completionStatusLabel'),
+  targetRateValue: document.getElementById('targetRateValue'),
+  targetProgressBarFill: document.getElementById('targetProgressBarFill'),
+  onTimeGraduationCount: document.getElementById('onTimeGraduationCount'),
+  delayedGraduationCount: document.getElementById('delayedGraduationCount'),
+  academicWarningCount: document.getElementById('academicWarningCount'),
+  kpiEvaluationBox: document.getElementById('kpiEvaluationBox'),
+  kpiEvaluationText: document.getElementById('kpiEvaluationText'),
 
-// DOM Elements
-const shiftForm = document.getElementById("shiftForm");
-const shiftNameInput = document.getElementById("shiftName");
-const startTimeInput = document.getElementById("startTime");
-const endTimeInput = document.getElementById("endTime");
-const shiftDurationBadge = document.getElementById("shiftDurationBadge");
-const overnightNotice = document.getElementById("overnightNotice");
-const timeErrorFeedback = document.getElementById("timeErrorFeedback");
+  // Các thẻ KPI số lượng sinh viên theo trạng thái
+  kpiTotalStudents: document.getElementById('kpiTotalStudents'),
+  totalTrendBadge: document.getElementById('totalTrendBadge'),
+  kpiActiveStudents: document.getElementById('kpiActiveStudents'),
+  activeRatioPill: document.getElementById('activeRatioPill'),
+  activeProgressFill: document.getElementById('activeProgressFill'),
+  kpiCompletedStudents: document.getElementById('kpiCompletedStudents'),
+  completedProgressFill: document.getElementById('completedProgressFill'),
+  kpiOnLeaveStudents: document.getElementById('kpiOnLeaveStudents'),
+  onLeaveRatioPill: document.getElementById('onLeaveRatioPill'),
+  onLeaveProgressFill: document.getElementById('onLeaveProgressFill'),
+  kpiDroppedStudents: document.getElementById('kpiDroppedStudents'),
+  droppedProgressFill: document.getElementById('droppedProgressFill'),
 
-const dayCheckboxes = document.querySelectorAll(".day-checkbox");
-const dayErrorFeedback = document.getElementById("dayErrorFeedback");
-const btnSelectWeekdays = document.getElementById("btnSelectWeekdays");
-const btnSelectWeekend = document.getElementById("btnSelectWeekend");
-const btnSelectAllDays = document.getElementById("btnSelectAllDays");
-const btnClearDays = document.getElementById("btnClearDays");
+  // Toast
+  toastMessage: document.getElementById('toastMessage'),
+  toastText: document.getElementById('toastText')
+};
 
-const btnSelectedBadge = document.getElementById("btnSelectedBadge");
-const emptyInternAlert = document.getElementById("emptyInternAlert");
-const selectedInternTags = document.getElementById("selectedInternTags");
-const internErrorFeedback = document.getElementById("internErrorFeedback");
-const shiftNotes = document.getElementById("shiftNotes");
-const btnResetForm = document.getElementById("btnResetForm");
-
-// Modal Elements
-const internModalEl = document.getElementById("internSelectionModal");
-const modalSearchInput = document.getElementById("modalSearchInput");
-const modalDepartmentFilter = document.getElementById("modalDepartmentFilter");
-const modalSelectAll = document.getElementById("modalSelectAll");
-const modalSelectedCounter = document.getElementById("modalSelectedCounter");
-const modalTotalCounter = document.getElementById("modalTotalCounter");
-const modalInternList = document.getElementById("modalInternList");
-const modalNoResults = document.getElementById("modalNoResults");
-const modalClearSelection = document.getElementById("modalClearSelection");
-const modalBtnConfirm = document.getElementById("modalBtnConfirm");
-const modalConfirmCount = document.getElementById("modalConfirmCount");
-
-// Table Elements
-const shiftTableBody = document.getElementById("shiftTableBody");
-const shiftCountBadge = document.getElementById("shiftCountBadge");
-
-// Toast Elements
-const actionToastEl = document.getElementById("actionToast");
-const toastMessageEl = document.getElementById("toastMessage");
-const toastIconEl = document.getElementById("toastIcon");
-
-// ==========================================
-// KHỞI TẠO ỨNG DỤNG
-// ==========================================
-document.addEventListener("DOMContentLoaded", () => {
-  // Khởi tạo Bootstrap components
-  if (typeof bootstrap !== "undefined") {
-    internModalInstance = new bootstrap.Modal(internModalEl);
-    toastInstance = new bootstrap.Toast(actionToastEl, { delay: 3500 });
-  }
-
-  // Cập nhật tính toán thời lượng ban đầu
-  calculateShiftDuration();
-
-  // Hiển thị danh sách TTS đã chọn trên form
-  renderSelectedInternTags();
-
-  // Hiển thị bảng ca làm việc
-  renderShiftsTable();
-
-  // Đăng ký các sự kiện tương tác
-  bindEventListeners();
-});
-
-// ==========================================
-// XỬ LÝ TÍNH TOÁN GIỜ (TYPE="TIME")
-// ==========================================
-function calculateShiftDuration() {
-  const startVal = startTimeInput.value;
-  const endVal = endTimeInput.value;
-
-  if (!startVal || !endVal) {
-    shiftDurationBadge.textContent = "--:--";
-    return;
-  }
-
-  const [startHour, startMin] = startVal.split(":").map(Number);
-  const [endHour, endMin] = endVal.split(":").map(Number);
-
-  const startTotalMinutes = startHour * 60 + startMin;
-  const endTotalMinutes = endHour * 60 + endMin;
-
-  if (startTotalMinutes === endTotalMinutes) {
-    shiftDurationBadge.className = "badge bg-danger ms-2 fs-6";
-    shiftDurationBadge.textContent = "0 giờ (Trùng nhau)";
-    timeErrorFeedback.classList.remove("d-none");
-    overnightNotice.classList.add("d-none");
-    return;
-  }
-
-  timeErrorFeedback.classList.add("d-none");
-
-  let diffMinutes = endTotalMinutes - startTotalMinutes;
-  let isOvernight = false;
-
-  if (diffMinutes < 0) {
-    // Ca qua đêm (Ví dụ từ 22:00 hôm trước đến 06:00 hôm sau)
-    diffMinutes += 24 * 60;
-    isOvernight = true;
-    overnightNotice.classList.remove("d-none");
-  } else {
-    overnightNotice.classList.add("d-none");
-  }
-
-  const hours = Math.floor(diffMinutes / 60);
-  const minutes = diffMinutes % 60;
-
-  shiftDurationBadge.className = "badge bg-primary ms-2 fs-6";
-  let durationText = `${hours} giờ`;
-  if (minutes > 0) {
-    durationText += ` ${minutes} phút`;
-  }
-  if (isOvernight) {
-    durationText += " (Qua đêm)";
-  }
-
-  shiftDurationBadge.textContent = durationText;
+/**
+ * Hàm định dạng số hiển thị có dấu chấm ngăn cách phần nghìn
+ * @param {number} num 
+ * @returns {string} Ví dụ: 12500 -> "12.500"
+ */
+function formatNumber(num) {
+  return new Intl.NumberFormat('vi-VN').format(Math.round(num));
 }
 
-// ==========================================
-// XỬ LÝ CHỌN CÁC NGÀY TRONG TUẦN
-// ==========================================
-function setDaysSelection(values) {
-  dayCheckboxes.forEach(cb => {
-    cb.checked = values.includes(cb.value);
+/**
+ * Hiệu ứng Count-Up animation mượt mà cho các con số
+ * @param {HTMLElement} element - Phần tử hiển thị số
+ * @param {number} startVal - Giá trị bắt đầu
+ * @param {number} endVal - Giá trị kết thúc
+ * @param {number} duration - Thời gian animation (ms)
+ * @param {boolean} isFloat - Có hiển thị số thập phân 1 chữ số hay không
+ */
+function animateValue(element, startVal, endVal, duration = 800, isFloat = false) {
+  if (!element) return;
+  if (startVal === endVal) {
+    element.textContent = isFloat ? endVal.toFixed(1) : formatNumber(endVal);
+    return;
+  }
+
+  const startTime = performance.now();
+
+  function updateCount(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Easing cubic out
+    const easeProgress = 1 - Math.pow(1 - progress, 3);
+    const currentVal = startVal + (endVal - startVal) * easeProgress;
+
+    element.textContent = isFloat ? currentVal.toFixed(1) : formatNumber(currentVal);
+
+    if (progress < 1) {
+      requestAnimationFrame(updateCount);
+    } else {
+      element.textContent = isFloat ? endVal.toFixed(1) : formatNumber(endVal);
+    }
+  }
+
+  requestAnimationFrame(updateCount);
+}
+
+/**
+ * Cập nhật góc quay của Vòng Tròn Phần Trăm SVG
+ * @param {number} percentage - Tỷ lệ phần trăm từ 0 đến 100
+ */
+function updateCircularProgress(percentage) {
+  const safePercentage = Math.max(0, Math.min(100, percentage));
+  const circumference = API_CONFIG.CIRCUMFERENCE;
+  
+  // Tính độ lệch stroke-dashoffset: 0% thì lệch nguyên chu vi, 100% thì lệch 0
+  const offset = circumference - (safePercentage / 100) * circumference;
+  
+  if (elements.circularProgressBar) {
+    elements.circularProgressBar.style.strokeDashoffset = offset.toFixed(2);
+  }
+}
+
+/**
+ * Cập nhật toàn bộ giao diện dựa trên dữ liệu báo cáo từ API
+ * @param {Object} reportData - Cấu trúc dữ liệu trả về từ backend
+ */
+function renderDashboard(reportData) {
+  const prev = dashboardState.previousData;
+  const current = reportData;
+
+  // 1. Cập nhật Vòng tròn phần trăm tiến độ hoàn thành
+  animateValue(elements.completionRateValue, prev.completionRate, current.completionRate, 1000, true);
+  updateCircularProgress(current.completionRate);
+
+  // Hiển thị tiến độ so với Mục tiêu
+  if (elements.targetRateValue) {
+    elements.targetRateValue.textContent = current.targetRate.toFixed(1);
+  }
+  if (elements.targetProgressBarFill) {
+    const targetRatio = Math.min(100, (current.completionRate / current.targetRate) * 100);
+    elements.targetProgressBarFill.style.width = `${targetRatio}%`;
+  }
+
+  // Đánh giá KPI
+  if (elements.kpiEvaluationBox && elements.kpiEvaluationText) {
+    if (current.completionRate >= current.targetRate) {
+      elements.kpiEvaluationBox.style.color = 'var(--emerald-500)';
+      elements.kpiEvaluationBox.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+      elements.kpiEvaluationBox.style.backgroundColor = 'rgba(16, 185, 129, 0.08)';
+      elements.kpiEvaluationText.textContent = `Vượt mục tiêu đề ra (+${(current.completionRate - current.targetRate).toFixed(1)}%)`;
+    } else {
+      const diff = (current.targetRate - current.completionRate).toFixed(1);
+      elements.kpiEvaluationBox.style.color = 'var(--amber-500)';
+      elements.kpiEvaluationBox.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+      elements.kpiEvaluationBox.style.backgroundColor = 'rgba(245, 158, 11, 0.08)';
+      elements.kpiEvaluationText.textContent = `Còn thiếu ${diff}% để đạt KPI hoàn thành`;
+    }
+  }
+
+  // Xu hướng hoàn thành
+  if (elements.completionTrendBadge && elements.completionTrendText && current.trend) {
+    elements.completionTrendText.textContent = current.trend.completionRateChange || '+0.0%';
+    const isNegative = (current.trend.completionRateChange || '').startsWith('-');
+    elements.completionTrendBadge.classList.toggle('negative', isNegative);
+    elements.completionTrendBadge.querySelector('.trend-arrow').textContent = isNegative ? '▼' : '▲';
+  }
+
+  // Chi tiết phân loại tốt nghiệp
+  if (current.details) {
+    animateValue(elements.onTimeGraduationCount, prev.onTime, current.details.onTimeGraduation, 800);
+    animateValue(elements.delayedGraduationCount, prev.delayed, current.details.delayedGraduation, 800);
+    animateValue(elements.academicWarningCount, prev.warning, current.details.academicWarning, 800);
+  }
+
+  // 2. Cập nhật Khối Thẻ Tổng sinh viên
+  animateValue(elements.kpiTotalStudents, prev.totalStudents, current.totalStudents, 900);
+  if (elements.totalTrendBadge && current.trend) {
+    elements.totalTrendBadge.textContent = current.trend.totalChange || '+0%';
+  }
+
+  // Tính phần trăm các trạng thái so với Tổng
+  const total = current.totalStudents > 0 ? current.totalStudents : 1;
+  const activePct = ((current.active / total) * 100).toFixed(1);
+  const completedPct = ((current.completed / total) * 100).toFixed(1);
+  const onLeavePct = ((current.onLeave / total) * 100).toFixed(1);
+  const droppedPct = ((current.dropped / total) * 100).toFixed(1);
+
+  // 3. Khối Thẻ: Đang theo học
+  animateValue(elements.kpiActiveStudents, prev.active, current.active, 900);
+  if (elements.activeRatioPill) elements.activeRatioPill.textContent = `${activePct}% tổng số`;
+  if (elements.activeProgressFill) elements.activeProgressFill.style.width = `${activePct}%`;
+
+  // 4. Khối Thẻ: Đã hoàn thành / Tốt nghiệp
+  animateValue(elements.kpiCompletedStudents, prev.completed, current.completed, 900);
+  if (elements.completedProgressFill) elements.completedProgressFill.style.width = `${completedPct}%`;
+
+  // 5. Khối Thẻ: Bảo lưu / Chờ xử lý
+  animateValue(elements.kpiOnLeaveStudents, prev.onLeave, current.onLeave, 900);
+  if (elements.onLeaveRatioPill) elements.onLeaveRatioPill.textContent = `${onLeavePct}% tổng số`;
+  if (elements.onLeaveProgressFill) elements.onLeaveProgressFill.style.width = `${onLeavePct}%`;
+
+  // 6. Khối Thẻ: Thôi học / Cảnh báo
+  animateValue(elements.kpiDroppedStudents, prev.dropped, current.dropped, 900);
+  if (elements.droppedProgressFill) elements.droppedProgressFill.style.width = `${droppedPct}%`;
+
+  // Cập nhật timestamp lần lấy dữ liệu gần nhất
+  const now = new Date();
+  elements.lastUpdatedTime.textContent = now.toLocaleTimeString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
   });
-  dayErrorFeedback.classList.add("d-none");
+
+  // Lưu lại giá trị hiện tại làm mốc cho lần sau
+  dashboardState.previousData = {
+    totalStudents: current.totalStudents,
+    active: current.active,
+    completed: current.completed,
+    onLeave: current.onLeave,
+    dropped: current.dropped,
+    completionRate: current.completionRate,
+    onTime: current.details ? current.details.onTimeGraduation : 0,
+    delayed: current.details ? current.details.delayedGraduation : 0,
+    warning: current.details ? current.details.academicWarning : 0
+  };
 }
 
-function getSelectedDays() {
-  return Array.from(dayCheckboxes)
-    .filter(cb => cb.checked)
-    .map(cb => cb.value);
+/**
+ * Tạo dữ liệu Mock ngẫu nhiên mô phỏng số liệu thời gian thực
+ * Phục vụ trường hợp chạy thử trực tiếp giao diện khi chưa dựng server backend
+ */
+function generateMockKpiData() {
+  const baseTotal = 12500;
+  // Giả lập biến động nhỏ ngẫu nhiên theo thời gian thực
+  const delta = Math.floor((Math.random() - 0.48) * 15);
+  const totalStudents = Math.max(12000, baseTotal + delta);
+
+  const completed = Math.floor(totalStudents * (0.17 + Math.random() * 0.03));
+  const onLeave = Math.floor(totalStudents * (0.03 + Math.random() * 0.008));
+  const dropped = Math.floor(totalStudents * (0.012 + Math.random() * 0.005));
+  const active = totalStudents - completed - onLeave - dropped;
+
+  // Tỷ lệ hoàn thành dao động quanh 82.5% - 87.5%
+  const completionRate = parseFloat((82.5 + Math.random() * 4.5).toFixed(1));
+
+  return {
+    success: true,
+    timestamp: new Date().toISOString(),
+    data: {
+      totalStudents,
+      active,
+      completed,
+      onLeave,
+      dropped,
+      completionRate,
+      targetRate: 85.0,
+      trend: {
+        totalChange: '+4.8%',
+        completionRateChange: `+${(Math.random() * 2.5 + 1.2).toFixed(1)}%`
+      },
+      details: {
+        onTimeGraduation: Math.floor(completed * 0.88),
+        delayedGraduation: Math.floor(completed * 0.12),
+        academicWarning: Math.floor(dropped * 0.7)
+      }
+    }
+  };
 }
 
-// ==========================================
-// RENDER TAGS THỰC TẬP SINH ĐÃ CHỌN TRÊN FORM
-// ==========================================
-function renderSelectedInternTags() {
-  btnSelectedBadge.textContent = selectedInternIds.size;
+/**
+ * Hiển thị thông báo Toast nhanh
+ * @param {string} msg 
+ * @param {string} type 'info' | 'error' | 'success'
+ */
+function showToast(msg, type = 'info') {
+  if (!elements.toastMessage || !elements.toastText) return;
+  
+  elements.toastText.textContent = msg;
+  elements.toastMessage.classList.remove('hidden');
 
-  if (selectedInternIds.size === 0) {
-    emptyInternAlert.classList.remove("d-none");
-    selectedInternTags.classList.add("d-none");
-    selectedInternTags.innerHTML = "";
-    return;
+  clearTimeout(elements.toastMessage._timeout);
+  elements.toastMessage._timeout = setTimeout(() => {
+    elements.toastMessage.classList.add('hidden');
+  }, 4000);
+}
+
+/**
+ * Gọi Fetch API GET /api/v1/reports/completion-rate để lấy dữ liệu KPI mới nhất
+ */
+async function fetchCompletionRateKpi() {
+  if (dashboardState.isFetching) return;
+  dashboardState.isFetching = true;
+
+  // Hiệu ứng xoay icon nút refresh
+  if (elements.btnManualRefresh) {
+    elements.btnManualRefresh.classList.add('loading');
   }
 
-  emptyInternAlert.classList.add("d-none");
-  selectedInternTags.classList.remove("d-none");
-  internErrorFeedback.classList.add("d-none");
+  const mode = elements.dataSourceMode ? elements.dataSourceMode.value : 'api';
 
-  const selectedList = INITIAL_INTERNS.filter(intern => selectedInternIds.has(intern.id));
+  try {
+    let reportData = null;
 
-  selectedInternTags.innerHTML = selectedList.map(intern => `
-    <div class="intern-tag" data-id="${intern.id}">
-      <span class="intern-avatar-sm ${intern.avatarColor}">${intern.initials}</span>
-      <span class="fw-semibold text-dark">${intern.name}</span>
-      <span class="badge bg-light text-secondary border small">${intern.code}</span>
-      <button type="button" class="intern-tag-btn-remove" title="Xóa thực tập sinh" data-remove-id="${intern.id}">
-        <i class="bi bi-x-lg" style="font-size: 0.75rem;"></i>
-      </button>
-    </div>
-  `).join("");
+    if (mode === 'mock') {
+      // Chế độ mô phỏng trực quan
+      await new Promise(res => setTimeout(res, 400)); // Giả lập độ trễ mạng 400ms
+      const mockResponse = generateMockKpiData();
+      reportData = mockResponse.data;
+      setOnlineStatus(true, 'Chế độ mô phỏng Realtime');
+    } else {
+      // Chế độ gọi API thật dùng Fetch API
+      const response = await fetch(API_CONFIG.ENDPOINT, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
 
-  // Bắt sự kiện xóa tag trực tiếp trên form
-  selectedInternTags.querySelectorAll(".intern-tag-btn-remove").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const idToRemove = Number(btn.getAttribute("data-remove-id"));
-      selectedInternIds.delete(idToRemove);
-      renderSelectedInternTags();
-      showToast(`Đã bỏ chọn thực tập sinh khỏi ca`, "info");
-    });
-  });
-}
+      if (!response.ok) {
+        throw new Error(`Mã lỗi HTTP: ${response.status} (${response.statusText})`);
+      }
 
-// ==========================================
-// MODAL DANH SÁCH THỰC TẬP SINH
-// ==========================================
-function openInternModal() {
-  // Đồng bộ danh sách đang chọn sang bộ nhớ tạm của modal
-  tempModalSelectedIds = new Set(selectedInternIds);
-  modalSearchInput.value = "";
-  modalDepartmentFilter.value = "ALL";
-  renderModalInternList();
-}
-
-function getFilteredInterns() {
-  const searchTerm = modalSearchInput.value.trim().toLowerCase();
-  const departmentFilter = modalDepartmentFilter.value;
-
-  return INITIAL_INTERNS.filter(intern => {
-    const matchesSearch = 
-      intern.name.toLowerCase().includes(searchTerm) ||
-      intern.code.toLowerCase().includes(searchTerm) ||
-      intern.email.toLowerCase().includes(searchTerm) ||
-      intern.role.toLowerCase().includes(searchTerm);
-
-    const matchesDept = (departmentFilter === "ALL") || (intern.department === departmentFilter);
-
-    return matchesSearch && matchesDept;
-  });
-}
-
-function renderModalInternList() {
-  const filtered = getFilteredInterns();
-
-  modalTotalCounter.textContent = filtered.length;
-  modalSelectedCounter.textContent = tempModalSelectedIds.size;
-  modalConfirmCount.textContent = tempModalSelectedIds.size;
-
-  if (filtered.length === 0) {
-    modalInternList.innerHTML = "";
-    modalNoResults.classList.remove("d-none");
-    modalSelectAll.checked = false;
-    modalSelectAll.disabled = true;
-    return;
-  }
-
-  modalNoResults.classList.add("d-none");
-  modalSelectAll.disabled = false;
-
-  // Kiểm tra trạng thái checkbox "Chọn tất cả"
-  const allFilteredSelected = filtered.length > 0 && filtered.every(i => tempModalSelectedIds.has(i.id));
-  modalSelectAll.checked = allFilteredSelected;
-
-  modalInternList.innerHTML = filtered.map(intern => {
-    const isChecked = tempModalSelectedIds.has(intern.id);
-    return `
-      <label class="list-group-item intern-list-item d-flex align-items-center justify-content-between ${isChecked ? 'selected' : ''}" for="modal_tts_${intern.id}">
-        <div class="d-flex align-items-center gap-3">
-          <input 
-            class="form-check-input intern-modal-checkbox flex-shrink-0" 
-            type="checkbox" 
-            id="modal_tts_${intern.id}" 
-            value="${intern.id}" 
-            ${isChecked ? 'checked' : ''}
-          >
-          <div class="intern-avatar ${intern.avatarColor}">
-            ${intern.initials}
-          </div>
-          <div>
-            <div class="d-flex align-items-center gap-2">
-              <span class="fw-bold text-dark">${intern.name}</span>
-              <span class="badge bg-secondary-subtle text-secondary small border">${intern.code}</span>
-            </div>
-            <div class="small text-muted">
-              <span>${intern.role}</span> &bull; <span>${intern.email}</span>
-            </div>
-          </div>
-        </div>
-        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 small">
-          ${intern.department}
-        </span>
-      </label>
-    `;
-  }).join("");
-
-  // Bắt sự kiện check/uncheck từng dòng
-  modalInternList.querySelectorAll(".intern-modal-checkbox").forEach(cb => {
-    cb.addEventListener("change", (e) => {
-      const id = Number(e.target.value);
-      if (e.target.checked) {
-        tempModalSelectedIds.add(id);
+      const result = await response.json();
+      
+      // Kiểm tra cấu trúc payload
+      if (result && result.data) {
+        reportData = result.data;
+      } else if (result && result.totalStudents !== undefined) {
+        reportData = result;
       } else {
-        tempModalSelectedIds.delete(id);
+        throw new Error('Dữ liệu API không đúng định dạng');
       }
-      updateModalSelectionUI();
-    });
-  });
-}
 
-function updateModalSelectionUI() {
-  const filtered = getFilteredInterns();
-  modalSelectedCounter.textContent = tempModalSelectedIds.size;
-  modalConfirmCount.textContent = tempModalSelectedIds.size;
-
-  // Cập nhật trạng thái class "selected" trên danh sách
-  modalInternList.querySelectorAll(".intern-list-item").forEach(item => {
-    const cb = item.querySelector(".intern-modal-checkbox");
-    if (cb && cb.checked) {
-      item.classList.add("selected");
-    } else {
-      item.classList.remove("selected");
+      setOnlineStatus(true, 'Đã đồng bộ từ API');
     }
-  });
 
-  const allFilteredSelected = filtered.length > 0 && filtered.every(i => tempModalSelectedIds.has(i.id));
-  modalSelectAll.checked = allFilteredSelected;
-}
+    // Tiến hành render giao diện với dữ liệu vừa nhận được
+    renderDashboard(reportData);
 
-// ==========================================
-// RENDER BẢNG DANH SÁCH CA LÀM VIỆC
-// ==========================================
-function renderShiftsTable() {
-  shiftCountBadge.textContent = shiftsList.length;
+  } catch (error) {
+    console.warn(`[KPI Fetch Warning]: ${error.message}`);
+    
+    // Nếu gọi API backend thất bại (ví dụ: server chưa khởi động khi test file HTML cục bộ),
+    // tự động fallback sang Mock Data kèm thông báo hướng dẫn người dùng
+    setOnlineStatus(false, 'Mất kết nối API (Dùng Fallback)');
+    showToast(`Không kết nối được ${API_CONFIG.ENDPOINT}. Tự động hiển thị dữ liệu mẫu.`);
 
-  if (shiftsList.length === 0) {
-    shiftTableBody.innerHTML = `
-      <tr>
-        <td colspan="5" class="text-center py-5 text-muted">
-          <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
-          <span>Chưa có ca làm việc nào. Hãy tạo ca đầu tiên ở form bên trên!</span>
-        </td>
-      </tr>
-    `;
-    return;
+    const fallbackData = generateMockKpiData().data;
+    renderDashboard(fallbackData);
+
+  } finally {
+    dashboardState.isFetching = false;
+    if (elements.btnManualRefresh) {
+      elements.btnManualRefresh.classList.remove('loading');
+    }
   }
-
-  shiftTableBody.innerHTML = shiftsList.map(shift => {
-    // Lấy thông tin các thực tập sinh của ca
-    const assignedInterns = INITIAL_INTERNS.filter(i => shift.internIds.includes(i.id));
-
-    // Render badge các ngày trong tuần
-    const daysHtml = shift.daysOfWeek.map(d => {
-      const isWeekend = d === "T7" || d === "CN";
-      return `<span class="day-badge ${isWeekend ? 'weekend-badge' : ''}">${d}</span>`;
-    }).join("");
-
-    // Render avatar stack của thực tập sinh
-    const avatarStackHtml = `
-      <div class="d-flex align-items-center gap-2">
-        <div class="avatar-stack">
-          ${assignedInterns.slice(0, 4).map(intern => `
-            <span class="avatar-stack-item ${intern.avatarColor}" title="${intern.name} (${intern.code})">
-              ${intern.initials}
-            </span>
-          `).join("")}
-          ${assignedInterns.length > 4 ? `
-            <span class="avatar-stack-item bg-secondary" title="Và ${assignedInterns.length - 4} thực tập sinh khác">
-              +${assignedInterns.length - 4}
-            </span>
-          ` : ''}
-        </div>
-        <span class="small fw-semibold text-secondary">(${assignedInterns.length} TTS)</span>
-      </div>
-    `;
-
-    return `
-      <tr>
-        <td class="ps-4">
-          <div class="fw-bold text-dark">${escapeHtml(shift.name)}</div>
-          ${shift.notes ? `<div class="small text-muted fst-italic"><i class="bi bi-chat-text me-1"></i>${escapeHtml(shift.notes)}</div>` : ''}
-        </td>
-        <td>
-          <span class="badge bg-light text-dark border fs-7 font-monospace px-2 py-1">
-            <i class="bi bi-clock me-1 text-primary"></i>${shift.startTime} - ${shift.endTime}
-          </span>
-        </td>
-        <td>${daysHtml}</td>
-        <td>${avatarStackHtml}</td>
-        <td class="text-end pe-4">
-          <button type="button" class="btn btn-outline-danger btn-sm rounded-pill btn-delete-shift" data-shift-id="${shift.id}" title="Xóa ca này">
-            <i class="bi bi-trash"></i>
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  // Bắt sự kiện xóa ca
-  shiftTableBody.querySelectorAll(".btn-delete-shift").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const shiftId = btn.getAttribute("data-shift-id");
-      if (confirm(`Bạn có chắc chắn muốn xóa ca làm việc này không?`)) {
-        shiftsList = shiftsList.filter(s => s.id !== shiftId);
-        renderShiftsTable();
-        showToast("Đã xóa ca làm việc thành công!", "warning");
-      }
-    });
-  });
 }
 
-// ==========================================
-// TIỆN ÍCH HIỂN THỊ TOAST THÔNG BÁO
-// ==========================================
-function showToast(message, type = "success") {
-  if (!toastInstance) return;
+/**
+ * Cập nhật giao diện badge trạng thái kết nối
+ */
+function setOnlineStatus(isOnline, statusMessage) {
+  if (!elements.realtimeStatusPill || !elements.connectionStatusText) return;
 
-  toastMessageEl.textContent = message;
-  actionToastEl.classList.remove("bg-success", "bg-danger", "bg-warning", "bg-primary", "bg-info");
-
-  if (type === "success") {
-    actionToastEl.classList.add("bg-success");
-    toastIconEl.className = "bi bi-check-circle-fill fs-5 me-2";
-  } else if (type === "danger") {
-    actionToastEl.classList.add("bg-danger");
-    toastIconEl.className = "bi bi-exclamation-octagon-fill fs-5 me-2";
-  } else if (type === "warning") {
-    actionToastEl.classList.add("bg-warning", "text-dark");
-    toastIconEl.className = "bi bi-exclamation-triangle-fill fs-5 me-2";
+  if (isOnline) {
+    elements.realtimeStatusPill.classList.remove('offline');
+    elements.connectionStatusText.textContent = statusMessage || 'Thời gian thực (Live)';
   } else {
-    actionToastEl.classList.add("bg-primary");
-    toastIconEl.className = "bi bi-info-circle-fill fs-5 me-2";
+    elements.realtimeStatusPill.classList.add('offline');
+    elements.connectionStatusText.textContent = statusMessage || 'Mất kết nối API';
+  }
+}
+
+/**
+ * Khởi động tiến trình cập nhật tự động (Polling interval)
+ * @param {number} intervalMs 
+ */
+function startAutoRefresh(intervalMs) {
+  if (dashboardState.timerId) {
+    clearInterval(dashboardState.timerId);
+    dashboardState.timerId = null;
   }
 
-  toastInstance.show();
+  if (intervalMs > 0) {
+    dashboardState.timerId = setInterval(() => {
+      fetchCompletionRateKpi();
+    }, intervalMs);
+    console.log(`[KPI Monitor]: Bắt đầu tự động cập nhật mỗi ${intervalMs / 1000}s`);
+  } else {
+    console.log('[KPI Monitor]: Đã tắt tự động cập nhật');
+  }
 }
 
-function escapeHtml(string) {
-  if (!string) return "";
-  return String(string)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+/**
+ * Khởi tạo sự kiện và chạy lần đầu tiên khi trang tải xong
+ */
+function initDashboard() {
+  // Lắng nghe nút bấm Làm Mới thủ công
+  if (elements.btnManualRefresh) {
+    elements.btnManualRefresh.addEventListener('click', () => {
+      fetchCompletionRateKpi();
+    });
+  }
+
+  // Lắng nghe thay đổi tần suất cập nhật
+  if (elements.refreshIntervalSelect) {
+    elements.refreshIntervalSelect.addEventListener('change', (e) => {
+      const newInterval = parseInt(e.target.value, 10);
+      startAutoRefresh(newInterval);
+    });
+  }
+
+  // Lắng nghe chuyển đổi nguồn dữ liệu (API vs Mock)
+  if (elements.dataSourceMode) {
+    elements.dataSourceMode.addEventListener('change', () => {
+      fetchCompletionRateKpi();
+    });
+  }
+
+  // Gọi API lần đầu tiên
+  fetchCompletionRateKpi();
+
+  // Khởi động chu kỳ Polling cập nhật tự động theo thời gian thực
+  const initialInterval = parseInt(elements.refreshIntervalSelect.value, 10);
+  startAutoRefresh(initialInterval);
 }
 
-// ==========================================
-// BIND TẤT CẢ SỰ KIỆN GIAO DIỆN
-// ==========================================
-function bindEventListeners() {
-  // Thay đổi input type="time"
-  startTimeInput.addEventListener("input", calculateShiftDuration);
-  endTimeInput.addEventListener("input", calculateShiftDuration);
-
-  // Chọn nhanh ngày trong tuần
-  btnSelectWeekdays.addEventListener("click", () => {
-    setDaysSelection(["T2", "T3", "T4", "T5", "T6"]);
-  });
-
-  btnSelectWeekend.addEventListener("click", () => {
-    setDaysSelection(["T7", "CN"]);
-  });
-
-  btnSelectAllDays.addEventListener("click", () => {
-    setDaysSelection(["T2", "T3", "T4", "T5", "T6", "T7", "CN"]);
-  });
-
-  btnClearDays.addEventListener("click", () => {
-    setDaysSelection([]);
-  });
-
-  dayCheckboxes.forEach(cb => {
-    cb.addEventListener("change", () => {
-      const selected = getSelectedDays();
-      if (selected.length > 0) {
-        dayErrorFeedback.classList.add("d-none");
-      }
-    });
-  });
-
-  // Chọn mẫu nhanh từ dropdown
-  document.querySelectorAll(".quick-preset").forEach(btn => {
-    btn.addEventListener("click", () => {
-      shiftNameInput.value = btn.getAttribute("data-name");
-      startTimeInput.value = btn.getAttribute("data-start");
-      endTimeInput.value = btn.getAttribute("data-end");
-      calculateShiftDuration();
-      shiftNameInput.focus();
-    });
-  });
-
-  // Sự kiện khi mở modal
-  internModalEl.addEventListener("show.bs.modal", openInternModal);
-
-  // Tìm kiếm và lọc trong modal
-  modalSearchInput.addEventListener("input", renderModalInternList);
-  modalDepartmentFilter.addEventListener("change", renderModalInternList);
-
-  // Checkbox "Chọn tất cả" trong modal
-  modalSelectAll.addEventListener("change", (e) => {
-    const isChecked = e.target.checked;
-    const filtered = getFilteredInterns();
-    filtered.forEach(intern => {
-      if (isChecked) {
-        tempModalSelectedIds.add(intern.id);
-      } else {
-        tempModalSelectedIds.delete(intern.id);
-      }
-    });
-    renderModalInternList();
-  });
-
-  // Nút bỏ chọn tất cả trong modal
-  modalClearSelection.addEventListener("click", () => {
-    tempModalSelectedIds.clear();
-    renderModalInternList();
-  });
-
-  // Xác nhận chọn thực tập sinh từ modal
-  modalBtnConfirm.addEventListener("click", () => {
-    selectedInternIds = new Set(tempModalSelectedIds);
-    renderSelectedInternTags();
-    if (internModalInstance) {
-      internModalInstance.hide();
-    }
-    showToast(`Đã áp dụng ${selectedInternIds.size} thực tập sinh cho ca làm việc!`, "success");
-  });
-
-  // Nút đặt lại form (Reset)
-  btnResetForm.addEventListener("click", () => {
-    if (confirm("Bạn có muốn đặt lại toàn bộ thông tin trong form không?")) {
-      shiftForm.reset();
-      shiftForm.classList.remove("was-validated");
-      startTimeInput.value = "08:00";
-      endTimeInput.value = "12:00";
-      calculateShiftDuration();
-      setDaysSelection(["T2", "T3", "T4", "T5", "T6"]);
-      selectedInternIds.clear();
-      renderSelectedInternTags();
-      dayErrorFeedback.classList.add("d-none");
-      internErrorFeedback.classList.add("d-none");
-      timeErrorFeedback.classList.add("d-none");
-    }
-  });
-
-  // SUBMIT FORM TẠO CA LÀM VIỆC
-  shiftForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    let isValid = true;
-
-    // 1. Kiểm tra tên ca
-    const nameVal = shiftNameInput.value.trim();
-    if (!nameVal || nameVal.length < 3) {
-      isValid = false;
-      shiftNameInput.classList.add("is-invalid");
-    } else {
-      shiftNameInput.classList.remove("is-invalid");
-    }
-
-    // 2. Kiểm tra giờ
-    if (startTimeInput.value === endTimeInput.value) {
-      isValid = false;
-      timeErrorFeedback.classList.remove("d-none");
-    } else {
-      timeErrorFeedback.classList.add("d-none");
-    }
-
-    // 3. Kiểm tra ngày trong tuần
-    const selectedDays = getSelectedDays();
-    if (selectedDays.length === 0) {
-      isValid = false;
-      dayErrorFeedback.classList.remove("d-none");
-    } else {
-      dayErrorFeedback.classList.add("d-none");
-    }
-
-    // 4. Kiểm tra chọn thực tập sinh
-    if (selectedInternIds.size === 0) {
-      isValid = false;
-      internErrorFeedback.classList.remove("d-none");
-    } else {
-      internErrorFeedback.classList.add("d-none");
-    }
-
-    if (!isValid) {
-      shiftForm.classList.add("was-validated");
-      showToast("Vui lòng hoàn thành đầy đủ thông tin các mục bắt buộc!", "danger");
-      return;
-    }
-
-    // Tạo đối tượng ca làm việc mới
-    const newShift = {
-      id: "SHIFT-" + Date.now().toString().slice(-4),
-      name: nameVal,
-      startTime: startTimeInput.value,
-      endTime: endTimeInput.value,
-      daysOfWeek: selectedDays,
-      internIds: Array.from(selectedInternIds),
-      notes: shiftNotes.value.trim()
-    };
-
-    // Thêm vào đầu danh sách
-    shiftsList.unshift(newShift);
-    renderShiftsTable();
-
-    // Hiển thị thông báo
-    showToast(`Tạo thành công ca làm việc: "${newShift.name}"!`, "success");
-
-    // Cuộn nhẹ xuống bảng kết quả
-    document.getElementById("shiftListSection").scrollIntoView({ behavior: "smooth" });
-
-    // Reset các trường nhập
-    shiftNameInput.value = "";
-    shiftNotes.value = "";
-    shiftForm.classList.remove("was-validated");
-  });
-}
+// Chạy khởi tạo khi tài liệu DOM đã sẵn sàng
+document.addEventListener('DOMContentLoaded', initDashboard);
