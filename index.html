@@ -3,473 +3,257 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thiết Lập Ca Làm Việc - Phân Bổ Thực Tập Sinh</title>
-  
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Gửi yêu cầu hỗ trợ - Thực tập sinh</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-  <link rel="stylesheet" href="style.css">
+    body {
+      background-color: #f4f6f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .form-card {
+      background: #ffffff;
+      max-width: 520px;
+      width: 100%;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-header {
+      margin-bottom: 24px;
+    }
+
+    .form-header h2 {
+      font-size: 22px;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .form-header p {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    .required-star {
+      color: #ef4444;
+    }
+
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background-color: #f8fafc;
+    }
+
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #3b82f6;
+      background-color: #ffffff;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+      background-color: #2563eb;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-submit:hover {
+      background-color: #1d4ed8;
+    }
+
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+
+    .btn-submit:disabled {
+      background-color: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    /* Hộp thông báo trạng thái */
+    .alert-box {
+      display: none;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .alert-success {
+      background-color: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+    }
+
+    .alert-error {
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Top Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm py-2">
-    <div class="container">
-      <a class="navbar-brand d-flex align-items-center fw-bold gap-2" href="#">
-        <i class="bi bi-calendar-week fs-4"></i>
-        <span>Hệ Thống Quản Lý Ca Làm Việc</span>
-      </a>
-      <span class="badge bg-white text-primary rounded-pill px-3 py-2 fw-semibold">
-        <i class="bi bi-mortarboard-fill me-1"></i> Quản lý Thực tập sinh
-      </span>
-    </div>
-  </nav>
-
-  <!-- Main Container -->
-  <main class="container my-4 my-md-5">
-    
-    <!-- Page Header -->
-    <div class="row mb-4 align-items-center">
-      <div class="col-md-8">
-        <h1 class="h3 fw-bold text-dark mb-1">
-          <i class="bi bi-clock-history text-primary me-2"></i>Tạo & Cấu Hình Ca Làm Việc
-        </h1>
-        <p class="text-muted mb-0">Thiết lập khung giờ, chọn các ngày áp dụng trong tuần và gán thực tập sinh vào ca.</p>
-      </div>
-      <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        <a href="#shiftListSection" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-          <i class="bi bi-list-check me-1"></i> Xem danh sách ca đã tạo (<span id="shiftCountBadge">2</span>)
-        </a>
-      </div>
+  <div class="form-card">
+    <div class="form-header">
+      <h2>Yêu cầu hỗ trợ thực tập</h2>
+      <p>Vui lòng điền đầy đủ thông tin để bộ phận quản trị xử lý hồ sơ.</p>
     </div>
 
-    <!-- Main Shift Creation Form -->
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
-      <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
-        <h2 class="h5 fw-bold mb-0 text-dark">
-          <i class="bi bi-pencil-square text-primary me-2"></i>Thông Tin Ca Làm Việc
-        </h2>
-        <span class="text-danger small fst-italic">* Trường bắt buộc nhập</span>
+    <!-- Hộp thông báo phản hồi từ hệ thống -->
+    <div id="statusAlert" class="alert-box" role="alert"></div>
+
+    <form id="supportForm">
+      <!-- Dropdown chọn loại giấy tờ -->
+      <div class="form-group">
+        <label for="documentType">Loại yêu cầu / Giấy tờ <span class="required-star">*</span></label>
+        <select id="documentType" name="documentType" required>
+          <option value="" disabled selected>-- Chọn loại giấy tờ --</option>
+          <option value="giấy xác nhận thực tập">Giấy xác nhận thực tập</option>
+          <option value="đóng dấu mộc">Đóng dấu mộc</option>
+          <option value="tài liệu dự án">Tài liệu dự án</option>
+        </select>
       </div>
 
-      <div class="card-body p-4 p-lg-5">
-        <form id="shiftForm" novalidate>
-          
-          <!-- 1. Tên ca làm việc -->
-          <div class="mb-4">
-            <label for="shiftName" class="form-label fw-bold text-dark d-flex align-items-center">
-              <span>1. Tên ca làm việc</span>
-              <span class="text-danger ms-1">*</span>
-            </label>
-            <div class="input-group">
-              <span class="input-group-text bg-light text-muted border-end-0">
-                <i class="bi bi-bookmark-star-fill text-primary"></i>
-              </span>
-              <input 
-                type="text" 
-                class="form-control border-start-0 ps-0" 
-                id="shiftName" 
-                name="shiftName" 
-                placeholder="Ví dụ: Ca Sáng - Đội ngũ Frontend, Ca Chiều Part-time..." 
-                required 
-                minlength="3"
-                autocomplete="off"
-              >
-              <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Mẫu nhanh
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                <li><button class="dropdown-item quick-preset" type="button" data-name="Ca Sáng (08:00 - 12:00)" data-start="08:00" data-end="12:00">Ca Sáng (08:00 - 12:00)</button></li>
-                <li><button class="dropdown-item quick-preset" type="button" data-name="Ca Chiều (13:30 - 17:30)" data-start="13:30" data-end="17:30">Ca Chiều (13:30 - 17:30)</button></li>
-                <li><button class="dropdown-item quick-preset" type="button" data-name="Ca Full-time Hành chính (08:30 - 17:30)" data-start="08:30" data-end="17:30">Ca Full-time (08:30 - 17:30)</button></li>
-                <li><button class="dropdown-item quick-preset" type="button" data-name="Ca Tối Hỗ Trợ (18:00 - 21:30)" data-start="18:00" data-end="21:30">Ca Tối (18:00 - 21:30)</button></li>
-              </ul>
-            </div>
-            <div class="invalid-feedback">Vui lòng nhập tên ca làm việc (tối thiểu 3 ký tự).</div>
-            <div class="form-text text-muted">Đặt tên rõ ràng để thực tập sinh dễ dàng nhận biết lịch làm việc.</div>
-          </div>
-
-          <!-- 2. Giờ làm việc (input type="time") -->
-          <div class="mb-4">
-            <label class="form-label fw-bold text-dark d-flex align-items-center">
-              <span>2. Thời gian ca làm việc (Giờ bắt đầu - Giờ kết thúc)</span>
-              <span class="text-danger ms-1">*</span>
-            </label>
-            <div class="row g-3">
-              <!-- Giờ bắt đầu -->
-              <div class="col-md-6">
-                <div class="time-input-box p-3 rounded-3 border bg-light-subtle">
-                  <label for="startTime" class="form-label fw-semibold text-secondary small mb-1">
-                    <i class="bi bi-box-arrow-in-right text-success me-1"></i> Giờ bắt đầu:
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-white"><i class="bi bi-clock"></i></span>
-                    <input 
-                      type="time" 
-                      class="form-control form-control-lg fw-bold" 
-                      id="startTime" 
-                      name="startTime" 
-                      value="08:00" 
-                      required
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Giờ kết thúc -->
-              <div class="col-md-6">
-                <div class="time-input-box p-3 rounded-3 border bg-light-subtle">
-                  <label for="endTime" class="form-label fw-semibold text-secondary small mb-1">
-                    <i class="bi bi-box-arrow-right text-danger me-1"></i> Giờ kết thúc:
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text bg-white"><i class="bi bi-clock-fill"></i></span>
-                    <input 
-                      type="time" 
-                      class="form-control form-control-lg fw-bold" 
-                      id="endTime" 
-                      name="endTime" 
-                      value="12:00" 
-                      required
-                    >
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Thời lượng tính toán tự động -->
-            <div class="mt-2 d-flex flex-wrap align-items-center justify-content-between gap-2 p-2 bg-light rounded-3 border">
-              <div class="d-flex align-items-center">
-                <i class="bi bi-stopwatch text-primary fs-5 me-2"></i>
-                <span class="small fw-semibold text-muted">Thời lượng ca làm:</span>
-                <span id="shiftDurationBadge" class="badge bg-primary ms-2 fs-6">4 giờ 00 phút</span>
-              </div>
-              <div id="overnightNotice" class="d-none text-warning small fw-semibold">
-                <i class="bi bi-moon-stars-fill me-1"></i> Ca làm việc qua đêm (kết thúc vào ngày hôm sau)
-              </div>
-            </div>
-            <div id="timeErrorFeedback" class="text-danger small mt-1 d-none">
-              <i class="bi bi-exclamation-triangle-fill me-1"></i> Giờ kết thúc không được trùng với giờ bắt đầu.
-            </div>
-          </div>
-
-          <!-- 3. Checkbox chọn các ngày trong tuần -->
-          <div class="mb-4">
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
-              <label class="form-label fw-bold text-dark mb-0 d-flex align-items-center">
-                <span>3. Chọn các ngày trong tuần áp dụng</span>
-                <span class="text-danger ms-1">*</span>
-              </label>
-              <!-- Các nút thao tác nhanh -->
-              <div class="btn-group btn-group-sm mt-1 mt-sm-0" role="group">
-                <button type="button" class="btn btn-outline-secondary" id="btnSelectWeekdays">
-                  <i class="bi bi-briefcase me-1"></i>Thứ 2 - Thứ 6
-                </button>
-                <button type="button" class="btn btn-outline-secondary" id="btnSelectWeekend">
-                  <i class="bi bi-sun me-1"></i>Cuối tuần (T7, CN)
-                </button>
-                <button type="button" class="btn btn-outline-secondary" id="btnSelectAllDays">
-                  <i class="bi bi-check-all me-1"></i>Cả tuần
-                </button>
-                <button type="button" class="btn btn-outline-secondary" id="btnClearDays">
-                  <i class="bi bi-x-circle me-1"></i>Bỏ chọn
-                </button>
-              </div>
-            </div>
-
-            <!-- Grid các checkbox ngày trong tuần -->
-            <div class="row row-cols-2 row-cols-sm-4 row-cols-lg-7 g-2 day-checkbox-group" id="dayCheckboxGroup">
-              <!-- Thứ 2 -->
-              <div class="col">
-                <input type="checkbox" class="btn-check day-checkbox" id="day_mon" name="daysOfWeek" value="T2" checked autocomplete="off">
-                <label class="btn btn-outline-primary w-100 day-card p-3 d-flex flex-column align-items-center justify-content-center" for="day_mon">
-                  <span class="day-short fw-bold">T2</span>
-                  <span class="day-full small">Thứ 2</span>
-                  <i class="bi bi-check-circle-fill check-icon mt-1"></i>
-                </label>
-              </div>
-
-              <!-- Thứ 3 -->
-              <div class="col">
-                <input type="checkbox" class="btn-check day-checkbox" id="day_tue" name="daysOfWeek" value="T3" checked autocomplete="off">
-                <label class="btn btn-outline-primary w-100 day-card p-3 d-flex flex-column align-items-center justify-content-center" for="day_tue">
-                  <span class="day-short fw-bold">T3</span>
-                  <span class="day-full small">Thứ 3</span>
-                  <i class="bi bi-check-circle-fill check-icon mt-1"></i>
-                </label>
-              </div>
-
-              <!-- Thứ 4 -->
-              <div class="col">
-                <input type="checkbox" class="btn-check day-checkbox" id="day_wed" name="daysOfWeek" value="T4" checked autocomplete="off">
-                <label class="btn btn-outline-primary w-100 day-card p-3 d-flex flex-column align-items-center justify-content-center" for="day_wed">
-                  <span class="day-short fw-bold">T4</span>
-                  <span class="day-full small">Thứ 4</span>
-                  <i class="bi bi-check-circle-fill check-icon mt-1"></i>
-                </label>
-              </div>
-
-              <!-- Thứ 5 -->
-              <div class="col">
-                <input type="checkbox" class="btn-check day-checkbox" id="day_thu" name="daysOfWeek" value="T5" checked autocomplete="off">
-                <label class="btn btn-outline-primary w-100 day-card p-3 d-flex flex-column align-items-center justify-content-center" for="day_thu">
-                  <span class="day-short fw-bold">T5</span>
-                  <span class="day-full small">Thứ 5</span>
-                  <i class="bi bi-check-circle-fill check-icon mt-1"></i>
-                </label>
-              </div>
-
-              <!-- Thứ 6 -->
-              <div class="col">
-                <input type="checkbox" class="btn-check day-checkbox" id="day_fri" name="daysOfWeek" value="T6" checked autocomplete="off">
-                <label class="btn btn-outline-primary w-100 day-card p-3 d-flex flex-column align-items-center justify-content-center" for="day_fri">
-                  <span class="day-short fw-bold">T6</span>
-                  <span class="day-full small">Thứ 6</span>
-                  <i class="bi bi-check-circle-fill check-icon mt-1"></i>
-                </label>
-              </div>
-
-              <!-- Thứ 7 -->
-              <div class="col">
-                <input type="checkbox" class="btn-check day-checkbox" id="day_sat" name="daysOfWeek" value="T7" autocomplete="off">
-                <label class="btn btn-outline-primary w-100 day-card p-3 d-flex flex-column align-items-center justify-content-center weekend" for="day_sat">
-                  <span class="day-short fw-bold">T7</span>
-                  <span class="day-full small">Thứ 7</span>
-                  <i class="bi bi-check-circle-fill check-icon mt-1"></i>
-                </label>
-              </div>
-
-              <!-- Chủ Nhật -->
-              <div class="col">
-                <input type="checkbox" class="btn-check day-checkbox" id="day_sun" name="daysOfWeek" value="CN" autocomplete="off">
-                <label class="btn btn-outline-primary w-100 day-card p-3 d-flex flex-column align-items-center justify-content-center weekend" for="day_sun">
-                  <span class="day-short fw-bold">CN</span>
-                  <span class="day-full small">Chủ Nhật</span>
-                  <i class="bi bi-check-circle-fill check-icon mt-1"></i>
-                </label>
-              </div>
-            </div>
-
-            <!-- Error Feedback nếu không chọn ngày nào -->
-            <div id="dayErrorFeedback" class="text-danger small mt-2 d-none">
-              <i class="bi bi-exclamation-circle-fill me-1"></i> Vui lòng chọn ít nhất một ngày làm việc trong tuần.
-            </div>
-          </div>
-
-          <!-- 4. Modal chọn danh sách thực tập sinh áp dụng -->
-          <div class="mb-4">
-            <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
-              <label class="form-label fw-bold text-dark mb-0 d-flex align-items-center">
-                <span>4. Danh sách thực tập sinh áp dụng ca</span>
-                <span class="text-danger ms-1">*</span>
-              </label>
-              <button 
-                type="button" 
-                class="btn btn-primary btn-sm px-3 rounded-pill shadow-sm"
-                data-bs-toggle="modal" 
-                data-bs-target="#internSelectionModal"
-              >
-                <i class="bi bi-person-plus-fill me-1"></i> Chọn thực tập sinh...
-                <span class="badge bg-white text-primary ms-1" id="btnSelectedBadge">0</span>
-              </button>
-            </div>
-
-            <!-- Khung danh sách thực tập sinh đã chọn dạng Tags / Badges -->
-            <div class="selected-interns-container p-3 rounded-3 border bg-light min-height-120">
-              <div id="emptyInternAlert" class="text-center py-4 text-muted">
-                <i class="bi bi-people fs-1 text-secondary opacity-50 d-block mb-2"></i>
-                <span>Chưa có thực tập sinh nào được chọn cho ca làm này.</span>
-                <br>
-                <button type="button" class="btn btn-link btn-sm text-decoration-none mt-1" data-bs-toggle="modal" data-bs-target="#internSelectionModal">
-                  Nhấp vào đây để mở danh sách chọn thực tập sinh
-                </button>
-              </div>
-
-              <div id="selectedInternTags" class="d-flex flex-wrap gap-2 d-none">
-                <!-- Javascript will render selected intern chips here -->
-              </div>
-            </div>
-
-            <div id="internErrorFeedback" class="text-danger small mt-2 d-none">
-              <i class="bi bi-exclamation-circle-fill me-1"></i> Vui lòng chọn ít nhất một thực tập sinh áp dụng ca làm việc này.
-            </div>
-          </div>
-
-          <!-- Ghi chú bổ sung (tùy chọn) -->
-          <div class="mb-4">
-            <label for="shiftNotes" class="form-label fw-semibold text-secondary small">
-              <i class="bi bi-chat-left-text me-1"></i> Ghi chú ca làm (Tùy chọn)
-            </label>
-            <textarea 
-              class="form-control" 
-              id="shiftNotes" 
-              rows="2" 
-              placeholder="Ghi chú yêu cầu đặc biệt, địa điểm làm việc, thiết bị cần chuẩn bị..."
-            ></textarea>
-          </div>
-
-          <hr class="my-4 text-muted">
-
-          <!-- Submit & Reset Buttons -->
-          <div class="d-flex flex-wrap justify-content-end gap-2">
-            <button type="button" class="btn btn-light px-4 py-2 border" id="btnResetForm">
-              <i class="bi bi-arrow-counterclockwise me-1"></i> Đặt lại
-            </button>
-            <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm" id="btnSubmitShift">
-              <i class="bi bi-check2-circle me-1"></i> Lưu Ca Làm Việc
-            </button>
-          </div>
-
-        </form>
+      <!-- Ô input tiêu đề -->
+      <div class="form-group">
+        <label for="title">Tiêu đề yêu cầu <span class="required-star">*</span></label>
+        <input 
+          type="text" 
+          id="title" 
+          name="title" 
+          placeholder="Ví dụ: Xin dấu mộc báo cáo tuần 8..." 
+          required 
+          maxlength="150"
+        >
       </div>
-    </div>
 
-    <!-- Section: Danh Sách Ca Làm Việc Đã Lưu -->
-    <div class="card shadow-sm border-0 rounded-4 overflow-hidden" id="shiftListSection">
-      <div class="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
-        <h3 class="h5 fw-bold mb-0 text-dark">
-          <i class="bi bi-table text-primary me-2"></i>Danh Sách Ca Làm Việc Hiện Tại
-        </h3>
-        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">
-          Hệ thống đang hoạt động
-        </span>
+      <!-- Thẻ textarea nội dung chi tiết -->
+      <div class="form-group">
+        <label for="content">Nội dung chi tiết <span class="required-star">*</span></label>
+        <textarea 
+          id="content" 
+          name="content" 
+          placeholder="Mô tả cụ thể mục đích, thời hạn cần nhận, thông tin bổ sung..." 
+          required
+        ></textarea>
       </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0" id="shiftsTable">
-            <thead class="table-light text-secondary">
-              <tr>
-                <th scope="col" class="ps-4">Tên Ca Làm Việc</th>
-                <th scope="col">Khung Giờ (type="time")</th>
-                <th scope="col">Ngày Trong Tuần</th>
-                <th scope="col">Thực Tập Sinh Áp Dụng</th>
-                <th scope="col" class="text-end pe-4">Thao Tác</th>
-              </tr>
-            </thead>
-            <tbody id="shiftTableBody">
-              <!-- Dynamically rendered or pre-populated via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
 
-  </main>
-
-  <!-- ======================================================== -->
-  <!-- MODAL: CHỌN DANH SÁCH THỰC TẬP SINH ÁP DỤNG             -->
-  <!-- ======================================================== -->
-  <div class="modal fade" id="internSelectionModal" tabindex="-1" aria-labelledby="internModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content rounded-4 border-0 shadow">
-        
-        <!-- Modal Header -->
-        <div class="modal-header bg-primary text-white border-bottom-0 py-3">
-          <h5 class="modal-title fw-bold d-flex align-items-center" id="internModalLabel">
-            <i class="bi bi-person-lines-fill me-2 fs-4"></i>
-            Chọn Danh Sách Thực Tập Sinh Áp Dụng
-          </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-
-        <!-- Modal Search & Filters -->
-        <div class="modal-body p-4">
-          <div class="row g-2 mb-3 align-items-center">
-            <!-- Ô tìm kiếm tên hoặc mã TTS -->
-            <div class="col-md-7">
-              <div class="input-group">
-                <span class="input-group-text bg-white border-end-0">
-                  <i class="bi bi-search text-muted"></i>
-                </span>
-                <input 
-                  type="text" 
-                  class="form-control border-start-0 ps-0" 
-                  id="modalSearchInput" 
-                  placeholder="Tìm theo họ tên, mã sinh viên, email..."
-                >
-              </div>
-            </div>
-
-            <!-- Bộ lọc theo phòng ban / chuyên ngành -->
-            <div class="col-md-5">
-              <select class="form-select" id="modalDepartmentFilter">
-                <option value="ALL">Tất cả phòng ban / vị trí</option>
-                <option value="Frontend">Frontend Developer</option>
-                <option value="Backend">Backend Developer</option>
-                <option value="Mobile">Mobile Developer</option>
-                <option value="UI/UX">UI/UX Designer</option>
-                <option value="QA">QA / Tester</option>
-                <option value="DevOps">DevOps Intern</option>
-                <option value="HR">HR Intern</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Thanh chọn tất cả & đếm số lượng -->
-          <div class="d-flex justify-content-between align-items-center p-2 mb-3 bg-light rounded-3 border">
-            <div class="form-check ms-2 mb-0">
-              <input class="form-check-input" type="checkbox" id="modalSelectAll">
-              <label class="form-check-label fw-semibold user-select-none" for="modalSelectAll">
-                Chọn tất cả (đang hiển thị)
-              </label>
-            </div>
-            <div class="text-muted small me-2">
-              Đã chọn: <span class="badge bg-primary fs-7" id="modalSelectedCounter">0</span> / <span id="modalTotalCounter">0</span> thực tập sinh
-            </div>
-          </div>
-
-          <!-- Danh sách Thực tập sinh (Checklist) -->
-          <div class="intern-list-wrapper border rounded-3 p-2 bg-white" style="max-height: 380px; overflow-y: auto;">
-            <div id="modalInternList" class="list-group list-group-flush">
-              <!-- Dynamically rendered via JS -->
-            </div>
-            <div id="modalNoResults" class="text-center py-4 text-muted d-none">
-              <i class="bi bi-search fs-3 d-block mb-1 opacity-50"></i>
-              <span>Không tìm thấy thực tập sinh phù hợp với điều kiện lọc.</span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="modal-footer bg-light border-top-0 py-3 px-4 d-flex justify-content-between">
-          <button type="button" class="btn btn-outline-danger btn-sm" id="modalClearSelection">
-            <i class="bi bi-trash3 me-1"></i> Bỏ chọn tất cả
-          </button>
-          <div class="d-flex gap-2">
-            <button type="button" class="btn btn-secondary px-3" data-bs-dismiss="modal">Hủy bỏ</button>
-            <button type="button" class="btn btn-primary px-4 fw-semibold" id="modalBtnConfirm">
-              <i class="bi bi-check-lg me-1"></i> Xác Nhận Áp Dụng (<span id="modalConfirmCount">0</span>)
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
+      <!-- Nút gửi -->
+      <button type="submit" id="submitBtn" class="btn-submit">Gửi yêu cầu</button>
+    </form>
   </div>
 
-  <!-- Toast Notification -->
-  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
-    <div id="actionToast" class="toast align-items-center text-white bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body d-flex align-items-center">
-          <i class="bi bi-check-circle-fill fs-5 me-2" id="toastIcon"></i>
-          <span id="toastMessage">Đã lưu ca làm việc thành công!</span>
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-      </div>
-    </div>
-  </div>
+  <script>
+    const form = document.getElementById('supportForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusAlert = document.getElementById('statusAlert');
 
-  <!-- Bootstrap 5 JS Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Main Application Script -->
-  <script src="app.js"></script>
+    // Hàm hiển thị hộp thông báo
+    function showAlert(message, type = 'success') {
+      statusAlert.textContent = message;
+      statusAlert.className = `alert-box alert-${type}`;
+      statusAlert.style.display = 'block';
+
+      // Tự động cuộn đến thông báo nếu form dài
+      statusAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault(); // Ngăn hành vi reload trang mặc định
+
+      // Thu thập dữ liệu từ Form
+      const payload = {
+        documentType: document.getElementById('documentType').value,
+        title: document.getElementById('title').value.trim(),
+        content: document.getElementById('content').value.trim()
+      };
+
+      // Đổi trạng thái nút bấm trong lúc gửi
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang gửi yêu cầu...';
+      statusAlert.style.display = 'none';
+
+      try {
+        const response = await fetch('/api/v1/support-requests', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          // Hiển thị hộp thông báo gửi thành công
+          showAlert('Yêu cầu hỗ trợ của bạn đã được gửi thành công!', 'success');
+          form.reset(); // Reset form sau khi gửi thành công
+        } else {
+          // Xử lý khi server trả về mã lỗi HTTP
+          const errData = await response.json().catch(() => null);
+          const errMsg = errData?.message || `Gửi thất bại (Mã lỗi: ${response.status})`;
+          showAlert(errMsg, 'error');
+        }
+      } catch (error) {
+        // Xử lý lỗi mạng hoặc kết nối server
+        console.error('Lỗi khi gửi yêu cầu:', error);
+        showAlert('Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng hoặc thử lại sau.', 'error');
+      } finally {
+        // Khôi phục trạng thái nút gửi
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi yêu cầu';
+      }
+    });
+  </script>
 </body>
 </html>
