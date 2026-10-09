@@ -4,6 +4,23 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.22.0] - 2026-10-09
+
+### Đã hoàn thành (Added & Enhanced)
+- **Pydantic Schemas (`FacultyReportResponse`, `FacultyReportData`, `FacultyReportSummary`, `FacultyUniversityStat`, `FacultyMajorStat`, `FacultyInternBreakdownItem`)**:
+  - Khai báo schema tại [schemas.py](file:///d:/clone/ttcs/backend/schemas.py).
+  - Chuẩn hóa cấu trúc gom nhóm hai chiều (Trường × Chuyên ngành), phân cấp theo trường đại học, phân cấp theo chuyên ngành, danh sách phẳng chi tiết và khối `summary` KPI tổng quan.
+- **Endpoint Thống Kê Sinh Viên Theo Trường & Chuyên Ngành (`GET /api/v1/reports/interns-by-faculty`)**:
+  - Thêm route tại [main.py](file:///d:/clone/ttcs/backend/main.py) kết hợp bảng `truong_dai_hoc` và `ho_so_thuc_tap` qua `ma_truong`.
+  - Thực hiện gom nhóm hai chiều theo `ten_truong` và `chuyen_nganh`, tính toán tổng số lượng sinh viên và tỷ lệ % phân bổ.
+  - Hỗ trợ các bộ lọc linh hoạt: `ma_truong`, `ten_truong`, `chuyen_nganh`, `ma_chuong_trinh`, `trang_thai_xet_duyet`, `trang_thai_thuc_tap`.
+  - Bắt trọn vẹn ngoại lệ theo chuẩn RESTful: `HTTP 404` (khi mã trường hoặc mã chương trình không tồn tại), `HTTP 400` (khi sai trạng thái xét duyệt hoặc thực tập), `HTTP 422` (khi tham số vi phạm validation).
+- **Kiểm thử tự động (Unit Test & Regression Test)**:
+  - Tạo mới bộ test [tests/test_report_interns_by_faculty.py](file:///d:/clone/ttcs/backend/tests/test_report_interns_by_faculty.py) gồm 13 test cases bao phủ gọi mặc định, lọc theo từng tiêu chí, bắt lỗi 400/404/422, gom nhóm nhiều sinh viên tính % và trường hợp dữ liệu rỗng -> **13/13 PASS 100%**.
+  - Kiểm tra hồi quy toàn bộ cụm report -> **54/54 PASS 100%**.
+
+---
+
 ## [1.21.0] - 2026-10-07
 
 ### Đã hoàn thành (Added & Enhanced)
