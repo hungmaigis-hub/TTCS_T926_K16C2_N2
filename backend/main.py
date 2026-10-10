@@ -10,9 +10,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from sqlalchemy import extract, or_
+from sqlalchemy import extract, or_, func
 
 from schemas import (
+    FacultyReportResponse,
+    FacultyReportData,
+    FacultyReportSummary,
+    FacultyUniversityStat,
+    FacultyMajorStat,
+    FacultyMajorItem,
+    FacultyUniversityItem,
+    FacultyInternBreakdownItem,
     InternCreate,
     InternUpdate,
     InternApprovalUpdate,
@@ -2824,6 +2832,224 @@ def create_mentor(
     }
 
 
+# ==============================================================
+# API BÁO CÁO THỐNG KÊ SINH VIÊN THEO TRƯỜNG & CHUYÊN NGÀNH
+# (REPORTS INTERNS BY FACULTY / UNIVERSITY & MAJOR)
+# ==============================================================
+@app.get("/api/v1/reports/interns-by-faculty", response_model=FacultyReportResponse)
+def get_interns_by_faculty_report(
+    ma_truong: Optional[int] = Query(None, ge=1, description="Lọc theo mã trường đại học (>= 1)"),
+    ten_truong: Optional[str] = Query(None, description="Tìm kiếm theo tên trường đại học"),
+    chuyen_nganh: Optional[str] = Query(None, description="Lọc hoặc tìm kiếm theo chuyên ngành đào tạo"),
+    ma_chuong_trinh: Optional[int] = Query(None, ge=1, description="Lọc theo mã chương trình thực tập (>= 1)"),
+    trang_thai_xet_duyet: Optional[str] = Query(None, description="Lọc theo trạng thái xét duyệt: ChoDuyet, DaDuyet, TuChoi"),
+    trang_thai_thuc_tap: Optional[str] = Query(None, description="Lọc theo trạng thái thực tập: ChuaThucTap, DangThucTap, HoanThanh, ThoiHoc"),
+    db: Session = Depends(get_db),
+):
+    """
+    Endpoint thống kê tổng hợp số lượng sinh viên bằng cách gom nhóm hai chiều
+    theo tên trường đại học (ten_truong) và chuyên ngành đào tạo (chuyen_nganh)
+    từ các bảng truong_dai_hoc và ho_so_thuc_tap:
+    - Bắt trọn vẹn ngoại lệ đầu vào và nghiệp vụ (400, 404, 422).
+    - Gom nhóm hai chiều (Trường x Chuyên ngành).
+    - Cung cấp chỉ số tổng quan KPI (summary), thống kê phân cấp theo trường,
+      thống kê phân cấp theo chuyên ngành, và danh sách chi tiết hai chiều.
+    """
+    # 1. Kiểm tra mã trường nếu có truyền
+    if ma_truong is not None:
+        truong_db = db.query(TruongDaiHoc).filter(TruongDaiHoc.ma_truong == ma_truong).first()
+        if not truong_db:
+            raise HTTPException(status_code=404, detail="Trường đại học không tồn tại trong hệ thống")
 
+    # 2. Kiểm tra mã chương trình nếu có truyền
+    if ma_chuong_trinh is not None:
+        ct_db = db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh == ma_chuong_trinh).first()
+        if not ct_db:
+            raise HTTPException(status_code=404, detail="Chương trình thực tập không tồn tại trong hệ thống")
 
+    # 3. Kiểm tra tính hợp lệ của trạng thái xét duyệt
+    hop_le_xet_duyet = {"ChoDuyet", "DaDuyet", "TuChoi"}
+    if trang_thai_xet_duyet is not None:
+        val_xet_duyet = trang_thai_xet_duyet.strip()
+        if val_xet_duyet not in hop_le_xet_duyet:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Trạng thái xét duyệt không hợp lệ. Chỉ chấp nhận một trong các giá trị: {', '.join(sorted(hop_le_xet_duyet))}"
+            )
+
+    # 4. Kiểm tra tính hợp lệ của trạng thái thực tập
+    hop_le_thuc_tap = {"ChuaThucTap", "DangThucTap", "HoanThanh", "ThoiHoc"}
+    if trang_thai_thuc_tap is not None:
+        val_thuc_tap = trang_thai_thuc_tap.strip()
+        if val_thuc_tap not in hop_le_thuc_tap:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Trạng thái thực tập không hợp lệ. Chỉ chấp nhận một trong các giá trị: {', '.join(sorted(hop_le_thuc_tap))}"
+            )
+
+    # 5. Xây dựng truy vấn gom nhóm hai chiều từ truong_dai_hoc và ho_so_thuc_tap
+    query = (
+        db.query(
+            TruongDaiHoc.ma_truong,
+            TruongDaiHoc.ten_truong,
+            func.coalesce(HoSoThucTap.chuyen_nganh, "Chưa phân ngành").label("chuyen_nganh"),
+            func.count(HoSoThucTap.ma_ho_so).label("so_luong")
+        )
+        .join(TruongDaiHoc, HoSoThucTap.ma_truong == TruongDaiHoc.ma_truong)
+    )
+
+    # Áp dụng các bộ lọc
+    if ma_truong is not None:
+        query = query.filter(HoSoThucTap.ma_truong == ma_truong)
+
+    if ten_truong and ten_truong.strip():
+        query = query.filter(TruongDaiHoc.ten_truong.ilike(f"%{ten_truong.strip()}%"))
+
+    if chuyen_nganh and chuyen_nganh.strip():
+        query = query.filter(HoSoThucTap.chuyen_nganh.ilike(f"%{chuyen_nganh.strip()}%"))
+
+    if ma_chuong_trinh is not None:
+        query = query.filter(HoSoThucTap.ma_chuong_trinh == ma_chuong_trinh)
+
+    if trang_thai_xet_duyet is not None:
+        query = query.filter(HoSoThucTap.trang_thai_xet_duyet == trang_thai_xet_duyet.strip())
+
+    if trang_thai_thuc_tap is not None:
+        query = query.filter(HoSoThucTap.trang_thai_thuc_tap == trang_thai_thuc_tap.strip())
+
+    # Gom nhóm theo Trường và Chuyên ngành
+    records = (
+        query.group_by(
+            TruongDaiHoc.ma_truong,
+            TruongDaiHoc.ten_truong,
+            func.coalesce(HoSoThucTap.chuyen_nganh, "Chưa phân ngành")
+        )
+        .order_by(
+            TruongDaiHoc.ten_truong.asc(),
+            func.count(HoSoThucTap.ma_ho_so).desc()
+        )
+        .all()
+    )
+
+    tong_sinh_vien = sum(r.so_luong for r in records)
+
+    # 6. Xây dựng cấu trúc dữ liệu tổng hợp
+    chi_tiet_items = []
+    universities_map = {}
+    majors_map = {}
+
+    for r in records:
+        m_truong = r.ma_truong
+        t_truong = r.ten_truong
+        c_nganh = r.chuyen_nganh if r.chuyen_nganh else "Chưa phân ngành"
+        s_luong = r.so_luong
+        ty_le = round((s_luong / tong_sinh_vien * 100), 2) if tong_sinh_vien > 0 else 0.0
+
+        # Danh sách chi tiết
+        chi_tiet_items.append(
+            FacultyInternBreakdownItem(
+                ma_truong=m_truong,
+                ten_truong=t_truong,
+                chuyen_nganh=c_nganh,
+                so_luong=s_luong,
+                ty_le_phan_tram=ty_le
+            )
+        )
+
+        # Gom nhóm theo Trường
+        if m_truong not in universities_map:
+            universities_map[m_truong] = {
+                "ma_truong": m_truong,
+                "ten_truong": t_truong,
+                "tong_sinh_vien": 0,
+                "majors": []
+            }
+        universities_map[m_truong]["tong_sinh_vien"] += s_luong
+        universities_map[m_truong]["majors"].append({
+            "chuyen_nganh": c_nganh,
+            "so_luong": s_luong
+        })
+
+        # Gom nhóm theo Chuyên ngành
+        if c_nganh not in majors_map:
+            majors_map[c_nganh] = {
+                "chuyen_nganh": c_nganh,
+                "tong_sinh_vien": 0,
+                "universities": []
+            }
+        majors_map[c_nganh]["tong_sinh_vien"] += s_luong
+        majors_map[c_nganh]["universities"].append({
+            "ma_truong": m_truong,
+            "ten_truong": t_truong,
+            "so_luong": s_luong
+        })
+
+    # Chuyển đổi dữ liệu nhóm Trường sang schema
+    thong_ke_theo_truong = []
+    for u in universities_map.values():
+        u_total = u["tong_sinh_vien"]
+        danh_sach_cn = [
+            FacultyMajorItem(
+                chuyen_nganh=m["chuyen_nganh"],
+                so_luong=m["so_luong"],
+                ty_le_phan_tram=round((m["so_luong"] / u_total * 100), 2) if u_total > 0 else 0.0
+            )
+            for m in u["majors"]
+        ]
+        thong_ke_theo_truong.append(
+            FacultyUniversityStat(
+                ma_truong=u["ma_truong"],
+                ten_truong=u["ten_truong"],
+                tong_sinh_vien=u_total,
+                danh_sach_chuyen_nganh=danh_sach_cn
+            )
+        )
+    thong_ke_theo_truong.sort(key=lambda x: x.tong_sinh_vien, reverse=True)
+
+    # Chuyển đổi dữ liệu nhóm Chuyên ngành sang schema
+    thong_ke_theo_chuyen_nganh = []
+    for m in majors_map.values():
+        m_total = m["tong_sinh_vien"]
+        danh_sach_tr = [
+            FacultyUniversityItem(
+                ma_truong=tr["ma_truong"],
+                ten_truong=tr["ten_truong"],
+                so_luong=tr["so_luong"],
+                ty_le_phan_tram=round((tr["so_luong"] / m_total * 100), 2) if m_total > 0 else 0.0
+            )
+            for tr in m["universities"]
+        ]
+        thong_ke_theo_chuyen_nganh.append(
+            FacultyMajorStat(
+                chuyen_nganh=m["chuyen_nganh"],
+                tong_sinh_vien=m_total,
+                danh_sach_truong=danh_sach_tr
+            )
+        )
+    thong_ke_theo_chuyen_nganh.sort(key=lambda x: x.tong_sinh_vien, reverse=True)
+
+    # Xác định trường và chuyên ngành có nhiều sinh viên nhất
+    truong_top = thong_ke_theo_truong[0].ten_truong if thong_ke_theo_truong else None
+    nganh_top = thong_ke_theo_chuyen_nganh[0].chuyen_nganh if thong_ke_theo_chuyen_nganh else None
+
+    summary = FacultyReportSummary(
+        tong_sinh_vien=tong_sinh_vien,
+        tong_so_truong=len(universities_map),
+        tong_so_chuyen_nganh=len(majors_map),
+        truong_nhieu_sinh_vien_nhat=truong_top,
+        chuyen_nganh_nhieu_sinh_vien_nhat=nganh_top
+    )
+
+    data = FacultyReportData(
+        summary=summary,
+        thong_ke_theo_truong=thong_ke_theo_truong,
+        thong_ke_theo_chuyen_nganh=thong_ke_theo_chuyen_nganh,
+        chi_tiet=chi_tiet_items
+    )
+
+    return FacultyReportResponse(
+        status_code=200,
+        message="Lấy báo cáo thống kê sinh viên theo trường và chuyên ngành thành công",
+        data=data
+    )
 
