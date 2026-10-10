@@ -470,7 +470,7 @@ erDiagram
 | `PHONG_BAN` | 1 - N | `CHUONG_TRINH_THUC_TAP` | `CHUONG_TRINH_THUC_TAP.ma_phong_ban` | Một phòng ban quản lý nhiều đợt thực tập |
 | `PHONG_BAN` | 1 - N | `NGUOI_DUNG` | `NGUOI_DUNG.ma_phong_ban` | Người dùng (Mentor, HR) thuộc phòng ban |
 | `NGUOI_DUNG` | 1 - 1 | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_nguoi_dung` | Mỗi tài khoản TTS có 1 hồ sơ thực tập tương ứng |
-| `NGUOI_DUNG` (Mentor) | 1 - N | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_mentor` | Một Mentor hướng dẫn nhiều hồ sơ thực tập |
+| `NGUOI_DUNG` (Mentor) | 1 - N | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_mentor` | Một Mentor hướng dẫn nhiều hồ sơ thực tập (Truy vấn Workload qua LEFT OUTER JOIN & GROUP BY) |
 | `NGUOI_DUNG` | 1 - N | `THONG_BAO` | `THONG_BAO.ma_nguoi_dung` | Một người dùng nhận nhiều thông báo |
 | `NGUOI_DUNG` | 1 - N | `NHAT_KY_HE_THONG` | `NHAT_KY_HE_THONG.ma_nguoi_dung` | Một người dùng tạo ra nhiều nhật ký hành động |
 | `CHUONG_TRINH_THUC_TAP` | 1 - N | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_chuong_trinh` | Một chương trình có nhiều hồ sơ tham gia |
@@ -491,7 +491,7 @@ erDiagram
 
 | Thực thể (Entity) | Vai trò hệ thống & Ánh xạ tới User Stories | User Stories liên quan |
 | :--- | :--- | :--- |
-| **`NGUOI_DUNG`** | Quản lý thông tin tài khoản chung và phân quyền tài khoản (Admin, HR, Mentor, Thực tập sinh). | US 39, US 40 |
+| **`NGUOI_DUNG`** | Quản lý thông tin tài khoản chung, phân quyền tài khoản (Admin, HR, Mentor, Thực tập sinh) và thống kê phân bổ tải hướng dẫn (Mentor Workload). | US 39, US 40, US 43 |
 | **`TRUONG_DAI_HOC`** | Quản lý danh mục trường đại học để lọc, thống kê nguồn ứng viên và gửi báo cáo liên kết. | US 3, US 20, US 32, US 34 |
 | **`PHONG_BAN`** | Quản lý cơ cấu phòng ban công ty để phân bổ thực tập sinh và mentor. | US 11, US 29, US 31 |
 | **`CHUONG_TRINH_THUC_TAP`** | Quản lý đợt/chương trình thực tập, thời gian bắt đầu & kết thúc. | US 11, US 13 |
