@@ -1221,8 +1221,70 @@ class MentorResponse(BaseModel):
     data: MentorItemData
 
 
+# ==============================================================
+# SCHEMAS CHO BÁO CÁO THỐNG KÊ SINH VIÊN THEO TRƯỜNG & CHUYÊN NGÀNH
+# (GET /api/v1/reports/interns-by-faculty)
+# ==============================================================
+
+class FacultyMajorItem(BaseModel):
+    """Thông tin chuyên ngành thuộc một trường"""
+    chuyen_nganh: str
+    so_luong: int
+    ty_le_phan_tram: float
 
 
+class FacultyUniversityStat(BaseModel):
+    """Thống kê tổng hợp theo trường đại học kèm danh sách chuyên ngành"""
+    ma_truong: Optional[int] = None
+    ten_truong: str
+    tong_sinh_vien: int
+    danh_sach_chuyen_nganh: List[FacultyMajorItem] = []
 
 
+class FacultyUniversityItem(BaseModel):
+    """Thông tin trường đại học thuộc một chuyên ngành"""
+    ma_truong: Optional[int] = None
+    ten_truong: str
+    so_luong: int
+    ty_le_phan_tram: float
+
+
+class FacultyMajorStat(BaseModel):
+    """Thống kê tổng hợp theo chuyên ngành kèm danh sách trường đại học"""
+    chuyen_nganh: str
+    tong_sinh_vien: int
+    danh_sach_truong: List[FacultyUniversityItem] = []
+
+
+class FacultyInternBreakdownItem(BaseModel):
+    """Chi tiết thống kê gom nhóm hai chiều: Tên trường x Chuyên ngành"""
+    ma_truong: Optional[int] = None
+    ten_truong: str
+    chuyen_nganh: str
+    so_luong: int
+    ty_le_phan_tram: float
+
+
+class FacultyReportSummary(BaseModel):
+    """Chỉ số KPI tổng quan báo cáo"""
+    tong_sinh_vien: int = 0
+    tong_so_truong: int = 0
+    tong_so_chuyen_nganh: int = 0
+    truong_nhieu_sinh_vien_nhat: Optional[str] = None
+    chuyen_nganh_nhieu_sinh_vien_nhat: Optional[str] = None
+
+
+class FacultyReportData(BaseModel):
+    """Dữ liệu phản hồi báo cáo sinh viên theo trường và chuyên ngành"""
+    summary: FacultyReportSummary
+    thong_ke_theo_truong: List[FacultyUniversityStat] = []
+    thong_ke_theo_chuyen_nganh: List[FacultyMajorStat] = []
+    chi_tiet: List[FacultyInternBreakdownItem] = []
+
+
+class FacultyReportResponse(BaseModel):
+    """Response bọc chuẩn trả về cho client"""
+    status_code: int = 200
+    message: str = "Lấy báo cáo thống kê sinh viên theo trường và chuyên ngành thành công"
+    data: FacultyReportData
 
