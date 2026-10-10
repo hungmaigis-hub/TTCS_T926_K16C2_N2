@@ -130,11 +130,11 @@ def reseed_sqlite_db():
         clv3 = CaLamViec(ma_ca=3, ten_ca="Ca Hành Chính", gio_bat_dau=time(8, 0, 0), gio_ket_thuc=time(17, 30, 0), cac_ngay_trong_tuan="Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6", ghi_chu="Ca làm việc cả ngày", trang_thai="HoatDong")
         session.add_all([clv1, clv2, clv3])
 
-        pc1 = PhuCap(ma_phu_cap=1, ma_ho_so=1, thang_nam="2026-09", so_tien=3000000.00, trang_thai_chi_tra="DaChiTra")
-        pc2 = PhuCap(ma_phu_cap=2, ma_ho_so=1, thang_nam="2026-10", so_tien=3000000.00, trang_thai_chi_tra="DaChiTra")
-        pc3 = PhuCap(ma_phu_cap=3, ma_ho_so=1, thang_nam="2026-11", so_tien=3500000.00, trang_thai_chi_tra="ChuaChiTra")
-        pc4 = PhuCap(ma_phu_cap=4, ma_ho_so=2, thang_nam="2026-09", so_tien=2500000.00, trang_thai_chi_tra="DaChiTra")
-        pc5 = PhuCap(ma_phu_cap=5, ma_ho_so=2, thang_nam="2026-10", so_tien=2500000.00, trang_thai_chi_tra="ChuaChiTra")
+        pc1 = PhuCap(ma_phu_cap=1, ma_ho_so=1, thang=9, nam=2026, thang_nam="2026-09", so_tien=3000000.00, ngay_chi_tra=date(2026, 9, 30), trang_thai="DaChiTra", trang_thai_chi_tra="DaChiTra")
+        pc2 = PhuCap(ma_phu_cap=2, ma_ho_so=1, thang=10, nam=2026, thang_nam="2026-10", so_tien=3000000.00, ngay_chi_tra=date(2026, 10, 31), trang_thai="DaChiTra", trang_thai_chi_tra="DaChiTra")
+        pc3 = PhuCap(ma_phu_cap=3, ma_ho_so=1, thang=11, nam=2026, thang_nam="2026-11", so_tien=3500000.00, ngay_chi_tra=None, trang_thai="ChuaChiTra", trang_thai_chi_tra="ChuaChiTra")
+        pc4 = PhuCap(ma_phu_cap=4, ma_ho_so=2, thang=9, nam=2026, thang_nam="2026-09", so_tien=2500000.00, ngay_chi_tra=date(2026, 9, 30), trang_thai="DaChiTra", trang_thai_chi_tra="DaChiTra")
+        pc5 = PhuCap(ma_phu_cap=5, ma_ho_so=2, thang=10, nam=2026, thang_nam="2026-10", so_tien=2500000.00, ngay_chi_tra=None, trang_thai="ChuaChiTra", trang_thai_chi_tra="ChuaChiTra")
         session.add_all([pc1, pc2, pc3, pc4, pc5])
 
         session.commit()

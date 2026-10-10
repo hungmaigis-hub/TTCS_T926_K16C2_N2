@@ -5,12 +5,12 @@ import uuid
 from datetime import date, timedelta, datetime, time
 from pathlib import Path
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query, Path as FastApiPath
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query, Path as FastApiPath, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from sqlalchemy import extract, or_, func
+from sqlalchemy import extract, or_, and_, func
 
 from schemas import (
     FacultyReportResponse,
@@ -76,6 +76,9 @@ from schemas import (
     AllowanceSummary,
     AllowanceDetailData,
     AllowanceResponse,
+    AllowanceCreate,
+    AllowanceCreateData,
+    AllowanceCreateResponse,
     MentorCreate,
     MentorResponse,
 )
@@ -613,6 +616,89 @@ def get_intern_allowances(id: int, db: Session = Depends(get_db)):
             "danh_sach_phu_cap": danh_sach_phu_cap,
             "cac_khoan_da_nhan": cac_khoan_da_nhan,
             "cac_khoan_cho_giai_ngan": cac_khoan_cho_giai_ngan,
+        }
+    }
+
+
+@app.post("/api/v1/allowances", response_model=AllowanceCreateResponse, status_code=status.HTTP_201_CREATED)
+def create_allowance(payload: AllowanceCreate, db: Session = Depends(get_db)):
+    """
+    Tiếp nhận thông tin và tạo mới bản ghi phụ cấp cho thực tập sinh (POST /api/v1/allowances):
+    1. Kiểm tra ma_ho_so có tồn tại trong bảng ho_so_thuc_tap hay không (HTTP 404 nếu không tìm thấy).
+    2. Validate ràng buộc: số tiền > 0, tháng trong khoảng 1-12 (đã được Pydantic kiểm tra).
+    3. Kiểm tra chống trùng lặp: Nếu thực tập sinh đã có bản ghi phụ cấp cho cùng kỳ (tháng, năm), báo lỗi (HTTP 400).
+    4. Lưu bản ghi vào bảng phu_cap trong CSDL (đồng bộ thang, nam, thang_nam, so_tien, ngay_chi_tra, trang_thai).
+    5. Trả về mã HTTP 201 Created kèm dữ liệu bản ghi.
+    """
+    # 1. Kiểm tra hồ sơ thực tập sinh có tồn tại trong hệ thống không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == payload.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với ID: {payload.ma_ho_so}"
+        )
+
+    # 2. Kiểm tra trùng lặp kỳ phụ cấp cho cùng thực tập sinh
+    thang_nam_str = f"{payload.nam:04d}-{payload.thang:02d}"
+    existing_allowance = (
+        db.query(PhuCap)
+        .filter(
+            PhuCap.ma_ho_so == payload.ma_ho_so,
+            or_(
+                and_(PhuCap.thang == payload.thang, PhuCap.nam == payload.nam),
+                PhuCap.thang_nam == thang_nam_str
+            )
+        )
+        .first()
+    )
+    if existing_allowance:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Khoản phụ cấp tháng {payload.thang}/{payload.nam} của thực tập sinh ID {payload.ma_ho_so} đã tồn tại trong hệ thống"
+        )
+
+    # 3. Xử lý ngày chi trả nếu có
+    ngay_chi_tra_val = None
+    if payload.ngay_chi_tra:
+        if isinstance(payload.ngay_chi_tra, str):
+            try:
+                ngay_chi_tra_val = datetime.strptime(payload.ngay_chi_tra.strip(), "%Y-%m-%d").date()
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Định dạng ngay_chi_tra không hợp lệ, yêu cầu định dạng YYYY-MM-DD"
+                )
+        else:
+            ngay_chi_tra_val = payload.ngay_chi_tra
+
+    # 4. Khởi tạo đối tượng PhuCap và lưu vào CSDL
+    new_allowance = PhuCap(
+        ma_ho_so=payload.ma_ho_so,
+        thang=payload.thang,
+        nam=payload.nam,
+        thang_nam=thang_nam_str,
+        so_tien=payload.so_tien,
+        ngay_chi_tra=ngay_chi_tra_val,
+        trang_thai=payload.trang_thai or "ChuaChiTra",
+        trang_thai_chi_tra=payload.trang_thai or "ChuaChiTra",
+    )
+
+    db.add(new_allowance)
+    db.commit()
+    db.refresh(new_allowance)
+
+    return {
+        "status_code": 201,
+        "message": "Tạo bản ghi phụ cấp thành công",
+        "data": {
+            "ma_phu_cap": new_allowance.ma_phu_cap,
+            "ma_ho_so": new_allowance.ma_ho_so,
+            "thang": new_allowance.thang,
+            "nam": new_allowance.nam,
+            "thang_nam": new_allowance.thang_nam,
+            "so_tien": float(new_allowance.so_tien),
+            "ngay_chi_tra": new_allowance.ngay_chi_tra.isoformat() if new_allowance.ngay_chi_tra else None,
+            "trang_thai": new_allowance.trang_thai,
         }
     }
 
