@@ -176,7 +176,7 @@ erDiagram
         string loai_yeu_cau "XinChungNhan, GiayXacNhan, Khac"
         string noi_dung
         string phan_hoi_hr
-        string trang_thai "ChoXuLy, DaXuLy"
+        string trang_thai "ChoXuLy, DaXuLy, TuChoi"
     }
 
     THONG_BAO {
@@ -430,7 +430,7 @@ erDiagram
 | `loai_yeu_cau` | `VARCHAR(50)` | | `XinChungNhan`, `GiayXacNhan`, `Khac` | Phân loại đề xuất |
 | `noi_dung` | `TEXT` | | `NOT NULL` | Chi tiết nội dung cần hỗ trợ |
 | `phan_hoi_hr` | `TEXT` | | `NULL` | Trả lời / hướng dẫn từ HR |
-| `trang_thai` | `VARCHAR(50)` | | `ChoXuLy`, `DaXuLy` | Tiến độ xử lý |
+| `trang_thai` | `VARCHAR(50)` | | `ChoXuLy`, `DaXuLy`, `TuChoi` | Tiến độ xử lý (Mặc định: `ChoXuLy`) |
 
 ---
 

@@ -4,6 +4,32 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.23.0] - 2026-10-10
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model YeuCauHoTro (`yeu_cau_ho_tro.py`)**:
+  - Tạo mới ORM Model [YeuCauHoTro](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/models/yeu_cau_ho_tro.py) ánh xạ bảng `yeu_cau_ho_tro` (`ma_yeu_cau`, `ma_ho_so`, `loai_yeu_cau`, `noi_dung`, `phan_hoi_hr`, `trang_thai`).
+  - Thiết lập quan hệ hai chiều `ho_so` và `danh_sach_yeu_cau_ho_tro` trong [ho_so.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/models/ho_so.py).
+  - Export tại [database/models/__init__.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/models/__init__.py).
+- **Dịch vụ Email Thông báo (`email_service.py`)**:
+  - Bổ sung hàm `send_support_request_email` gửi email thông báo kết quả xử lý yêu cầu (kèm trích dẫn phản hồi của HR) cho sinh viên qua SMTP.
+- **Pydantic Schemas (`schemas.py`)**:
+  - `SupportRequestStatusUpdate`: Tiếp nhận trạng thái cập nhật (chỉ cho phép `DaXuLy` hoặc `TuChoi`) và trường phản hồi `phan_hoi_hr`.
+  - `SupportRequestItemData` & `SupportRequestResponse`: Schema response chuẩn RESTful (HTTP 200 OK).
+- **Endpoint Cập Nhật Yêu Cầu Hỗ Trợ (`PATCH /api/v1/support-requests/{id}`)**:
+  - Thêm route tại [main.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/main.py) cho phép HR cập nhật trạng thái yêu cầu (`DaXuLy` hoặc `TuChoi`), lưu ghi chú phản hồi vào `phan_hoi_hr`.
+  - Tích hợp `fastapi.BackgroundTasks` tự động gửi email thông báo cho sinh viên mà không làm nghẽn tiến trình API.
+  - Bắt trọn vẹn ngoại lệ: `HTTP 404 Not Found` (khi ID yêu cầu không tồn tại), `HTTP 400 Bad Request` / `422 Unprocessable Entity` (khi trạng thái không hợp lệ).
+- **Đồng bộ CSDL & Thiết kế**:
+  - Cập nhật sơ đồ Mermaid ERD và Bảng 2.14 trong [DATABASE_DESIGN.md](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/DATABASE_DESIGN.md).
+  - Bổ sung seed data cho bảng `yeu_cau_ho_tro` trong [init_db.sql](file:///d:/CodeGym/TTCS_T926_K16C2_N2/script/database/init_db.sql).
+  - Cập nhật fixture SQLite trong [conftest.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/conftest.py).
+- **Kiểm thử tự động**:
+  - Tạo mới bộ test [test_support_requests.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_support_requests.py) gồm 6 test cases bao phủ cập nhật trạng thái DaXuLy, TuChoi, gửi email nền, bắt lỗi 404/422 -> **6/6 PASS 100%**.
+  - Kiểm thử hồi quy toàn bộ cụm email -> **12/12 PASS 100%**.
+
+---
+
 ## [1.22.0] - 2026-10-09
 
 ### Đã hoàn thành (Added & Enhanced)
