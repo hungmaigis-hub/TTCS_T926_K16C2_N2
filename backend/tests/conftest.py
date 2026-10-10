@@ -27,6 +27,7 @@ from database.models import (
     DonXinNghi,
     CaLamViec,
     PhuCap,
+    YeuCauHoTro,
 )
 from main import app
 
@@ -136,6 +137,10 @@ def reseed_sqlite_db():
         pc4 = PhuCap(ma_phu_cap=4, ma_ho_so=2, thang_nam="2026-09", so_tien=2500000.00, trang_thai_chi_tra="DaChiTra")
         pc5 = PhuCap(ma_phu_cap=5, ma_ho_so=2, thang_nam="2026-10", so_tien=2500000.00, trang_thai_chi_tra="ChuaChiTra")
         session.add_all([pc1, pc2, pc3, pc4, pc5])
+
+        yc1 = YeuCauHoTro(ma_yeu_cau=1, ma_ho_so=1, loai_yeu_cau="XinChungNhan", noi_dung="Em xin giấy chứng nhận thực tập để nộp về trường", phan_hoi_hr=None, trang_thai="ChoXuLy")
+        yc2 = YeuCauHoTro(ma_yeu_cau=2, ma_ho_so=2, loai_yeu_cau="GiayXacNhan", noi_dung="Em xin xác nhận số giờ thực tập tháng 9", phan_hoi_hr=None, trang_thai="ChoXuLy")
+        session.add_all([yc1, yc2])
 
         session.commit()
     finally:

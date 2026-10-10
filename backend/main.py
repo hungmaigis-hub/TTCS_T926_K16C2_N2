@@ -78,6 +78,9 @@ from schemas import (
     AllowanceResponse,
     MentorCreate,
     MentorResponse,
+    SupportRequestStatusUpdate,
+    SupportRequestItemData,
+    SupportRequestResponse,
 )
 from security import get_password_hash, verify_password
 
@@ -99,6 +102,7 @@ from database.models import (
     DonXinNghi,
     CaLamViec,
     PhuCap,
+    YeuCauHoTro,
 )
 
 from services.export_service import export_evaluations_to_excel, export_evaluations_to_pdf
@@ -114,6 +118,7 @@ from services.email_service import (
     send_document_approval_email,
     send_profile_approval_email,
     send_contract_confirmed_email,
+    send_support_request_email,
 )
 
 # Khởi tạo ứng dụng FastAPI
@@ -613,6 +618,77 @@ def get_intern_allowances(id: int, db: Session = Depends(get_db)):
             "danh_sach_phu_cap": danh_sach_phu_cap,
             "cac_khoan_da_nhan": cac_khoan_da_nhan,
             "cac_khoan_cho_giai_ngan": cac_khoan_cho_giai_ngan,
+        }
+    }
+
+
+@app.patch("/api/v1/support-requests/{id}", response_model=SupportRequestResponse, status_code=200)
+def update_support_request_status(
+    id: int,
+    payload: SupportRequestStatusUpdate,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db)
+):
+    """
+    Cập nhật trạng thái yêu cầu hỗ trợ sinh viên (PATCH /api/v1/support-requests/{id}):
+    1. Kiểm tra sự tồn tại của yêu cầu hỗ trợ theo id trong CSDL (HTTP 404 Not Found nếu không tìm thấy).
+    2. Cập nhật trạng thái ('DaXuLy' hoặc 'TuChoi') và lưu nội dung ghi chú phản hồi vào cột phan_hoi_hr.
+    3. Đăng ký tác vụ nền qua fastapi.BackgroundTasks để gửi email thông báo kết quả xử lý cho sinh viên.
+    4. Trả về mã HTTP 200 OK kèm thông tin yêu cầu hỗ trợ đã được cập nhật.
+    """
+    # 1. Truy vấn yêu cầu hỗ trợ trong CSDL
+    yeu_cau = db.query(YeuCauHoTro).filter(YeuCauHoTro.ma_yeu_cau == id).first()
+    if not yeu_cau:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy yêu cầu hỗ trợ với ID: {id}"
+        )
+
+    # 2. Kiểm tra tính hợp lệ của trạng thái cập nhật
+    trang_thai_clean = payload.trang_thai.strip()
+    if trang_thai_clean not in ["DaXuLy", "TuChoi"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Trạng thái không hợp lệ. Chỉ cho phép các trạng thái: 'DaXuLy' hoặc 'TuChoi'"
+        )
+
+    # 3. Cập nhật trạng thái và ghi chú phản hồi của HR
+    yeu_cau.trang_thai = trang_thai_clean
+    if payload.phan_hoi_hr is not None:
+        yeu_cau.phan_hoi_hr = payload.phan_hoi_hr.strip() if payload.phan_hoi_hr else None
+
+    db.commit()
+    db.refresh(yeu_cau)
+
+    # 4. Lấy thông tin sinh viên liên kết để gửi email thông báo qua BackgroundTasks
+    ho_ten_sinh_vien = None
+    email_sinh_vien = None
+    if yeu_cau.ho_so and yeu_cau.ho_so.thuc_tap_sinh:
+        ho_ten_sinh_vien = yeu_cau.ho_so.thuc_tap_sinh.ho_ten
+        email_sinh_vien = yeu_cau.ho_so.thuc_tap_sinh.email
+
+    if email_sinh_vien:
+        background_tasks.add_task(
+            send_support_request_email,
+            to_email=email_sinh_vien,
+            intern_name=ho_ten_sinh_vien or "Sinh viên",
+            request_type=yeu_cau.loai_yeu_cau,
+            status=yeu_cau.trang_thai,
+            hr_feedback=yeu_cau.phan_hoi_hr,
+        )
+
+    return {
+        "status_code": 200,
+        "message": "Cập nhật trạng thái yêu cầu hỗ trợ thành công",
+        "data": {
+            "ma_yeu_cau": yeu_cau.ma_yeu_cau,
+            "ma_ho_so": yeu_cau.ma_ho_so,
+            "loai_yeu_cau": yeu_cau.loai_yeu_cau,
+            "noi_dung": yeu_cau.noi_dung,
+            "phan_hoi_hr": yeu_cau.phan_hoi_hr,
+            "trang_thai": yeu_cau.trang_thai,
+            "ho_ten_sinh_vien": ho_ten_sinh_vien,
+            "email_sinh_vien": email_sinh_vien,
         }
     }
 

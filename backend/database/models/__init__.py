@@ -13,6 +13,7 @@ from database.models.don_nghi_phep import DonNghiPhep
 from database.models.don_xin_nghi import DonXinNghi
 from database.models.ca_lam_viec import CaLamViec
 from database.models.phu_cap import PhuCap
+from database.models.yeu_cau_ho_tro import YeuCauHoTro
 
 __all__ = [
     "PhongBan",
@@ -30,6 +31,7 @@ __all__ = [
     "DonXinNghi",
     "CaLamViec",
     "PhuCap",
+    "YeuCauHoTro",
 ]
 
 
