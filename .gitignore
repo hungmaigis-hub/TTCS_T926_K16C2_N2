@@ -1,10 +1,23 @@
+<<<<<<< HEAD
 # môi trường ảo python
 venv/
 .venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Python bytecode & cache
 __pycache__/
 *.pyc
+*.py[cod]
+*$py.class
+*.so
 
+# Environment variables
 .env
+*.env.local
 
 # Thư mục nháp cá nhân và các trang không dùng
 frontend/unused_html/
@@ -13,9 +26,44 @@ Hiếu 2/
 
 # Test artifacts & SQLite
 *.sqlite
+*.sqlite3
 *.db
 .pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # Uploaded files
 backend/uploads/*
 !backend/uploads/.gitkeep
+=======
+# Git ignore
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+*.env
+!.env.example
+venv/
+.venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.db
+*.sqlite3
+test_intern.db
+.idea/
+.vscode/
+*.log
+>>>>>>> 9dea817 (feat: PATCH /api/v1/interns/{id}/mentor - assign mentor (Nguyen Van Hieu))

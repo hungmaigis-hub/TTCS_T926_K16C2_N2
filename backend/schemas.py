@@ -1158,6 +1158,47 @@ class AllowanceResponse(BaseModel):
     data: Optional[AllowanceDetailData] = None
 
 
+class AllowanceCreate(BaseModel):
+    """Schema tiếp nhận thông tin tạo mới bản ghi phụ cấp (POST /api/v1/allowances)"""
+    ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập sinh")
+    thang: int = Field(..., ge=1, le=12, description="Tháng nhận phụ cấp (1-12)")
+    nam: int = Field(..., ge=2000, le=2100, description="Năm nhận phụ cấp")
+    so_tien: float = Field(..., gt=0, description="Số tiền phụ cấp (phải > 0)")
+    ngay_chi_tra: Optional[Union[date, str]] = Field(default=None, description="Ngày chi trả phụ cấp (YYYY-MM-DD)")
+    trang_thai: Optional[str] = Field(default="ChuaChiTra", description="Trạng thái chi trả (ChuaChiTra, DaChiTra, ChoDuyet)")
+
+    @field_validator("thang")
+    def validate_thang(cls, value: int):
+        if value < 1 or value > 12:
+            raise ValueError("Tháng phải nằm trong khoảng từ 1 đến 12")
+        return value
+
+    @field_validator("so_tien")
+    def validate_so_tien(cls, value: float):
+        if value <= 0:
+            raise ValueError("Số tiền phụ cấp phải lớn hơn 0")
+        return value
+
+
+class AllowanceCreateData(BaseModel):
+    """Dữ liệu trả về chi tiết sau khi tạo mới bản ghi phụ cấp"""
+    ma_phu_cap: int
+    ma_ho_so: int
+    thang: int
+    nam: int
+    thang_nam: Optional[str] = None
+    so_tien: float
+    ngay_chi_tra: Optional[str] = None
+    trang_thai: str
+
+
+class AllowanceCreateResponse(BaseModel):
+    """Response chuẩn khi tạo mới phụ cấp thành công (HTTP 201)"""
+    status_code: int = 201
+    message: str = "Tạo bản ghi phụ cấp thành công"
+    data: AllowanceCreateData
+
+
 # ==============================================================
 # SCHEMAS CHO QUẢN LÝ NGƯỜI HƯỚNG DẪN (MENTOR API)
 # ==============================================================
@@ -1219,6 +1260,40 @@ class MentorResponse(BaseModel):
     status_code: int = 201
     message: str = "Tạo tài khoản người hướng dẫn thành công"
     data: MentorItemData
+
+
+class MentorWorkloadItem(BaseModel):
+    """Chi tiết khối lượng công việc của một người hướng dẫn"""
+    ma_mentor: int
+    ho_ten: str
+    email: str
+    so_dien_thoai: Optional[str] = None
+    ma_phong_ban: Optional[int] = None
+    ten_phong_ban: Optional[str] = None
+    trang_thai: str = "HoatDong"
+    so_luong_thuc_tap_sinh: int = 0
+
+
+class MentorWorkloadSummary(BaseModel):
+    """Tổng quan KPI phân bổ khối lượng hướng dẫn"""
+    tong_so_mentor: int = 0
+    tong_so_thuc_tap_sinh_duoc_huong_dan: int = 0
+    trung_binh_sinh_vien_moi_mentor: float = 0.0
+    mentor_nhieu_sinh_vien_nhat: Optional[str] = None
+    so_mentor_chua_co_sinh_vien: int = 0
+
+
+class MentorWorkloadData(BaseModel):
+    """Dữ liệu khối lượng công việc trả về cho Client"""
+    summary: MentorWorkloadSummary
+    danh_sach_workload: List[MentorWorkloadItem] = []
+
+
+class MentorWorkloadResponse(BaseModel):
+    """Response chuẩn trả về khi truy vấn khối lượng công việc mentor thành công (HTTP 200)"""
+    status_code: int = 200
+    message: str = "Lấy thống kê khối lượng công việc của người hướng dẫn thành công"
+    data: MentorWorkloadData
 
 
 # ==============================================================
@@ -1287,4 +1362,42 @@ class FacultyReportResponse(BaseModel):
     status_code: int = 200
     message: str = "Lấy báo cáo thống kê sinh viên theo trường và chuyên ngành thành công"
     data: FacultyReportData
+
+
+# ==============================================================
+# SCHEMAS CHO YÊU CẦU HỖ TRỢ (SUPPORT REQUESTS API)
+# ==============================================================
+
+class SupportRequestStatusUpdate(BaseModel):
+    """Schema tiếp nhận thông tin cập nhật trạng thái yêu cầu hỗ trợ (PATCH /api/v1/support-requests/{id})"""
+    trang_thai: str = Field(..., description="Trạng thái xử lý: DaXuLy hoặc TuChoi")
+    phan_hoi_hr: Optional[str] = Field(default=None, description="Nội dung ghi chú / phản hồi từ HR")
+
+    @field_validator("trang_thai")
+    def validate_trang_thai(cls, value: str):
+        allowed = ["DaXuLy", "TuChoi"]
+        cleaned = value.strip()
+        if cleaned not in allowed:
+            raise ValueError(f"Trạng thái không hợp lệ. Chỉ cho phép các trạng thái: {', '.join(allowed)}")
+        return cleaned
+
+
+class SupportRequestItemData(BaseModel):
+    """Dữ liệu chi tiết yêu cầu hỗ trợ sau khi cập nhật"""
+    ma_yeu_cau: int
+    ma_ho_so: int
+    loai_yeu_cau: str
+    noi_dung: str
+    phan_hoi_hr: Optional[str] = None
+    trang_thai: str
+    ho_ten_sinh_vien: Optional[str] = None
+    email_sinh_vien: Optional[str] = None
+
+
+class SupportRequestResponse(BaseModel):
+    """Response chuẩn trả về sau khi cập nhật trạng thái yêu cầu hỗ trợ thành công (HTTP 200)"""
+    status_code: int = 200
+    message: str = "Cập nhật trạng thái yêu cầu hỗ trợ thành công"
+    data: SupportRequestItemData
+
 

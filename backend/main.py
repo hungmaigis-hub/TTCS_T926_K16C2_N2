@@ -5,12 +5,12 @@ import uuid
 from datetime import date, timedelta, datetime, time
 from pathlib import Path
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query, Path as FastApiPath
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query, Path as FastApiPath, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from sqlalchemy import extract, or_, func
+from sqlalchemy import extract, or_, and_, func
 
 from schemas import (
     FacultyReportResponse,
@@ -76,8 +76,20 @@ from schemas import (
     AllowanceSummary,
     AllowanceDetailData,
     AllowanceResponse,
+    AllowanceCreate,
+    AllowanceCreateData,
+    AllowanceCreateResponse,
     MentorCreate,
     MentorResponse,
+
+    SupportRequestStatusUpdate,
+    SupportRequestItemData,
+    SupportRequestResponse,
+    MentorWorkloadItem,
+    MentorWorkloadSummary,
+    MentorWorkloadData,
+    MentorWorkloadResponse,
+ 
 )
 from security import get_password_hash, verify_password
 
@@ -99,6 +111,7 @@ from database.models import (
     DonXinNghi,
     CaLamViec,
     PhuCap,
+    YeuCauHoTro,
 )
 
 from services.export_service import export_evaluations_to_excel, export_evaluations_to_pdf
@@ -114,6 +127,7 @@ from services.email_service import (
     send_document_approval_email,
     send_profile_approval_email,
     send_contract_confirmed_email,
+    send_support_request_email,
 )
 
 # Khởi tạo ứng dụng FastAPI
@@ -613,6 +627,159 @@ def get_intern_allowances(id: int, db: Session = Depends(get_db)):
             "danh_sach_phu_cap": danh_sach_phu_cap,
             "cac_khoan_da_nhan": cac_khoan_da_nhan,
             "cac_khoan_cho_giai_ngan": cac_khoan_cho_giai_ngan,
+        }
+    }
+
+
+
+@app.post("/api/v1/allowances", response_model=AllowanceCreateResponse, status_code=status.HTTP_201_CREATED)
+def create_allowance(payload: AllowanceCreate, db: Session = Depends(get_db)):
+    """
+    Tiếp nhận thông tin và tạo mới bản ghi phụ cấp cho thực tập sinh (POST /api/v1/allowances):
+    1. Kiểm tra ma_ho_so có tồn tại trong bảng ho_so_thuc_tap hay không (HTTP 404 nếu không tìm thấy).
+    2. Validate ràng buộc: số tiền > 0, tháng trong khoảng 1-12 (đã được Pydantic kiểm tra).
+    3. Kiểm tra chống trùng lặp: Nếu thực tập sinh đã có bản ghi phụ cấp cho cùng kỳ (tháng, năm), báo lỗi (HTTP 400).
+    4. Lưu bản ghi vào bảng phu_cap trong CSDL (đồng bộ thang, nam, thang_nam, so_tien, ngay_chi_tra, trang_thai).
+    5. Trả về mã HTTP 201 Created kèm dữ liệu bản ghi.
+    """
+    # 1. Kiểm tra hồ sơ thực tập sinh có tồn tại trong hệ thống không
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == payload.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với ID: {payload.ma_ho_so}"
+        )
+
+    # 2. Kiểm tra trùng lặp kỳ phụ cấp cho cùng thực tập sinh
+    thang_nam_str = f"{payload.nam:04d}-{payload.thang:02d}"
+    existing_allowance = (
+        db.query(PhuCap)
+        .filter(
+            PhuCap.ma_ho_so == payload.ma_ho_so,
+            or_(
+                and_(PhuCap.thang == payload.thang, PhuCap.nam == payload.nam),
+                PhuCap.thang_nam == thang_nam_str
+            )
+        )
+        .first()
+    )
+    if existing_allowance:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Khoản phụ cấp tháng {payload.thang}/{payload.nam} của thực tập sinh ID {payload.ma_ho_so} đã tồn tại trong hệ thống"
+        )
+
+    # 3. Xử lý ngày chi trả nếu có
+    ngay_chi_tra_val = None
+    if payload.ngay_chi_tra:
+        if isinstance(payload.ngay_chi_tra, str):
+            try:
+                ngay_chi_tra_val = datetime.strptime(payload.ngay_chi_tra.strip(), "%Y-%m-%d").date()
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Định dạng ngay_chi_tra không hợp lệ, yêu cầu định dạng YYYY-MM-DD"
+                )
+        else:
+            ngay_chi_tra_val = payload.ngay_chi_tra
+
+    # 4. Khởi tạo đối tượng PhuCap và lưu vào CSDL
+    new_allowance = PhuCap(
+        ma_ho_so=payload.ma_ho_so,
+        thang=payload.thang,
+        nam=payload.nam,
+        thang_nam=thang_nam_str,
+        so_tien=payload.so_tien,
+        ngay_chi_tra=ngay_chi_tra_val,
+        trang_thai=payload.trang_thai or "ChuaChiTra",
+        trang_thai_chi_tra=payload.trang_thai or "ChuaChiTra",
+    )
+
+    db.add(new_allowance)
+    db.commit()
+    db.refresh(new_allowance)
+
+    return {
+        "status_code": 201,
+        "message": "Tạo bản ghi phụ cấp thành công",
+        "data": {
+            "ma_phu_cap": new_allowance.ma_phu_cap,
+            "ma_ho_so": new_allowance.ma_ho_so,
+            "thang": new_allowance.thang,
+            "nam": new_allowance.nam,
+            "thang_nam": new_allowance.thang_nam,
+            "so_tien": float(new_allowance.so_tien),
+            "ngay_chi_tra": new_allowance.ngay_chi_tra.isoformat() if new_allowance.ngay_chi_tra else None,
+            "trang_thai": new_allowance.trang_thai,
+
+@app.patch("/api/v1/support-requests/{id}", response_model=SupportRequestResponse, status_code=200)
+def update_support_request_status(
+    id: int,
+    payload: SupportRequestStatusUpdate,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: Session = Depends(get_db)
+):
+    """
+    Cập nhật trạng thái yêu cầu hỗ trợ sinh viên (PATCH /api/v1/support-requests/{id}):
+    1. Kiểm tra sự tồn tại của yêu cầu hỗ trợ theo id trong CSDL (HTTP 404 Not Found nếu không tìm thấy).
+    2. Cập nhật trạng thái ('DaXuLy' hoặc 'TuChoi') và lưu nội dung ghi chú phản hồi vào cột phan_hoi_hr.
+    3. Đăng ký tác vụ nền qua fastapi.BackgroundTasks để gửi email thông báo kết quả xử lý cho sinh viên.
+    4. Trả về mã HTTP 200 OK kèm thông tin yêu cầu hỗ trợ đã được cập nhật.
+    """
+    # 1. Truy vấn yêu cầu hỗ trợ trong CSDL
+    yeu_cau = db.query(YeuCauHoTro).filter(YeuCauHoTro.ma_yeu_cau == id).first()
+    if not yeu_cau:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy yêu cầu hỗ trợ với ID: {id}"
+        )
+
+    # 2. Kiểm tra tính hợp lệ của trạng thái cập nhật
+    trang_thai_clean = payload.trang_thai.strip()
+    if trang_thai_clean not in ["DaXuLy", "TuChoi"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Trạng thái không hợp lệ. Chỉ cho phép các trạng thái: 'DaXuLy' hoặc 'TuChoi'"
+        )
+
+    # 3. Cập nhật trạng thái và ghi chú phản hồi của HR
+    yeu_cau.trang_thai = trang_thai_clean
+    if payload.phan_hoi_hr is not None:
+        yeu_cau.phan_hoi_hr = payload.phan_hoi_hr.strip() if payload.phan_hoi_hr else None
+
+    db.commit()
+    db.refresh(yeu_cau)
+
+    # 4. Lấy thông tin sinh viên liên kết để gửi email thông báo qua BackgroundTasks
+    ho_ten_sinh_vien = None
+    email_sinh_vien = None
+    if yeu_cau.ho_so and yeu_cau.ho_so.thuc_tap_sinh:
+        ho_ten_sinh_vien = yeu_cau.ho_so.thuc_tap_sinh.ho_ten
+        email_sinh_vien = yeu_cau.ho_so.thuc_tap_sinh.email
+
+    if email_sinh_vien:
+        background_tasks.add_task(
+            send_support_request_email,
+            to_email=email_sinh_vien,
+            intern_name=ho_ten_sinh_vien or "Sinh viên",
+            request_type=yeu_cau.loai_yeu_cau,
+            status=yeu_cau.trang_thai,
+            hr_feedback=yeu_cau.phan_hoi_hr,
+        )
+
+    return {
+        "status_code": 200,
+        "message": "Cập nhật trạng thái yêu cầu hỗ trợ thành công",
+        "data": {
+            "ma_yeu_cau": yeu_cau.ma_yeu_cau,
+            "ma_ho_so": yeu_cau.ma_ho_so,
+            "loai_yeu_cau": yeu_cau.loai_yeu_cau,
+            "noi_dung": yeu_cau.noi_dung,
+            "phan_hoi_hr": yeu_cau.phan_hoi_hr,
+            "trang_thai": yeu_cau.trang_thai,
+            "ho_ten_sinh_vien": ho_ten_sinh_vien,
+            "email_sinh_vien": email_sinh_vien,
+
         }
     }
 
@@ -2828,6 +2995,125 @@ def create_mentor(
             "ten_phong_ban": department.ten_phong_ban if department else None,
             "vai_tro": new_mentor.vai_tro,
             "trang_thai": new_mentor.trang_thai
+        }
+    }
+
+
+@app.get("/api/v1/mentors/workload", response_model=MentorWorkloadResponse)
+def get_mentors_workload(
+    ma_phong_ban: Optional[int] = Query(None, ge=1, description="Lọc theo mã phòng ban"),
+    trang_thai: Optional[str] = Query(None, description="Lọc theo trạng thái hoạt động: HoatDong, Khoa"),
+    tu_khoa: Optional[str] = Query(None, description="Tìm kiếm theo họ tên hoặc email người hướng dẫn"),
+    db: Session = Depends(get_db)
+):
+    """
+    Truy vấn kết hợp bảng nguoi_dung và ho_so_thuc_tap bằng outerjoin và group_by
+    để đếm chính xác số lượng thực tập sinh mà từng mentor đang trực tiếp phụ trách:
+    - Sử dụng LEFT OUTER JOIN để đảm bảo các mentor chưa có sinh viên vẫn hiển thị với số lượng = 0.
+    - Hỗ trợ các bộ lọc linh hoạt: ma_phong_ban, trang_thai, tu_khoa.
+    - Cung cấp khối tổng quan KPI summary (tổng mentor, tổng TTS, trung bình, người phụ trách nhiều nhất).
+    """
+    # 1. Kiểm tra phòng ban nếu có truyền
+    if ma_phong_ban is not None:
+        pb = db.query(PhongBan).filter(PhongBan.ma_phong_ban == ma_phong_ban).first()
+        if not pb:
+            raise HTTPException(status_code=404, detail="Phòng ban không tồn tại trong hệ thống")
+
+    # 2. Xây dựng truy vấn outerjoin giữa nguoi_dung (vai_tro='Mentor') và ho_so_thuc_tap, phong_ban
+    query = (
+        db.query(
+            NguoiDung.ma_nguoi_dung.label("ma_mentor"),
+            NguoiDung.ho_ten,
+            NguoiDung.email,
+            NguoiDung.so_dien_thoai,
+            NguoiDung.ma_phong_ban,
+            PhongBan.ten_phong_ban,
+            NguoiDung.trang_thai,
+            func.count(HoSoThucTap.ma_ho_so).label("so_luong_thuc_tap_sinh")
+        )
+        .outerjoin(HoSoThucTap, HoSoThucTap.ma_mentor == NguoiDung.ma_nguoi_dung)
+        .outerjoin(PhongBan, PhongBan.ma_phong_ban == NguoiDung.ma_phong_ban)
+        .filter(NguoiDung.vai_tro == "Mentor")
+    )
+
+    # 3. Áp dụng các bộ lọc
+    if ma_phong_ban is not None:
+        query = query.filter(NguoiDung.ma_phong_ban == ma_phong_ban)
+
+    if trang_thai and trang_thai.strip():
+        val_status = trang_thai.strip()
+        if val_status not in ["HoatDong", "Khoa"]:
+            raise HTTPException(status_code=400, detail="Trạng thái không hợp lệ. Chỉ chấp nhận: HoatDong, Khoa")
+        query = query.filter(NguoiDung.trang_thai == val_status)
+
+    if tu_khoa and tu_khoa.strip():
+        kw = f"%{tu_khoa.strip()}%"
+        query = query.filter(or_(NguoiDung.ho_ten.ilike(kw), NguoiDung.email.ilike(kw)))
+
+    # 4. Gom nhóm theo các trường định danh của mentor và sắp xếp
+    results = (
+        query.group_by(
+            NguoiDung.ma_nguoi_dung,
+            NguoiDung.ho_ten,
+            NguoiDung.email,
+            NguoiDung.so_dien_thoai,
+            NguoiDung.ma_phong_ban,
+            PhongBan.ten_phong_ban,
+            NguoiDung.trang_thai
+        )
+        .order_by(
+            func.count(HoSoThucTap.ma_ho_so).desc(),
+            NguoiDung.ho_ten.asc()
+        )
+        .all()
+    )
+
+    # 5. Tổng hợp dữ liệu chi tiết và tính toán KPI summary
+    workload_list = []
+    tong_so_tts = 0
+    max_tts = -1
+    mentor_max_name = None
+    so_mentor_0_tts = 0
+
+    for r in results:
+        cnt = int(r.so_luong_thuc_tap_sinh or 0)
+        tong_so_tts += cnt
+        if cnt == 0:
+            so_mentor_0_tts += 1
+        if cnt > max_tts:
+            max_tts = cnt
+            mentor_max_name = r.ho_ten
+
+        workload_list.append(
+            MentorWorkloadItem(
+                ma_mentor=r.ma_mentor,
+                ho_ten=r.ho_ten,
+                email=r.email,
+                so_dien_thoai=r.so_dien_thoai,
+                ma_phong_ban=r.ma_phong_ban,
+                ten_phong_ban=r.ten_phong_ban,
+                trang_thai=r.trang_thai,
+                so_luong_thuc_tap_sinh=cnt
+            )
+        )
+
+    tong_mentors = len(workload_list)
+    avg_tts = round(tong_so_tts / tong_mentors, 2) if tong_mentors > 0 else 0.0
+
+    summary = MentorWorkloadSummary(
+        tong_so_mentor=tong_mentors,
+        tong_so_thuc_tap_sinh_duoc_huong_dan=tong_so_tts,
+        trung_binh_sinh_vien_moi_mentor=avg_tts,
+        mentor_nhieu_sinh_vien_nhat=mentor_max_name if tong_so_tts > 0 else None,
+        so_mentor_chua_co_sinh_vien=so_mentor_0_tts
+    )
+
+    return {
+        "status_code": 200,
+        "message": "Lấy thống kê khối lượng công việc của người hướng dẫn thành công",
+        "data": {
+            "summary": summary,
+            "danh_sach_workload": workload_list
         }
     }
 
