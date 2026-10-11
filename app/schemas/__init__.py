@@ -6,6 +6,7 @@ from app.schemas.intern import (
     HoSoThucTapCreate,
     HoSoThucTapResponse
 )
+from app.schemas.report import CompletionRateResponse
 
 __all__ = [
     "MentorBase",
@@ -17,4 +18,5 @@ __all__ = [
     "HoSoThucTapBase",
     "HoSoThucTapCreate",
     "HoSoThucTapResponse",
+    "CompletionRateResponse",
 ]
