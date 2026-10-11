@@ -6,8 +6,40 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fastapi.testclient import TestClient
 from main import app
+from database.session import SessionLocal
+from database.models import NguoiDung, HoSoThucTap
 
 client = TestClient(app)
+
+TEST_EMAILS = [
+    "cuong.le@example.com",
+    "dung.pham@example.com",
+    "dam.vu@example.com"
+]
+
+@pytest.fixture(autouse=True)
+def cleanup_test_interns():
+    def _cleanup():
+        try:
+            from tests.conftest import MYSQL_AVAILABLE, TestSessionLocal
+            Session = SessionLocal if MYSQL_AVAILABLE else TestSessionLocal
+        except Exception:
+            Session = SessionLocal
+        db = Session()
+        try:
+            users = db.query(NguoiDung).filter(NguoiDung.email.in_(TEST_EMAILS)).all()
+            for u in users:
+                db.query(HoSoThucTap).filter(HoSoThucTap.ma_nguoi_dung == u.ma_nguoi_dung).delete()
+                db.delete(u)
+            db.commit()
+        except Exception:
+            db.rollback()
+        finally:
+            db.close()
+
+    _cleanup()
+    yield
+    _cleanup()
 
 # ==============================================================================
 # BỘ KIỂM THỬ CHO API: POST /api/v1/interns (Tạo mới hồ sơ thực tập sinh)

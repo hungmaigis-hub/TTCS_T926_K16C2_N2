@@ -9,6 +9,29 @@ from main import app
 client = TestClient(app)
 
 # ==============================================================
+# UNIT TEST CHO API GET /api/v1/interns (Danh sách)
+# ==============================================================
+
+def test_get_interns_list_success():
+    """Kiểm tra lấy thành công danh sách thực tập sinh"""
+    response = client.get("/api/v1/interns")
+    assert response.status_code == 200
+    res_data = response.json()
+    assert res_data["status_code"] == 200
+    assert "data" in res_data
+    assert isinstance(res_data["data"], list)
+    assert res_data["total"] >= 1
+
+def test_get_interns_list_filter_status():
+    """Kiểm tra lọc danh sách theo trạng thái xét duyệt"""
+    response = client.get("/api/v1/interns?trang_thai_xet_duyet=ChoDuyet")
+    assert response.status_code == 200
+    res_data = response.json()
+    for item in res_data["data"]:
+        assert item["trang_thai_xet_duyet"] == "ChoDuyet"
+
+
+# ==============================================================
 # UNIT TEST CHO API GET /api/v1/interns/{id}
 # ==============================================================
 

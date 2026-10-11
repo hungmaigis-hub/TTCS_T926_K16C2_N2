@@ -23,6 +23,7 @@ erDiagram
     HO_SO_THUC_TAP ||--o{ DANH_GIA : "duoc_danh_gia"
     HO_SO_THUC_TAP ||--o{ CHAM_CONG : "ghi_nhan"
     HO_SO_THUC_TAP ||--o{ DON_NGHI_PHEP : "xin_nghi"
+    HO_SO_THUC_TAP ||--o{ DON_XIN_NGHI : "xin_nghi_theo_dot"
     HO_SO_THUC_TAP ||--o{ PHU_CAP : "nhan_hang_thang"
     HO_SO_THUC_TAP ||--o{ YEU_CAU_HO_TRO : "gui"
 
@@ -31,6 +32,7 @@ erDiagram
         int ma_phong_ban FK
         string ho_ten
         string email
+        string mat_khau_hash
         string so_dien_thoai
         string vai_tro "Admin, HR, Mentor, ThucTapSinh"
         string trang_thai "HoatDong, Khoa"
@@ -122,9 +124,24 @@ erDiagram
         int ma_cham_cong PK
         int ma_ho_so FK
         date ngay_cham_cong
+        datetime thoi_gian_checkin
+        datetime thoi_gian_checkout
         time gio_check_in
         time gio_check_out
+        string trang_thai "DungGio, DiMuon, VeSom, HoanThanh"
         string phuong_thuc "QR, The, Web"
+        string ghi_chu
+    }
+
+    CA_LAM_VIEC {
+        int ma_ca PK
+        string ten_ca
+        time gio_bat_dau
+        time gio_ket_thuc
+        string cac_ngay_trong_tuan
+        string ghi_chu
+        string trang_thai "HoatDong, TamNgung"
+        datetime ngay_tao
     }
 
     DON_NGHI_PHEP {
@@ -135,13 +152,28 @@ erDiagram
         string trang_thai "ChoDuyet, DaDuyet, TuChoi"
     }
 
+    DON_XIN_NGHI {
+        int ma_don PK
+        int ma_ho_so FK
+        date tu_ngay
+        date den_ngay
+        string ly_do
+        string trang_thai "Chờ duyệt, Đã duyệt, Từ chối"
+        datetime ngay_tao
+    }
+
     PHU_CAP {
         int ma_phu_cap PK
         int ma_ho_so FK
-        string thang_nam
-        decimal so_tien
-        string trang_thai_chi_tra "DaChiTra, ChuaChiTra"
+        int thang "1-12"
+        int nam
+        string thang_nam "YYYY-MM (tuong thich)"
+        decimal so_tien "> 0"
+        date ngay_chi_tra
+        string trang_thai "ChuaChiTra, DaChiTra, ChoDuyet"
+        string trang_thai_chi_tra "DaChiTra, ChuaChiTra (tuong thich)"
     }
+
 
     YEU_CAU_HO_TRO {
         int ma_yeu_cau PK
@@ -149,7 +181,7 @@ erDiagram
         string loai_yeu_cau "XinChungNhan, GiayXacNhan, Khac"
         string noi_dung
         string phan_hoi_hr
-        string trang_thai "ChoXuLy, DaXuLy"
+        string trang_thai "ChoXuLy, DaXuLy, TuChoi"
     }
 
     THONG_BAO {
@@ -184,6 +216,7 @@ erDiagram
 | `ma_phong_ban` | `INT` | **FK** | `NULL` được (cho TTS chưa gán phòng ban) | Liên kết tới `PHONG_BAN(ma_phong_ban)` |
 | `ho_ten` | `VARCHAR(100)` | | `NOT NULL` | Họ và tên |
 | `email` | `VARCHAR(100)` | | `NOT NULL, UNIQUE` | Địa chỉ email đăng nhập / liên hệ |
+| `mat_khau_hash` | `VARCHAR(255)` | | `NULL` | Mật khẩu tài khoản (đã băm bcrypt) |
 | `so_dien_thoai` | `VARCHAR(20)` | | `NULL, UNIQUE` | Số điện thoại liên lạc |
 | `vai_tro` | `VARCHAR(50)` | | `Admin`, `HR`, `Mentor`, `ThucTapSinh` | Quyền hạn tài khoản trong hệ thống |
 | `trang_thai` | `VARCHAR(50)` | | `HoatDong`, `Khoa` | Trạng thái kích hoạt tài khoản |
@@ -318,16 +351,36 @@ erDiagram
 ---
 
 ### 2.11. CHAM_CONG (Nhật ký chấm công hàng ngày)
-*Lưu vết giờ đến, giờ về của thực tập sinh.*
+*Lưu vết giờ đến, giờ về và trạng thái kỷ luật ca làm việc của thực tập sinh.*
 
 | Tên cột | Kiểu dữ liệu | Khóa | Ràng buộc / Giá trị cho phép | Mô tả |
 | :--- | :--- | :--- | :--- | :--- |
 | `ma_cham_cong` | `INT` | **PK** | `AUTO_INCREMENT` | Mã bản ghi chấm công |
 | `ma_ho_so` | `INT` | **FK** | `NOT NULL` | Chấm công cho hồ sơ (`HO_SO_THUC_TAP`) |
 | `ngay_cham_cong` | `DATE` | | `NOT NULL` | Ngày làm việc |
-| `gio_check_in` | `TIME` | | `NULL` | Giờ vào làm |
-| `gio_check_out` | `TIME` | | `NULL` | Giờ tan làm |
-| `phuong_thuc` | `VARCHAR(50)` | | `QR`, `The`, `Web` | Phương thức điểm danh |
+| `thoi_gian_checkin`| `DATETIME` | | `NULL` | Thời điểm quét/ghi nhận vào ca (ISO 8601) |
+| `thoi_gian_checkout`| `DATETIME` | | `NULL` | Thời điểm quét/ghi nhận kết thúc ca (ISO 8601) |
+| `gio_check_in` | `TIME` | | `NULL` | Giờ vào làm (Tương thích ngược) |
+| `gio_check_out` | `TIME` | | `NULL` | Giờ tan làm (Tương thích ngược) |
+| `trang_thai` | `VARCHAR(50)` | | `DungGio`, `DiMuon`, `VeSom`, `NghiCoPhep`, `NghiKhongPhep` | Trạng thái ca làm việc (Mặc định: `DungGio`) |
+| `phuong_thuc` | `VARCHAR(50)` | | `QR`, `The`, `Web` | Phương thức điểm danh (Mặc định: `Web`) |
+| `ghi_chu` | `VARCHAR(255)` | | `NULL` | Lý do, địa điểm công tác hoặc giải trình bổ sung |
+
+---
+
+### 2.11b. CA_LAM_VIEC (Ca làm việc / Lịch làm việc)
+*Quản lý danh mục các ca làm việc (giờ bắt đầu, giờ kết thúc, các ngày áp dụng trong tuần).*
+
+| Tên cột | Kiểu dữ liệu | Khóa | Ràng buộc / Giá trị cho phép | Mô tả |
+| :--- | :--- | :--- | :--- | :--- |
+| `ma_ca` | `INT` | **PK** | `AUTO_INCREMENT` | Mã định danh ca làm việc |
+| `ten_ca` | `VARCHAR(100)` | | `NOT NULL` | Tên ca làm việc (VD: Ca Sáng, Ca Chiều, Ca Fulltime) |
+| `gio_bat_dau` | `TIME` | | `NOT NULL` | Thời gian bắt đầu ca |
+| `gio_ket_thuc` | `TIME` | | `NOT NULL` (phải > `gio_bat_dau`) | Thời gian kết thúc ca |
+| `cac_ngay_trong_tuan` | `VARCHAR(255)` | | `NOT NULL` | Các ngày áp dụng trong tuần (VD: "Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6") |
+| `ghi_chu` | `VARCHAR(255)` | | `NULL` | Ghi chú thêm |
+| `trang_thai` | `VARCHAR(50)` | | `HoatDong`, `TamNgung` | Mặc định: `HoatDong` |
+| `ngay_tao` | `DATETIME` | | `DEFAULT CURRENT_TIMESTAMP` | Thời điểm tạo ca |
 
 ---
 
@@ -344,6 +397,21 @@ erDiagram
 
 ---
 
+### 2.12b. DON_XIN_NGHI (Đơn xin nghỉ phép theo khoảng thời gian - Leave Requests API)
+*Quản lý yêu cầu xin vắng mặt của sinh viên theo khoảng thời gian từ ngày đến ngày.*
+
+| Tên cột | Kiểu dữ liệu | Khóa | Ràng buộc / Giá trị cho phép | Mô tả |
+| :--- | :--- | :--- | :--- | :--- |
+| `ma_don` | `INT` | **PK** | `AUTO_INCREMENT` | Mã định danh đơn xin nghỉ |
+| `ma_ho_so` | `INT` | **FK** | `NOT NULL` | Người làm đơn (`HO_SO_THUC_TAP`) |
+| `tu_ngay` | `DATE` | | `NOT NULL` (>= ngày hiện tại) | Ngày bắt đầu nghỉ phép |
+| `den_ngay` | `DATE` | | `NOT NULL` (>= `tu_ngay`) | Ngày kết thúc nghỉ phép |
+| `ly_do` | `VARCHAR(255)` | | `NOT NULL` | Lý do xin nghỉ |
+| `trang_thai` | `VARCHAR(50)` | | `Chờ duyệt`, `Đã duyệt`, `Từ chối` | Mặc định: `Chờ duyệt` |
+| `ngay_tao` | `DATETIME` | | `DEFAULT CURRENT_TIMESTAMP` | Thời điểm nộp đơn |
+
+---
+
 ### 2.13. PHU_CAP (Phụ cấp thực tập hàng tháng)
 *Ghi nhận chính sách hỗ trợ tài chính cho sinh viên.*
 
@@ -351,9 +419,13 @@ erDiagram
 | :--- | :--- | :--- | :--- | :--- |
 | `ma_phu_cap` | `INT` | **PK** | `AUTO_INCREMENT` | Mã bản ghi phụ cấp |
 | `ma_ho_so` | `INT` | **FK** | `NOT NULL` | Hồ sơ nhận phụ cấp (`HO_SO_THUC_TAP`) |
-| `thang_nam` | `VARCHAR(7)` | | Định dạng `YYYY-MM` (VD: `2026-09`) | Kỳ chi trả |
-| `so_tien` | `DECIMAL(12,2)` | | `>= 0` | Số tiền phụ cấp (VND) |
-| `trang_thai_chi_tra`| `VARCHAR(50)`| | `DaChiTra`, `ChuaChiTra` | Tình trạng kế toán thanh toán |
+| `thang` | `INT` | | `1 <= thang <= 12` | Tháng nhận phụ cấp |
+| `nam` | `INT` | | `nam >= 2000` | Năm nhận phụ cấp |
+| `thang_nam` | `VARCHAR(7)` | | Định dạng `YYYY-MM` (VD: `2026-09`) | Kỳ chi trả (tương thích) |
+| `so_tien` | `DECIMAL(12,2)` | | `> 0` | Số tiền phụ cấp (VND) |
+| `ngay_chi_tra` | `DATE` | | Có thể NULL | Ngày thực tế giải ngân / chi trả |
+| `trang_thai` | `VARCHAR(50)` | | `ChuaChiTra`, `DaChiTra`, `ChoDuyet` | Trạng thái giải ngân phụ cấp |
+| `trang_thai_chi_tra`| `VARCHAR(50)`| | `DaChiTra`, `ChuaChiTra` | Tình trạng kế toán thanh toán (tương thích) |
 
 ---
 
@@ -367,7 +439,7 @@ erDiagram
 | `loai_yeu_cau` | `VARCHAR(50)` | | `XinChungNhan`, `GiayXacNhan`, `Khac` | Phân loại đề xuất |
 | `noi_dung` | `TEXT` | | `NOT NULL` | Chi tiết nội dung cần hỗ trợ |
 | `phan_hoi_hr` | `TEXT` | | `NULL` | Trả lời / hướng dẫn từ HR |
-| `trang_thai` | `VARCHAR(50)` | | `ChoXuLy`, `DaXuLy` | Tiến độ xử lý |
+| `trang_thai` | `VARCHAR(50)` | | `ChoXuLy`, `DaXuLy`, `TuChoi` | Tiến độ xử lý (Mặc định: `ChoXuLy`) |
 
 ---
 
@@ -407,7 +479,7 @@ erDiagram
 | `PHONG_BAN` | 1 - N | `CHUONG_TRINH_THUC_TAP` | `CHUONG_TRINH_THUC_TAP.ma_phong_ban` | Một phòng ban quản lý nhiều đợt thực tập |
 | `PHONG_BAN` | 1 - N | `NGUOI_DUNG` | `NGUOI_DUNG.ma_phong_ban` | Người dùng (Mentor, HR) thuộc phòng ban |
 | `NGUOI_DUNG` | 1 - 1 | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_nguoi_dung` | Mỗi tài khoản TTS có 1 hồ sơ thực tập tương ứng |
-| `NGUOI_DUNG` (Mentor) | 1 - N | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_mentor` | Một Mentor hướng dẫn nhiều hồ sơ thực tập |
+| `NGUOI_DUNG` (Mentor) | 1 - N | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_mentor` | Một Mentor hướng dẫn nhiều hồ sơ thực tập (Truy vấn Workload qua LEFT OUTER JOIN & GROUP BY) |
 | `NGUOI_DUNG` | 1 - N | `THONG_BAO` | `THONG_BAO.ma_nguoi_dung` | Một người dùng nhận nhiều thông báo |
 | `NGUOI_DUNG` | 1 - N | `NHAT_KY_HE_THONG` | `NHAT_KY_HE_THONG.ma_nguoi_dung` | Một người dùng tạo ra nhiều nhật ký hành động |
 | `CHUONG_TRINH_THUC_TAP` | 1 - N | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_chuong_trinh` | Một chương trình có nhiều hồ sơ tham gia |
@@ -418,6 +490,7 @@ erDiagram
 | `HO_SO_THUC_TAP` | 1 - N | `DANH_GIA` | `DANH_GIA.ma_ho_so` | Một hồ sơ có các đợt đánh giá giữa/cuối kỳ |
 | `HO_SO_THUC_TAP` | 1 - N | `CHAM_CONG` | `CHAM_CONG.ma_ho_so` | Một hồ sơ có lịch sử chấm công từng ngày |
 | `HO_SO_THUC_TAP` | 1 - N | `DON_NGHI_PHEP` | `DON_NGHI_PHEP.ma_ho_so` | Một hồ sơ nộp các đơn xin nghỉ phép |
+| `HO_SO_THUC_TAP` | 1 - N | `DON_XIN_NGHI` | `DON_XIN_NGHI.ma_ho_so` | Một hồ sơ nộp các đơn xin nghỉ phép theo đợt |
 | `HO_SO_THUC_TAP` | 1 - N | `PHU_CAP` | `PHU_CAP.ma_ho_so` | Một hồ sơ nhận phụ cấp từng tháng |
 | `HO_SO_THUC_TAP` | 1 - N | `YEU_CAU_HO_TRO` | `YEU_CAU_HO_TRO.ma_ho_so` | Một hồ sơ gửi các yêu cầu xin xác nhận |
 
@@ -427,7 +500,7 @@ erDiagram
 
 | Thực thể (Entity) | Vai trò hệ thống & Ánh xạ tới User Stories | User Stories liên quan |
 | :--- | :--- | :--- |
-| **`NGUOI_DUNG`** | Quản lý thông tin tài khoản chung và phân quyền tài khoản (Admin, HR, Mentor, Thực tập sinh). | US 39, US 40 |
+| **`NGUOI_DUNG`** | Quản lý thông tin tài khoản chung, phân quyền tài khoản (Admin, HR, Mentor, Thực tập sinh) và thống kê phân bổ tải hướng dẫn (Mentor Workload). | US 39, US 40, US 43 |
 | **`TRUONG_DAI_HOC`** | Quản lý danh mục trường đại học để lọc, thống kê nguồn ứng viên và gửi báo cáo liên kết. | US 3, US 20, US 32, US 34 |
 | **`PHONG_BAN`** | Quản lý cơ cấu phòng ban công ty để phân bổ thực tập sinh và mentor. | US 11, US 29, US 31 |
 | **`CHUONG_TRINH_THUC_TAP`** | Quản lý đợt/chương trình thực tập, thời gian bắt đầu & kết thúc. | US 11, US 13 |
@@ -438,7 +511,9 @@ erDiagram
 | **`BAO_CAO_TUAN`** | Thực tập sinh nộp báo cáo tuần và Mentor xem/phản hồi. | US 17, US 18 |
 | **`DANH_GIA`** | Ghi nhận điểm kỹ năng, thái độ, nhận xét cuối kỳ và tỷ lệ đề xuất tuyển chính thức. | US 19, US 20, US 33 |
 | **`CHAM_CONG`** | Ghi nhận Check-in/Check-out qua Web/QR/Thẻ. | US 21, US 22, US 38 |
-| **`DON_NGHI_PHEP`** | Tạo và quản lý yêu cầu xin nghỉ phép. | US 22, US 24 |
+| **`CA_LAM_VIEC`** | Cấu hình ca làm việc, thời gian bắt đầu, kết thúc và các ngày áp dụng. | US 21, US 22 |
+| **`DON_NGHI_PHEP`** | Tạo và quản lý yêu cầu xin nghỉ phép đơn lẻ. | US 22, US 24 |
+| **`DON_XIN_NGHI`** | Tạo và quản lý yêu cầu xin nghỉ phép theo khoảng thời gian (từ ngày đến ngày). | US 22, US 24 |
 | **`PHU_CAP`** | Quản lý mức phụ cấp và lịch sử nhận tiền hàng tháng. | US 25, US 26 |
 | **`YEU_CAU_HO_TRO`** | Xử lý các xin xác nhận/chứng nhận thực tập. | US 27, US 28 |
 | **`THONG_BAO`** | Nhật ký gửi email/notification tự động đến người dùng. | US 8, US 35, US 36 |
@@ -446,20 +521,8 @@ erDiagram
 
 ---
 
-## 5. ĐỊNH HƯỚNG TÁI CẤU TRÚC (REFACTORING ROADMAP) CHO BƯỚC 2
+## 5. TIẾN ĐỘ TÁI CẤU TRÚC (REFACTORING ROADMAP) - ĐÃ HOÀN THÀNH
 
 > [!NOTE]
-> Phần ghi chú kỹ thuật này chuẩn bị cho Bước 2 (Sửa lại API GET và PUT):
-
-1. **Hiện trạng cũ (Bảng `interns`)**:
-   - Chỉ có 1 bảng đơn lẻ: `id`, `full_name`, `email`, `phone`, `university`, `major`, `status`, `start_date`, `end_date`, `created_at`.
-   - Các API `/api/interns/{id}` (GET, PUT) hiện đang thao tác trực tiếp trên bảng `interns` này.
-
-2. **Mô hình mới tương ứng**:
-   - Thông tin cá nhân (`ho_ten`, `email`, `so_dien_thoai`) thuộc về bảng **`NGUOI_DUNG`**.
-   - Trường học thuộc về bảng **`TRUONG_DAI_HOC`** (hoặc `ma_truong` trong `HO_SO_THUC_TAP`).
-   - Thời gian thực tập (`ngay_bat_dau`, `ngay_ket_thuc`) thuộc về **`CHUONG_TRINH_THUC_TAP`** hoặc kế thừa qua đợt.
-   - Trạng thái thực tập (`DangThucTap`, `HoanThanh`, `ThoiHoc`) và chuyên ngành (`chuyen_nganh`) thuộc về **`HO_SO_THUC_TAP`**.
-   - Khi thực hiện bước 2, ta sẽ xác định rõ chiến lược:
-     - **Chiến lược A (Khuyến nghị chuyển đổi toàn diện)**: Cập nhật SQLAlchemy Models theo đúng các bảng mới (`User`, `InternshipProfile`, `University`,...), đồng thời sửa API `GET /api/interns/{id}` và `PUT /api/interns/{id}` để query join `HO_SO_THUC_TAP` với `NGUOI_DUNG` và các quan hệ liên quan.
-     - **Chiến lược B (Adapter/View layer)**: Tạo DTO/Schema mapping giúp API bên ngoài giữ nguyên hợp đồng (contract) trong khi tầng database đã chuẩn hóa sang mô hình mới.
+> **Trạng thái:** ĐÃ HOÀN THÀNH (COMPLETED) trong Sprint 2.  
+> Toàn bộ hệ thống Backend, CSDL và các API (`GET`, `PUT`, `POST`) đã chuyển đổi thành công sang mô hình quan hệ 16 thực thể chuẩn hóa (`HoSoThucTap`, `NguoiDung`, `TruongDaiHoc`,...), thay thế hoàn toàn bảng đơn lẻ `interns` ban đầu. Mọi chức năng hiện tại đều hoạt động đồng bộ với 100% test cases tự động (269/269 unit tests PASS).

@@ -53,6 +53,7 @@
       >
         <div class="relative shrink-0">
           <div
+            id="adminAvatarInitials"
             class="w-11 h-11 rounded-full bg-gradient-to-tr from-ictu-600 to-sky-400 flex items-center justify-center text-white font-bold text-base shadow-sm ring-2 ring-white"
           >
             AD
@@ -63,7 +64,7 @@
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-1.5">
-            <h4 class="text-sm font-bold text-slate-900 truncate">
+            <h4 id="adminSidebarName" class="text-sm font-bold text-slate-900 truncate">
               Ban Đào Tạo &amp; QLTT
             </h4>
             <span
@@ -71,8 +72,9 @@
               >verified</span
             >
           </div>
-          <p class="text-xs text-slate-500 truncate">admin@ictu.edu.vn</p>
+          <p id="adminSidebarEmail" class="text-xs text-slate-500 truncate">admin@ictu.edu.vn</p>
           <span
+            id="adminSidebarRole"
             class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-ictu-100 text-ictu-700"
             >Quản trị viên</span
           >
@@ -132,7 +134,7 @@
             class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
             >calendar_month</span
           >
-          <span>Lịch thực tập</span>
+          <span>Kế hoạch &amp; Đợt thực tập</span>
         </a>
 
         <a
@@ -152,58 +154,27 @@
           >
         </a>
 
-        <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
-          <p
-            class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+        <a
+          href="cham_cong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >fact_check</span
           >
-            Cổng Thực Tập Sinh
-          </p>
-          <a
-            href="../sinhvien/dashboard.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          <span>Điểm danh &amp; Chuyên cần</span>
+        </a>
+
+        <a
+          href="../public/thamquan.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >360</span
           >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >space_dashboard</span
-            >
-            <span>Tổng quan sinh viên</span>
-          </a>
-          <a
-            href="../sinhvien/tai_tai_lieu.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >upload_file</span
-            >
-            <span>1. Nộp tài liệu &amp; CV</span>
-          </a>
-          <a
-            href="../sinhvien/hop_dong.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >history_edu</span
-            >
-            <span>2. Ký kết hợp đồng</span>
-          </a>
-          <a
-            href="../sinhvien/nhiem_vu.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >checklist</span
-            >
-            <span>3. Nhiệm vụ &amp; Tiến độ</span>
-          </a>
-          <a
-            href="../public/thamquan.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >360</span
-            >
-            <span>Tham quan thực tế ảo</span>
-          </a>
-        </div>
+          <span>Tham quan thực tế ảo</span>
+        </a>
       </div>
       <div class="p-4 border-t border-slate-100 bg-slate-50/50">
         <div class="flex items-center justify-between text-xs text-slate-500">
@@ -221,6 +192,9 @@
         </div>
       </div>
     </aside>
+    <script>
+      if (typeof dongBoThongTinNguoiDung === "function") dongBoThongTinNguoiDung();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0">
       <div class="flex flex-col w-full">
@@ -304,16 +278,18 @@
               class="flex items-center gap-space-xs pl-2 border-l border-surface-container-high"
             >
               <div
+                id="adminHeaderAvatar"
                 class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-md"
               >
                 QL
               </div>
               <div class="hidden xl:flex flex-col text-left">
                 <span
+                  id="adminHeaderName"
                   class="text-label-sm text-on-surface leading-tight font-semibold"
                   >Admin QLTT</span
                 >
-                <span class="text-[10px] text-on-surface-variant leading-none"
+                <span id="adminHeaderRole" class="text-[10px] text-on-surface-variant leading-none"
                   >Hội đồng thẩm định</span
                 >
               </div>
@@ -332,7 +308,7 @@
                 <span class="material-symbols-outlined text-[15px]"
                   >verified_user</span
                 >
-                <span>Cổng Xét Duyệt Đợt Tuyển &amp; Thực Tập 2024 - 2025</span>
+                <span>Cổng Xét Duyệt Đợt Tuyển &amp; Thực Tập 2026 - 2027</span>
               </div>
               <h1
                 class="font-headline-lg text-headline-lg text-on-surface tracking-tight"
@@ -370,7 +346,7 @@
                 <span
                   class="font-headline-sm text-headline-sm text-amber-800 font-bold"
                   id="demChoDuyet"
-                  >5</span
+                  >0</span
                 >
               </div>
               <div
@@ -382,7 +358,7 @@
                 <span
                   class="font-headline-sm text-headline-sm text-secondary font-bold"
                   id="demDaDuyet"
-                  >6</span
+                  >0</span
                 >
               </div>
               <div
@@ -394,7 +370,7 @@
                 <span
                   class="font-headline-sm text-headline-sm text-error font-bold"
                   id="demTuChoi"
-                  >1</span
+                  >0</span
                 >
               </div>
             </div>
@@ -432,8 +408,9 @@
                 >
                   <span>Tất cả</span>
                   <span
+                    id="demNutLocTatCa"
                     class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-primary text-[10px]"
-                    >12</span
+                    >0</span
                   >
                 </button>
                 <button
@@ -443,8 +420,9 @@
                 >
                   <span>Chờ duyệt</span>
                   <span
+                    id="demNutLocChoDuyet"
                     class="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold"
-                    >5</span
+                    >0</span
                   >
                 </button>
                 <button
@@ -454,8 +432,9 @@
                 >
                   <span>Đã duyệt</span>
                   <span
+                    id="demNutLocDaDuyet"
                     class="px-1.5 py-0.2 rounded-full bg-surface-container-highest text-secondary text-[10px]"
-                    >6</span
+                    >0</span
                   >
                 </button>
                 <button
@@ -465,8 +444,9 @@
                 >
                   <span>Bị từ chối</span>
                   <span
+                    id="demNutLocTuChoi"
                     class="px-1.5 py-0.2 rounded-full bg-error-container text-on-error-container text-[10px]"
-                    >1</span
+                    >0</span
                   >
                 </button>
               </div>
@@ -537,7 +517,7 @@
                           class="inline-block w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin"
                         ></span>
                         <span class="text-sm font-medium"
-                          >Đang kết nối API Backend và tải danh sách hồ
+                          >Đang kết nối máy chủ và tải danh sách hồ
                           sơ...</span
                         >
                       </div>
@@ -551,9 +531,8 @@
               class="px-4 py-3 bg-surface-container-low/50 flex flex-col sm:flex-row items-center justify-between gap-space-sm text-body-sm text-on-surface-variant"
             >
               <div>
-                <span
-                  >Hiển thị <strong class="text-on-surface">1 - 3</strong> của
-                  <strong class="text-on-surface">12</strong> hồ sơ</span
+                <span id="phanTrangThongTin"
+                  >Đang tải dữ liệu hồ sơ...</span
                 >
               </div>
               <div class="flex items-center gap-1">
@@ -652,8 +631,7 @@
                   >info</span
                 >
                 <p id="moTaUngVienTuChoi">
-                  Bạn đang từ chối hồ sơ của ứng viên: Nguyễn Văn An (Mã:
-                  ICTU-2024-8842)
+                  Bạn đang thực hiện thao tác từ chối hồ sơ ứng viên.
                 </p>
               </div>
               <div class="flex flex-col gap-1">
@@ -693,7 +671,7 @@
                     class="px-2.5 py-1 rounded-md bg-surface-container-high text-on-surface hover:bg-surface-container-highest text-label-sm transition-colors"
                     onclick="
                       ganLyDoNhanh(
-                        'CV chưa đạt chuẩn ICTU, yêu cầu cập nhật lại theo biểu mẫu đợt thực tập 2024.',
+                        'CV chưa đạt chuẩn ICTU, yêu cầu cập nhật lại theo biểu mẫu đợt thực tập 2026.',
                       )
                     "
                     type="button"
@@ -744,7 +722,7 @@
           id="hopThoaiTaiLieu"
         >
           <div
-            class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all border border-slate-200 animate-in fade-in zoom-in-95"
+            class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden transform transition-all border border-slate-200 animate-in fade-in zoom-in-95"
           >
             <div
               class="p-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between"
@@ -765,17 +743,29 @@
                     Hồ Sơ &amp; Tài Liệu Đính Kèm
                   </h3>
                   <span class="text-xs text-slate-500" id="moTaTaiLieuHoSo"
-                    >Dữ liệu đồng bộ trực tiếp từ API Backend</span
+                    >Dữ liệu đồng bộ trực tiếp từ máy chủ</span
                   >
                 </div>
               </div>
-              <button
-                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
-                onclick="dongHopThoaiTaiLieu()"
-                type="button"
-              >
-                <span class="material-symbols-outlined text-[20px]">close</span>
-              </button>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  id="btnDuyetTatCaTaiLieu"
+                  onclick="duyetTatCaTaiLieuTrongModal()"
+                  class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  title="Phê duyệt toàn bộ các tài liệu đính kèm của hồ sơ này"
+                >
+                  <span class="material-symbols-outlined text-[16px]" id="iconDuyetTatCaTaiLieu">done_all</span>
+                  <span id="textDuyetTatCaTaiLieu">Duyệt tất cả</span>
+                </button>
+                <button
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+                  onclick="dongHopThoaiTaiLieu()"
+                  type="button"
+                >
+                  <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
             </div>
 
             <div class="p-6 space-y-4">
@@ -804,8 +794,53 @@
             </div>
           </div>
         </div>
+
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm hidden transition-opacity"
+          id="hopThoaiXemPdf"
+        >
+          <div
+            class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full h-[90vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95"
+          >
+            <div
+              class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                  <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                </div>
+                <div>
+                  <h3 class="font-bold text-slate-900 text-sm" id="tieuDeXemPdf">Xem Tài Liệu / CV</h3>
+                  <span class="text-xs text-slate-500 font-mono" id="duongDanXemPdf">uploads/cv.pdf</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <a
+                  id="nutMoTabMoi"
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors shadow-xs"
+                >
+                  <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+                  <span>Mở tab mới</span>
+                </a>
+                <button
+                  type="button"
+                  onclick="dongHopThoaiXemPdf()"
+                  class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+                >
+                  <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+            </div>
+            <div class="flex-1 bg-slate-100 p-2 overflow-hidden">
+              <iframe id="khungXemPdf" src="" class="w-full h-full rounded-xl border border-slate-200 bg-white"></iframe>
+            </div>
+          </div>
+        </div>
       </div>
-      <script src="../../js/xet_duyet_ho_so.js"></script>
+      <script src="../../js/quanly/xet_duyet_ho_so.js"></script>
     </main>
   </body>
 </html>

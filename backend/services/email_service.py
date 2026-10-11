@@ -236,3 +236,59 @@ def send_contract_confirmed_email(
 
     content = "\n".join(body_lines)
     return send_email_smtp(to_email=to_email, subject=subject, content=content)
+
+
+def _get_support_request_type_label(request_type: str) -> str:
+    """Chuyển mã loại yêu cầu hỗ trợ sang tên tiếng Việt dễ hiểu"""
+    mapping = {
+        "XinChungNhan": "Xin chứng nhận thực tập",
+        "GiayXacNhan": "Giấy xác nhận thực tập",
+        "Khac": "Yêu cầu hỗ trợ khác",
+    }
+    return mapping.get(request_type, request_type)
+
+
+def send_support_request_email(
+    to_email: str,
+    intern_name: str,
+    request_type: str,
+    status: str,
+    hr_feedback: Optional[str] = None
+) -> bool:
+    """
+    Gửi email thông báo kết quả xử lý yêu cầu hỗ trợ sinh viên (chạy qua BackgroundTasks).
+    """
+    req_label = _get_support_request_type_label(request_type)
+
+    if status == "DaXuLy":
+        status_label = "ĐÃ ĐƯỢC XỬ LÝ"
+        subject = f"[Thông báo] Yêu cầu hỗ trợ '{req_label}' của bạn đã được XỬ LÝ"
+    elif status == "TuChoi":
+        status_label = "BỊ TỪ CHỐI"
+        subject = f"[Thông báo] Yêu cầu hỗ trợ '{req_label}' của bạn đã bị TỪ CHỐI"
+    else:
+        status_label = status
+        subject = f"[Thông báo] Cập nhật tiến độ yêu cầu hỗ trợ '{req_label}'"
+
+    body_lines = [
+        f"Xin chào {intern_name},",
+        "",
+        "Hệ thống Quản lý Thực tập sinh xin thông báo kết quả xử lý yêu cầu hỗ trợ của bạn:",
+        f"- Loại yêu cầu: {req_label}",
+        f"- Kết quả xử lý: {status_label}",
+    ]
+
+    if hr_feedback and hr_feedback.strip():
+        body_lines.append(f"- Ghi chú / Phản hồi từ HR: {hr_feedback.strip()}")
+
+    body_lines.extend([
+        "",
+        "Vui lòng đăng nhập hệ thống để kiểm tra chi tiết hoặc liên hệ phòng Nhân sự nếu cần thêm thông tin.",
+        "",
+        "Trân trọng,",
+        "Phòng Nhân sự / Ban Quản lý Chương trình Thực tập"
+    ])
+
+    content = "\n".join(body_lines)
+    return send_email_smtp(to_email=to_email, subject=subject, content=content)
+

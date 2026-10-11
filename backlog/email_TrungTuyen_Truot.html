@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mẫu Template Email Tuyển Dụng</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e9ecef;
+      margin: 0;
+      padding: 20px;
+    }
+    .toolbar {
+      max-width: 600px;
+      margin: 0 auto 20px auto;
+      text-align: center;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      font-size: 15px;
+      border: 1px solid #007bff;
+      background: #fff;
+      color: #007bff;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 0 5px;
+      font-weight: bold;
+    }
+    .tab-btn.active {
+      background: #007bff;
+      color: #fff;
+    }
+    .template-section {
+      display: none;
+    }
+    .template-section.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Thanh chuyển đổi xem 2 mẫu -->
+  <div class="toolbar">
+    <button class="tab-btn active" onclick="showTemplate('offer', this)">1. Chúc Mừng Trúng Tuyển</button>
+    <button class="tab-btn" onclick="showTemplate('rejection', this)">2. Thư Từ Chối</button>
+  </div>
+
+  <!-- ==================== MẪU 1: CHÚC MỪNG TRÚNG TUYỂN ==================== -->
+  <div id="template-offer" class="template-section active">
+    <table width="100%" border="0" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <table width="600" border="0" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+            <!-- Header -->
+            <tr>
+              <td align="center" style="background-color: #1a73e8; padding: 35px 20px;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">THƯ MỜI NHẬN VIỆC</h1>
+                <p style="color: #e8f0fe; margin: 8px 0 0 0; font-size: 14px;">Chúc mừng bạn đã trúng tuyển!</p>
+              </td>
+            </tr>
+            <!-- Content -->
+            <tr>
+              <td style="padding: 35px 30px; color: #333333; line-height: 1.6; font-size: 15px;">
+                <p style="margin-top: 0;">Xin chào <strong>{{Candidate_Name}}</strong>,</p>
+                <p>Thay mặt <strong>{{Company_Name}}</strong>, chúng tôi chúc mừng bạn đã xuất sắc vượt qua các vòng phỏng vấn cho vị trí <strong>{{Job_Title}}</strong>.</p>
+                
+                <!-- Info Box -->
+                <table width="100%" border="0" cellpadding="10" cellspacing="0" style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; margin: 20px 0;">
+                  <tr>
+                    <td width="35%" style="color: #666666; font-size: 14px; border-bottom: 1px solid #e9ecef;"><strong>Vị trí:</strong></td>
+                    <td style="color: #212529; font-size: 14px; border-bottom: 1px solid #e9ecef;">{{Job_Title}}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #666666; font-size: 14px; border-bottom: 1px solid #e9ecef;"><strong>Phòng ban:</strong></td>
+                    <td style="color: #212529; font-size: 14px; border-bottom: 1px solid #e9ecef;">{{Department}}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #666666; font-size: 14px; border-bottom: 1px solid #e9ecef;"><strong>Ngày bắt đầu:</strong></td>
+                    <td style="color: #212529; font-size: 14px; border-bottom: 1px solid #e9ecef;">{{Start_Date}}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #666666; font-size: 14px;"><strong>Địa điểm làm việc:</strong></td>
+                    <td style="color: #212529; font-size: 14px;">{{Work_Location}}</td>
+                  </tr>
+                </table>
+
+                <p>Vui lòng xác nhận nhận việc trước ngày <strong>{{Deadline_Date}}</strong>:</p>
+                
+                <!-- CTA Button -->
+                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin: 25px 0;">
+                  <tr>
+                    <td align="center">
+                      <a href="{{Confirmation_Link}}" target="_blank" style="background-color: #28a745; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 4px; font-weight: bold; font-size: 15px; display: inline-block;">XÁC NHẬN NHẬN VIỆC</a>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin-bottom: 0;">Mọi thắc mắc xin liên hệ bộ phận Tuyển dụng qua email <strong>{{HR_Email}}</strong>.</p>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #eeeeee; color: #888888; font-size: 13px;">
+                <p style="margin: 0 0 6px 0;"><strong>{{Company_Name}}</strong> - Phòng Nhân sự</p>
+                <p style="margin: 0;">Địa chỉ: {{Company_Address}}</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ==================== MẪU 2: THƯ TỪ CHỐI ==================== -->
+  <div id="template-rejection" class="template-section">
+    <table width="100%" border="0" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center">
+          <table width="600" border="0" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">
+            <tr>
+              <td align="center" style="background-color: #495057; padding: 35px 20px;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: bold;">THÔNG BÁO KẾT QUẢ PHỎNG VẤN</h1>
+                <p style="color: #dee2e6; margin: 8px 0 0 0; font-size: 14px;">Thư phản hồi từ {{Company_Name}}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 35px 30px; color: #333333; line-height: 1.6; font-size: 15px;">
+                <p style="margin-top: 0;">Xin chào <strong>{{Candidate_Name}}</strong>,</p>
+                <p>Cảm ơn bạn đã dành thời gian tham gia ứng tuyển cho vị trí <strong>{{Job_Title}}</strong> tại <strong>{{Company_Name}}</strong>.</p>
+                
+                <div style="background-color: #f8f9fa; border-left: 4px solid #6c757d; padding: 15px; margin: 20px 0; font-size: 14px; color: #495057;">
+                  Sau khi cân nhắc kỹ lưỡng, chúng tôi rất tiếc thông báo hiện chưa thể chọn bạn đồng hành ở giai đoạn này do yêu cầu công việc hiện tại.
+                </div>
+
+                <p>Thông tin của bạn đã được lưu vào hệ thống dữ liệu ứng viên tiềm năng của chúng tôi để liên hệ khi có cơ hội phù hợp hơn trong tương lai.</p>
+                <p>Chúc bạn luôn thành công trên con đường sự nghiệp!</p>
+                <p style="margin-bottom: 0;">Trân trọng,</p>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #eeeeee; color: #888888; font-size: 13px;">
+                <p style="margin: 0 0 6px 0;"><strong>{{Company_Name}}</strong> - Ban Tuyển dụng</p>
+                <p style="margin: 0;">Địa chỉ: {{Company_Address}} | Email: {{HR_Email}}</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <script>
+    function showTemplate(type, btn) {
+      // Ẩn tất cả template
+      document.querySelectorAll('.template-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
+      // Hiển thị template được chọn
+      document.getElementById('template-' + type).classList.add('active');
+      btn.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>

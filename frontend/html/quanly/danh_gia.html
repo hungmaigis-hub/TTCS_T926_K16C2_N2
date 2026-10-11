@@ -49,6 +49,7 @@
       >
         <div class="relative shrink-0">
           <div
+            id="adminAvatarInitials"
             class="w-11 h-11 rounded-full bg-gradient-to-tr from-ictu-600 to-sky-400 flex items-center justify-center text-white font-bold text-base shadow-sm ring-2 ring-white"
           >
             AD
@@ -59,7 +60,7 @@
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-1.5">
-            <h4 class="text-sm font-bold text-slate-900 truncate">
+            <h4 id="adminSidebarName" class="text-sm font-bold text-slate-900 truncate">
               Ban Đào Tạo &amp; QLTT
             </h4>
             <span
@@ -67,8 +68,9 @@
               >verified</span
             >
           </div>
-          <p class="text-xs text-slate-500 truncate">admin@ictu.edu.vn</p>
+          <p id="adminSidebarEmail" class="text-xs text-slate-500 truncate">admin@ictu.edu.vn</p>
           <span
+            id="adminSidebarRole"
             class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-ictu-100 text-ictu-700"
             >Quản trị viên</span
           >
@@ -128,7 +130,7 @@
             class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
             >calendar_month</span
           >
-          <span>Lịch thực tập</span>
+          <span>Kế hoạch &amp; Đợt thực tập</span>
         </a>
 
         <a
@@ -148,58 +150,27 @@
           >
         </a>
 
-        <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
-          <p
-            class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+        <a
+          href="cham_cong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >fact_check</span
           >
-            Cổng Thực Tập Sinh
-          </p>
-          <a
-            href="../sinhvien/dashboard.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
+          <span>Điểm danh &amp; Chuyên cần</span>
+        </a>
+
+        <a
+          href="../public/thamquan.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >360</span
           >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >space_dashboard</span
-            >
-            <span>Tổng quan sinh viên</span>
-          </a>
-          <a
-            href="../sinhvien/tai_tai_lieu.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >upload_file</span
-            >
-            <span>1. Nộp tài liệu &amp; CV</span>
-          </a>
-          <a
-            href="../sinhvien/hop_dong.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >history_edu</span
-            >
-            <span>2. Ký kết hợp đồng</span>
-          </a>
-          <a
-            href="../sinhvien/nhiem_vu.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >checklist</span
-            >
-            <span>3. Nhiệm vụ &amp; Tiến độ</span>
-          </a>
-          <a
-            href="../public/thamquan.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >360</span
-            >
-            <span>Tham quan thực tế ảo</span>
-          </a>
-        </div>
+          <span>Tham quan thực tế ảo</span>
+        </a>
       </div>
       <div class="p-4 border-t border-slate-100 bg-slate-50/50">
         <div class="flex items-center justify-between text-xs text-slate-500">
@@ -217,6 +188,29 @@
         </div>
       </div>
     </aside>
+    <script>
+      (function(){
+        try {
+          const raw = localStorage.getItem("ictu_admin_session") || localStorage.getItem("currentUser") || localStorage.getItem("user");
+          if (!raw) return;
+          const u = JSON.parse(raw);
+          if (u.expires_at && Date.now() > u.expires_at) return;
+          const nameEl = document.getElementById("adminSidebarName");
+          const emailEl = document.getElementById("adminSidebarEmail");
+          const avatarEl = document.getElementById("adminAvatarInitials");
+          const roleEl = document.getElementById("adminSidebarRole");
+          if (nameEl && u.ho_ten) nameEl.textContent = u.ho_ten;
+          if (emailEl && u.email) emailEl.textContent = u.email;
+          if (roleEl && u.vai_tro) {
+            roleEl.textContent = u.vai_tro === "Admin" ? "Quản trị viên" : (u.vai_tro === "Mentor" ? "Người hướng dẫn" : "Thực tập sinh");
+          }
+          if (avatarEl && u.ho_ten) {
+            const parts = u.ho_ten.trim().split(/\s+/);
+            avatarEl.textContent = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+          }
+        } catch(e){}
+      })();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0 bg-slate-50">
       <header
@@ -248,9 +242,10 @@
                 Phiếu Đánh Giá Kết Quả Kỳ Thực Tập
               </h1>
               <span
+                id="theHocKyDanhGia"
                 class="bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2.5 py-0.5 rounded-full text-xs font-semibold"
               >
-                Học kỳ 2024 - 2025
+                Học kỳ doanh nghiệp
               </span>
             </div>
           </div>
@@ -267,12 +262,19 @@
             </button>
             <button
               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-ictu-50 hover:bg-ictu-100 text-ictu-700 border border-ictu-200 text-xs font-semibold shadow-sm transition-colors"
+              onclick="xuatBaoCaoDanhGia('pdf')"
               type="button"
             >
-              <span class="material-symbols-outlined text-[18px]"
-                >picture_as_pdf</span
-              >
+              <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
               Xuất PDF
+            </button>
+            <button
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-semibold shadow-sm transition-colors"
+              onclick="xuatBaoCaoDanhGia('excel')"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[18px]">table_chart</span>
+              Xuất Excel
             </button>
           </div>
         </div>
@@ -685,8 +687,8 @@ Sinh viên nắm vững kiến thức thực tế, hoàn thành xuất sắc cá
               <h3 class="text-base font-bold text-slate-900">
                 Danh Sách Sinh Viên Đã Chấm Điểm Gần Đây
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5">
-                Dữ liệu đánh giá trực tiếp đợt 1 năm học 2024 - 2025
+              <p id="moTaDotDanhGia" class="text-xs text-slate-500 mt-0.5">
+                Dữ liệu đánh giá trực tiếp đợt thực tập hiện hành
               </p>
             </div>
             <span
@@ -815,6 +817,6 @@ Sinh viên nắm vững kiến thức thực tế, hoàn thành xuất sắc cá
       </div>
     </main>
 
-    <script src="../../js/danh_gia.js"></script>
+    <script src="../../js/quanly/danh_gia.js"></script>
   </body>
 </html>

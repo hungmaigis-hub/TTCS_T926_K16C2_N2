@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo cáo công việc tuần</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-focus: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 40px 20px;
+      line-height: 1.5;
+    }
+
+    .report-card {
+      max-width: 650px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border);
+      background-color: #fafafa;
+    }
+
+    .card-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .card-header p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .card-body {
+      padding: 32px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 580px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .card-body {
+        padding: 20px;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: var(--text-main);
+      background-color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 110px;
+      line-height: 1.6;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+      background-color: var(--primary);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-top: 10px;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--primary-hover);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="report-card">
+    <!-- Header của Form -->
+    <div class="card-header">
+      <h2>Nộp Báo Cáo Tiến Độ Công Việc</h2>
+      <p>Vui lòng điền thông tin chi tiết nội dung công việc và kết quả đã đạt được</p>
+    </div>
+
+    <!-- Nội dung Form -->
+    <div class="card-body">
+      <form id="reportForm">
+        
+        <!-- Hàng chọn Tuần số & Nhiệm vụ -->
+        <div class="form-grid">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="weekNumber">Tuần báo cáo:</label>
+            <input type="number" id="weekNumber" name="weekNumber" class="form-control" min="1" max="52" placeholder="Ví dụ: Tuần 4" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="taskSelect">Nhiệm vụ liên quan:</label>
+            <select id="taskSelect" name="taskId" class="form-control" required>
+              <option value="">-- Đang tải danh sách nhiệm vụ... --</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Textarea: Nội dung công việc -->
+        <div class="form-group">
+          <label for="workContent">Nội dung công việc thực hiện:</label>
+          <textarea id="workContent" name="workContent" class="form-control" placeholder="Mô tả các hạng mục công việc chi tiết đã làm trong tuần..." required></textarea>
+        </div>
+
+        <!-- Textarea: Kết quả đạt được -->
+        <div class="form-group">
+          <label for="resultDetails">Kết quả đạt được & Sản phẩm hoàn thành:</label>
+          <textarea id="resultDetails" name="resultDetails" class="form-control" placeholder="Nêu rõ kết quả đầu ra, đường dẫn tài liệu bàn giao hoặc khó khăn gặp phải..." required></textarea>
+        </div>
+
+        <!-- Nút gửi báo cáo -->
+        <button type="submit" class="btn-submit">Gửi Báo Cáo</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('reportForm');
+    const taskSelect = document.getElementById('taskSelect');
+
+    // 1. Dùng JS gọi API load danh sách nhiệm vụ liên quan vào dropdown
+    async function loadRelatedTasks() {
+      try {
+        // Thay URL bằng API thực tế
+        const response = await fetch('https://api.example.com/tasks');
+        const tasks = await response.json();
+
+        // Đổ dữ liệu vào dropdown
+        taskSelect.innerHTML = '<option value="">-- Chọn nhiệm vụ liên quan --</option>';
+        tasks.forEach(task => {
+          const option = document.createElement('option');
+          option.value = task.id;
+          option.textContent = `[${task.code}] ${task.title}`;
+          taskSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Lỗi khi tải danh sách nhiệm vụ:', error);
+        taskSelect.innerHTML = '<option value="">Lỗi tải danh sách nhiệm vụ</option>';
+      }
+    }
+
+    // 2. Gửi API nộp báo cáo khi người dùng submit
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const reportData = {
+        weekNumber: parseInt(document.getElementById('weekNumber').value, 10),
+        taskId: document.getElementById('taskSelect').value,
+        workContent: document.getElementById('workContent').value,
+        resultDetails: document.getElementById('resultDetails').value
+      };
+
+      try {
+        const response = await fetch('https://api.example.com/reports', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(reportData)
+        });
+
+        if (response.ok) {
+          alert('Nộp báo cáo thành công!');
+          form.reset();
+        } else {
+          alert('Nộp báo cáo thất bại!');
+        }
+      } catch (error) {
+        console.error('Lỗi khi gửi API nộp báo cáo:', error);
+      }
+    });
+
+    // Tự động tải danh sách nhiệm vụ khi mở trang
+    window.onload = loadRelatedTasks;
+  </script>
+
+</body>
+</html>

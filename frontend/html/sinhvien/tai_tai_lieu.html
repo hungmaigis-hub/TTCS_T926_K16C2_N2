@@ -136,23 +136,25 @@
         </a>
 
         <a
-          href="javascript:void(0)"
-          data-coming-soon="Lịch làm việc &amp; Chấm công sinh viên"
-          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+          href="cham_cong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
         >
-          <div class="flex items-center gap-3">
-            <span
-              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
-              >calendar_month</span
-            >
-            <span>Lịch &amp; Điểm danh</span>
-          </div>
           <span
-            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >schedule</span
           >
-            <span class="material-symbols-outlined text-[12px]">lock</span>
-            Sắp có
-          </span>
+          <span>Chấm công &amp; Điểm danh</span>
+        </a>
+
+        <a
+          href="nghi_phep.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >event_busy</span
+          >
+          <span>Đăng ký nghỉ phép</span>
         </a>
 
         <a
@@ -206,28 +208,12 @@
           <span>Tham quan trường ICTU</span>
         </a>
 
-        <div class="pt-4 border-t border-slate-100 mt-4 space-y-1">
-          <p
-            class="px-3 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
-          >
-            Dành Cho Quản Trị
-          </p>
-          <a
-            href="../quanly/them_ho_so.html"
-            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors"
-          >
-            <span class="material-symbols-outlined text-[19px] text-slate-400"
-              >admin_panel_settings</span
-            >
-            <span>Cổng Quản trị viên</span>
-          </a>
-        </div>
       </div>
       <div class="p-4 border-t border-slate-100 bg-slate-50/50">
         <div class="flex items-center justify-between text-xs text-slate-500">
           <span class="flex items-center gap-1.5 font-medium">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            Học kỳ 2024 - 2025
+            <span id="theHocKyTaiLieuSidebar">Học kỳ hiện hành</span>
           </span>
           <a
             href="../public/index.html"
@@ -239,6 +225,20 @@
         </div>
       </div>
     </aside>
+    <script>
+      (function(){
+        try {
+          const now = new Date();
+          const curY = now.getFullYear();
+          const startY = now.getMonth() >= 8 ? curY : curY - 1;
+          const nienKhoa = startY + " - " + (startY + 1);
+          const elSidebar = document.getElementById("theHocKyTaiLieuSidebar");
+          if (elSidebar) elSidebar.textContent = "Học kỳ " + nienKhoa;
+          const elBanner = document.getElementById("theHocKyTaiLieuBanner");
+          if (elBanner) elBanner.textContent = "Cổng Nộp Hồ Sơ Số Hóa ICTU - Năm học " + nienKhoa;
+        } catch(e){}
+      })();
+    </script>
 
     <main class="flex-1 flex flex-col min-w-0">
       <div class="flex flex-col w-full">
@@ -321,7 +321,7 @@
                 <span class="material-symbols-outlined text-[14px]"
                   >school</span
                 >
-                <span>Cổng Nộp Hồ Sơ Số Hóa ICTU - Học Kỳ 2024 - 2025</span>
+                <span id="theHocKyTaiLieuBanner">Cổng Nộp Hồ Sơ Số Hóa ICTU</span>
               </div>
               <h1
                 class="font-headline-lg text-headline-lg text-on-surface tracking-tight"
@@ -337,15 +337,17 @@
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-              <button
+              <a
+                href="http://127.0.0.1:8000/uploads/Mau_CV_Chuan_ICTU.pdf"
+                target="_blank"
                 class="h-10 px-4 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low shadow-sm text-primary font-label-md text-label-md flex items-center gap-2 transition-colors"
-                type="button"
+                title="Tải hoặc xem Mẫu CV chuẩn ICTU 2026"
               >
                 <span class="material-symbols-outlined text-[18px]"
                   >download</span
                 >
                 <span>Mẫu CV chuẩn ICTU</span>
-              </button>
+              </a>
               <button
                 class="h-10 px-4 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low shadow-sm text-on-surface-variant font-label-md text-label-md flex items-center gap-2 transition-colors"
                 type="button"
@@ -602,7 +604,7 @@
                     <th class="py-3.5 px-6 text-right" scope="col">THAO TÁC</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y-0">
+                <tbody id="bangDanhSachTaiLieu" class="divide-y-0">
                   <tr
                     class="hover:bg-surface-container-low/50 transition-colors"
                   >
@@ -618,11 +620,11 @@
                       </div>
                       <div>
                         <span class="font-bold block"
-                          >NguyenVanA_CV_Fullstack_2024.pdf</span
+                          >CV_UngTuyen_ThucTap.pdf</span
                         >
                         <span
                           class="font-body-sm text-body-sm text-on-surface-variant"
-                          >Mã hồ sơ: ICTU-2024-8842</span
+                          >Tài liệu minh chứng số hóa</span
                         >
                       </div>
                     </td>
@@ -798,7 +800,7 @@
                     <td
                       class="py-4 px-4 font-body-sm text-body-sm text-on-surface-variant"
                     >
-                      12/10/2024
+                      Mới cập nhật
                     </td>
                     <td class="py-4 px-4">
                       <span
@@ -844,7 +846,7 @@
             </div>
           </div>
         </div>
-        <script src="../../js/tai_tai_lieu.js"></script>
+        <script src="../../js/sinhvien/tai_tai_lieu.js"></script>
       </div>
     </main>
   </body>

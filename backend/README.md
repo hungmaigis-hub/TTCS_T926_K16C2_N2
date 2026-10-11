@@ -160,7 +160,7 @@ Tại thư mục `backend/`, chạy lệnh:
 ```bash
 pytest -v
 ```
-*(Thực thi trọn bộ **96 unit test**: bao gồm đầy đủ tạo hồ sơ POST, cập nhật PUT, duyệt hồ sơ PATCH, xác nhận hợp đồng PATCH kèm email BackgroundTasks, truy vấn GET, upload tài liệu POST, duyệt tài liệu PATCH và xử lý ngoại lệ).*
+*(Thực thi trọn bộ **123 unit test**: bao gồm đầy đủ tạo hồ sơ POST, cập nhật PUT, duyệt hồ sơ PATCH, xác nhận hợp đồng PATCH kèm email BackgroundTasks, truy vấn GET, upload tài liệu POST, duyệt tài liệu PATCH, tạo chương trình POST, cập nhật tiến độ nhiệm vụ PATCH và xử lý ngoại lệ).*
 
 ---
 
@@ -408,4 +408,310 @@ pytest -v
     "mo_ta": "Đào tạo chuyên sâu AI và Machine Learning"
   }
 }
+
+---
+
+### 6. Cập nhật thời gian chương trình thực tập (Timeline)
+* **URL:** `/api/v1/programs/{id}/timeline`
+* **Method:** `PATCH`
+* **Status Code:** `200 OK`
+* **URL Params:** `id=[integer]` (Mã chương trình thực tập)
+* **Request Body (JSON):**
+```json
+{
+  "ngay_bat_dau": "2026-10-01",
+  "ngay_ket_thuc": "2026-12-31"
+}
 ```
+
+> **Quy tắc Validate & Nghiệp vụ:**
+> - `ngay_bat_dau`, `ngay_ket_thuc`: Tùy chọn (cho phép cập nhật một hoặc cả hai trường).
+> - Yêu cầu cung cấp ít nhất một trường trong payload, nếu rỗng sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - **Quy tắc thời gian bắt buộc:** `ngay_ket_thuc > ngay_bat_dau` (ngày kết thúc phải lớn hơn ngày bắt đầu).
+>   - Nếu gửi cả hai ngày mà `ngay_ket_thuc <= ngay_bat_dau`: Trả về `HTTP 422 Unprocessable Entity`.
+>   - Nếu chỉ gửi một ngày mà xung đột với mốc thời gian hiện tại trong CSDL: Trả về `HTTP 400 Bad Request`.
+> - `id`: Nếu không tìm thấy chương trình thực tập trong hệ thống sẽ trả về `HTTP 404 Not Found`.
+
+* **Phản hồi thành công (HTTP 200 OK):**
+```json
+{
+  "status_code": 200,
+  "message": "Cập nhật thời gian chương trình thực tập thành công",
+  "data": {
+    "ma_chuong_trinh": 1,
+    "ma_phong_ban": 1,
+    "ten_phong_ban": "Trung tâm Phần mềm",
+    "ten_chuong_trinh": "Thực tập sinh Khóa Mùa Thu 2026",
+    "ngay_bat_dau": "2026-10-01",
+    "ngay_ket_thuc": "2026-12-31",
+    "mo_ta": "Chương trình đào tạo kỹ sư phần mềm thực chiến"
+  }
+}
+```
+
+---
+
+### 9. Cập nhật tiến độ nhiệm vụ thực tập sinh
+* **URL:** `/api/v1/tasks/{id}/progress`
+* **Method:** `PATCH`
+* **Status Code:** `200 OK`
+* **URL Params:** `id=[integer]` (Mã nhiệm vụ)
+* **Request Body (JSON):**
+```json
+{
+  "tien_do_phantram": 100
+}
+```
+> **Quy tắc Validate & Tính năng:**
+> - `tien_do_phantram`: Bắt buộc, số nguyên trong khoảng `0` đến `100`. Nếu vi phạm sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - **Tự động cập nhật trạng thái (`trang_thai`):**
+>   - Đạt `100%`: Tự động chuyển `trang_thai = "Hoàn thành"`.
+>   - Từ `1%` đến `99%`: Tự động chuyển `trang_thai = "Đang thực hiện"`.
+>   - Bằng `0%`: Tự động chuyển `trang_thai = "Chưa bắt đầu"`.
+> - Nếu mã nhiệm vụ không tồn tại: Trả về `HTTP 404 Not Found`.
+
+#### Response mẫu (HTTP 200 OK):
+```json
+{
+  "status_code": 200,
+  "message": "Cập nhật tiến độ nhiệm vụ thành công",
+  "data": {
+    "ma_nhiem_vu": 1,
+    "ma_ho_so": 1,
+    "ten_nhiem_vu": "Nghiên cứu tài liệu kiến trúc hệ thống",
+    "mo_ta": "Đọc hiểu tài liệu thiết kế CSDL và luồng xử lý API",
+    "han_hoan_thanh": "2026-10-15",
+    "tien_do_phantram": 100,
+    "trang_thai": "Hoàn thành"
+  }
+}
+```
+
+---
+
+### 10. Tạo mới đánh giá kết quả thực tập
+* **URL:** `/api/v1/evaluations`
+* **Method:** `POST`
+* **Status Code:** `201 Created`
+* **Request Body (JSON):**
+```json
+{
+  "ma_ho_so": 1,
+  "ma_nguoi_danh_gia": 3,
+  "loai_danh_gia": "CuoiKy",
+  "diem_ky_nang": 8.5,
+  "diem_thai_do": 9.0,
+  "nhan_xet": "Sinh viên tiếp thu nhanh, hoàn thành tốt các nhiệm vụ được giao.",
+  "de_xuat_tuyen_dung": true
+}
+```
+
+> **Quy tắc Validate & Tính năng:**
+> - `ma_ho_so`: Bắt buộc, số nguyên dương > 0. Nếu không tìm thấy hồ sơ sẽ trả về `HTTP 404 Not Found`.
+> - `ma_nguoi_danh_gia`: Bắt buộc, số nguyên dương > 0. Nếu người đánh giá không tồn tại trong hệ thống sẽ trả về `HTTP 400 Bad Request`.
+> - `loai_danh_gia`: Bắt buộc, chỉ nhận `"GiuaKy"` hoặc `"CuoiKy"`. Giá trị khác sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - `diem_ky_nang`, `diem_thai_do`: Bắt buộc, số thực trong khoảng `0.0` đến `10.0`. Nếu ngoài khoảng sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - `nhan_xet`: Tùy chọn (hỗ trợ cả alias `nhan_xet_chi_tiet`).
+> - `de_xuat_tuyen_dung`: Tùy chọn, kiểu boolean (hỗ trợ cả alias `de_xuat_tuyen_chinh_thuc`).
+> - **Chống trùng lặp:** Mỗi hồ sơ chỉ có tối đa 1 đánh giá giữa kỳ và 1 đánh giá cuối kỳ. Trùng lặp sẽ trả về `HTTP 400 Bad Request`.
+> - **Tự động tính toán:** Tự động tính điểm trung bình (`diem_trung_binh`) và xếp loại rèn luyện (`xep_loai`: XuatSac, Gioi, Kha, TrungBinh, Yeu).
+
+* **Phản hồi thành công (HTTP 201 Created):**
+```json
+{
+  "status_code": 201,
+  "message": "Tạo đánh giá thực tập sinh thành công",
+  "data": {
+    "ma_danh_gia": 1,
+    "ma_ho_so": 1,
+    "ma_nguoi_danh_gia": 3,
+    "ten_nguoi_danh_gia": "Nguyễn Hướng Dẫn",
+    "loai_danh_gia": "CuoiKy",
+    "diem_ky_nang": 8.5,
+    "diem_thai_do": 9.0,
+    "diem_trung_binh": 8.75,
+    "xep_loai": "Gioi",
+    "nhan_xet_chi_tiet": "Sinh viên tiếp thu nhanh, hoàn thành tốt các nhiệm vụ được giao.",
+    "de_xuat_tuyen_chinh_thuc": true
+  }
+}
+```
+
+---
+
+### 11. Điểm danh vào ca làm việc (Check-in)
+* **URL:** `/api/v1/attendance/check-in`
+* **Method:** `POST`
+* **Status Code:** `201 Created`
+* **Request Body (JSON):**
+```json
+{
+  "ma_ho_so": 1,
+  "thoi_gian_checkin": "2026-10-01T08:15:00",
+  "phuong_thuc": "Web",
+  "ghi_chu": "Check-in đúng giờ qua cổng Web"
+}
+```
+
+> **Quy tắc Validate & Nghiệp vụ:**
+> - `ma_ho_so`: Bắt buộc, số nguyên dương > 0. Nếu không tìm thấy hồ sơ sẽ trả về `HTTP 404 Not Found`.
+> - `thoi_gian_checkin`: Tùy chọn (định dạng ISO 8601). Nếu không truyền hoặc truyền `null`, hệ thống tự động lấy thời gian hiện tại (`datetime.now()`).
+> - `phuong_thuc`: Tùy chọn (`Web`, `QR`, `The`), mặc định là `"Web"`.
+> - `ghi_chu`: Tùy chọn chuỗi ghi chú lý do.
+> - **Quy tắc tính trạng thái chấm công (`trang_thai`):**
+>   - Check-in trước hoặc đúng 08:30:00 $\rightarrow$ `DungGio` (Đúng giờ).
+>   - Check-in sau 08:30:00 $\rightarrow$ `DiMuon` (Đi muộn).
+> - **Chống trùng lặp:** Mỗi thực tập sinh chỉ được check-in 1 lần trong một ngày. Nếu đã check-in trong ngày, trả về `HTTP 400 Bad Request`.
+
+#### Response mẫu (HTTP 201 Created):
+```json
+{
+  "status_code": 201,
+  "message": "Check-in thành công",
+  "data": {
+    "ma_cham_cong": 15,
+    "ma_ho_so": 1,
+    "ngay_cham_cong": "2026-10-01",
+    "thoi_gian_checkin": "2026-10-01T08:15:00",
+    "thoi_gian_checkout": null,
+    "gio_check_in": "08:15:00",
+    "gio_check_out": null,
+    "trang_thai": "DungGio",
+    "phuong_thuc": "Web",
+    "ghi_chu": "Check-in đúng giờ qua cổng Web"
+  }
+}
+```
+
+---
+
+### 12. Điểm danh kết thúc ca làm việc (Check-out)
+* **URL:** `/api/v1/attendance/check-out`
+* **Method:** `POST`
+* **Status Code:** `200 OK`
+* **Request Body (JSON):**
+```json
+{
+  "ma_ho_so": 1,
+  "thoi_gian_checkout": "2026-10-01T17:35:00",
+  "ghi_chu": "Hoàn thành ca làm việc"
+}
+```
+
+> **Quy tắc Validate & Nghiệp vụ:**
+> - `ma_ho_so`: Bắt buộc, số nguyên dương > 0. Nếu không tìm thấy hồ sơ sẽ trả về `HTTP 404 Not Found`.
+> - `thoi_gian_checkout`: Tùy chọn (định dạng ISO 8601). Nếu không truyền hoặc truyền `null`, hệ thống tự động lấy thời gian hiện tại (`datetime.now()`).
+> - `ghi_chu`: Tùy chọn chuỗi ghi chú bổ sung khi checkout.
+> - **Bắt buộc phải Check-in trước:** Nếu chưa có bản ghi check-in trong ngày tương ứng, trả về `HTTP 400 Bad Request`.
+> - **Chống trùng lặp:** Nếu hồ sơ đã check-out trong ngày, trả về `HTTP 400 Bad Request`.
+> - **Logic thời gian:** `thoi_gian_checkout` phải sau `thoi_gian_checkin`. Nếu checkout trước thời điểm checkin sẽ trả về `HTTP 400 Bad Request`.
+> - **Cập nhật trạng thái:** Nếu trước đó trạng thái là `DungGio` nhưng thời gian check-out trước 17:00:00 $\rightarrow$ cập nhật `trang_thai = "VeSom"` (Về sớm). Nếu trước đó đã là `DiMuon` thì giữ nguyên để phản ánh đúng kỷ luật ca làm việc.
+
+#### Response mẫu (HTTP 200 OK):
+```json
+{
+  "status_code": 200,
+  "message": "Check-out thành công",
+  "data": {
+    "ma_cham_cong": 15,
+    "ma_ho_so": 1,
+    "ngay_cham_cong": "2026-10-01",
+    "thoi_gian_checkin": "2026-10-01T08:15:00",
+    "thoi_gian_checkout": "2026-10-01T17:35:00",
+    "gio_check_in": "08:15:00",
+    "gio_check_out": "17:35:00",
+    "trang_thai": "DungGio",
+    "phuong_thuc": "Web",
+    "ghi_chu": "Hoàn thành ca làm việc"
+  }
+}
+```
+
+---
+
+### 13. Tạo đơn xin nghỉ phép (Leave Requests)
+* **URL:** `/api/v1/leave-requests`
+* **Method:** `POST`
+* **Status Code:** `201 Created`
+* **Request Body (JSON):**
+```json
+{
+  "ma_ho_so": 1,
+  "tu_ngay": "2026-10-05",
+  "den_ngay": "2026-10-06",
+  "ly_do": "[Nghỉ phép cá nhân] Có việc bận gia đình",
+  "trang_thai": "Chờ duyệt"
+}
+```
+
+> **Quy tắc Validate & Nghiệp vụ:**
+> - `ma_ho_so`: Bắt buộc, số nguyên dương > 0. Nếu không tìm thấy hồ sơ thực tập sinh tương ứng sẽ trả về `HTTP 404 Not Found`.
+> - `tu_ngay`: Bắt buộc, định dạng ngày `YYYY-MM-DD`. Ràng buộc `tu_ngay >= ngày hiện tại` (`date.today()`). Nếu ngày bắt đầu nghỉ trong quá khứ sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - `den_ngay`: Bắt buộc, định dạng ngày `YYYY-MM-DD`. Ràng buộc `den_ngay >= tu_ngay`. Nếu ngày kết thúc trước ngày bắt đầu sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - `ly_do`: Bắt buộc, chuỗi không được để trống hoặc chỉ chứa khoảng trắng. Nếu vi phạm trả về `HTTP 422 Unprocessable Entity`.
+> - `trang_thai`: Tùy chọn, mặc định tự động gán là `"Chờ duyệt"`.
+> - **Tiện ích:** API tự động tính toán tổng số ngày nghỉ `so_ngay = (den_ngay - tu_ngay).days + 1` trả về trong phản hồi.
+
+#### Response mẫu (HTTP 201 Created):
+```json
+{
+  "status_code": 201,
+  "message": "Tạo đơn xin nghỉ thành công",
+  "data": {
+    "ma_don": 1,
+    "ma_ho_so": 1,
+    "tu_ngay": "2026-10-05",
+    "den_ngay": "2026-10-06",
+    "so_ngay": 2,
+    "ly_do": "[Nghỉ phép cá nhân] Có việc bận gia đình",
+    "trang_thai": "Chờ duyệt",
+    "ngay_tao": "2026-10-01T19:39:24.000000"
+  }
+}
+```
+
+---
+
+### 14. Tạo mới nhiệm vụ thực tập (Tasks Management)
+* **URL:** `/api/v1/tasks`
+* **Method:** `POST`
+* **Status Code:** `201 Created`
+* **Request Body (JSON):**
+```json
+{
+  "ma_ho_so": 1,
+  "tieu_de": "Phát triển tính năng quản lý nhiệm vụ thực tập",
+  "mo_ta": "Thiết kế model CSDL, xây dựng endpoint POST và kiểm thử tự động",
+  "han_hoan_thanh": "2026-10-25",
+  "tien_do_phantram": 0,
+  "trang_thai": "Chưa bắt đầu"
+}
+```
+
+> **Quy tắc Validate & Nghiệp vụ:**
+> - `ma_ho_so`: Bắt buộc, số nguyên dương > 0. Nếu không tồn tại hồ sơ thực tập tương ứng sẽ trả về `HTTP 404 Not Found`.
+> - `tieu_de`: Bắt buộc, chuỗi không được để trống hoặc chỉ chứa khoảng trắng (hỗ trợ alias `ten_nhiem_vu`).
+> - `han_hoan_thanh`: Bắt buộc, định dạng ngày `YYYY-MM-DD`. Nếu định dạng sai sẽ trả về `HTTP 422 Unprocessable Entity`.
+> - `tien_do_phantram`: Tùy chọn, mặc định tự động gán là `0` (khoảng giá trị từ `0` đến `100`).
+> - `trang_thai`: Tùy chọn, mặc định tự động gán là `"Chưa bắt đầu"`.
+> - `mo_ta`: Tùy chọn, mô tả chi tiết công việc cần hoàn thành.
+
+#### Response mẫu (HTTP 201 Created):
+```json
+{
+  "status_code": 201,
+  "message": "Tạo nhiệm vụ mới thành công",
+  "data": {
+    "ma_nhiem_vu": 4,
+    "ma_ho_so": 1,
+    "tieu_de": "Phát triển tính năng quản lý nhiệm vụ thực tập",
+    "ten_nhiem_vu": "Phát triển tính năng quản lý nhiệm vụ thực tập",
+    "mo_ta": "Thiết kế model CSDL, xây dựng endpoint POST và kiểm thử tự động",
+    "han_hoan_thanh": "2026-10-25",
+    "tien_do_phantram": 0,
+    "trang_thai": "Chưa bắt đầu"
+  }
+}
+```
+
+

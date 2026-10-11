@@ -5,6 +5,15 @@ from database.models.nguoi_dung import NguoiDung
 from database.models.ho_so import HoSoThucTap
 from database.models.tai_lieu import TaiLieuHoSo
 from database.models.hop_dong import HopDong
+from database.models.nhiem_vu import NhiemVu
+from database.models.bao_cao_tuan import BaoCaoTuan
+from database.models.danh_gia import DanhGia
+from database.models.cham_cong import ChamCong
+from database.models.don_nghi_phep import DonNghiPhep
+from database.models.don_xin_nghi import DonXinNghi
+from database.models.ca_lam_viec import CaLamViec
+from database.models.phu_cap import PhuCap
+from database.models.yeu_cau_ho_tro import YeuCauHoTro
 
 __all__ = [
     "PhongBan",
@@ -14,4 +23,15 @@ __all__ = [
     "HoSoThucTap",
     "TaiLieuHoSo",
     "HopDong",
+    "NhiemVu",
+    "BaoCaoTuan",
+    "DanhGia",
+    "ChamCong",
+    "DonNghiPhep",
+    "DonXinNghi",
+    "CaLamViec",
+    "PhuCap",
+    "YeuCauHoTro",
 ]
+
+

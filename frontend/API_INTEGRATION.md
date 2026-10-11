@@ -14,7 +14,47 @@ Tài liệu đặc tả các giao thức kết nối, định dạng dữ liệu
 
 ## 📋 Danh sách Endpoints đã tích hợp
 
-### 1. Truy xuất chi tiết hồ sơ thực tập sinh
+### 1. Truy xuất danh sách hồ sơ thực tập sinh
+- **Method**: `GET`
+- **Endpoint**: `/api/v1/interns`
+- **Tham số Query**:
+  - `trang_thai_xet_duyet` *(Query string, tùy chọn)*: `ChoDuyet`, `DaDuyet`, `TuChoi`
+  - `trang_thai_thuc_tap` *(Query string, tùy chọn)*: `DangThucTap`, `HoanThanh`, `ThoiHoc`
+  - `limit` *(int, mặc định 100)*
+  - `offset` *(int, mặc định 0)*
+- **Tệp Frontend sử dụng**: `frontend/js/xet_duyet_ho_so.js`, `frontend/js/them_ho_so.js`
+- **Response mẫu (HTTP 200)**:
+```json
+{
+  "status_code": 200,
+  "message": "Danh sách thực tập sinh",
+  "total": 1,
+  "data": [
+    {
+      "ma_ho_so": 1,
+      "ma_nguoi_dung": 1,
+      "ho_ten": "Nguyễn Văn A",
+      "email": "vana@example.com",
+      "so_dien_thoai": "0912345678",
+      "chuyen_nganh": "Công nghệ thông tin",
+      "ma_truong": 1,
+      "ten_truong": "Đại học Thái Nguyên",
+      "ma_chuong_trinh": 1,
+      "ten_chuong_trinh": "Thực tập sinh Khóa Mùa Thu 2026",
+      "ngay_bat_dau": "2026-09-01",
+      "ngay_ket_thuc": "2026-12-30",
+      "ma_mentor": 3,
+      "ten_mentor": "Nguyễn Hướng Dẫn",
+      "trang_thai_xet_duyet": "ChoDuyet",
+      "trang_thai_thuc_tap": "DangThucTap"
+    }
+  ]
+}
+```
+
+---
+
+### 2. Truy xuất chi tiết hồ sơ thực tập sinh
 - **Method**: `GET`
 - **Endpoint**: `/api/v1/interns/{id}`
 - **Tham số**:
@@ -117,6 +157,163 @@ Tài liệu đặc tả các giao thức kết nối, định dạng dữ liệu
 
 ---
 
+### 5. Cập nhật tiến độ nhiệm vụ thực tập sinh
+- **Method**: `PATCH`
+- **Endpoint**: `/api/v1/tasks/{id}/progress`
+- **Tham số**:
+  - `id` *(Path parameter)*: Mã nhiệm vụ (`ma_nhiem_vu`)
+- **Request Body**:
+```json
+{
+  "tien_do_phantram": 100
+}
+```
+- **Quy tắc & Logic chuyển đổi**:
+  - `tien_do_phantram`: Số nguyên từ `0` đến `100`.
+  - Nếu `100%`: Trạng thái tự động đổi thành `"Hoàn thành"`.
+  - Nếu `1% - 99%`: Trạng thái tự động đổi thành `"Đang thực hiện"`.
+  - Nếu `0%`: Trạng thái tự động đổi thành `"Chưa bắt đầu"`.
+- **Tệp Frontend sử dụng**: `frontend/js/nhiem_vu.js`
+- **Response mẫu (HTTP 200)**:
+```json
+{
+  "status_code": 200,
+  "message": "Cập nhật tiến độ nhiệm vụ thành công",
+  "data": {
+    "ma_nhiem_vu": 1,
+    "ma_ho_so": 1,
+    "ten_nhiem_vu": "Nghiên cứu tài liệu kiến trúc hệ thống",
+    "mo_ta": "Đọc hiểu tài liệu thiết kế CSDL và luồng xử lý API",
+    "han_hoan_thanh": "2026-10-15",
+    "tien_do_phantram": 100,
+    "trang_thai": "Hoàn thành"
+  }
+}
+```
+
+---
+### 6. Tạo mới chương trình / Lịch thực tập
+- **Method**: `POST`
+- **Endpoint**: `/api/v1/programs`
+- **Request Body**:
+```json
+{
+  "ma_phong_ban": 1,
+  "ten_chuong_trinh": "Kỳ thực tập K16 Công nghệ Thông tin đợt 2",
+  "mo_ta": "Chương trình thực tập chuyên môn tại doanh nghiệp",
+  "ngay_bat_dau": "2024-11-01",
+  "ngay_ket_thuc": "2025-01-31"
+}
+```
+- **Tệp Frontend sử dụng**: `frontend/js/lich_thuc_tap.js`
+
+---
+
+### 7. Cập nhật thời gian chương trình thực tập (Timeline)
+- **Method**: `PATCH`
+- **Endpoint**: `/api/v1/programs/{id}/timeline`
+- **Tham số**:
+  - `id` *(Path parameter)*: Mã chương trình thực tập (`ma_chuong_trinh`)
+- **Request Body**:
+```json
+{
+  "ngay_bat_dau": "2026-10-01",
+  "ngay_ket_thuc": "2026-12-31"
+}
+```
+- **Quy tắc & Logic nghiệp vụ**:
+  - `ngay_bat_dau`, `ngay_ket_thuc`: Tùy chọn (cho phép cập nhật một hoặc cả 2 trường).
+  - Bắt buộc: **`ngay_ket_thuc > ngay_bat_dau`** (ngày kết thúc phải lớn hơn ngày bắt đầu).
+  - Phía Client validate trước khi gửi yêu cầu.
+  - Phía Backend validate và trả về `HTTP 422 Unprocessable Entity` nếu `ngay_ket_thuc <= ngay_bat_dau`, hoặc `HTTP 400 Bad Request` nếu xung đột mốc thời gian với CSDL.
+- **Tệp Frontend sử dụng**: `frontend/js/lich_thuc_tap.js` (giao diện `frontend/html/quanly/lich_thuc_tap.html`)
+- **Response mẫu (HTTP 200)**:
+```json
+{
+  "status_code": 200,
+  "message": "Cập nhật thời gian chương trình thực tập thành công",
+  "data": {
+    "ma_chuong_trinh": 1,
+    "ma_phong_ban": 1,
+    "ten_phong_ban": "Trung tâm Phát triển Phần mềm",
+    "ten_chuong_trinh": "Kỳ thực tập K16 Công nghệ Thông tin đợt 2",
+    "ngay_bat_dau": "2026-10-01",
+    "ngay_ket_thuc": "2026-12-31",
+    "mo_ta": "Chương trình đào tạo kỹ sư thực chiến"
+  }
+}
+```
+
+---
+
+### 8. Xem lịch trình & nhiệm vụ thực tập sinh
+- **Method**: `GET`
+- **Endpoint**: `/api/v1/interns/my-schedule`
+- **Tham số Query**:
+  - `ho_so_id` *(int)*: Mã hồ sơ thực tập
+- **Tệp Frontend sử dụng**: `frontend/js/nhiem_vu.js`
+- **Response mẫu (HTTP 200)**:
+```json
+{
+  "status_code": 200,
+  "message": "Lấy lịch trình và nhiệm vụ thực tập sinh thành công",
+  "data": {
+    "ho_ten": "Nguyễn Văn A",
+    "ma_ho_so": 1,
+    "ten_chuong_trinh": "Thực tập sinh Khóa Mùa Thu 2026",
+    "danh_sach_nhiem_vu": [
+      {
+        "ma_nhiem_vu": 1,
+        "ten_nhiem_vu": "Nghiên cứu kiến trúc hệ thống",
+        "mo_ta": "Đọc tài liệu và viết báo cáo phân tích",
+        "tien_do_phantram": 85
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 9. Nộp báo cáo tuần thực tập
+- **Method**: `POST`
+- **Endpoint**: `/api/v1/reports`
+- **Request Body**:
+```json
+{
+  "ma_ho_so": 1,
+  "tuan_so": 6,
+  "noi_dung_cong_viec": "Hoàn thành module tích hợp API và sửa lỗi giao diện",
+  "ket_qua_dat_duoc": "Mã nguồn đã merge và kiểm thử thành công"
+}
+```
+- **Tệp Frontend sử dụng**: `frontend/js/nhiem_vu.js`
+
+---
+
+### 10. Ký kết hợp đồng điện tử
+- **Method**: `PATCH`
+- **Endpoint**: `/api/v1/contracts/{id}/confirm`
+- **Request Body**:
+```json
+{
+  "trang_thai": "DaXacNhan",
+  "trang_thai_thuc_tap": "DangThucTap",
+  "ghi_chu": "Ký số điện tử OTP qua Cổng sinh viên"
+}
+```
+- **Tệp Frontend sử dụng**: `frontend/js/hop_dong.js`
+
+---
+
+### 11. Tải tài liệu đính kèm (CV, Đơn xin, Giấy giới thiệu)
+- **Method**: `POST`
+- **Endpoint**: `/api/v1/documents/upload`
+- **Content-Type**: `multipart/form-data`
+- **Tệp Frontend sử dụng**: `frontend/js/tai_tai_lieu.js`
+
+---
+
 ## 🛡️ Cơ chế Fallback và Xử lý Lỗi
 
 Phía Frontend cài đặt lớp xử lý an toàn tự động:
@@ -126,3 +323,4 @@ Phía Frontend cài đặt lớp xử lý an toàn tự động:
    - Giao diện có huy hiệu kết nối (Badge) tại góc màn hình thông báo:
      - 🟢 *Đã kết nối API Backend*: Đang lấy dữ liệu thực từ CSDL.
      - 🟡 *Chế độ Thử nghiệm (Offline)*: Đang sử dụng dữ liệu mẫu cho phép thử nghiệm mượt mà.
+

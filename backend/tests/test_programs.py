@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fastapi.testclient import TestClient
 from main import app
+from tests.conftest import MYSQL_AVAILABLE, TestSessionLocal
 from database.session import SessionLocal
 from database.models import ChuongTrinhThucTap
 
@@ -16,11 +17,20 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def clean_created_test_programs():
     """Dọn dẹp các chương trình được tạo trong quá trình test sau mỗi test case"""
+    db = SessionLocal() if MYSQL_AVAILABLE else TestSessionLocal()
+    initial_ids = [row[0] for row in db.query(ChuongTrinhThucTap.ma_chuong_trinh).all()]
+    db.close()
     yield
-    db = SessionLocal()
+    db = SessionLocal() if MYSQL_AVAILABLE else TestSessionLocal()
     try:
-        # Xóa các chương trình test có mã lớn hơn 1 (dữ liệu mẫu ban đầu là 1)
-        db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh > 1).delete()
+        if initial_ids:
+            db.query(ChuongTrinhThucTap).filter(~ChuongTrinhThucTap.ma_chuong_trinh.in_(initial_ids)).delete(synchronize_session=False)
+        else:
+            db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh > 1).delete()
+        prog1 = db.query(ChuongTrinhThucTap).filter(ChuongTrinhThucTap.ma_chuong_trinh == 1).first()
+        if prog1:
+            prog1.ngay_bat_dau = date(2026, 9, 1)
+            prog1.ngay_ket_thuc = date(2026, 12, 30)
         db.commit()
     finally:
         db.close()
@@ -209,3 +219,125 @@ def test_create_program_same_dates_success():
     prog = response.json()["data"]
     assert prog["ngay_bat_dau"] == "2026-10-15"
     assert prog["ngay_ket_thuc"] == "2026-10-15"
+
+
+# ==============================================================================
+# BỘ KIỂM THỬ CHO API: PATCH /api/v1/programs/{id}/timeline
+# ==============================================================================
+
+def test_update_timeline_success_both_dates():
+    """Kiểm tra cập nhật thành công cả ngày bắt đầu và kết thúc (ngay_ket_thuc > ngay_bat_dau) -> 200 OK"""
+    payload = {
+        "ngay_bat_dau": "2026-10-01",
+        "ngay_ket_thuc": "2026-12-31"
+    }
+    response = client.patch("/api/v1/programs/1/timeline", json=payload)
+    assert response.status_code == 200
+    res_data = response.json()
+    assert res_data["status_code"] == 200
+    assert res_data["message"] == "Cập nhật thời gian chương trình thực tập thành công"
+    assert res_data["data"]["ma_chuong_trinh"] == 1
+    assert res_data["data"]["ngay_bat_dau"] == "2026-10-01"
+    assert res_data["data"]["ngay_ket_thuc"] == "2026-12-31"
+
+
+def test_update_timeline_success_start_date_only():
+    """Kiểm tra cập nhật chỉ ngày bắt đầu mới (hợp lệ với ngày kết thúc hiện tại trong DB) -> 200 OK"""
+    payload = {
+        "ngay_bat_dau": "2026-09-15"
+    }
+    response = client.patch("/api/v1/programs/1/timeline", json=payload)
+    assert response.status_code == 200
+    res_data = response.json()
+    assert res_data["data"]["ngay_bat_dau"] == "2026-09-15"
+    assert res_data["data"]["ngay_ket_thuc"] == "2026-12-30"
+
+
+def test_update_timeline_success_end_date_only():
+    """Kiểm tra cập nhật chỉ ngày kết thúc mới (hợp lệ với ngày bắt đầu hiện tại trong DB) -> 200 OK"""
+    payload = {
+        "ngay_ket_thuc": "2026-11-30"
+    }
+    response = client.patch("/api/v1/programs/1/timeline", json=payload)
+    assert response.status_code == 200
+    res_data = response.json()
+    assert res_data["data"]["ngay_bat_dau"] == "2026-09-01"
+    assert res_data["data"]["ngay_ket_thuc"] == "2026-11-30"
+
+
+def test_update_timeline_invalid_end_before_start():
+    """Kiểm tra gửi cả 2 ngày nhưng ngày kết thúc trước ngày bắt đầu -> 422 Unprocessable Entity"""
+    payload = {
+        "ngay_bat_dau": "2026-11-01",
+        "ngay_ket_thuc": "2026-10-01"
+    }
+    response = client.patch("/api/v1/programs/1/timeline", json=payload)
+    assert response.status_code == 422
+
+
+def test_update_timeline_invalid_end_equals_start():
+    """Kiểm tra gửi cả 2 ngày nhưng ngày kết thúc bằng ngày bắt đầu (yêu cầu kết thúc > bắt đầu) -> 422 Unprocessable Entity"""
+    payload = {
+        "ngay_bat_dau": "2026-11-01",
+        "ngay_ket_thuc": "2026-11-01"
+    }
+    response = client.patch("/api/v1/programs/1/timeline", json=payload)
+    assert response.status_code == 422
+
+
+def test_update_timeline_conflict_with_existing_end():
+    """Kiểm tra chỉ đổi ngày bắt đầu nhưng lớn hơn hoặc bằng ngày kết thúc hiện tại trong DB -> 400 Bad Request"""
+    payload = {
+        "ngay_bat_dau": "2027-01-01"
+    }
+    response = client.patch("/api/v1/programs/1/timeline", json=payload)
+    assert response.status_code == 400
+    assert "Ngày kết thúc phải lớn hơn ngày bắt đầu" in response.json()["detail"]
+
+
+def test_update_timeline_conflict_with_existing_start():
+    """Kiểm tra chỉ đổi ngày kết thúc nhưng nhỏ hơn hoặc bằng ngày bắt đầu hiện tại trong DB -> 400 Bad Request"""
+    payload = {
+        "ngay_ket_thuc": "2026-08-01"
+    }
+    response = client.patch("/api/v1/programs/1/timeline", json=payload)
+    assert response.status_code == 400
+    assert "Ngày kết thúc phải lớn hơn ngày bắt đầu" in response.json()["detail"]
+
+
+def test_update_timeline_same_as_existing_boundary_rejected():
+    """Kiểm tra chỉ đổi ngày kết thúc trùng đúng ngày bắt đầu hiện tại (2026-09-01) -> 400 Bad Request"""
+    payload = {
+        "ngay_ket_thuc": "2026-09-01"
+    }
+    response = client.patch("/api/v1/programs/1/timeline", json=payload)
+    assert response.status_code == 400
+    assert "Ngày kết thúc phải lớn hơn ngày bắt đầu" in response.json()["detail"]
+
+
+def test_update_timeline_empty_body():
+    """Kiểm tra không gửi trường nào trong body -> 422 Unprocessable Entity"""
+    response = client.patch("/api/v1/programs/1/timeline", json={})
+    assert response.status_code == 422
+
+
+def test_update_timeline_not_found():
+    """Kiểm tra cập nhật timeline của chương trình không tồn tại -> 404 Not Found"""
+    payload = {
+        "ngay_bat_dau": "2026-10-01",
+        "ngay_ket_thuc": "2026-12-31"
+    }
+    response = client.patch("/api/v1/programs/9999/timeline", json=payload)
+    assert response.status_code == 404
+    assert "Không tìm thấy chương trình thực tập ID: 9999" in response.json()["detail"]
+
+
+def test_update_timeline_invalid_id():
+    """Kiểm tra ID âm hoặc bằng 0 -> 422 Unprocessable Entity"""
+    payload = {
+        "ngay_bat_dau": "2026-10-01",
+        "ngay_ket_thuc": "2026-12-31"
+    }
+    response = client.patch("/api/v1/programs/0/timeline", json=payload)
+    assert response.status_code == 422
+
