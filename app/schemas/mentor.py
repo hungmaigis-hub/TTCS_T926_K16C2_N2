@@ -13,6 +13,9 @@ class MentorBase(BaseModel):
     so_luong_toi_da: int = 5
     trang_thai: str = "HoatDong"
 
+class MentorCreate(MentorBase):
+    pass
+
 class MentorSimpleResponse(BaseModel):
     id: int
     ma_can_bo: str

@@ -901,6 +901,16 @@ def assign_mentor_to_intern(id: int, payload: AssignMentorRequest, db: Session =
                 status_code=403,
                 detail=f"Tài khoản của Mentor '{mentor.ho_ten}' đã bị vô hiệu hóa, không thể gán."
             )
+        # Kiểm tra giới hạn chỉ tiêu (Quota: tối đa 5 sinh viên theo GEMINI.md B.3)
+        current_count = db.query(HoSoThucTap).filter(
+            HoSoThucTap.ma_mentor == mentor.ma_nguoi_dung,
+            HoSoThucTap.ma_ho_so != id
+        ).count()
+        if current_count >= 5:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Mentor '{mentor.ho_ten}' đã đủ chỉ tiêu hướng dẫn tối đa ({current_count}/5 sinh viên), không thể tiếp nhận thêm."
+            )
         ho_so.ma_mentor = mentor.ma_nguoi_dung
         mentor_data = {
             "ma_mentor": mentor.ma_nguoi_dung,
