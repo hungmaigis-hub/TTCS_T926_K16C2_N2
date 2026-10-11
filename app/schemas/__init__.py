@@ -1,13 +1,20 @@
+from app.schemas.mentor import MentorBase, MentorCreate, MentorResponse, MentorSimpleResponse
 from app.schemas.intern import (
     AssignMentorRequest,
-    InternResponse,
     AssignMentorResponse,
-    MentorResponse,
+    HoSoThucTapBase,
+    HoSoThucTapCreate,
+    HoSoThucTapResponse
 )
 
 __all__ = [
-    "AssignMentorRequest",
-    "InternResponse",
-    "AssignMentorResponse",
+    "MentorBase",
+    "MentorCreate",
     "MentorResponse",
+    "MentorSimpleResponse",
+    "AssignMentorRequest",
+    "AssignMentorResponse",
+    "HoSoThucTapBase",
+    "HoSoThucTapCreate",
+    "HoSoThucTapResponse",
 ]

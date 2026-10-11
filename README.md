@@ -1,126 +1,207 @@
-# Backend (FastAPI): Quản lý Thực tập sinh — NV15: Phân công Mentor
+# 🚀 HỆ THỐNG QUẢN LÝ THỰC TẬP SINH (TTCS_T926_K16C2_N2)
 
-- **Người thực hiện (Assignee)**: Nguyễn Văn Hiếu (Backend)
-- **Nhiệm vụ**: Viết endpoint `PATCH /api/v1/interns/{id}/assign-mentor` cập nhật trường `ma_mentor` trong `ho_so_thuc_tap`.
-- **Dành cho Frontend**: Cung cấp API để hiển thị danh sách thực tập sinh, dropdown `<select>` chọn Mentor và nút Lưu phân công mentor.
+## 📌 Phân Hệ Backend: API Phân Công Mentor (Assign Mentor)
+
+### 👤 Thông tin thành viên & Phân công nhiệm vụ
+- **Họ và tên:** **Nguyễn Văn Hiếu**
+- **Vai trò:** Backend Developer (FastAPI)
+- **Nhiệm vụ theo Kế hoạch dự án:** Viết endpoint `PATCH /api/v1/interns/{id}/assign-mentor` cập nhật trường `ma_mentor` trong `ho_so_thuc_tap`.
+- **User Story tương ứng (Theo Kế hoạch - Mục tiêu Quản lý Mentor & Phòng ban):**
+  - **US 30:** *"Là HR, tôi muốn gán mentor cho thực tập sinh để họ được hướng dẫn."*
+  - **US 12:** *"Là HR, tôi muốn phân công thực tập sinh cho mentor để họ được hướng dẫn."*
+  - **US 31:** *"Là HR, tôi muốn xem số lượng thực tập sinh mỗi mentor quản lý để cân bằng khối lượng công việc."*
+- **Nhánh Git (Feature Branch):** `feature/NV15-hieu-backend`
+- **Repository:** `https://github.com/hungmaigis-hub/TTCS_T926_K16C2_N2.git`
 
 ---
 
-## 1. Cài đặt và Khởi chạy
+## 🏗️ Cấu Trúc Thư Mục Dự Án (Project Structure)
 
-### Cài thư viện:
+```text
+├── app/
+│   ├── api/
+│   │   └── v1/
+│   │       ├── endpoints/
+│   │       │   ├── interns.py       # [Trọng tâm] Chứa API PATCH assign-mentor & quản lý TTS
+│   │       │   └── mentors.py       # API lấy danh sách Mentor cho Frontend chọn
+│   │       └── api.py               # Gom các router của API v1
+│   ├── core/
+│   │   ├── config.py                # Cấu hình hệ thống & CORS
+│   │   └── database.py              # Kết nối SQLAlchemy ORM & SQLite
+│   ├── models/
+│   │   ├── ho_so_thuc_tap.py        # Model bảng ho_so_thuc_tap (có trường ma_mentor)
+│   │   └── mentor.py                # Model bảng mentors
+│   ├── schemas/
+│   │   ├── intern.py                # Pydantic schemas cho AssignMentorRequest, Response
+│   │   └── mentor.py                # Pydantic schemas cho Mentor
+│   ├── services/
+│   │   └── intern_service.py        # Business logic gán mentor, kiểm tra ràng buộc
+│   └── main.py                      # Khởi chạy FastAPI app, cấu hình CORS, Swagger UI
+├── tests/
+│   └── test_assign_mentor.py        # Bộ unit test toàn diện (pytest)
+├── demo_frontend.html               # Giao diện HTML/JS mẫu cho Frontend test trực tiếp API
+├── seed_data.py                     # Script tạo sẵn dữ liệu mẫu thực tế
+├── requirements.txt                 # Khai báo các thư viện phụ thuộc
+├── .gitignore                       # Bỏ qua file rác, file tạm, cache, DB
+└── README.md                        # Hướng dẫn chi tiết dự án & hướng dẫn Git
+```
+
+---
+
+## 📡 Chi Tiết Đặc Tả API (API Specification)
+
+### 🎯 1. Endpoint Trọng Tâm: `PATCH /api/v1/interns/{id}/assign-mentor`
+
+- **Mục đích:** Cập nhật trường `ma_mentor` trong bảng `ho_so_thuc_tap` cho thực tập sinh có ID tương ứng.
+- **Phương thức:** `PATCH`
+- **URL Path:** `/api/v1/interns/{id}/assign-mentor`
+- **Path Parameters:**
+  - `id` (integer, bắt buộc): ID của hồ sơ thực tập sinh cần gán mentor.
+
+#### 📥 Request Body (JSON):
+```json
+{
+  "ma_mentor": 1,
+  "ghi_chu": "Phân công hướng dẫn dự án Backend FastAPI"
+}
+```
+> **Lưu ý đặc biệt:** Nếu muốn **Hủy phân công** (Unassign), truyền `"ma_mentor": null`:
+```json
+{
+  "ma_mentor": null,
+  "ghi_chu": "Hủy gán mentor"
+}
+```
+
+#### 📤 Phản Hồi Thành Công (HTTP 200 OK):
+```json
+{
+  "success": true,
+  "message": "Phân công mentor thành công",
+  "data": {
+    "id": 1,
+    "ma_sv": "DTC245180138",
+    "ho_ten": "Nguyễn Văn Hiếu",
+    "email": "dtc245180138@ictu.edu.vn",
+    "so_dien_thoai": "0988776655",
+    "truong_hoc": "Đại học Công nghệ Thông tin & Truyền thông (ICTU)",
+    "chuyen_nganh": "Kỹ thuật phần mềm",
+    "ma_mentor": 1,
+    "mentor": {
+      "id": 1,
+      "ma_can_bo": "MEN01",
+      "ho_ten": "Nguyễn Minh Tuấn",
+      "email": "tuan.nguyen@company.com",
+      "phong_ban": "Phòng Kỹ thuật Phần mềm",
+      "chuc_vu": "Tech Lead Backend",
+      "chuyen_mon": "FastAPI, Python, Microservices, SQL"
+    },
+    "trang_thai": "DangThucTap",
+    "ngay_bat_dau": "2026-09-01",
+    "ngay_ket_thuc": "2026-12-31",
+    "ghi_chu_phan_cong": "Phân công hướng dẫn dự án Backend FastAPI",
+    "ngay_gan_mentor": "2026-10-11T04:30:00",
+    "created_at": "2026-10-11T04:00:00",
+    "updated_at": "2026-10-11T04:30:00"
+  }
+}
+```
+
+#### ⚠️ Các Mã Lỗi Xử Lý (Error Responses):
+1. **HTTP 404 Not Found (Không tìm thấy thực tập sinh):**
+   ```json
+   { "detail": "Không tìm thấy hồ sơ thực tập sinh với ID = 999" }
+   ```
+2. **HTTP 404 Not Found (Không tìm thấy mentor):**
+   ```json
+   { "detail": "Không tìm thấy mentor với ID = 999" }
+   ```
+3. **HTTP 400 Bad Request (Mentor không khả dụng):**
+   ```json
+   { "detail": "Mentor 'Vũ Hải Đăng' hiện không khả dụng (Trạng thái: TamNghi)" }
+   ```
+4. **HTTP 400 Bad Request (Mentor quá tải số lượng):**
+   ```json
+   { "detail": "Mentor 'Nguyễn Minh Tuấn' đã đạt giới hạn tối đa (5 thực tập sinh)" }
+   ```
+
+---
+
+### 🌐 2. Các API Hỗ Trợ Đội Ngũ Frontend (Supporting APIs)
+
+| Phương thức | Endpoint | Chức năng | Phục vụ Frontend |
+|---|---|---|---|
+| `GET` | `/api/v1/interns` | Lấy danh sách thực tập sinh | Render bảng danh sách sinh viên |
+| `GET` | `/api/v1/interns/{id}` | Lấy chi tiết thực tập sinh | Xem thông tin chi tiết / profile |
+| `GET` | `/api/v1/mentors` | Lấy danh sách tất cả mentor | Đổ dữ liệu vào Dropdown / Select chọn Mentor |
+| `GET` | `/docs` | Swagger UI tương tác | Test trực tiếp API trên trình duyệt |
+
+---
+
+## 🛠️ Hướng Dẫn Cài Đặt & Chạy Thử (Quick Start)
+
+### 1. Cài đặt môi trường ảo & Thư viện
 ```bash
+python -m venv venv
+# Trên Windows:
+venv\Scripts\activate
+# Cài đặt thư viện:
 pip install -r requirements.txt
 ```
 
-### Chạy ứng dụng FastAPI:
+### 2. Khởi tạo dữ liệu mẫu (Seed Data)
 ```bash
-uvicorn app.main:app --reload --port 8000
-```
-- Swagger UI (Xem & Test API trực quan): [http://localhost:8000/docs](http://localhost:8000/docs)
-- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
-
-*(Lưu ý: Hệ thống đã tích hợp sẵn data seed mẫu gồm các mentor và thực tập sinh, chạy lên là có sẵn data để test).*
-
----
-
-## 2. Tài liệu API dành cho Frontend & Tester
-
-### 🎯 API 1 (Nhiệm vụ chính NV15): Gán Mentor cho thực tập sinh
-- **Method**: `PATCH`
-- **URL**: `/api/v1/interns/{id}/assign-mentor`
-- **Path Param**: `id` (int, ví dụ: `1`, `2`, ...)
-- **Headers**: `Content-Type: application/json`
-- **Request Body**:
-```json
-{
-  "ma_mentor": "MTR001"
-}
+python seed_data.py
 ```
 
-#### Response thành công (`200 OK`):
-```json
-{
-  "message": "Gán mentor cho thực tập sinh thành công",
-  "data": {
-    "id": 1,
-    "ma_thuc_tap_sinh": "TTS2024001",
-    "ho_ten": "Lê Hoàng Huy",
-    "email": "huy.le@university.edu.vn",
-    "truong_dai_hoc": "Đại học Quốc gia",
-    "chuyen_nganh": "Công nghệ Thông tin",
-    "vi_tri_thuc_tap": "Frontend Intern",
-    "ma_phong_ban": "PB01",
-    "ma_mentor": "MTR001",
-    "trang_thai": "dang_thuc_tap",
-    "ngay_cap_nhat": "2026-10-02T13:45:00"
-  }
-}
-```
-
-#### Các mã lỗi cần xử lý:
-- `404 Not Found`: Khi không tìm thấy hồ sơ thực tập sinh theo `id` hoặc không tìm thấy mentor theo `ma_mentor`.
-```json
-{ "detail": "Không tìm thấy hồ sơ thực tập sinh có id = 999" }
-```
-- `400 Bad Request`: Khi người dùng được chọn không có vai trò Mentor hoặc tài khoản không hoạt động.
-```json
-{ "detail": "Người dùng 'Nguyễn Văn Test' không có vai trò Mentor (Role hiện tại: Employee)." }
-```
-
----
-
-### 📋 API 2: Lấy danh sách Mentor (Đổ vào `<select>` dropdown trên Frontend)
-- **Method**: `GET`
-- **URL**: `/api/v1/interns/mentors`
-- **Response**: Trả về danh sách mentor hợp lệ (`role = "Mentor"` & `is_active = true`).
-
----
-
-### 📋 API 3: Lấy danh sách Thực tập sinh (Render ra bảng danh sách)
-- **Method**: `GET`
-- **URL**: `/api/v1/interns`
-
----
-
-## 3. Code mẫu JavaScript (fetch) cho các bạn Frontend
-
-```javascript
-// Hàm gọi API khi người dùng chọn mentor và bấm Lưu
-async function handleAssignMentor(internId, selectedMaMentor) {
-  try {
-    const response = await fetch(`http://localhost:8000/api/v1/interns/${internId}/assign-mentor`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ma_mentor: selectedMaMentor,
-      }),
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      alert("Lỗi: " + result.detail);
-      return;
-    }
-
-    alert(result.message);
-    // Reload lại bảng hoặc cập nhật giao diện
-  } catch (error) {
-    console.error("Lỗi kết nối API:", error);
-    alert("Không thể kết nối đến máy chủ");
-  }
-}
-```
-
----
-
-## 4. Hướng dẫn Đẩy Code Lên GitHub (Git Push)
-
-Mở terminal trong thư mục dự án và chạy các lệnh:
+### 3. Chạy Server FastAPI
 ```bash
+uvicorn app.main:app --reload
+```
+Server chạy tại: `http://127.0.0.1:8000`
+- Swagger UI tài liệu: `http://127.0.0.1:8000/docs`
+- Redoc tài liệu: `http://127.0.0.1:8000/redoc`
+
+### 4. Chạy Unit Test
+```bash
+pytest -v
+```
+
+### 5. Thử nghiệm với giao diện mẫu (Dành cho Frontend)
+Mở trực tiếp file `demo_frontend.html` bằng trình duyệt (Chrome / Edge / Firefox) để trải nghiệm giao diện test thực tế, bấm chọn sinh viên, gán mentor và xem dữ liệu phản hồi!
+
+---
+
+## 🌿 HƯỚNG DẪN PUSH CODE LÊN GITHUB (DÀNH CHO NGUYỄN VĂN HIẾU)
+
+Để nộp bài chuẩn quy trình nhóm và đẩy lên nhánh `feature/NV15-hieu-backend` cho anh em Frontend kéo về:
+
+Mở **Terminal (PowerShell)** tại thư mục dự án và chạy các lệnh sau:
+
+```powershell
+# 1. Thêm toàn bộ file mới vào Git
 git add .
-git commit -m "feat(backend): hoan thanh endpoint PATCH /api/v1/interns/{id}/assign-mentor (NV15)"
-git push origin <ten-branch-cua-ban>
+
+# 2. Tạo commit theo quy chuẩn conventional commit
+git commit -m "feat(backend): hoan thanh endpoint PATCH /api/v1/interns/{id}/assign-mentor (NV15 - Nguyen Van Hieu)"
+
+# 3. Tạo và chuyển sang nhánh riêng của bạn (nếu chưa ở nhánh này)
+git checkout -B feature/NV15-hieu-backend
+
+# 4. Kiểm tra remote origin đã trỏ về đúng repo nhóm
+git remote set-url origin https://github.com/hungmaigis-hub/TTCS_T926_K16C2_N2.git
+
+# 5. Đẩy nhánh lên GitHub
+git push -u origin feature/NV15-hieu-backend
 ```
+
+---
+
+## 🤝 Dành Cho Đồng Đội Frontend Kéo Về Làm Việc
+
+Khi anh em Frontend muốn lấy nhánh của Hiếu về máy để ghép API vào giao diện:
+```powershell
+git fetch origin
+git checkout feature/NV15-hieu-backend
+```
+Các bạn Frontend chỉ cần mở file `demo_frontend.html` hoặc xem trực tiếp tại Swagger `/docs` để lấy chính xác định dạng Request/Response!

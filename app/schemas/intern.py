@@ -1,51 +1,51 @@
-from pydantic import BaseModel, Field
+from datetime import datetime, date
 from typing import Optional
-from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field
+from app.schemas.mentor import MentorSimpleResponse
 
-
-# ── REQUEST SCHEMA ──────────────────────────────────────────
 class AssignMentorRequest(BaseModel):
-    """Payload gửi lên từ Frontend khi chọn mentor trong dropdown và bấm Lưu."""
-    ma_mentor: str = Field(
-        ...,
-        min_length=1,
-        description="Mã của mentor được phân công",
-        json_schema_extra={"example": "MTR001"}
+    """
+    Schema nhận payload phân công mentor cho thực tập sinh.
+    - ma_mentor: ID của Mentor trong hệ thống (hoặc null nếu hủy gán)
+    - ghi_chu: Ghi chú nội dung phân công / dự án hướng dẫn
+    """
+    ma_mentor: Optional[int] = Field(
+        default=...,
+        description="ID của Mentor (tương ứng trường id trong bảng mentors) cần gán cho thực tập sinh. Truyền null nếu muốn hủy gán."
+    )
+    ghi_chu: Optional[str] = Field(
+        default=None,
+        max_length=255,
+        description="Ghi chú phân công, ví dụ: 'Hướng dẫn dự án Quản lý TTS'"
     )
 
-
-# ── RESPONSE SCHEMAS ─────────────────────────────────────────
-class InternResponse(BaseModel):
-    id: int
-    ma_thuc_tap_sinh: str
+class HoSoThucTapBase(BaseModel):
+    ma_sv: str
     ho_ten: str
-    email: Optional[str] = None
-    truong_dai_hoc: Optional[str] = None
+    email: str
+    so_dien_thoai: Optional[str] = None
+    truong_hoc: Optional[str] = None
     chuyen_nganh: Optional[str] = None
-    vi_tri_thuc_tap: Optional[str] = None
-    ma_phong_ban: Optional[str] = None
-    ma_mentor: Optional[str] = None
-    trang_thai: Optional[str] = None
-    ngay_cap_nhat: Optional[datetime] = None
+    trang_thai: str = "DangThucTap"
+    ngay_bat_dau: Optional[date] = None
+    ngay_ket_thuc: Optional[date] = None
 
-    class Config:
-        from_attributes = True
+class HoSoThucTapCreate(HoSoThucTapBase):
+    ma_mentor: Optional[int] = None
 
+class HoSoThucTapResponse(HoSoThucTapBase):
+    id: int
+    ma_mentor: Optional[int] = None
+    mentor: Optional[MentorSimpleResponse] = None
+    ghi_chu_phan_cong: Optional[str] = None
+    ngay_gan_mentor: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 class AssignMentorResponse(BaseModel):
+    """Schema trả về chuẩn sau khi gán mentor thành công"""
+    success: bool = True
     message: str = "Phân công mentor thành công"
-    data: InternResponse
-
-
-class MentorResponse(BaseModel):
-    id: int
-    ma_mentor: str
-    ho_ten: str
-    email: Optional[str] = None
-    chuc_vu: Optional[str] = None
-    phong_ban: Optional[str] = None
-    role: Optional[str] = None
-    is_active: bool
-
-    class Config:
-        from_attributes = True
+    data: HoSoThucTapResponse

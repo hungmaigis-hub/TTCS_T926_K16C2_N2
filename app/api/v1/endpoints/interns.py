@@ -1,113 +1,101 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional
+from fastapi import APIRouter, Depends, Path, status
 from sqlalchemy.orm import Session
-from typing import List
-
-from app.database import get_db
-from app.models.ho_so_thuc_tap import HoSoThucTap
-from app.models.mentor import Mentor
+from app.core.database import get_db
 from app.schemas.intern import (
     AssignMentorRequest,
     AssignMentorResponse,
-    InternResponse,
-    MentorResponse,
+    HoSoThucTapResponse,
+    HoSoThucTapCreate
 )
+from app.models.ho_so_thuc_tap import HoSoThucTap
+from app.services.intern_service import InternService
 
-router = APIRouter()
+router = APIRouter(prefix="/interns", tags=["Interns - Quản lý Hồ sơ Thực tập sinh"])
 
-
-# ── ENDPOINT CHÍNH CỦA NHIỆM VỤ ──────────────────────────────────────────────
 @router.patch(
     "/{id}/assign-mentor",
     response_model=AssignMentorResponse,
     status_code=status.HTTP_200_OK,
-    summary="Phân công mentor cho thực tập sinh",
-    description="Cập nhật trường ma_mentor trong bảng ho_so_thuc_tap dựa theo id thực tập sinh.",
+    summary="Phân công / Gán Mentor cho thực tập sinh (Nhiệm vụ: Nguyễn Văn Hiếu)",
+    description=(
+        "Endpoint này cập nhật trường `ma_mentor` trong bảng `ho_so_thuc_tap` cho thực tập sinh có `id` tương ứng.\n"
+        "- **Validation:**\n"
+        "  + Kiểm tra sự tồn tại của hồ sơ thực tập sinh (`id`).\n"
+        "  + Kiểm tra sự tồn tại và tính khả dụng của Mentor (`ma_mentor`).\n"
+        "  + Kiểm tra giới hạn số lượng sinh viên mà Mentor đang hướng dẫn.\n"
+        "- **Hỗ trợ:**\n"
+        "  + Nếu truyền `ma_mentor` là số nguyên hợp lệ: gán mentor và cập nhật thời điểm gán.\n"
+        "  + Nếu truyền `ma_mentor: null`: hủy gán mentor cho thực tập sinh."
+    )
 )
 def assign_mentor(
-    id: int,
-    payload: AssignMentorRequest,
-    db: Session = Depends(get_db),
+    id: int = Path(..., title="ID của Thực tập sinh trong ho_so_thuc_tap", example=1),
+    payload: AssignMentorRequest = ...,
+    db: Session = Depends(get_db)
 ):
     """
-    Endpoint PATCH /api/v1/interns/{id}/assign-mentor:
-    - Kiểm tra hồ sơ thực tập sinh theo id
-    - Kiểm tra mã mentor tồn tại và hợp lệ (role Mentor)
-    - Cập nhật ma_mentor trong bảng ho_so_thuc_tap
+    API PATCH /api/v1/interns/{id}/assign-mentor
+    Cập nhật trường ma_mentor trong ho_so_thuc_tap
     """
-    # 1. Tìm hồ sơ thực tập sinh theo id
-    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.id == id).first()
-    if not ho_so:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Không tìm thấy hồ sơ thực tập sinh có id = {id}",
-        )
-
-    # 2. Kiểm tra mentor có tồn tại không
-    mentor = db.query(Mentor).filter(Mentor.ma_mentor == payload.ma_mentor).first()
-    if not mentor:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Mentor với mã '{payload.ma_mentor}' không tồn tại trong hệ thống.",
-        )
-
-    # 3. Kiểm tra kiểm thử: chỉ người dùng có role Mentor và đang hoạt động mới được chọn
-    if mentor.role != "Mentor":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Người dùng '{mentor.ho_ten}' không có vai trò Mentor (Role hiện tại: {mentor.role}).",
-        )
-    if not mentor.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Mentor '{mentor.ho_ten}' hiện đang không hoạt động.",
-        )
-
-    # 4. Cập nhật trường ma_mentor trong ho_so_thuc_tap
-    ho_so.ma_mentor = payload.ma_mentor
-    db.commit()
-    db.refresh(ho_so)
-
+    updated_intern = InternService.assign_mentor(db=db, intern_id=id, request=payload)
+    
+    action_msg = "Phân công mentor thành công" if payload.ma_mentor is not None else "Đã hủy phân công mentor thành công"
     return AssignMentorResponse(
-        message="Gán mentor cho thực tập sinh thành công",
-        data=InternResponse.model_validate(ho_so),
+        success=True,
+        message=action_msg,
+        data=updated_intern
     )
-
-
-# ── CÁC ENDPOINT HỖ TRỢ CHO FRONTEND VÀ TESTER ──────────────────────────────
-@router.get(
-    "",
-    response_model=List[InternResponse],
-    summary="Lấy danh sách hồ sơ thực tập sinh",
-    description="Frontend sử dụng để hiển thị bảng danh sách thực tập sinh.",
-)
-def get_interns(db: Session = Depends(get_db)):
-    return db.query(HoSoThucTap).all()
-
-
-@router.get(
-    "/mentors",
-    response_model=List[MentorResponse],
-    summary="Lấy danh sách mentor hợp lệ",
-    description="Frontend sử dụng để đổ dữ liệu vào dropdown <select> chọn mentor.",
-)
-def get_mentors(db: Session = Depends(get_db)):
-    return (
-        db.query(Mentor)
-        .filter(Mentor.role == "Mentor", Mentor.is_active == True)
-        .all()
-    )
-
 
 @router.get(
     "/{id}",
-    response_model=InternResponse,
-    summary="Chi tiết một hồ sơ thực tập sinh",
+    response_model=HoSoThucTapResponse,
+    summary="Xem chi tiết hồ sơ thực tập sinh theo ID",
+    description="Trả về thông tin chi tiết của 1 hồ sơ thực tập sinh kèm thông tin Mentor đã gán (nếu có)."
 )
-def get_intern_detail(id: int, db: Session = Depends(get_db)):
-    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.id == id).first()
-    if not ho_so:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Không tìm thấy hồ sơ thực tập sinh có id = {id}",
-        )
-    return ho_so
+def get_intern_detail(
+    id: int = Path(..., title="ID của Thực tập sinh", example=1),
+    db: Session = Depends(get_db)
+):
+    return InternService.get_intern_by_id(db=db, intern_id=id)
+
+@router.get(
+    "",
+    response_model=List[HoSoThucTapResponse],
+    summary="Lấy danh sách tất cả hồ sơ thực tập sinh",
+    description="Hỗ trợ Frontend hiển thị bảng danh sách thực tập sinh để chọn gán mentor."
+)
+def list_interns(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    return InternService.get_all_interns(db=db, skip=skip, limit=limit)
+
+@router.post(
+    "",
+    response_model=HoSoThucTapResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Tạo mới hồ sơ thực tập sinh (hỗ trợ test)",
+    description="Tạo nhanh 1 hồ sơ thực tập sinh mới vào hệ thống."
+)
+def create_intern(
+    payload: HoSoThucTapCreate,
+    db: Session = Depends(get_db)
+):
+    new_intern = HoSoThucTap(
+        ma_sv=payload.ma_sv,
+        ho_ten=payload.ho_ten,
+        email=payload.email,
+        so_dien_thoai=payload.so_dien_thoai,
+        truong_hoc=payload.truong_hoc,
+        chuyen_nganh=payload.chuyen_nganh,
+        ma_mentor=payload.ma_mentor,
+        trang_thai=payload.trang_thai,
+        ngay_bat_dau=payload.ngay_bat_dau,
+        ngay_ket_thuc=payload.ngay_ket_thuc
+    )
+    db.add(new_intern)
+    db.commit()
+    db.refresh(new_intern)
+    return new_intern

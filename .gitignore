@@ -1,14 +1,33 @@
+# Python bytecode & cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-env/
+
+# Environments
 venv/
+.venv/
+env/
 ENV/
-.env
-*.db
-*.sqlite3
+build/
+dist/
+*.egg-info/
+
+# Testing & Coverage
 .pytest_cache/
+.coverage
+htmlcov/
+
+# Database files
+*.sqlite3
+*.db
+
+# IDE & Editor
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+*.env.local

@@ -1,1 +1,1 @@
-"""Package api v1 initialization."""
+"""API V1 package."""

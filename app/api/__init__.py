@@ -1,1 +1,1 @@
-"""Package api initialization."""
+"""API package for the internship management system."""
