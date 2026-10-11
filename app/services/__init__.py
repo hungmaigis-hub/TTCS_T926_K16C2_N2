@@ -1,1 +1,1 @@
-"""Services package cho nghiệp vụ quản lý thực tập sinh và mentor."""
+# app/services/__init__.py

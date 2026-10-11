@@ -1,137 +1,332 @@
-# 🚀 TTCS_T926_K16C2_N2 - Hệ Thống Quản Lý Thực Tập Sinh
+<<<<<<< HEAD
+# TTCS_T926_K16C2_N2
+=======
+# 🎓 Intern Management System – Backend API
+
+> **Nhóm:** TTCS_T926_K16C2_N2  
+> **Backend dev:** Nguyễn Văn Hiếu  
+> **Framework:** FastAPI + MySQL (SQLAlchemy)  
+> **Python:** ≥ 3.11
 
 ---
 
-## 📌 Phân Hệ Backend (FastAPI): NV15 - Phân Công Mentor
+## 📁 Cấu trúc thư mục
 
-- **Người thực hiện (Assignee):** **Nguyễn Văn Hiếu** (Backend Developer)
-- **Nhiệm vụ:** Viết endpoint `PATCH /api/v1/interns/{id}/assign-mentor` cập nhật trường `ma_mentor` trong `ho_so_thuc_tap`.
-- **Dành cho Frontend:** Cung cấp API để hiển thị danh sách thực tập sinh, dropdown `<select>` chọn Mentor và nút Lưu phân công mentor.
-- **User Story tương ứng:**
-  - **US 30:** *"Là HR, tôi muốn gán mentor cho thực tập sinh để họ được hướng dẫn."*
-  - **US 12:** *"Là HR, tôi muốn phân công thực tập sinh cho mentor để họ được hướng dẫn."*
-  - **US 31:** *"Là HR, tôi muốn xem số lượng thực tập sinh mỗi mentor quản lý để cân bằng khối lượng công việc."*
-- **Nhánh phát triển:** `develop`
+```
+├── app/
+│   ├── main.py                  # Entry point FastAPI
+│   ├── config.py                # Cấu hình từ .env
+│   ├── database.py              # Kết nối DB, session factory
+│   ├── models/
+│   │   ├── nguoi_dung.py        # ORM: bảng nguoi_dung
+│   │   └── ho_so_thuc_tap.py   # ORM: bảng ho_so_thuc_tap
+│   ├── schemas/
+│   │   └── intern.py            # Pydantic schemas (request/response)
+│   ├── services/
+│   │   └── intern_service.py    # Business logic (assign mentor)
+│   └── routers/
+│       └── intern_router.py     # FastAPI router – /api/v1/interns
+├── database/
+│   └── init_db.sql              # Script tạo bảng + seed data MySQL
+├── tests/
+│   └── test_assign_mentor.py    # Pytest test suite (15 test cases)
+├── .env.example                 # Template biến môi trường
+├── .gitignore
+├── requirements.txt
+└── README.md
+```
 
 ---
 
-## 1. Cài đặt và Khởi chạy
+## ⚡ Cài đặt & Chạy
 
-### Cài thư viện:
+### 1. Clone & cài dependencies
+
 ```bash
+# Tạo virtual environment
+python -m venv venv
+
+# Kích hoạt (Windows)
+venv\Scripts\activate
+
+# Kích hoạt (macOS/Linux)
+source venv/bin/activate
+
+# Cài packages
 pip install -r requirements.txt
 ```
 
-### Chạy ứng dụng FastAPI:
-```bash
-uvicorn app.main:app --reload --port 8000
-```
-- Swagger UI (Xem & Test API trực quan): [http://localhost:8000/docs](http://localhost:8000/docs)
-- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+### 2. Cấu hình môi trường
 
-*(Lưu ý: Hệ thống đã tích hợp sẵn data seed mẫu gồm các mentor và thực tập sinh trong `seed_data.py`, chạy `python seed_data.py` là có sẵn data để test).*
+```bash
+# Copy file mẫu
+copy .env.example .env          # Windows
+cp .env.example .env             # macOS/Linux
+
+# Chỉnh sửa .env – điền thông tin MySQL của bạn
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=intern_management
+```
+
+### 3. Khởi tạo CSDL MySQL
+
+```bash
+# Chạy script SQL để tạo bảng + seed data mẫu
+mysql -u root -p < database/init_db.sql
+```
+
+### 4. Chạy server
+
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Server sẽ khởi động tại: **http://localhost:8000**
+
+| URL | Mô tả |
+|-----|-------|
+| http://localhost:8000/docs | **Swagger UI** (test trực tiếp) |
+| http://localhost:8000/redoc | ReDoc documentation |
+| http://localhost:8000/health | Health check |
 
 ---
 
-## 2. Tài liệu API dành cho Frontend & Tester
+## 🔑 Endpoint chính
 
-### 🎯 API 1 (Nhiệm vụ chính NV15): Gán Mentor cho thực tập sinh
-- **Method:** `PATCH`
-- **URL:** `/api/v1/interns/{id}/assign-mentor`
-- **Path Param:** `id` (int, ví dụ: `1`, `2`, ...)
-- **Headers:** `Content-Type: application/json`
-- **Request Body:**
+### `PATCH /api/v1/interns/{id}/mentor`
+
+**Gán hoặc thay đổi Mentor cho hồ sơ thực tập sinh.**
+
+#### Request
+
+| Phần | Chi tiết |
+|------|----------|
+| Method | `PATCH` |
+| URL | `/api/v1/interns/{id}/mentor` |
+| Path param | `id` – mã hồ sơ thực tập (`ma_ho_so`) |
+| Content-Type | `application/json` |
+
+**Body:**
 ```json
 {
-  "ma_mentor": 1,
-  "ghi_chu": "Phân công hướng dẫn Backend"
+  "ma_mentor": "MENTOR01"
 }
 ```
-*(Nếu muốn hủy phân công, truyền `"ma_mentor": null`)*
 
-#### Response thành công (`200 OK`):
+| Field | Kiểu | Bắt buộc | Mô tả |
+|-------|------|----------|-------|
+| `ma_mentor` | `string \| null` | ✅ | Mã mentor cần gán. Truyền `null` để hủy gán. |
+
+#### Validation
+
+| Điều kiện | Lỗi |
+|-----------|-----|
+| Hồ sơ `{id}` không tồn tại | `404 INTERN_NOT_FOUND` |
+| `ma_mentor` không tồn tại trong bảng `nguoi_dung` | `404 MENTOR_NOT_FOUND` |
+| Người dùng tồn tại nhưng `vai_tro ≠ 'Mentor'` | `422 INVALID_MENTOR_ROLE` |
+| Tài khoản Mentor bị vô hiệu hóa (`kich_hoat = 0`) | `403 MENTOR_INACTIVE` |
+
+#### Response 200 – Thành công
+
 ```json
 {
   "success": true,
-  "message": "Phân công mentor thành công",
+  "message": "Gán Mentor 'Lê Văn Phúc' cho hồ sơ 'HS001' thành công.",
   "data": {
-    "id": 1,
-    "ma_sv": "DTC245180138",
-    "ho_ten": "Nguyễn Văn Hiếu",
-    "email": "dtc245180138@ictu.edu.vn",
-    "truong_hoc": "Đại học Công nghệ Thông tin & Truyền thông (ICTU)",
-    "chuyen_nganh": "Kỹ thuật phần mềm",
-    "ma_mentor": 1,
-    "mentor": {
-      "id": 1,
-      "ma_can_bo": "MEN01",
-      "ho_ten": "Nguyễn Minh Tuấn",
-      "email": "tuan.nguyen@company.com",
-      "phong_ban": "Phòng Kỹ thuật Phần mềm",
-      "chuc_vu": "Tech Lead Backend",
-      "chuyen_mon": "FastAPI, Python, Microservices, SQL"
+    "ho_so": {
+      "ma_ho_so": "HS001",
+      "ho_ten": "Trần Văn An",
+      "email": "an.tran@uni.edu.vn",
+      "vi_tri_thuc_tap": "Backend Developer",
+      "trang_thai": "DaDuyet"
     },
-    "trang_thai": "DangThucTap",
-    "ghi_chu_phan_cong": "Phân công hướng dẫn Backend",
-    "ngay_gan_mentor": "2026-10-11T04:30:00"
+    "mentor": {
+      "ma_mentor": "MENTOR01",
+      "ho_ten": "Lê Văn Phúc",
+      "email": "phuc.le@company.com",
+      "so_dien_thoai": "0901111001"
+    },
+    "ngay_cap_nhat": "2024-10-07T11:39:49.123456"
   }
 }
 ```
 
-#### Các mã lỗi cần xử lý:
-- `404 Not Found`: Khi không tìm thấy hồ sơ thực tập sinh theo `id` hoặc không tìm thấy mentor theo `ma_mentor`.
-- `400 Bad Request`: Khi mentor được chọn đang tạm nghỉ hoặc đã đạt số lượng tối đa.
+#### Response 404 – Hồ sơ không tồn tại
+
+```json
+{
+  "detail": {
+    "error_code": "INTERN_NOT_FOUND",
+    "message": "Không tìm thấy hồ sơ thực tập với mã 'HS999'.",
+    "field": "id"
+  }
+}
+```
+
+#### Response 404 – Mentor không tồn tại
+
+```json
+{
+  "detail": {
+    "error_code": "MENTOR_NOT_FOUND",
+    "message": "Không tìm thấy người dùng với mã 'MENTOR99' trong hệ thống.",
+    "field": "ma_mentor"
+  }
+}
+```
+
+#### Response 422 – Sai vai trò
+
+```json
+{
+  "detail": {
+    "error_code": "INVALID_MENTOR_ROLE",
+    "message": "Người dùng 'HR01' có vai trò 'HR', không phải 'Mentor'. Chỉ người dùng có vai trò 'Mentor' mới được gán.",
+    "field": "ma_mentor"
+  }
+}
+```
+
+#### Response 403 – Mentor bị vô hiệu hóa
+
+```json
+{
+  "detail": {
+    "error_code": "MENTOR_INACTIVE",
+    "message": "Tài khoản của Mentor 'MENTOR04' đã bị vô hiệu hóa, không thể gán.",
+    "field": "ma_mentor"
+  }
+}
+```
+
+#### Hủy gán Mentor
+
+```json
+{
+  "ma_mentor": null
+}
+```
+
+→ Response `200` với `"mentor": null`.
 
 ---
 
-### 📋 API 2: Lấy danh sách Mentor (Đổ vào `<select>` dropdown trên Frontend)
-- **Method:** `GET`
-- **URL:** `/api/v1/mentors`
-- **Response:** Trả về danh sách mentor hợp lệ kèm số lượng thực tập sinh đang hướng dẫn.
+## 🧪 Chạy test
+
+```bash
+# Chạy toàn bộ test
+pytest tests/ -v
+
+# Chạy với report chi tiết
+pytest tests/ -v --tb=short
+
+# Chạy 1 class test cụ thể
+pytest tests/test_assign_mentor.py::TestAssignMentorSuccess -v
+```
+
+**15 test cases** bao gồm:
+- ✅ Gán mentor mới
+- ✅ Thay đổi mentor
+- ✅ Hủy gán (null)
+- ✅ Gán lại cùng mentor (idempotent)
+- ✅ Response có `ngay_cap_nhat`
+- ❌ Hồ sơ không tồn tại (404)
+- ❌ Mentor không tồn tại (404)
+- ❌ Sai vai trò – HR (422)
+- ❌ Sai vai trò – ThucTapSinh (422)
+- ❌ Mentor bị vô hiệu hóa (403)
+- ❌ Body rỗng (422)
+- ✅ Whitespace treated as null
 
 ---
 
-### 📋 API 3: Lấy danh sách Thực tập sinh (Render ra bảng danh sách)
-- **Method:** `GET`
-- **URL:** `/api/v1/interns`
+## 🗄️ Schema CSDL
+
+### Bảng `nguoi_dung`
+
+| Cột | Kiểu | Mô tả |
+|-----|------|-------|
+| `ma_nguoi_dung` | VARCHAR(20) PK | Mã định danh |
+| `ho_ten` | VARCHAR(100) | Họ tên |
+| `email` | VARCHAR(150) UNIQUE | Email đăng nhập |
+| `mat_khau_hash` | VARCHAR(255) | Mật khẩu băm |
+| `so_dien_thoai` | VARCHAR(15) | SĐT |
+| `vai_tro` | ENUM | `HR` / `Mentor` / `ThucTapSinh` / `Admin` |
+| `kich_hoat` | TINYINT(1) | 1=active, 0=inactive |
+| `ngay_tao` | DATETIME | |
+| `ngay_cap_nhat` | DATETIME | |
+
+### Bảng `ho_so_thuc_tap`
+
+| Cột | Kiểu | Mô tả |
+|-----|------|-------|
+| `ma_ho_so` | VARCHAR(20) PK | Mã hồ sơ |
+| `ma_sinh_vien` | VARCHAR(20) FK | → nguoi_dung |
+| `ho_ten` | VARCHAR(100) | |
+| `email` | VARCHAR(150) | |
+| `vi_tri_thuc_tap` | VARCHAR(100) | |
+| `ngay_bat_dau` | DATE | |
+| `ngay_ket_thuc` | DATE | |
+| `trang_thai` | ENUM | ChoDuyet/DaDuyet/TuChoi/DangThucTap/HoanThanh |
+| **`ma_mentor`** | **VARCHAR(20) FK** | **→ nguoi_dung (vai_tro='Mentor')** |
+| `ngay_tao` | DATETIME | |
+| `ngay_cap_nhat` | DATETIME | |
 
 ---
 
-## 3. Code mẫu JavaScript (fetch) cho các bạn Frontend
+## 🔧 Dành cho Frontend
+
+Khi gọi API từ React/Vue/Next.js:
 
 ```javascript
-// Hàm gọi API khi người dùng chọn mentor và bấm Lưu
-async function handleAssignMentor(internId, selectedMaMentor) {
-  try {
-    const response = await fetch(`http://localhost:8000/api/v1/interns/${internId}/assign-mentor`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ma_mentor: selectedMaMentor,
-        ghi_chu: "Phân công mentor"
-      }),
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      alert("Lỗi: " + result.detail);
-      return;
+// Gán mentor
+const assignMentor = async (maHoSo, maMentor) => {
+  const response = await fetch(
+    `http://localhost:8000/api/v1/interns/${maHoSo}/mentor`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ma_mentor: maMentor }),
     }
+  );
 
-    alert(result.message);
-  } catch (error) {
-    console.error("Lỗi kết nối API:", error);
-    alert("Không thể kết nối đến máy chủ");
+  if (!response.ok) {
+    const error = await response.json();
+    // error.detail.error_code → xử lý từng loại lỗi
+    // error.detail.message   → hiển thị cho người dùng
+    throw error;
   }
-}
+
+  return response.json();
+};
+
+// Hủy gán mentor
+const unassignMentor = (maHoSo) => assignMentor(maHoSo, null);
 ```
+
+**Các `error_code` cần xử lý ở FE:**
+
+| `error_code` | HTTP | Hiển thị |
+|--------------|------|---------|
+| `INTERN_NOT_FOUND` | 404 | "Hồ sơ không tồn tại" |
+| `MENTOR_NOT_FOUND` | 404 | "Mentor không tồn tại trong hệ thống" |
+| `INVALID_MENTOR_ROLE` | 422 | "Người này không phải Mentor" |
+| `MENTOR_INACTIVE` | 403 | "Tài khoản Mentor đã bị vô hiệu hóa" |
 
 ---
 
-## 4. Kiểm thử tự động (Unit Test)
-Chạy bộ test kiểm thử tất cả các trường hợp:
-```bash
-pytest -v
-```
+## 📝 Ghi chú kỹ thuật
+
+- **Transaction an toàn:** Mọi thao tác DB đều trong try/except + rollback khi lỗi.
+- **Logging:** Ghi log đầy đủ ở INFO/WARNING/ERROR để dễ debug.
+- **CORS:** Đã cấu hình cho phép `localhost:3000` (React) và `localhost:5173` (Vite).
+- **DEBUG mode:** Tự động `CREATE TABLE IF NOT EXISTS` khi khởi động (dev only).
+- **Production:** Dùng Alembic migration thay vì `create_all`.
+
+---
+
+*Cập nhật lần cuối: 07/10/2024*
+>>>>>>> 9dea817 (feat: PATCH /api/v1/interns/{id}/mentor - assign mentor (Nguyen Van Hieu))

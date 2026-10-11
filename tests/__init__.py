@@ -1,1 +1,1 @@
-"""Test package cho các API của hệ thống."""
+# tests/__init__.py
