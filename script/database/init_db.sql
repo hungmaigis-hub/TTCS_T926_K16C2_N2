@@ -306,6 +306,13 @@ VALUES
 (5, 2, '2026-10', 2500000.00, 'ChuaChiTra')
 ON DUPLICATE KEY UPDATE so_tien = VALUES(so_tien), trang_thai_chi_tra = VALUES(trang_thai_chi_tra);
 
+INSERT INTO yeu_cau_ho_tro (ma_yeu_cau, ma_ho_so, loai_yeu_cau, noi_dung, phan_hoi_hr, trang_thai)
+VALUES
+(1, 1, 'XinChungNhan', 'Em xin giấy chứng nhận thực tập để nộp về trường', NULL, 'ChoXuLy'),
+(2, 2, 'GiayXacNhan', 'Em xin xác nhận số giờ thực tập tháng 9', NULL, 'ChoXuLy')
+ON DUPLICATE KEY UPDATE loai_yeu_cau = VALUES(loai_yeu_cau), noi_dung = VALUES(noi_dung);
+
+
 
 
 
