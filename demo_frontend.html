@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giao Diện Thử Nghiệm Phân Công Mentor - TTCS K16C2 N2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #e0e7ff;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 15% 15%, #1e1b4b 0%, #0f172a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--surface-border);
+      margin-bottom: 28px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-primary { background: var(--primary-light); color: var(--primary); }
+    .badge-success { background: #dcfce7; color: #15803d; }
+    .badge-warning { background: #fef3c7; color: #b45309; }
+    .badge-unassigned { background: #fee2e2; color: #b91c1c; }
+
+    .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th {
+      background: #0f172a;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--surface-border);
+    }
+    td {
+      padding: 14px;
+      border-bottom: 1px solid var(--surface-border);
+      font-size: 14px;
+    }
+    tr:hover { background: rgba(51, 65, 85, 0.4); }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #334155; color: white; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #dc2626; }
+
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
+    select, input, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      background: #0f172a;
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      color: white;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .code-box {
+      background: #090d16;
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 250px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none; align-items: center; justify-content: center; z-index: 100;
+    }
+    .modal-backdrop.active { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      width: 100%; max-width: 500px;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      padding: 12px 20px; border-radius: 10px;
+      font-size: 14px; font-weight: 600;
+      display: none; z-index: 999;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1 style="font-size: 24px; font-weight: 800; color: #fff;">Quản Lý Thực Tập Sinh & Phân Công Mentor</h1>
+        <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">
+          Nhiệm vụ: <strong>Nguyễn Văn Hiếu</strong> | Endpoint: <code>PATCH /api/v1/interns/{id}/assign-mentor</code>
+        </p>
+      </div>
+      <div>
+        <span class="badge badge-primary" id="api-status">API: Đang kết nối...</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Cột trái: Bảng thực tập sinh -->
+      <div class="card">
+        <div class="card-title">
+          <span> Danh Sách Hồ Sơ Thực Tập Sinh</span>
+          <button class="btn btn-secondary" style="margin-left: auto;" onclick="loadData()">Làm Mới</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Mã SV</th>
+              <th>Họ và Tên</th>
+              <th>Trường & Ngành</th>
+              <th>Mentor Hướng Dẫn</th>
+              <th>Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="interns-table">
+            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Đang tải dữ liệu...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Cột phải: Inspector API & Hướng dẫn cho Frontend -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="card">
+          <div class="card-title">📡 API Live Inspector</div>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Request payload & phản hồi từ máy chủ FastAPI:</p>
+          <div id="inspector" class="code-box">// Bấm "Phân công Mentor" để xem request/response trực tiếp</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">💡 Mẫu Code cho Frontend (Axios / Fetch)</div>
+          <pre class="code-box">// Gọi phân công mentor:
+await axios.patch(`http://127.0.0.1:8000/api/v1/interns/${id}/assign-mentor`, {
+  ma_mentor: 1, // ID của Mentor
+  ghi_chu: "Phân công hướng dẫn Backend"
+});
+
+// Gọi hủy phân công mentor:
+await axios.patch(`http://127.0.0.1:8000/api/v1/interns/${id}/assign-mentor`, {
+  ma_mentor: null,
+  ghi_chu: "Hủy gán mentor"
+});</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Phân Công Mentor -->
+  <div class="modal-backdrop" id="assignModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 style="font-size: 18px;" id="modalTitle">Phân Công Mentor</h3>
+        <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="closeModal()">✕</button>
+      </div>
+      <div>
+        <input type="hidden" id="modalInternId">
+        <div class="form-group">
+          <label>Thực tập sinh:</label>
+          <input type="text" id="modalInternName" disabled style="opacity: 0.7;">
+        </div>
+        <div class="form-group">
+          <label>Chọn Mentor hướng dẫn:</label>
+          <select id="modalMentorSelect">
+            <option value="">-- Chọn Mentor từ danh sách --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ghi chú phân công / Dự án:</label>
+          <input type="text" id="modalNote" placeholder="Ví dụ: Hướng dẫn dự án Web Portal">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="btnUnassign" onclick="submitAssign(null)" style="display:none; margin-right: auto;">Hủy Gán</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Đóng</button>
+        <button class="btn btn-primary" onclick="submitAssignFromSelect()">Lưu Phân Công</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+    let mentorsList = [];
+    let internsList = [];
+
+    async function checkHealth() {
+      try {
+        const res = await fetch(`${API_BASE}/`);
+        if (res.ok) {
+          document.getElementById("api-status").innerText = "API: Sẵn sàng (Port 8000)";
+          document.getElementById("api-status").className = "badge badge-success";
+          return true;
+        }
+      } catch (err) {
+        document.getElementById("api-status").innerText = "API: Chưa bật backend";
+        document.getElementById("api-status").className = "badge badge-danger";
+        return false;
+      }
+    }
+
+    async function loadData() {
+      await checkHealth();
+      try {
+        const [internsRes, mentorsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/v1/interns`),
+          fetch(`${API_BASE}/api/v1/mentors`)
+        ]);
+
+        internsList = await internsRes.json();
+        mentorsList = await mentorsRes.json();
+
+        renderInternsTable();
+        populateMentorSelect();
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu:", error);
+      }
+    }
+
+    function renderInternsTable() {
+      const tbody = document.getElementById("interns-table");
+      if (!internsList.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Chưa có dữ liệu. Hãy chạy <code>python seed_data.py</code></td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = internsList.map(intern => {
+        const hasMentor = intern.mentor != null;
+        const mentorBadge = hasMentor
+          ? `<span class="badge badge-success">👨‍🏫 ${intern.mentor.ho_ten} (${intern.mentor.phong_ban})</span>`
+          : `<span class="badge badge-unassigned">Chưa có mentor</span>`;
+
+        return `
+          <tr>
+            <td><strong>${intern.ma_sv}</strong></td>
+            <td>${intern.ho_ten}</td>
+            <td><div style="font-size:13px;">${intern.truong_hoc || '-'}</div><div style="font-size:12px; color:var(--text-muted);">${intern.chuyen_nganh || ''}</div></td>
+            <td>${mentorBadge}</td>
+            <td>
+              <button class="btn btn-primary" onclick="openAssignModal(${intern.id})">Phân Công</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function populateMentorSelect() {
+      const select = document.getElementById("modalMentorSelect");
+      select.innerHTML = `<option value="">-- Chọn Mentor từ danh sách --</option>` +
+        mentorsList.map(m => `
+          <option value="${m.id}">
+            ${m.ho_ten} - ${m.chuc_vu} (${m.phong_ban}) [Đang HD: ${m.so_luong_dang_huong_dan}/${m.so_luong_toi_da}]
+          </option>
+        `).join("");
+    }
+
+    function openAssignModal(internId) {
+      const intern = internsList.find(i => i.id === internId);
+      if (!intern) return;
+
+      document.getElementById("modalInternId").value = intern.id;
+      document.getElementById("modalInternName").value = `${intern.ho_ten} (${intern.ma_sv})`;
+      document.getElementById("modalNote").value = intern.ghi_chu_phan_cong || "";
+
+      const select = document.getElementById("modalMentorSelect");
+      select.value = intern.ma_mentor ? intern.ma_mentor : "";
+
+      const btnUnassign = document.getElementById("btnUnassign");
+      if (intern.ma_mentor) {
+        btnUnassign.style.display = "inline-flex";
+      } else {
+        btnUnassign.style.display = "none";
+      }
+
+      document.getElementById("assignModal").classList.add("active");
+    }
+
+    function closeModal() {
+      document.getElementById("assignModal").classList.remove("active");
+    }
+
+    function submitAssignFromSelect() {
+      const mentorVal = document.getElementById("modalMentorSelect").value;
+      if (!mentorVal) {
+        showToast("Vui lòng chọn một mentor hợp lệ!", "warning");
+        return;
+      }
+      submitAssign(parseInt(mentorVal, 10));
+    }
+
+    async function submitAssign(ma_mentor) {
+      const internId = document.getElementById("modalInternId").value;
+      const ghiChu = document.getElementById("modalNote").value;
+
+      const payload = {
+        ma_mentor: ma_mentor,
+        ghi_chu: ghiChu || (ma_mentor ? "Phân công người hướng dẫn" : "Hủy gán mentor")
+      };
+
+      const endpoint = `${API_BASE}/api/v1/interns/${internId}/assign-mentor`;
+
+      try {
+        const res = await fetch(endpoint, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        // Hiển thị inspector
+        document.getElementById("inspector").innerText =
+          `METHOD: PATCH\nURL: ${endpoint}\n\n[REQUEST BODY]:\n${JSON.stringify(payload, null, 2)}\n\n[RESPONSE (${res.status})]:\n${JSON.stringify(data, null, 2)}`;
+
+        if (res.ok) {
+          showToast(data.message || "Thao tác thành công!", "success");
+          closeModal();
+          loadData();
+        } else {
+          showToast(data.detail || "Đã xảy ra lỗi!", "danger");
+        }
+      } catch (err) {
+        showToast("Lỗi kết nối tới Backend!", "danger");
+      }
+    }
+
+    function showToast(message, type) {
+      const toast = document.getElementById("toast");
+      toast.innerText = message;
+      toast.style.background = type === "success" ? "#10b981" : (type === "warning" ? "#f59e0b" : "#ef4444");
+      toast.style.display = "block";
+      setTimeout(() => { toast.style.display = "none"; }, 3500);
+    }
+
+    window.onload = loadData;
+  </script>
+</body>
+</html>

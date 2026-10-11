@@ -1,63 +1,137 @@
-# Dashboard Quản Lý Sinh Viên - KPI & Tỷ Lệ Hoàn Thành Thời Gian Thực
-
-Giao diện Frontend (HTML5, CSS3, Vanilla JavaScript) thiết kế hiện đại hiển thị các khối thẻ thông số KPI số lượng sinh viên theo từng trạng thái và vòng tròn phần trăm tiến độ hoàn thành (Circular Progress Bar SVG). Hệ thống sử dụng Fetch API gọi endpoint `GET /api/v1/reports/completion-rate` với cơ chế cập nhật tự động theo thời gian thực (Real-time Polling).
+# 🚀 TTCS_T926_K16C2_N2 - Hệ Thống Quản Lý Thực Tập Sinh
 
 ---
 
-## 1. Cấu Trúc Thành Phần Giao Diện
+## 📌 Phân Hệ Backend (FastAPI): NV15 - Phân Công Mentor
 
-### A. Khối Thẻ Nổi Bật (Hero Card) - Vòng Tròn Phần Trăm Hoàn Thành:
-- **Vòng tròn SVG (Circular Progress Bar)**: Thiết kế bằng vector SVG với hiệu ứng Gradient màu hiện đại (Indigo -> Cyan -> Emerald), viền phát sáng (Glow effect), chuyển động quay mượt mà qua thuộc tính `stroke-dashoffset`.
-- **Số phần trăm ở tâm**: Hiển thị tỷ lệ hoàn thành kèm hiệu ứng số nhảy mượt mà (Count-up animation).
-- **Phân tích chỉ số kỳ học**: So sánh tỷ lệ thực tế với KPI Target, số lượng tốt nghiệp đúng hạn, gia hạn luận văn và cảnh báo học vụ.
-
-### B. Các Khối Thẻ Thống Số KPI Trạng Thái Sinh Viên:
-1. **Tổng Sinh Viên (Total Students)**: Quy mô toàn trường, thống kê xu hướng tăng trưởng so với kỳ trước (`+4.8%`).
-2. **Đang Theo Học (Active Students)**: Số lượng đang có lịch học/học phần hoạt động bình thường kèm thanh tỷ lệ % trực quan.
-3. **Đã Hoàn Thành / Tốt Nghiệp (Completed Students)**: Số lượng sinh viên đã đủ điều kiện tốt nghiệp và nhận văn bằng.
-4. **Bảo Lưu / Chờ Xử Lý (On Leave Students)**: Thống kê số lượng sinh viên tạm dừng tiến độ hoặc đang xét duyệt bảo lưu.
-5. **Thôi Học / Cảnh Báo (Dropped / Warning)**: Cảnh báo học vụ, nguy cơ buộc thôi học cần cố vấn học tập can thiệp.
+- **Người thực hiện (Assignee):** **Nguyễn Văn Hiếu** (Backend Developer)
+- **Nhiệm vụ:** Viết endpoint `PATCH /api/v1/interns/{id}/assign-mentor` cập nhật trường `ma_mentor` trong `ho_so_thuc_tap`.
+- **Dành cho Frontend:** Cung cấp API để hiển thị danh sách thực tập sinh, dropdown `<select>` chọn Mentor và nút Lưu phân công mentor.
+- **User Story tương ứng:**
+  - **US 30:** *"Là HR, tôi muốn gán mentor cho thực tập sinh để họ được hướng dẫn."*
+  - **US 12:** *"Là HR, tôi muốn phân công thực tập sinh cho mentor để họ được hướng dẫn."*
+  - **US 31:** *"Là HR, tôi muốn xem số lượng thực tập sinh mỗi mentor quản lý để cân bằng khối lượng công việc."*
+- **Nhánh phát triển:** `develop`
 
 ---
 
-## 2. Đặc Tả API Backend Contract
+## 1. Cài đặt và Khởi chạy
 
-### Endpoint:
-```http
-GET /api/v1/reports/completion-rate
+### Cài thư viện:
+```bash
+pip install -r requirements.txt
 ```
 
-### Response Định Dạng Chuẩn JSON:
+### Chạy ứng dụng FastAPI:
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+- Swagger UI (Xem & Test API trực quan): [http://localhost:8000/docs](http://localhost:8000/docs)
+- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+*(Lưu ý: Hệ thống đã tích hợp sẵn data seed mẫu gồm các mentor và thực tập sinh trong `seed_data.py`, chạy `python seed_data.py` là có sẵn data để test).*
+
+---
+
+## 2. Tài liệu API dành cho Frontend & Tester
+
+### 🎯 API 1 (Nhiệm vụ chính NV15): Gán Mentor cho thực tập sinh
+- **Method:** `PATCH`
+- **URL:** `/api/v1/interns/{id}/assign-mentor`
+- **Path Param:** `id` (int, ví dụ: `1`, `2`, ...)
+- **Headers:** `Content-Type: application/json`
+- **Request Body:**
+```json
+{
+  "ma_mentor": 1,
+  "ghi_chu": "Phân công hướng dẫn Backend"
+}
+```
+*(Nếu muốn hủy phân công, truyền `"ma_mentor": null`)*
+
+#### Response thành công (`200 OK`):
 ```json
 {
   "success": true,
-  "timestamp": "2026-10-09T20:15:00.000Z",
+  "message": "Phân công mentor thành công",
   "data": {
-    "totalStudents": 12500,
-    "active": 9850,
-    "completed": 2100,
-    "onLeave": 380,
-    "dropped": 170,
-    "completionRate": 84.5,
-    "targetRate": 85.0,
-    "trend": {
-      "totalChange": "+4.8%",
-      "completionRateChange": "+2.5%"
+    "id": 1,
+    "ma_sv": "DTC245180138",
+    "ho_ten": "Nguyễn Văn Hiếu",
+    "email": "dtc245180138@ictu.edu.vn",
+    "truong_hoc": "Đại học Công nghệ Thông tin & Truyền thông (ICTU)",
+    "chuyen_nganh": "Kỹ thuật phần mềm",
+    "ma_mentor": 1,
+    "mentor": {
+      "id": 1,
+      "ma_can_bo": "MEN01",
+      "ho_ten": "Nguyễn Minh Tuấn",
+      "email": "tuan.nguyen@company.com",
+      "phong_ban": "Phòng Kỹ thuật Phần mềm",
+      "chuc_vu": "Tech Lead Backend",
+      "chuyen_mon": "FastAPI, Python, Microservices, SQL"
     },
-    "details": {
-      "onTimeGraduation": 1850,
-      "delayedGraduation": 250,
-      "academicWarning": 110
+    "trang_thai": "DangThucTap",
+    "ghi_chu_phan_cong": "Phân công hướng dẫn Backend",
+    "ngay_gan_mentor": "2026-10-11T04:30:00"
+  }
+}
+```
+
+#### Các mã lỗi cần xử lý:
+- `404 Not Found`: Khi không tìm thấy hồ sơ thực tập sinh theo `id` hoặc không tìm thấy mentor theo `ma_mentor`.
+- `400 Bad Request`: Khi mentor được chọn đang tạm nghỉ hoặc đã đạt số lượng tối đa.
+
+---
+
+### 📋 API 2: Lấy danh sách Mentor (Đổ vào `<select>` dropdown trên Frontend)
+- **Method:** `GET`
+- **URL:** `/api/v1/mentors`
+- **Response:** Trả về danh sách mentor hợp lệ kèm số lượng thực tập sinh đang hướng dẫn.
+
+---
+
+### 📋 API 3: Lấy danh sách Thực tập sinh (Render ra bảng danh sách)
+- **Method:** `GET`
+- **URL:** `/api/v1/interns`
+
+---
+
+## 3. Code mẫu JavaScript (fetch) cho các bạn Frontend
+
+```javascript
+// Hàm gọi API khi người dùng chọn mentor và bấm Lưu
+async function handleAssignMentor(internId, selectedMaMentor) {
+  try {
+    const response = await fetch(`http://localhost:8000/api/v1/interns/${internId}/assign-mentor`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ma_mentor: selectedMaMentor,
+        ghi_chu: "Phân công mentor"
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      alert("Lỗi: " + result.detail);
+      return;
     }
+
+    alert(result.message);
+  } catch (error) {
+    console.error("Lỗi kết nối API:", error);
+    alert("Không thể kết nối đến máy chủ");
   }
 }
 ```
 
 ---
 
-## 3. Tính Năng JavaScript Fetch API & Real-time
-- **Fetch API không đồng bộ (`async/await`)**: Tự động gửi request với `Cache-Control: no-cache` để đảm bảo luôn nhận dữ liệu mới nhất.
-- **Cơ chế Cập nhật Tự động (Polling Interval)**: Có thể tùy chỉnh tần suất gọi API (mỗi 5s, 10s, 30s hoặc Tắt).
-- **Count-Up Animation (`requestAnimationFrame`)**: Khi dữ liệu cập nhật, các con số không bị giật mà tăng/giảm mượt mà.
-- **Chế độ kiểm thử Demo (Mock Mode)**: Khi mở trực tiếp file `index.html` trong trình duyệt mà chưa có server backend chạy, hệ thống tự động phát hiện và cung cấp dữ liệu giả lập có biến động thời gian thực để test trơn tru ngay lập tức.
-- **Badge trạng thái kết nối Live**: Hiển thị chấm tròn nhấp nháy xanh (Pulse dot) và thời điểm cập nhật lần cuối (`HH:mm:ss`).
+## 4. Kiểm thử tự động (Unit Test)
+Chạy bộ test kiểm thử tất cả các trường hợp:
+```bash
+pytest -v
+```
