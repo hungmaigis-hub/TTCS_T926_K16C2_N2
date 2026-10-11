@@ -10,12 +10,12 @@ class ReportService:
         Truy vấn tổng số lượng sinh viên, đếm số lượng theo từng trạng thái
         (DangThucTap, HoanThanh, ThoiHoc) và tự động tính toán tỷ lệ phần trăm (%) hoàn thành.
         """
-        # 1. Truy vấn tổng số lượng sinh viên trong hệ thống
-        tong_so_sinh_vien = db.query(func.count(HoSoThucTap.id)).scalar() or 0
+        # 1. Truy vấn tổng số lượng sinh viên trong hệ thống (dùng primary key ma_ho_so)
+        tong_so_sinh_vien = db.query(func.count(HoSoThucTap.ma_ho_so)).scalar() or 0
 
         # 2. Truy vấn đếm số lượng theo từng trạng thái bằng GROUP BY để tối ưu hiệu năng
         status_counts = (
-            db.query(HoSoThucTap.trang_thai, func.count(HoSoThucTap.id))
+            db.query(HoSoThucTap.trang_thai, func.count(HoSoThucTap.ma_ho_so))
             .group_by(HoSoThucTap.trang_thai)
             .all()
         )

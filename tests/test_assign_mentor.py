@@ -40,9 +40,6 @@ def override_get_db():
         db.close()
 
 
-# Override dependency
-app.dependency_overrides[get_db] = override_get_db
-
 # Client
 client = TestClient(app)
 
@@ -53,6 +50,7 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def setup_database():
     """Tạo bảng và seed data trước mỗi test, xóa sau khi test xong."""
+    app.dependency_overrides[get_db] = override_get_db
     Base.metadata.create_all(bind=engine_test)
 
     db = TestingSessionLocal()
@@ -138,6 +136,7 @@ def setup_database():
 
     # Teardown
     Base.metadata.drop_all(bind=engine_test)
+    app.dependency_overrides.pop(get_db, None)
 
 
 # ============================================================

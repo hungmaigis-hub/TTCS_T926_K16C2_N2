@@ -63,6 +63,7 @@ class HoSoThucTap(Base):
             "TuChoi",
             "DangThucTap",
             "HoanThanh",
+            "ThoiHoc",
             name="trang_thai_enum",
         ),
         default="ChoDuyet",

@@ -1401,3 +1401,54 @@ class SupportRequestResponse(BaseModel):
     data: SupportRequestItemData
 
 
+class SupportRequestCreate(BaseModel):
+    """Schema tiếp nhận yêu cầu hỗ trợ từ sinh viên (POST /api/v1/support-requests)"""
+    ma_ho_so: int = Field(..., description="Mã hồ sơ thực tập sinh", gt=0)
+    loai_yeu_cau: str = Field(..., description="Loại yêu cầu: XinChungNhan, GiayXacNhan, Khac")
+    noi_dung: str = Field(..., description="Chi tiết nội dung cần hỗ trợ")
+
+    @field_validator("noi_dung")
+    def validate_noi_dung(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Nội dung yêu cầu hỗ trợ không được để trống")
+        return cleaned
+
+
+class SupportRequestCreateResponse(BaseModel):
+    """Response chuẩn trả về sau khi tạo yêu cầu hỗ trợ thành công (HTTP 201)"""
+    status_code: int = 201
+    message: str = "Gửi yêu cầu hỗ trợ thành công"
+    data: SupportRequestItemData
+
+
+class AssignMentorRequest(BaseModel):
+    """Schema gán hoặc thay đổi Mentor (PATCH /api/v1/interns/{id}/mentor)"""
+    ma_mentor: Optional[int] = Field(None, description="Mã mentor cần gán. Truyền null để hủy gán")
+
+
+class AssignMentorResponse(BaseModel):
+    """Response gán mentor thành công"""
+    status_code: int = 200
+    message: str = "Phân công mentor thành công"
+    data: dict
+
+
+class CompletionRateSummary(BaseModel):
+    """Khối số liệu thống kê tỷ lệ hoàn thành thực tập"""
+    tong_so_sinh_vien: int = 0
+    so_luong_dang_thuc_tap: int = 0
+    so_luong_hoan_thanh: int = 0
+    so_luong_thoi_hoc: int = 0
+    ty_le_hoan_thanh: float = 0.0
+    chi_tiet_theo_trang_thai: dict = {}
+
+
+class CompletionRateReportResponse(BaseModel):
+    """Response chuẩn trả về báo cáo tỷ lệ hoàn thành (HTTP 200)"""
+    status_code: int = 200
+    message: str = "Lấy báo cáo tỷ lệ hoàn thành thực tập thành công"
+    data: CompletionRateSummary
+
+
+
