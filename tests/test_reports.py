@@ -1,23 +1,23 @@
+import os
 import pytest
 from datetime import date
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
-from app.core.database import Base, get_db
+from app.database import Base, get_db
 from app.main import app
+from app.models.nguoi_dung import NguoiDung
 from app.models.ho_so_thuc_tap import HoSoThucTap
 
-# Database in-memory riêng cho unit test
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+# Database SQLite riêng cho unit test
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test_reports.db"
 
-engine = create_engine(
+engine_test = create_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine_test)
 
 def override_get_db():
     db = TestingSessionLocal()
@@ -26,14 +26,16 @@ def override_get_db():
     finally:
         db.close()
 
-app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def setup_database():
-    Base.metadata.create_all(bind=engine)
+    app.dependency_overrides[get_db] = override_get_db
+    Base.metadata.drop_all(bind=engine_test)
+    Base.metadata.create_all(bind=engine_test)
     yield
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=engine_test)
+    app.dependency_overrides.pop(get_db, None)
 
 def test_completion_rate_empty_db():
     """Kiểm tra khi hệ thống chưa có sinh viên nào (0 sinh viên)"""
@@ -50,10 +52,10 @@ def test_completion_rate_with_various_statuses():
     """Kiểm tra đếm đúng theo trạng thái và tính tỷ lệ hoàn thành chính xác"""
     db = TestingSessionLocal()
     # Tạo 4 sinh viên mẫu: 2 Hoàn thành, 1 Đang thực tập, 1 Thôi học
-    s1 = HoSoThucTap(ma_sv="SV01", ho_ten="Nguyễn Văn A", email="a@test.com", trang_thai="HoanThanh")
-    s2 = HoSoThucTap(ma_sv="SV02", ho_ten="Trần Thị B", email="b@test.com", trang_thai="HoanThanh")
-    s3 = HoSoThucTap(ma_sv="SV03", ho_ten="Lê Văn C", email="c@test.com", trang_thai="DangThucTap")
-    s4 = HoSoThucTap(ma_sv="SV04", ho_ten="Phạm Văn D", email="d@test.com", trang_thai="ThoiHoc")
+    s1 = HoSoThucTap(ma_ho_so="HS001", ma_sinh_vien="SV01", ho_ten="Nguyễn Văn A", email="a@test.com", trang_thai="HoanThanh")
+    s2 = HoSoThucTap(ma_ho_so="HS002", ma_sinh_vien="SV02", ho_ten="Trần Thị B", email="b@test.com", trang_thai="HoanThanh")
+    s3 = HoSoThucTap(ma_ho_so="HS003", ma_sinh_vien="SV03", ho_ten="Lê Văn C", email="c@test.com", trang_thai="DangThucTap")
+    s4 = HoSoThucTap(ma_ho_so="HS004", ma_sinh_vien="SV04", ho_ten="Phạm Văn D", email="d@test.com", trang_thai="ThoiHoc")
     db.add_all([s1, s2, s3, s4])
     db.commit()
     db.close()
@@ -74,9 +76,9 @@ def test_completion_rate_with_various_statuses():
 def test_completion_rate_rounding():
     """Kiểm tra làm tròn 2 chữ số thập phân (1/3 = 33.33%)"""
     db = TestingSessionLocal()
-    s1 = HoSoThucTap(ma_sv="SV01", ho_ten="Nguyễn Văn A", email="a@test.com", trang_thai="HoanThanh")
-    s2 = HoSoThucTap(ma_sv="SV02", ho_ten="Trần Thị B", email="b@test.com", trang_thai="DangThucTap")
-    s3 = HoSoThucTap(ma_sv="SV03", ho_ten="Lê Văn C", email="c@test.com", trang_thai="DangThucTap")
+    s1 = HoSoThucTap(ma_ho_so="HS001", ma_sinh_vien="SV01", ho_ten="Nguyễn Văn A", email="a@test.com", trang_thai="HoanThanh")
+    s2 = HoSoThucTap(ma_ho_so="HS002", ma_sinh_vien="SV02", ho_ten="Trần Thị B", email="b@test.com", trang_thai="DangThucTap")
+    s3 = HoSoThucTap(ma_ho_so="HS003", ma_sinh_vien="SV03", ho_ten="Lê Văn C", email="c@test.com", trang_thai="DangThucTap")
     db.add_all([s1, s2, s3])
     db.commit()
     db.close()
@@ -92,8 +94,8 @@ def test_completion_rate_rounding():
 def test_completion_rate_all_completed():
     """Kiểm tra tỷ lệ 100% khi tất cả đều hoàn thành"""
     db = TestingSessionLocal()
-    s1 = HoSoThucTap(ma_sv="SV01", ho_ten="Nguyễn Văn A", email="a@test.com", trang_thai="HoanThanh")
-    s2 = HoSoThucTap(ma_sv="SV02", ho_ten="Trần Thị B", email="b@test.com", trang_thai="HoanThanh")
+    s1 = HoSoThucTap(ma_ho_so="HS001", ma_sinh_vien="SV01", ho_ten="Nguyễn Văn A", email="a@test.com", trang_thai="HoanThanh")
+    s2 = HoSoThucTap(ma_ho_so="HS002", ma_sinh_vien="SV02", ho_ten="Trần Thị B", email="b@test.com", trang_thai="HoanThanh")
     db.add_all([s1, s2])
     db.commit()
     db.close()

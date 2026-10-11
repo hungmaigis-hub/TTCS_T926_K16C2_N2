@@ -21,6 +21,8 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.database import Base, engine
 from app.routers.intern_router import router as intern_router
+from app.api.v1.endpoints.reports import router as reports_router
+from app.api.v1.endpoints.support_requests import router as support_requests_router
 
 # ============================================================
 # Logging config
@@ -126,6 +128,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 # Include routers
 # ============================================================
 app.include_router(intern_router)
+app.include_router(reports_router, prefix="/api/v1")
+app.include_router(support_requests_router, prefix="/api/v1")
 
 
 # ============================================================

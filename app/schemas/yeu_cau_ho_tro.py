@@ -12,10 +12,10 @@ class TrangThaiYeuCau(str, Enum):
 
 
 class YeuCauHoTroBase(BaseModel):
-    ma_ho_so: str = Field(..., example="HS001", description="Mã hồ sơ thực tập sinh")
-    loai_yeu_cau: str = Field(..., example="GiayTo", description="Loại yêu cầu hỗ trợ (GiayTo, ChungNhan, KyThuat, PhuCap, Khac)")
-    tieu_de: str = Field(..., min_length=1, max_length=255, example="Xin giấy xác nhận thực tập", description="Tiêu đề yêu cầu")
-    noi_dung: str = Field(..., min_length=1, example="Em cần giấy xác nhận hoàn thành thực tập để nộp về trường.", description="Nội dung chi tiết yêu cầu")
+    ma_ho_so: str = Field(..., examples=["HS001"], description="Mã hồ sơ thực tập sinh")
+    loai_yeu_cau: str = Field(..., examples=["GiayTo"], description="Loại yêu cầu hỗ trợ (GiayTo, ChungNhan, KyThuat, PhuCap, Khac)")
+    tieu_de: str = Field(..., min_length=1, max_length=255, examples=["Xin giấy xác nhận thực tập"], description="Tiêu đề yêu cầu")
+    noi_dung: str = Field(..., min_length=1, examples=["Em cần giấy xác nhận hoàn thành thực tập để nộp về trường."], description="Nội dung chi tiết yêu cầu")
 
 
 class YeuCauHoTroCreate(YeuCauHoTroBase):
