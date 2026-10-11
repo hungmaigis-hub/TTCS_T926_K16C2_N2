@@ -1,1 +1,4 @@
-"""Package app khởi tạo ứng dụng Backend."""
+# App package
+from .main import app
+
+__all__ = ["app"]

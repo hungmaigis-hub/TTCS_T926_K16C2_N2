@@ -1,29 +1,21 @@
-# Python bytecode / cache
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environments
-venv/
-.venv/
-env/
-ENV/
-
-# Environment variables
-.env
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Pytest / coverage
+# Caches and virtual environments
 .pytest_cache/
 .coverage
 htmlcov/
+.env
+venv/
+.venv/
+env/
+
+# Databases
+*.db
+*.sqlite3
 
 # IDEs
 .vscode/
 .idea/
-*.swp
-*.swo

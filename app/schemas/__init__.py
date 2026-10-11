@@ -1,15 +1,19 @@
-from app.schemas.ho_so import HoSoBase, HoSoCreate, HoSoResponse
-from app.schemas.yeu_cau_ho_tro import (
-    SupportRequestCreate,
-    SupportRequestResponse,
-    SupportRequestMessageResponse,
+from .yeu_cau_ho_tro import (
+    YeuCauHoTroBase,
+    YeuCauHoTroCreate,
+    YeuCauHoTroUpdate,
+    YeuCauHoTroUpdateTrangThai,
+    YeuCauHoTroResponse,
+    TrangThaiYeuCau,
+    LoaiYeuCau,
 )
 
 __all__ = [
-    "HoSoBase",
-    "HoSoCreate",
-    "HoSoResponse",
-    "SupportRequestCreate",
-    "SupportRequestResponse",
-    "SupportRequestMessageResponse",
+    "YeuCauHoTroBase",
+    "YeuCauHoTroCreate",
+    "YeuCauHoTroUpdate",
+    "YeuCauHoTroUpdateTrangThai",
+    "YeuCauHoTroResponse",
+    "TrangThaiYeuCau",
+    "LoaiYeuCau",
 ]

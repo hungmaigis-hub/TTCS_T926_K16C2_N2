@@ -1,60 +1,48 @@
-from datetime import datetime
-from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional
+from datetime import datetime
+from enum import Enum
 
 
-class SupportRequestCreate(BaseModel):
-    """
-    Schema nhận dữ liệu từ sinh viên khi gửi yêu cầu hỗ trợ.
-    Không cần truyền `trang_thai` và `ngay_tao` (backend tự gán tự động).
-    """
-    ma_ho_so: str = Field(
-        ...,
-        min_length=1,
-        max_length=50,
-        description="Mã hồ sơ sinh viên",
-        examples=["HS001"]
-    )
-    loai_yeu_cau: str = Field(
-        ...,
-        min_length=2,
-        max_length=100,
-        description="Loại yêu cầu hỗ trợ (Giấy tờ thực tập, Chứng nhận, Kỹ thuật, Trợ cấp,...)",
-        examples=["Giấy tờ thực tập"]
-    )
-    tieu_de: str = Field(
-        ...,
-        min_length=3,
-        max_length=255,
-        description="Tiêu đề yêu cầu hỗ trợ",
-        examples=["Xin giấy xác nhận hoàn thành đợt thực tập"]
-    )
-    noi_dung: str = Field(
-        ...,
-        min_length=5,
-        description="Nội dung chi tiết yêu cầu hỗ trợ",
-        examples=["Em cần xin giấy xác nhận hoàn thành 3 tháng thực tập để nộp về khoa CNTT trường Đại học Bách Khoa."]
-    )
+class TrangThaiYeuCau(str, Enum):
+    CHO_XU_LY = "ChoXuLy"
+    DANG_XU_LY = "DangXuLy"
+    DA_XU_LY = "DaXuLy"
+    TU_CHOI = "TuChoi"
 
 
-class SupportRequestResponse(BaseModel):
-    """
-    Schema trả về cho frontend sau khi tiếp nhận yêu cầu hỗ trợ thành công.
-    """
-    ma_yeu_cau: int = Field(..., description="Mã định danh yêu cầu")
-    ma_ho_so: str = Field(..., description="Mã hồ sơ sinh viên")
-    loai_yeu_cau: str = Field(..., description="Loại yêu cầu hỗ trợ")
-    tieu_de: str = Field(..., description="Tiêu đề yêu cầu")
-    noi_dung: str = Field(..., description="Nội dung chi tiết")
-    trang_thai: str = Field(..., description="Trạng thái xử lý (mặc định ChoXuLy)")
-    ngay_tao: datetime = Field(..., description="Thời gian tạo tự động")
+class LoaiYeuCau(str, Enum):
+    GIAY_TO = "GiayTo"           # Giấy xác nhận, giấy giới thiệu thực tập
+    CHUNG_NHAN = "ChungNhan"     # Chứng nhận hoàn thành thực tập
+    KY_THUAT = "KyThuat"         # Hỗ trợ kỹ thuật / tài khoản / phần mềm
+    PHU_CAP = "PhuCap"           # Thắc mắc về phụ cấp / chấm công
+    KHAC = "Khac"                # Các vấn đề phát sinh khác
+
+
+class YeuCauHoTroBase(BaseModel):
+    ma_ho_so: int = Field(..., description="Mã hồ sơ thực tập của sinh viên")
+    loai_yeu_cau: str = Field(..., example="GiayTo", description="Loại yêu cầu hỗ trợ (GiayTo, ChungNhan, KyThuat, PhuCap, Khac)")
+    tieu_de: str = Field(..., min_length=1, max_length=255, example="Xin cấp giấy xác nhận thực tập", description="Tiêu đề yêu cầu hỗ trợ")
+    noi_dung: str = Field(..., min_length=1, example="Em cần xin giấy xác nhận hoàn thành thực tập 2 tháng để nộp cho nhà trường.", description="Nội dung chi tiết yêu cầu")
+
+
+class YeuCauHoTroCreate(YeuCauHoTroBase):
+    """Payload gửi lên từ Frontend khi sinh viên tạo yêu cầu hỗ trợ"""
+    pass
+
+
+class YeuCauHoTroResponse(YeuCauHoTroBase):
+    """Dữ liệu trả về cho Frontend hiển thị"""
+    ma_yeu_cau: int
+    trang_thai: str = "ChoXuLy"
+    ngay_tao: datetime
+    phan_hoi: Optional[str] = None
+    ngay_xu_ly: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class SupportRequestMessageResponse(BaseModel):
-    """
-    Schema chuẩn RESTful bọc kết quả kèm thông điệp phản hồi cho Frontend.
-    """
-    message: str = Field(..., description="Thông báo trạng thái")
-    data: SupportRequestResponse = Field(..., description="Dữ liệu yêu cầu vừa tạo")
+class YeuCauHoTroUpdateTrangThai(BaseModel):
+    """Dành cho HR duyệt/phản hồi yêu cầu (User Story 28)"""
+    trang_thai: TrangThaiYeuCau = Field(..., description="Trạng thái cập nhật: ChoXuLy, DangXuLy, DaXuLy, TuChoi")
+    phan_hoi: Optional[str] = Field(None, description="Nội dung phản hồi hoặc lý do từ HR")

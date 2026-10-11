@@ -1,56 +1,40 @@
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List
 
-from app.api.deps import get_db
+from app.core.database import get_db
 from app.models.ho_so import HoSo
-from app.schemas.ho_so import HoSoCreate, HoSoResponse
+from app.schemas.ho_so import HoSoCreate, HoSoResponse, HoSoUpdate
 
 router = APIRouter()
 
 
-@router.get(
-    "",
-    response_model=List[HoSoResponse],
-    summary="Lấy danh sách hồ sơ sinh viên",
-    description="Xem danh sách các hồ sơ sinh viên / thực tập sinh trong hệ thống.",
-)
-def list_students(db: Session = Depends(get_db)):
-    return db.query(HoSo).all()
-
-
-@router.post(
-    "",
-    response_model=HoSoResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Tạo mới hồ sơ sinh viên",
-    description="Thêm hồ sơ sinh viên / thực tập sinh vào cơ sở dữ liệu.",
-)
-def create_student(payload: HoSoCreate, db: Session = Depends(get_db)):
-    existing = db.query(HoSo).filter(HoSo.ma_ho_so == payload.ma_ho_so).first()
+@router.post("", response_model=HoSoResponse, status_code=status.HTTP_201_CREATED, summary="Tạo hồ sơ thực tập mới")
+def create_student_profile(profile_in: HoSoCreate, db: Session = Depends(get_db)):
+    existing = db.query(HoSo).filter(HoSo.ma_sinh_vien == profile_in.ma_sinh_vien).first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Mã hồ sơ '{payload.ma_ho_so}' đã tồn tại trong hệ thống.",
+            detail=f"Mã sinh viên {profile_in.ma_sinh_vien} đã tồn tại hồ sơ thực tập."
         )
-    ho_so = HoSo(**payload.model_dump())
-    db.add(ho_so)
+    profile = HoSo(**profile_in.model_dump())
+    db.add(profile)
     db.commit()
-    db.refresh(ho_so)
-    return ho_so
+    db.refresh(profile)
+    return profile
 
 
-@router.get(
-    "/{ma_ho_so}",
-    response_model=HoSoResponse,
-    summary="Chi tiết hồ sơ sinh viên",
-    description="Tra cứu hồ sơ sinh viên theo mã hồ sơ.",
-)
-def get_student(ma_ho_so: str, db: Session = Depends(get_db)):
-    ho_so = db.query(HoSo).filter(HoSo.ma_ho_so == ma_ho_so).first()
-    if not ho_so:
+@router.get("", response_model=List[HoSoResponse], summary="Lấy danh sách hồ sơ thực tập")
+def get_student_profiles(db: Session = Depends(get_db)):
+    return db.query(HoSo).all()
+
+
+@router.get("/{id}", response_model=HoSoResponse, summary="Lấy chi tiết hồ sơ thực tập theo mã")
+def get_student_profile_by_id(id: int, db: Session = Depends(get_db)):
+    profile = db.query(HoSo).filter(HoSo.ma_ho_so == id).first()
+    if not profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Không tìm thấy hồ sơ sinh viên với mã '{ma_ho_so}'.",
+            detail=f"Không tìm thấy hồ sơ thực tập với mã {id}."
         )
-    return ho_so
+    return profile

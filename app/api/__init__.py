@@ -1,1 +1,1 @@
-"""Package API chứa các routers và dependencies."""
+# API package
