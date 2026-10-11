@@ -1158,6 +1158,47 @@ class AllowanceResponse(BaseModel):
     data: Optional[AllowanceDetailData] = None
 
 
+class AllowanceCreate(BaseModel):
+    """Schema tiếp nhận thông tin tạo mới bản ghi phụ cấp (POST /api/v1/allowances)"""
+    ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập sinh")
+    thang: int = Field(..., ge=1, le=12, description="Tháng nhận phụ cấp (1-12)")
+    nam: int = Field(..., ge=2000, le=2100, description="Năm nhận phụ cấp")
+    so_tien: float = Field(..., gt=0, description="Số tiền phụ cấp (phải > 0)")
+    ngay_chi_tra: Optional[Union[date, str]] = Field(default=None, description="Ngày chi trả phụ cấp (YYYY-MM-DD)")
+    trang_thai: Optional[str] = Field(default="ChuaChiTra", description="Trạng thái chi trả (ChuaChiTra, DaChiTra, ChoDuyet)")
+
+    @field_validator("thang")
+    def validate_thang(cls, value: int):
+        if value < 1 or value > 12:
+            raise ValueError("Tháng phải nằm trong khoảng từ 1 đến 12")
+        return value
+
+    @field_validator("so_tien")
+    def validate_so_tien(cls, value: float):
+        if value <= 0:
+            raise ValueError("Số tiền phụ cấp phải lớn hơn 0")
+        return value
+
+
+class AllowanceCreateData(BaseModel):
+    """Dữ liệu trả về chi tiết sau khi tạo mới bản ghi phụ cấp"""
+    ma_phu_cap: int
+    ma_ho_so: int
+    thang: int
+    nam: int
+    thang_nam: Optional[str] = None
+    so_tien: float
+    ngay_chi_tra: Optional[str] = None
+    trang_thai: str
+
+
+class AllowanceCreateResponse(BaseModel):
+    """Response chuẩn khi tạo mới phụ cấp thành công (HTTP 201)"""
+    status_code: int = 201
+    message: str = "Tạo bản ghi phụ cấp thành công"
+    data: AllowanceCreateData
+
+
 # ==============================================================
 # SCHEMAS CHO QUẢN LÝ NGƯỜI HƯỚNG DẪN (MENTOR API)
 # ==============================================================

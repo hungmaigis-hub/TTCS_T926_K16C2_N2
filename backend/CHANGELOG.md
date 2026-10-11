@@ -8,6 +8,25 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ### Đã hoàn thành (Added & Enhanced)
 
+- **Model PhuCap (`phu_cap.py`)**:
+  - Bổ sung các trường `thang` (1-12), `nam`, `ngay_chi_tra`, `trang_thai` trong SQLAlchemy ORM model [PhuCap](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/models/phu_cap.py).
+  - Tự động duy trì và đồng bộ hóa hai trường tương thích ngược `thang_nam` và `trang_thai_chi_tra`.
+  - Cập nhật hàm `to_dict()` trả về đầy đủ các trường mới cho client.
+- **Pydantic Schemas (`schemas.py`)**:
+  - `AllowanceCreate`: Schema tiếp nhận dữ liệu tạo mới phụ cấp cho thực tập sinh với các validator ràng buộc số tiền `so_tien > 0`, tháng trong khoảng `1 <= thang <= 12`, `ma_ho_so > 0`.
+  - `AllowanceCreateData` & `AllowanceCreateResponse`: Schema response chuẩn RESTful (HTTP 201 Created).
+- **Endpoint Tạo Mới Phụ Cấp (`POST /api/v1/allowances`)**:
+  - Tiếp nhận thông tin phụ cấp và kiểm tra sự tồn tại của thực tập sinh trong bảng `ho_so_thuc_tap` (`HTTP 404 Not Found` nếu không tìm thấy).
+  - Kiểm tra chống trùng lặp: Nếu thực tập sinh đã có bản ghi phụ cấp cùng kỳ (tháng, năm), trả về mã `HTTP 400 Bad Request`.
+  - Lưu bản ghi vào bảng `phu_cap` trong CSDL và trả về mã `HTTP 201 Created`.
+- **Cơ sở dữ liệu & Tài liệu thiết kế**:
+  - Cập nhật bảng 2.13 và sơ đồ quan hệ Mermaid ERD trong [DATABASE_DESIGN.md](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/DATABASE_DESIGN.md).
+  - Cập nhật định nghĩa bảng `phu_cap` và dữ liệu mẫu trong [init_db.sql](file:///d:/CodeGym/TTCS_T926_K16C2_N2/script/database/init_db.sql).
+  - Cập nhật seed fixture cho SQLite trong [conftest.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/conftest.py).
+- **Kiểm thử tự động (Unit Test & Regression Test)**:
+  - Viết mới bộ test [test_create_allowance.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_create_allowance.py) với 10 test cases bao phủ tạo thành công (đầy đủ/mặc định), bắt lỗi 404, 422, 400 trùng lặp -> **10/10 PASS 100%**.
+  - Kiểm thử hồi quy với API phụ cấp cũ `test_intern_allowances.py` -> **5/5 PASS 100%**.
+
 - **Model YeuCauHoTro (`yeu_cau_ho_tro.py`)**:
   - Tạo mới ORM Model [YeuCauHoTro](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/models/yeu_cau_ho_tro.py) ánh xạ bảng `yeu_cau_ho_tro` (`ma_yeu_cau`, `ma_ho_so`, `loai_yeu_cau`, `noi_dung`, `phan_hoi_hr`, `trang_thai`).
   - Thiết lập quan hệ hai chiều `ho_so` và `danh_sach_yeu_cau_ho_tro` trong [ho_so.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/models/ho_so.py).
@@ -43,6 +62,7 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 - **Kiểm thử tự động**:
   - Tạo mới bộ test [tests/test_mentor_workload.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_mentor_workload.py) gồm 7 test cases bao phủ gọi mặc định, mentor có sinh viên, mentor 0 sinh viên (outerjoin), lọc theo phòng ban (200 & 404), lọc từ khóa, lọc trạng thái (200 & 400) và tính toán KPI summary -> **7/7 PASS 100%**.
   - Kiểm tra hồi quy toàn bộ cụm Mentor -> **18/18 PASS 100%**.
+
 
 
 ---

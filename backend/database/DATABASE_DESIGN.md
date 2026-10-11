@@ -165,10 +165,15 @@ erDiagram
     PHU_CAP {
         int ma_phu_cap PK
         int ma_ho_so FK
-        string thang_nam
-        decimal so_tien
-        string trang_thai_chi_tra "DaChiTra, ChuaChiTra"
+        int thang "1-12"
+        int nam
+        string thang_nam "YYYY-MM (tuong thich)"
+        decimal so_tien "> 0"
+        date ngay_chi_tra
+        string trang_thai "ChuaChiTra, DaChiTra, ChoDuyet"
+        string trang_thai_chi_tra "DaChiTra, ChuaChiTra (tuong thich)"
     }
+
 
     YEU_CAU_HO_TRO {
         int ma_yeu_cau PK
@@ -414,9 +419,13 @@ erDiagram
 | :--- | :--- | :--- | :--- | :--- |
 | `ma_phu_cap` | `INT` | **PK** | `AUTO_INCREMENT` | Mã bản ghi phụ cấp |
 | `ma_ho_so` | `INT` | **FK** | `NOT NULL` | Hồ sơ nhận phụ cấp (`HO_SO_THUC_TAP`) |
-| `thang_nam` | `VARCHAR(7)` | | Định dạng `YYYY-MM` (VD: `2026-09`) | Kỳ chi trả |
-| `so_tien` | `DECIMAL(12,2)` | | `>= 0` | Số tiền phụ cấp (VND) |
-| `trang_thai_chi_tra`| `VARCHAR(50)`| | `DaChiTra`, `ChuaChiTra` | Tình trạng kế toán thanh toán |
+| `thang` | `INT` | | `1 <= thang <= 12` | Tháng nhận phụ cấp |
+| `nam` | `INT` | | `nam >= 2000` | Năm nhận phụ cấp |
+| `thang_nam` | `VARCHAR(7)` | | Định dạng `YYYY-MM` (VD: `2026-09`) | Kỳ chi trả (tương thích) |
+| `so_tien` | `DECIMAL(12,2)` | | `> 0` | Số tiền phụ cấp (VND) |
+| `ngay_chi_tra` | `DATE` | | Có thể NULL | Ngày thực tế giải ngân / chi trả |
+| `trang_thai` | `VARCHAR(50)` | | `ChuaChiTra`, `DaChiTra`, `ChoDuyet` | Trạng thái giải ngân phụ cấp |
+| `trang_thai_chi_tra`| `VARCHAR(50)`| | `DaChiTra`, `ChuaChiTra` | Tình trạng kế toán thanh toán (tương thích) |
 
 ---
 
