@@ -65,14 +65,9 @@ function dongBoThongTinNguoiDung() {
 
   if (isStudentPage) {
     let student = layThongTinSession("student");
-    if (!student) {
-      student = {
-        ho_ten: "Vũ Quang Huy",
-        email: "quanghuy.dtc@ictu.edu.vn",
-        ma_sinh_vien: "DTC2051060124",
-        vai_tro: "ThucTapSinh"
-      };
-      luuThongTinSession("student", student);
+    if (!student || student.vai_tro !== "ThucTapSinh") {
+      window.location.href = "../public/dangnhap.html";
+      return;
     }
 
     const hoTen = student.ho_ten || "Vũ Quang Huy";
@@ -120,23 +115,21 @@ function dongBoThongTinNguoiDung() {
     }
 
     document.querySelectorAll("a[title='Đăng xuất'], [data-action='logout']").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
         localStorage.removeItem("ictu_student_session");
         localStorage.removeItem("user");
         localStorage.removeItem("currentUser");
+        window.location.href = "../public/dangnhap.html";
       });
     });
   }
 
   if (isManagerPage) {
     let admin = layThongTinSession("manager");
-    if (!admin) {
-      admin = {
-        ho_ten: "Ban Đào Tạo & QLTT",
-        email: "admin@ictu.edu.vn",
-        vai_tro: "Admin"
-      };
-      luuThongTinSession("manager", admin);
+    if (!admin || admin.vai_tro === "ThucTapSinh") {
+      window.location.href = "../public/dangnhap.html";
+      return;
     }
 
     const hoTen = admin.ho_ten || "Ban Đào Tạo & QLTT";
@@ -181,10 +174,12 @@ function dongBoThongTinNguoiDung() {
     }
 
     document.querySelectorAll("a[title='Đăng xuất'], [data-action='logout']").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
         localStorage.removeItem("ictu_admin_session");
         localStorage.removeItem("user");
         localStorage.removeItem("currentUser");
+        window.location.href = "../public/dangnhap.html";
       });
     });
   }

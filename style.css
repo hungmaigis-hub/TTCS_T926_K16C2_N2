@@ -1,0 +1,264 @@
+/* Custom Styles for Shift Schedule & Intern Assignment Form */
+
+:root {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-subtle: #eff6ff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --bg-body: #f8fafc;
+  --radius-lg: 14px;
+}
+
+body {
+  background-color: var(--bg-body);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text-main);
+  min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+}
+
+/* Day Checkbox Buttons */
+.day-checkbox-group .day-card {
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  background-color: #ffffff;
+  color: var(--text-main);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  min-height: 80px;
+}
+
+.day-checkbox-group .day-card:hover {
+  border-color: #93c5fd;
+  background-color: #f0f7ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.08);
+}
+
+.day-checkbox-group .day-card .day-short {
+  font-size: 1.15rem;
+}
+
+.day-checkbox-group .day-card .day-full {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.day-checkbox-group .day-card .check-icon {
+  font-size: 0.9rem;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* Checked State for Day Checkboxes */
+.btn-check:checked + .day-card {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-check:checked + .day-card .check-icon {
+  opacity: 1;
+}
+
+/* Weekend distinction */
+.day-card.weekend {
+  border-style: dashed;
+}
+
+.btn-check:checked + .day-card.weekend {
+  background-color: #4f46e5 !important;
+  border-color: #4f46e5 !important;
+}
+
+/* Time Input Styling */
+.time-input-box {
+  background: #ffffff;
+  transition: border-color 0.2s ease;
+}
+
+.time-input-box:focus-within {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+input[type="time"] {
+  font-family: inherit;
+  font-size: 1.15rem;
+  color: #0f172a;
+}
+
+/* Selected Intern Tags */
+.min-height-120 {
+  min-height: 110px;
+}
+
+.intern-tag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  padding: 4px 12px 4px 6px;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+  font-size: 0.875rem;
+}
+
+.intern-tag:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.intern-avatar-sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.intern-tag-btn-remove {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  transition: all 0.15s ease;
+}
+
+.intern-tag-btn-remove:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+/* Modal Intern Item in Checklist */
+.intern-list-item {
+  border-radius: 10px !important;
+  border: 1px solid transparent;
+  margin-bottom: 4px;
+  padding: 10px 14px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.intern-list-item:hover {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.intern-list-item.selected {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.intern-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+/* Custom Scrollbar for Modal Intern List */
+.intern-list-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+.intern-list-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.intern-list-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.intern-list-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Avatar Department Color Palettes */
+.bg-avatar-frontend { background: linear-gradient(135deg, #0284c7, #38bdf8); }
+.bg-avatar-backend  { background: linear-gradient(135deg, #16a34a, #4ade80); }
+.bg-avatar-mobile   { background: linear-gradient(135deg, #9333ea, #c084fc); }
+.bg-avatar-uiux     { background: linear-gradient(135deg, #ea580c, #fb923c); }
+.bg-avatar-qa       { background: linear-gradient(135deg, #d97706, #fcd34d); }
+.bg-avatar-devops   { background: linear-gradient(135deg, #475569, #94a3b8); }
+.bg-avatar-hr       { background: linear-gradient(135deg, #db2777, #f472b6); }
+
+/* Shifts Table */
+#shiftsTable th {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  padding: 12px 16px;
+}
+
+#shiftsTable td {
+  padding: 14px 16px;
+}
+
+.day-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background-color: #e0e7ff;
+  color: #3730a3;
+  margin-right: 3px;
+  margin-bottom: 2px;
+}
+
+.day-badge.weekend-badge {
+  background-color: #fce7f3;
+  color: #9d174d;
+}
+
+.avatar-stack {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-stack-item {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  margin-left: -8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-stack-item:first-child {
+  margin-left: 0;
+}

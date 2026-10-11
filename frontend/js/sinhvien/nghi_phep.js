@@ -14,6 +14,22 @@ const duLieuDonMau = [
   },
 ];
 
+function layMaHoSoHienTai() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const idFromUrl = urlParams.get("id");
+  if (idFromUrl) return parseInt(idFromUrl, 10);
+
+  try {
+    const raw = localStorage.getItem("ictu_student_session") || localStorage.getItem("currentUser") || localStorage.getItem("user");
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u.ma_ho_so) return parseInt(u.ma_ho_so, 10);
+    }
+  } catch (e) {}
+
+  return 15;
+}
+
 function layDanhSachDon() {
   try {
     const raw = localStorage.getItem(KEY_DON_NGHI_PHEP);
@@ -26,6 +42,44 @@ function luuDanhSachDon(danhSach) {
   try {
     localStorage.setItem(KEY_DON_NGHI_PHEP, JSON.stringify(danhSach));
   } catch (e) {}
+}
+
+async function taiDanhSachDonTuApi() {
+  const maHoSo = layMaHoSoHienTai();
+  try {
+    const res = await fetch(`${duongDanApi}/leave-requests?ma_ho_so=${maHoSo}`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json && Array.isArray(json.data) && json.data.length > 0) {
+        const danhSachTuDb = json.data.map((item) => {
+          let loai = "Nghỉ phép";
+          let lyDoText = item.ly_do || "";
+          if (lyDoText.startsWith("[")) {
+            const idx = lyDoText.indexOf("]");
+            if (idx > -1) {
+              loai = lyDoText.substring(1, idx);
+              lyDoText = lyDoText.substring(idx + 1).trim();
+            }
+          }
+
+          return {
+            maDon: `NP-2026-${String(100 + item.ma_don).slice(-3)}`,
+            tuNgay: item.tu_ngay,
+            denNgay: item.den_ngay,
+            soNgay: item.so_ngay || 1,
+            loaiNghi: loai,
+            lyDo: lyDoText,
+            ngayGui: item.ngay_tao ? item.ngay_tao.split("T")[0] : item.tu_ngay,
+            trangThai: item.trang_thai || "Chờ duyệt",
+          };
+        });
+        luuDanhSachDon(danhSachTuDb);
+        renderBangLichSu();
+        return;
+      }
+    }
+  } catch (e) {}
+  renderBangLichSu();
 }
 
 function tinhSoNgayNghi() {
@@ -55,8 +109,32 @@ function tinhSoNgayNghi() {
   const diffTime = Math.abs(dDen - dTu);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-  elNhan.textContent = `${diffDays} ngày`;
-  elNhan.className = "font-bold text-emerald-700 font-mono";
+  const danhSach = layDanhSachDon();
+  let soNgayDaDung = 0;
+  let soNgayChoDuyet = 0;
+  danhSach.forEach((item) => {
+    if (item.trangThai === "Đã duyệt") {
+      soNgayDaDung += item.soNgay || 1;
+    } else if (item.trangThai === "Chờ duyệt") {
+      soNgayChoDuyet += item.soNgay || 1;
+    }
+  });
+  const conLai = Math.max(0, 3 - soNgayDaDung);
+  const khaDungHienTai = Math.max(0, conLai - soNgayChoDuyet);
+
+  if (diffDays > 3) {
+    elNhan.textContent = `${diffDays} ngày (Vượt quá tối đa 3 ngày/kỳ)`;
+    elNhan.className = "font-bold text-rose-600 font-mono text-xs";
+  } else if (diffDays > conLai) {
+    elNhan.textContent = `${diffDays} ngày (Vượt quá quỹ phép còn lại: ${conLai} ngày)`;
+    elNhan.className = "font-bold text-rose-600 font-mono text-xs";
+  } else if (diffDays > khaDungHienTai) {
+    elNhan.textContent = `${diffDays} ngày (Đang có ${soNgayChoDuyet} ngày chờ duyệt, chỉ còn ${khaDungHienTai} ngày khả dụng)`;
+    elNhan.className = "font-bold text-amber-600 font-mono text-xs";
+  } else {
+    elNhan.textContent = `${diffDays} ngày (Hợp lệ)`;
+    elNhan.className = "font-bold text-emerald-700 font-mono";
+  }
 }
 
 function renderBangLichSu() {
@@ -65,11 +143,14 @@ function renderBangLichSu() {
 
   const danhSach = layDanhSachDon();
   let soNgayDaDung = 0;
+  let soNgayChoDuyet = 0;
 
   tbody.innerHTML = danhSach
     .map((item) => {
       if (item.trangThai === "Đã duyệt") {
         soNgayDaDung += item.soNgay || 1;
+      } else if (item.trangThai === "Chờ duyệt") {
+        soNgayChoDuyet += item.soNgay || 1;
       }
 
       let badgeClass = "bg-amber-50 text-amber-700 border-amber-200";
@@ -101,38 +182,70 @@ function renderBangLichSu() {
 
   const elDaDung = document.getElementById("soNgayDaDung");
   const elConLai = document.getElementById("soNgayConLai");
+  const conLai = Math.max(0, 3 - soNgayDaDung);
+
   if (elDaDung) {
     elDaDung.innerHTML = `${String(soNgayDaDung).padStart(2, "0")} <span class="text-base font-medium text-slate-500">ngày</span>`;
   }
   if (elConLai) {
-    const conLai = Math.max(0, 3 - soNgayDaDung);
     elConLai.innerHTML = `${String(conLai).padStart(2, "0")} <span class="text-base font-medium text-slate-500">ngày</span>`;
+  }
+
+  const nutGui = document.getElementById("nutGuiDon");
+  if (nutGui) {
+    if (conLai <= 0) {
+      nutGui.disabled = true;
+      nutGui.classList.add("opacity-50", "cursor-not-allowed");
+      nutGui.title = "Đã sử dụng hết 3/3 ngày nghỉ phép quy định";
+    } else {
+      nutGui.disabled = false;
+      nutGui.classList.remove("opacity-50", "cursor-not-allowed");
+      nutGui.title = "";
+    }
   }
 }
 
-function taiLaiLichSuDon() {
-  renderBangLichSu();
+async function taiLaiLichSuDon() {
+  await taiDanhSachDonTuApi();
   hienThiThongBao(
     "info",
     "Đã làm mới dữ liệu",
-    "Bảng theo dõi lịch sử đơn nghỉ phép đã được cập nhật mới nhất."
+    "Bảng theo dõi lịch sử đơn nghỉ phép đã được cập nhật mới nhất từ cơ sở dữ liệu."
   );
 }
 
 async function guiDonNghiPhep() {
   const tuNgay = document.getElementById("tuNgay")?.value;
   const denNgay = document.getElementById("denNgay")?.value;
-  const loaiNghi = document.getElementById("loaiNghiPhep")?.value;
+  const loaiNghi = document.getElementById("loaiNghiPhep")?.value || "Nghỉ phép";
   const lyDo = document.getElementById("lyDoNghi")?.value.trim();
   const nutGui = document.getElementById("nutGuiDon");
 
   if (!tuNgay || !denNgay || !lyDo) {
-    alert("Vui lòng điền đầy đủ các thông tin bắt buộc!");
+    hienThiThongBao(
+      "error",
+      "Thiếu thông tin bắt buộc",
+      "Vui lòng điền đầy đủ ngày bắt đầu, ngày kết thúc và lý do chi tiết xin nghỉ phép."
+    );
+    return;
+  }
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  if (tuNgay < todayStr) {
+    hienThiThongBao(
+      "error",
+      "Ngày không hợp lệ",
+      "Không thể gửi đơn xin nghỉ phép trong quá khứ so với thời điểm hiện tại."
+    );
     return;
   }
 
   if (new Date(denNgay) < new Date(tuNgay)) {
-    alert("Ngày kết thúc nghỉ phép không được nhỏ hơn ngày bắt đầu!");
+    hienThiThongBao(
+      "error",
+      "Khoảng thời gian không hợp lệ",
+      "Ngày kết thúc nghỉ phép phải lớn hơn hoặc bằng ngày bắt đầu (den_ngay >= tu_ngay)."
+    );
     return;
   }
 
@@ -141,60 +254,125 @@ async function guiDonNghiPhep() {
   const diffTime = Math.abs(dDen - dTu);
   const soNgay = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
+  if (soNgay > 3) {
+    hienThiThongBao(
+      "error",
+      "Vượt quá hạn mức tối đa",
+      `Mỗi kỳ thực tập sinh viên chỉ được nghỉ tối đa 3 ngày phép. Bạn đang xin ${soNgay} ngày.`
+    );
+    return;
+  }
+
+  const danhSach = layDanhSachDon();
+  let soNgayDaDung = 0;
+  let soNgayChoDuyet = 0;
+  danhSach.forEach((item) => {
+    if (item.trangThai === "Đã duyệt") {
+      soNgayDaDung += item.soNgay || 1;
+    } else if (item.trangThai === "Chờ duyệt") {
+      soNgayChoDuyet += item.soNgay || 1;
+    }
+  });
+  const conLai = Math.max(0, 3 - soNgayDaDung);
+  const khaDungHienTai = Math.max(0, conLai - soNgayChoDuyet);
+
+  if (conLai <= 0) {
+    hienThiThongBao(
+      "error",
+      "Hết hạn mức nghỉ phép",
+      "Bạn đã sử dụng hết hạn mức 3/3 ngày nghỉ phép của kỳ thực tập. Chỉ các đơn đã được duyệt mới tính trừ ngày phép."
+    );
+    return;
+  }
+
+  if (soNgay > conLai) {
+    hienThiThongBao(
+      "error",
+      "Vượt quá quỹ phép còn lại",
+      `Bạn xin nghỉ ${soNgay} ngày, nhưng hạn mức nghỉ phép còn lại chỉ còn ${conLai} ngày (trên tổng 3 ngày phép). Vui lòng điều chỉnh lại ngày nghỉ.`
+    );
+    return;
+  }
+
+  if (soNgay > khaDungHienTai) {
+    hienThiThongBao(
+      "error",
+      "Đơn chờ duyệt chiếm quỹ phép",
+      `Bạn hiện có ${soNgayChoDuyet} ngày nghỉ đang chờ xét duyệt và ${soNgayDaDung} ngày đã duyệt (tổng ${soNgayDaDung + soNgayChoDuyet}/3 ngày). Bạn chỉ có thể nộp thêm tối đa ${khaDungHienTai} ngày nghỉ nữa.`
+    );
+    return;
+  }
+
+  const trungLap = danhSach.find((item) => {
+    if (item.trangThai === "Từ chối") return false;
+    return item.tuNgay <= denNgay && item.denNgay >= tuNgay;
+  });
+  if (trungLap) {
+    hienThiThongBao(
+      "error",
+      "Trùng lặp khoảng thời gian nghỉ",
+      `Bạn đã có đơn ${trungLap.maDon} (${trungLap.tuNgay} đến ${trungLap.denNgay}, trạng thái: ${trungLap.trangThai}) trùng hoặc giao thoa với khoảng thời gian bạn vừa chọn. Vui lòng không nộp trùng lặp.`
+    );
+    return;
+  }
+
   const oldBtnHtml = nutGui ? nutGui.innerHTML : "";
   if (nutGui) {
     nutGui.disabled = true;
     nutGui.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> <span>Đang gửi đơn lên HR...</span>`;
   }
 
-  const homNayStr = new Date().toISOString().split("T")[0];
-  const maDonMoi = `NP-2026-${String(Math.floor(100 + Math.random() * 900))}`;
+  const maHoSo = layMaHoSoHienTai();
 
   try {
     const payload = {
-      ma_ho_so: 1,
+      ma_ho_so: maHoSo,
       tu_ngay: tuNgay,
       den_ngay: denNgay,
       ly_do: `[${loaiNghi}] ${lyDo}`,
       trang_thai: "Chờ duyệt",
     };
 
-    await fetch(`${duongDanApi}/leave-requests`, {
+    const res = await fetch(`${duongDanApi}/leave-requests`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+
+    const resData = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      let errMsg = "Không thể gửi đơn xin nghỉ phép.";
+      if (typeof resData.detail === "string") {
+        errMsg = resData.detail;
+      } else if (Array.isArray(resData.detail)) {
+        errMsg = resData.detail.map((e) => e.msg || e.message).join(", ");
+      }
+      hienThiThongBao("error", "Lỗi từ chối từ hệ thống", errMsg);
+      return;
+    }
+
+    document.getElementById("formDangKyNghiPhep")?.reset();
+    setTimeout(tinhSoNgayNghi, 50);
+    await taiDanhSachDonTuApi();
+
+    hienThiThongBao(
+      "success",
+      "Gửi đơn xin nghỉ phép thành công!",
+      `Đơn xin nghỉ phép (${soNgay} ngày, từ ${tuNgay} đến ${denNgay}) đã được chuyển đến bộ phận Nhân sự và Mentor phụ trách để xét duyệt.`
+    );
   } catch (err) {
-    console.warn("Backend leave-requests offline, fallback lưu cục bộ.");
+    hienThiThongBao(
+      "error",
+      "Mất kết nối máy chủ",
+      `Không thể kết nối đến máy chủ (${err.message || "Lỗi mạng"}). Vui lòng kiểm tra lại dịch vụ Backend.`
+    );
   } finally {
     if (nutGui) {
       nutGui.disabled = false;
       nutGui.innerHTML = oldBtnHtml;
     }
   }
-
-  const danhSach = layDanhSachDon();
-  danhSach.unshift({
-    maDon: maDonMoi,
-    tuNgay: tuNgay,
-    denNgay: denNgay,
-    soNgay: soNgay,
-    loaiNghi: loaiNghi,
-    lyDo: lyDo,
-    ngayGui: homNayStr,
-    trangThai: "Chờ duyệt",
-  });
-  luuDanhSachDon(danhSach);
-
-  document.getElementById("formDangKyNghiPhep")?.reset();
-  setTimeout(tinhSoNgayNghi, 50);
-  renderBangLichSu();
-
-  hienThiThongBao(
-    "success",
-    "Gửi đơn xin nghỉ phép thành công!",
-    `Đơn xin nghỉ phép mã <strong>${maDonMoi}</strong> (${soNgay} ngày, từ ${tuNgay} đến ${denNgay}) đã được tiếp nhận và chuyển đến phòng Nhân sự (HR) phê duyệt.`
-  );
 }
 
 function datLaiFormNghiPhep() {
@@ -277,4 +455,5 @@ document.addEventListener("DOMContentLoaded", () => {
   tinhSoNgayNghi();
   dongBoThongTinNguoiDung();
   renderBangLichSu();
+  taiDanhSachDonTuApi();
 });

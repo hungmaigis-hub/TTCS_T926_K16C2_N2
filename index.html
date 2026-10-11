@@ -1,0 +1,330 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Quản Lý Sinh Viên - Báo Cáo KPI Thời Gian Thực</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Top Header -->
+    <header class="dashboard-header">
+      <div class="header-left">
+        <div class="logo-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="header-title">Thống Kê Sinh Viên & Chỉ Số KPI</h1>
+          <p class="header-subtitle">Hệ thống theo dõi tiến độ đào tạo và phân loại trạng thái học tập</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Trạng thái kết nối Realtime -->
+        <div class="realtime-status-pill" id="realtimeStatusPill">
+          <span class="pulse-dot"></span>
+          <span class="status-text" id="connectionStatusText">Thời gian thực (Live)</span>
+        </div>
+
+        <!-- Bộ chọn chế độ Nguồn dữ liệu (API Thật vs Giả lập Realtime để demo) -->
+        <div class="data-source-selector">
+          <label for="dataSourceMode" class="source-label">Nguồn dữ liệu:</label>
+          <select id="dataSourceMode" class="form-select">
+            <option value="api" selected>API Thật (/api/v1/...)</option>
+            <option value="mock">Mô phỏng Realtime (Demo)</option>
+          </select>
+        </div>
+
+        <!-- Tần suất cập nhật tự động -->
+        <div class="refresh-control">
+          <label for="refreshIntervalSelect" class="source-label">Tự động làm mới:</label>
+          <select id="refreshIntervalSelect" class="form-select">
+            <option value="5000">Mỗi 5 giây</option>
+            <option value="10000" selected>Mỗi 10 giây</option>
+            <option value="30000">Mỗi 30 giây</option>
+            <option value="0">Tắt tự động</option>
+          </select>
+        </div>
+
+        <!-- Nút Refresh thủ công -->
+        <button id="btnManualRefresh" class="btn-refresh" title="Cập nhật ngay">
+          <svg class="refresh-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M23 4v6h-6"/>
+            <path d="M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          <span>Làm mới</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Thanh thông tin thời gian cập nhật -->
+    <div class="sync-meta-bar">
+      <div class="meta-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>Lần cập nhật cuối: <strong id="lastUpdatedTime">Đang tải...</strong></span>
+      </div>
+      <div class="meta-item">
+        <span class="api-tag">GET /api/v1/reports/completion-rate</span>
+      </div>
+    </div>
+
+    <!-- KHỐI KPI CHÍNH & VÒNG TRÒN PHẦN TRĂM TIẾN ĐỘ -->
+    <div class="kpi-main-grid">
+      <!-- 1. KHỐI NỔI BẬT: VÒNG TRÒN TIẾN ĐỘ HOÀN THÀNH -->
+      <section class="card kpi-hero-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="badge badge-primary">Chỉ số trọng tâm</span>
+            <h2 class="card-title">Tiến Độ Hoàn Thành & Tốt Nghiệp</h2>
+          </div>
+          <div class="trend-badge" id="completionTrendBadge">
+            <span class="trend-arrow">▲</span>
+            <span id="completionTrendText">+0.0%</span>
+          </div>
+        </div>
+
+        <div class="hero-content">
+          <!-- Vòng tròn phần trăm tiến độ hoàn thành SVG -->
+          <div class="circular-progress-wrapper">
+            <div class="svg-container">
+              <svg class="circular-chart" viewBox="0 0 160 160">
+                <defs>
+                  <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4F46E5" />
+                    <stop offset="50%" stop-color="#06B6D4" />
+                    <stop offset="100%" stop-color="#10B981" />
+                  </linearGradient>
+                  <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+                <!-- Vòng tròn nền (Track) -->
+                <circle class="circle-bg" cx="80" cy="80" r="68" />
+                <!-- Vòng tròn tiến độ động (Value Indicator) -->
+                <circle
+                  id="circularProgressBar"
+                  class="circle-progress"
+                  cx="80"
+                  cy="80"
+                  r="68"
+                  stroke-dasharray="427.26"
+                  stroke-dashoffset="427.26"
+                />
+              </svg>
+              <!-- Nội dung phần trăm bên trong tâm vòng tròn -->
+              <div class="circular-inner-content">
+                <div class="percentage-value-group">
+                  <span id="completionRateValue" class="percentage-number">0.0</span>
+                  <span class="percentage-unit">%</span>
+                </div>
+                <span class="progress-subtext" id="completionStatusLabel">Tỷ lệ hoàn thành</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thông tin phân tích chi tiết tiến độ -->
+          <div class="progress-details-panel">
+            <div class="stat-milestone">
+              <div class="milestone-label">Mục tiêu kỳ này (KPI Target)</div>
+              <div class="milestone-value"><span id="targetRateValue">85.0</span>%</div>
+              <div class="target-progress-bar-bg">
+                <div id="targetProgressBarFill" class="target-progress-bar-fill" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div class="stats-mini-list">
+              <div class="mini-stat-row">
+                <span class="dot dot-success"></span>
+                <span class="stat-name">Tốt nghiệp đúng hạn:</span>
+                <span class="stat-number" id="onTimeGraduationCount">0</span>
+              </div>
+              <div class="mini-stat-row">
+                <span class="dot dot-warning"></span>
+                <span class="stat-name">Gia hạn luận văn/kỳ:</span>
+                <span class="stat-number" id="delayedGraduationCount">0</span>
+              </div>
+              <div class="mini-stat-row">
+                <span class="dot dot-danger"></span>
+                <span class="stat-name">Cảnh báo học vụ:</span>
+                <span class="stat-number" id="academicWarningCount">0</span>
+              </div>
+            </div>
+
+            <div class="evaluation-box" id="kpiEvaluationBox">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+              <span id="kpiEvaluationText">Đang phân tích tiến độ KPI...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. KHỐI THẺ TỔNG SỐ SINH VIÊN -->
+      <div class="card kpi-card kpi-card-total">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Tổng Sinh Viên</span>
+          <div class="kpi-icon-bubble bubble-indigo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number-row">
+          <span class="kpi-counter" id="kpiTotalStudents">0</span>
+          <span class="kpi-badge badge-neutral" id="totalTrendBadge">+0%</span>
+        </div>
+        <div class="kpi-footer-metric">
+          <span class="footer-label">Quy mô toàn trường</span>
+          <span class="footer-subtext">Đã đồng bộ</span>
+        </div>
+      </div>
+
+      <!-- 3. KHỐI THẺ SINH VIÊN ĐANG THEO HỌC -->
+      <div class="card kpi-card kpi-card-active">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Đang Theo Học</span>
+          <div class="kpi-icon-bubble bubble-cyan">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <path d="M8 7h8M8 11h6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number-row">
+          <span class="kpi-counter counter-active" id="kpiActiveStudents">0</span>
+          <span class="kpi-ratio-pill" id="activeRatioPill">0% tổng số</span>
+        </div>
+        <div class="linear-progress-track">
+          <div class="linear-progress-fill fill-cyan" id="activeProgressFill" style="width: 0%;"></div>
+        </div>
+        <div class="kpi-footer-metric">
+          <span class="footer-label">Trạng thái: Hoạt động bình thường</span>
+        </div>
+      </div>
+
+      <!-- 4. KHỐI THẺ SINH VIÊN ĐÃ HOÀN THÀNH / TỐT NGHIỆP -->
+      <div class="card kpi-card kpi-card-completed">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Đã Hoàn Thành / Tốt Nghiệp</span>
+          <div class="kpi-icon-bubble bubble-emerald">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number-row">
+          <span class="kpi-counter counter-emerald" id="kpiCompletedStudents">0</span>
+          <span class="kpi-badge badge-success">Đạt chuẩn</span>
+        </div>
+        <div class="linear-progress-track">
+          <div class="linear-progress-fill fill-emerald" id="completedProgressFill" style="width: 0%;"></div>
+        </div>
+        <div class="kpi-footer-metric">
+          <span class="footer-label">Đủ điều kiện nhận văn bằng</span>
+        </div>
+      </div>
+
+      <!-- 5. KHỐI THẺ SINH VIÊN BẢO LƯU / CHỜ XỬ LÝ -->
+      <div class="card kpi-card kpi-card-onleave">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Bảo Lưu / Chờ Xử Lý</span>
+          <div class="kpi-icon-bubble bubble-amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number-row">
+          <span class="kpi-counter counter-amber" id="kpiOnLeaveStudents">0</span>
+          <span class="kpi-ratio-pill text-amber" id="onLeaveRatioPill">0%</span>
+        </div>
+        <div class="linear-progress-track">
+          <div class="linear-progress-fill fill-amber" id="onLeaveProgressFill" style="width: 0%;"></div>
+        </div>
+        <div class="kpi-footer-metric">
+          <span class="footer-label">Dự kiến tái nhập học kỳ tới</span>
+        </div>
+      </div>
+
+      <!-- 6. KHỐI THẺ CẢNH BÁO / NGUY CƠ BỎ HỌC -->
+      <div class="card kpi-card kpi-card-dropped">
+        <div class="kpi-card-top">
+          <span class="kpi-label">Thôi Học / Cảnh Báo Buộc Thôi</span>
+          <div class="kpi-icon-bubble bubble-rose">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-number-row">
+          <span class="kpi-counter counter-rose" id="kpiDroppedStudents">0</span>
+          <span class="kpi-badge badge-danger" id="riskBadge">Cần can thiệp</span>
+        </div>
+        <div class="linear-progress-track">
+          <div class="linear-progress-fill fill-rose" id="droppedProgressFill" style="width: 0%;"></div>
+        </div>
+        <div class="kpi-footer-metric">
+          <span class="footer-label">Cố vấn học tập đang xử lý</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Thông báo trạng thái / Thông báo kết nối (Toast/Banner) -->
+    <div id="toastMessage" class="toast-notification hidden">
+      <div class="toast-content">
+        <span class="toast-icon">ℹ️</span>
+        <span class="toast-text" id="toastText">Nội dung thông báo</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script điều khiển -->
+  <script src="app.js"></script>
+</body>
+
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content="0; url=frontend/html/public/index.html" />
+    <title>ICTU Internship Management Portal</title>
+    <script>
+      window.location.href = "frontend/html/public/index.html";
+    </script>
+  </head>
+  <body style="background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; margin: 0;">
+    <div style="text-align: center; padding: 24px; background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
+      <h2 style="color: #1e3a8a; margin: 0 0 8px 0; font-size: 18px;">Hệ Thống Quản Lý Thực Tập ICTU</h2>
+      <p style="color: #64748b; margin: 0 0 16px 0; font-size: 13px;">Đang chuyển hướng đến cổng thông tin...</p>
+      <a href="frontend/html/public/index.html" style="display: inline-block; padding: 8px 18px; background: #2563eb; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600;">
+        Nhấp vào đây nếu không tự chuyển
+      </a>
+    </div>
+  </body>
+
+</html>

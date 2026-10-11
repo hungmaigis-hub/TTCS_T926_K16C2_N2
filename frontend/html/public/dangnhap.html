@@ -24,6 +24,11 @@
   <body
     class="bg-surface text-on-surface min-h-screen flex flex-col font-body-md text-body-md"
   >
+    <div
+      id="toastContainer"
+      class="fixed right-5 sm:right-8 flex flex-col gap-3 max-w-sm sm:max-w-md w-full px-4 sm:px-0 pointer-events-none"
+      style="top: 84px; z-index: 999999;"
+    ></div>
     <header
       class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
     >
@@ -355,6 +360,11 @@
                   >
                 </div>
 
+                <div
+                  id="loginAlertBox"
+                  class="hidden mb-4 p-3.5 rounded-xl text-sm border flex items-start gap-3 transition-all duration-300"
+                ></div>
+
                 <form
                   class="space-y-4"
                   onsubmit="
@@ -378,7 +388,7 @@
                       <input
                         class="w-full h-11 pl-10 pr-4 rounded-lg bg-surface-container-lowest text-on-surface placeholder:text-outline-variant font-body-md text-body-md outline-none transition-all shadow-[0_0_0_1px_rgba(115,118,134,0.3)] focus:shadow-[0_0_0_2px_#004ac6] focus:bg-surface-container-lowest"
                         id="identifier"
-                        placeholder="sv.nguyenvana@university.edu.vn"
+                        placeholder="Ví dụ: an.nguyen@ictu.edu.vn hoặc quanghuy.dtc@ictu.edu.vn"
                         required=""
                         type="text"
                       />

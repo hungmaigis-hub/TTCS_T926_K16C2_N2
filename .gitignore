@@ -2,10 +2,22 @@
 # môi trường ảo python
 venv/
 .venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Python bytecode & cache
 __pycache__/
 *.pyc
+*.py[cod]
+*$py.class
+*.so
 
+# Environment variables
 .env
+*.env.local
 
 # Thư mục nháp cá nhân và các trang không dùng
 frontend/unused_html/
@@ -14,7 +26,17 @@ Hiếu 2/
 
 # Test artifacts & SQLite
 *.sqlite
+*.sqlite3
+*.db
 .pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # Uploaded files
 backend/uploads/*
