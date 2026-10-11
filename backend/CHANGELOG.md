@@ -4,6 +4,26 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.23.0] - 2026-10-10
+
+### Đã hoàn thành (Added & Enhanced)
+- **Pydantic Schemas (`schemas.py`)**:
+  - `MentorWorkloadItem`: Schema biểu diễn khối lượng công việc của từng Mentor bao gồm thông tin cá nhân, phòng ban và số lượng thực tập sinh đang phụ trách.
+  - `MentorWorkloadSummary`: Khối KPI tổng quan tự động thống kê tổng số mentor, tổng số TTS được hướng dẫn, trung bình TTS/mentor, mentor phụ trách nhiều nhất và số mentor chưa có sinh viên.
+  - `MentorWorkloadData` & `MentorWorkloadResponse`: Response bọc chuẩn RESTful trả về cho Client.
+- **Endpoint Thống Kê Khối Lượng Công Việc Mentor (`GET /api/v1/mentors/workload`)**:
+  - Thêm route tại [main.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/main.py) thực hiện truy vấn kết hợp giữa `nguoi_dung` (`vai_tro = "Mentor"`), `ho_so_thuc_tap` và `phong_ban` bằng kỹ thuật `outerjoin` và `group_by`.
+  - Đếm chính xác số lượng thực tập sinh bằng `func.count(HoSoThucTap.ma_ho_so)` đảm bảo các Mentor chưa có sinh viên vẫn hiển thị đầy đủ với `so_luong_thuc_tap_sinh = 0`.
+  - Hỗ trợ các bộ lọc linh hoạt: `ma_phong_ban` (kiểm tra tồn tại HTTP 404), `trang_thai` (validate HTTP 400), `tu_khoa` (tìm kiếm không phân biệt hoa thường theo họ tên hoặc email).
+- **Cơ sở dữ liệu & Tài liệu thiết kế**:
+  - Cập nhật ghi chú quan hệ và vai trò thực thể `NGUOI_DUNG` (Mentor Workload) trong [DATABASE_DESIGN.md](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/DATABASE_DESIGN.md).
+  - Bổ sung Mentor mẫu chưa có sinh viên vào fixture SQLite trong [conftest.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/conftest.py) phục vụ kiểm thử `outerjoin`.
+- **Kiểm thử tự động**:
+  - Tạo mới bộ test [tests/test_mentor_workload.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_mentor_workload.py) gồm 7 test cases bao phủ gọi mặc định, mentor có sinh viên, mentor 0 sinh viên (outerjoin), lọc theo phòng ban (200 & 404), lọc từ khóa, lọc trạng thái (200 & 400) và tính toán KPI summary -> **7/7 PASS 100%**.
+  - Kiểm tra hồi quy toàn bộ cụm Mentor -> **18/18 PASS 100%**.
+
+---
+
 ## [1.22.0] - 2026-10-09
 
 ### Đã hoàn thành (Added & Enhanced)

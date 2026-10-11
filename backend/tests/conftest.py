@@ -85,7 +85,8 @@ def reseed_sqlite_db():
         u1 = NguoiDung(ma_nguoi_dung=1, ma_phong_ban=1, ho_ten="Nguyễn Văn A", email="vana@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0912345678", vai_tro="ThucTapSinh", trang_thai="HoatDong")
         u2 = NguoiDung(ma_nguoi_dung=2, ma_phong_ban=1, ho_ten="Trần Thị B", email="thib@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0987654321", vai_tro="ThucTapSinh", trang_thai="HoatDong")
         u3 = NguoiDung(ma_nguoi_dung=3, ma_phong_ban=1, ho_ten="Nguyễn Hướng Dẫn", email="mentor@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0905123456", vai_tro="Mentor", trang_thai="HoatDong")
-        session.add_all([u1, u2, u3])
+        u4 = NguoiDung(ma_nguoi_dung=4, ma_phong_ban=1, ho_ten="Lê Thị Mentor", email="mentor2@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0905999888", vai_tro="Mentor", trang_thai="HoatDong")
+        session.add_all([u1, u2, u3, u4])
 
         hs1 = HoSoThucTap(ma_ho_so=1, ma_nguoi_dung=1, ma_truong=1, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Công nghệ thông tin", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="ChuaThucTap")
         hs2 = HoSoThucTap(ma_ho_so=2, ma_nguoi_dung=2, ma_truong=2, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Khoa học máy tính", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="DangThucTap")

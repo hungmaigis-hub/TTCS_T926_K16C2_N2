@@ -1221,6 +1221,40 @@ class MentorResponse(BaseModel):
     data: MentorItemData
 
 
+class MentorWorkloadItem(BaseModel):
+    """Chi tiết khối lượng công việc của một người hướng dẫn"""
+    ma_mentor: int
+    ho_ten: str
+    email: str
+    so_dien_thoai: Optional[str] = None
+    ma_phong_ban: Optional[int] = None
+    ten_phong_ban: Optional[str] = None
+    trang_thai: str = "HoatDong"
+    so_luong_thuc_tap_sinh: int = 0
+
+
+class MentorWorkloadSummary(BaseModel):
+    """Tổng quan KPI phân bổ khối lượng hướng dẫn"""
+    tong_so_mentor: int = 0
+    tong_so_thuc_tap_sinh_duoc_huong_dan: int = 0
+    trung_binh_sinh_vien_moi_mentor: float = 0.0
+    mentor_nhieu_sinh_vien_nhat: Optional[str] = None
+    so_mentor_chua_co_sinh_vien: int = 0
+
+
+class MentorWorkloadData(BaseModel):
+    """Dữ liệu khối lượng công việc trả về cho Client"""
+    summary: MentorWorkloadSummary
+    danh_sach_workload: List[MentorWorkloadItem] = []
+
+
+class MentorWorkloadResponse(BaseModel):
+    """Response chuẩn trả về khi truy vấn khối lượng công việc mentor thành công (HTTP 200)"""
+    status_code: int = 200
+    message: str = "Lấy thống kê khối lượng công việc của người hướng dẫn thành công"
+    data: MentorWorkloadData
+
+
 # ==============================================================
 # SCHEMAS CHO BÁO CÁO THỐNG KÊ SINH VIÊN THEO TRƯỜNG & CHUYÊN NGÀNH
 # (GET /api/v1/reports/interns-by-faculty)

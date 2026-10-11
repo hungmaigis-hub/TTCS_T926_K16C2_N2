@@ -78,6 +78,10 @@ from schemas import (
     AllowanceResponse,
     MentorCreate,
     MentorResponse,
+    MentorWorkloadItem,
+    MentorWorkloadSummary,
+    MentorWorkloadData,
+    MentorWorkloadResponse,
 )
 from security import get_password_hash, verify_password
 
@@ -2828,6 +2832,125 @@ def create_mentor(
             "ten_phong_ban": department.ten_phong_ban if department else None,
             "vai_tro": new_mentor.vai_tro,
             "trang_thai": new_mentor.trang_thai
+        }
+    }
+
+
+@app.get("/api/v1/mentors/workload", response_model=MentorWorkloadResponse)
+def get_mentors_workload(
+    ma_phong_ban: Optional[int] = Query(None, ge=1, description="Lọc theo mã phòng ban"),
+    trang_thai: Optional[str] = Query(None, description="Lọc theo trạng thái hoạt động: HoatDong, Khoa"),
+    tu_khoa: Optional[str] = Query(None, description="Tìm kiếm theo họ tên hoặc email người hướng dẫn"),
+    db: Session = Depends(get_db)
+):
+    """
+    Truy vấn kết hợp bảng nguoi_dung và ho_so_thuc_tap bằng outerjoin và group_by
+    để đếm chính xác số lượng thực tập sinh mà từng mentor đang trực tiếp phụ trách:
+    - Sử dụng LEFT OUTER JOIN để đảm bảo các mentor chưa có sinh viên vẫn hiển thị với số lượng = 0.
+    - Hỗ trợ các bộ lọc linh hoạt: ma_phong_ban, trang_thai, tu_khoa.
+    - Cung cấp khối tổng quan KPI summary (tổng mentor, tổng TTS, trung bình, người phụ trách nhiều nhất).
+    """
+    # 1. Kiểm tra phòng ban nếu có truyền
+    if ma_phong_ban is not None:
+        pb = db.query(PhongBan).filter(PhongBan.ma_phong_ban == ma_phong_ban).first()
+        if not pb:
+            raise HTTPException(status_code=404, detail="Phòng ban không tồn tại trong hệ thống")
+
+    # 2. Xây dựng truy vấn outerjoin giữa nguoi_dung (vai_tro='Mentor') và ho_so_thuc_tap, phong_ban
+    query = (
+        db.query(
+            NguoiDung.ma_nguoi_dung.label("ma_mentor"),
+            NguoiDung.ho_ten,
+            NguoiDung.email,
+            NguoiDung.so_dien_thoai,
+            NguoiDung.ma_phong_ban,
+            PhongBan.ten_phong_ban,
+            NguoiDung.trang_thai,
+            func.count(HoSoThucTap.ma_ho_so).label("so_luong_thuc_tap_sinh")
+        )
+        .outerjoin(HoSoThucTap, HoSoThucTap.ma_mentor == NguoiDung.ma_nguoi_dung)
+        .outerjoin(PhongBan, PhongBan.ma_phong_ban == NguoiDung.ma_phong_ban)
+        .filter(NguoiDung.vai_tro == "Mentor")
+    )
+
+    # 3. Áp dụng các bộ lọc
+    if ma_phong_ban is not None:
+        query = query.filter(NguoiDung.ma_phong_ban == ma_phong_ban)
+
+    if trang_thai and trang_thai.strip():
+        val_status = trang_thai.strip()
+        if val_status not in ["HoatDong", "Khoa"]:
+            raise HTTPException(status_code=400, detail="Trạng thái không hợp lệ. Chỉ chấp nhận: HoatDong, Khoa")
+        query = query.filter(NguoiDung.trang_thai == val_status)
+
+    if tu_khoa and tu_khoa.strip():
+        kw = f"%{tu_khoa.strip()}%"
+        query = query.filter(or_(NguoiDung.ho_ten.ilike(kw), NguoiDung.email.ilike(kw)))
+
+    # 4. Gom nhóm theo các trường định danh của mentor và sắp xếp
+    results = (
+        query.group_by(
+            NguoiDung.ma_nguoi_dung,
+            NguoiDung.ho_ten,
+            NguoiDung.email,
+            NguoiDung.so_dien_thoai,
+            NguoiDung.ma_phong_ban,
+            PhongBan.ten_phong_ban,
+            NguoiDung.trang_thai
+        )
+        .order_by(
+            func.count(HoSoThucTap.ma_ho_so).desc(),
+            NguoiDung.ho_ten.asc()
+        )
+        .all()
+    )
+
+    # 5. Tổng hợp dữ liệu chi tiết và tính toán KPI summary
+    workload_list = []
+    tong_so_tts = 0
+    max_tts = -1
+    mentor_max_name = None
+    so_mentor_0_tts = 0
+
+    for r in results:
+        cnt = int(r.so_luong_thuc_tap_sinh or 0)
+        tong_so_tts += cnt
+        if cnt == 0:
+            so_mentor_0_tts += 1
+        if cnt > max_tts:
+            max_tts = cnt
+            mentor_max_name = r.ho_ten
+
+        workload_list.append(
+            MentorWorkloadItem(
+                ma_mentor=r.ma_mentor,
+                ho_ten=r.ho_ten,
+                email=r.email,
+                so_dien_thoai=r.so_dien_thoai,
+                ma_phong_ban=r.ma_phong_ban,
+                ten_phong_ban=r.ten_phong_ban,
+                trang_thai=r.trang_thai,
+                so_luong_thuc_tap_sinh=cnt
+            )
+        )
+
+    tong_mentors = len(workload_list)
+    avg_tts = round(tong_so_tts / tong_mentors, 2) if tong_mentors > 0 else 0.0
+
+    summary = MentorWorkloadSummary(
+        tong_so_mentor=tong_mentors,
+        tong_so_thuc_tap_sinh_duoc_huong_dan=tong_so_tts,
+        trung_binh_sinh_vien_moi_mentor=avg_tts,
+        mentor_nhieu_sinh_vien_nhat=mentor_max_name if tong_so_tts > 0 else None,
+        so_mentor_chua_co_sinh_vien=so_mentor_0_tts
+    )
+
+    return {
+        "status_code": 200,
+        "message": "Lấy thống kê khối lượng công việc của người hướng dẫn thành công",
+        "data": {
+            "summary": summary,
+            "danh_sach_workload": workload_list
         }
     }
 
