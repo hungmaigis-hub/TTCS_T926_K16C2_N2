@@ -17,6 +17,7 @@ class CaLamViec(Base):
     cac_ngay_trong_tuan = Column(String(255), nullable=False)
     ngay_dien_ra = Column(Date, nullable=True)
     chuyen_nganh = Column(String(100), nullable=True)
+    lop = Column(String(50), nullable=True)
     ma_chuong_trinh = Column(Integer, nullable=True)
     ghi_chu = Column(String(255), nullable=True)
     trang_thai = Column(String(50), default="HoatDong")  # HoatDong, TamNgung
@@ -32,6 +33,7 @@ class CaLamViec(Base):
             "cac_ngay_trong_tuan": self.cac_ngay_trong_tuan,
             "ngay_dien_ra": self.ngay_dien_ra.isoformat() if self.ngay_dien_ra else None,
             "chuyen_nganh": self.chuyen_nganh,
+            "lop": self.lop,
             "ma_chuong_trinh": self.ma_chuong_trinh,
             "ghi_chu": self.ghi_chu,
             "trang_thai": self.trang_thai,

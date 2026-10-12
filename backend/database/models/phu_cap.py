@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, Numeric, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from database.session import Base
 
@@ -14,6 +14,7 @@ class PhuCap(Base):
     ngay_chi_tra = Column(Date, nullable=True)  # Ngày thực tế/dự kiến chi trả
     trang_thai = Column(String(50), nullable=True, default="ChuaChiTra")  # 'ChuaChiTra', 'DaChiTra', 'ChoDuyet'
     trang_thai_chi_tra = Column(String(50), nullable=True, default="ChuaChiTra")  # 'DaChiTra', 'ChuaChiTra' (tương thích ngược)
+    ghi_chu = Column(String(255), nullable=True)
 
     # Quan hệ liên kết ngược tới hồ sơ thực tập
     ho_so = relationship("HoSoThucTap", back_populates="danh_sach_phu_cap")
@@ -30,5 +31,5 @@ class PhuCap(Base):
             "ngay_chi_tra": self.ngay_chi_tra.isoformat() if self.ngay_chi_tra else None,
             "trang_thai": self.trang_thai or self.trang_thai_chi_tra or "ChuaChiTra",
             "trang_thai_chi_tra": self.trang_thai_chi_tra or self.trang_thai or "ChuaChiTra",
+            "ghi_chu": self.ghi_chu,
         }
-

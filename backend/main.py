@@ -81,15 +81,19 @@ from schemas import (
     AllowanceCreateResponse,
     MentorCreate,
     MentorResponse,
-
     SupportRequestStatusUpdate,
     SupportRequestItemData,
+    SupportRequestCreate,
     SupportRequestResponse,
+    SupportRequestListResponse,
     MentorWorkloadItem,
     MentorWorkloadSummary,
     MentorWorkloadData,
     MentorWorkloadResponse,
- 
+    CompletionRateResponse,
+    UserStatusUpdate,
+    UserResetPasswordRequest,
+    UserCreateRequest,
 )
 from security import get_password_hash, verify_password
 
@@ -311,6 +315,7 @@ def get_students_for_assignment(db: Session = Depends(get_db)):
             "ma_sinh_vien": email_prefix,
             "ma_ho_so": hs.ma_ho_so if hs else None,
             "chuyen_nganh": (hs.chuyen_nganh if hs else None) or "Kỹ thuật phần mềm",
+            "lop": (hs.lop if hs else None) or "KTPM-K19A",
             "ma_truong": hs.ma_truong if hs else 1,
             "ten_truong": truong.ten_truong if truong else "Đại học Công nghệ Thông tin & Truyền thông (ICTU)",
             "ma_chuong_trinh": hs.ma_chuong_trinh if hs else None,
@@ -331,7 +336,7 @@ def get_students_for_assignment(db: Session = Depends(get_db)):
 
 @app.get("/api/v1/mentors", status_code=200)
 def get_mentor_list(db: Session = Depends(get_db)):
-    mentors = db.query(NguoiDung).filter(NguoiDung.vai_tro.in_(["Mentor", "GiangVien"])).order_by(NguoiDung.ma_nguoi_dung.asc()).all()
+    mentors = db.query(NguoiDung).filter(NguoiDung.vai_tro.in_(["Mentor", "mentor"])).order_by(NguoiDung.ma_nguoi_dung.asc()).all()
     result = []
     for m in mentors:
         count = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == m.ma_nguoi_dung).count()
@@ -340,7 +345,7 @@ def get_mentor_list(db: Session = Depends(get_db)):
             "ho_ten": m.ho_ten,
             "email": m.email,
             "so_dien_thoai": m.so_dien_thoai or "",
-            "chuc_vu": "Mentor Doanh nghiệp" if m.vai_tro == "Mentor" else "Giảng viên hướng dẫn",
+            "chuc_vu": "Mentor hướng dẫn",
             "so_sinh_vien_huong_dan": count,
             "chi_tieu_huong_dan": 5,
             "da_du_chi_tieu": count >= 5
@@ -352,6 +357,193 @@ def get_mentor_list(db: Session = Depends(get_db)):
     }
 
 
+# ==============================================================
+# API QUẢN LÝ NGƯỜI DÙNG & TÀI KHOẢN HỆ THỐNG (USER MANAGEMENT)
+# ==============================================================
+
+@app.get("/api/v1/users", status_code=200)
+def get_users_list(
+    vai_tro: Optional[str] = Query(None, description="Lọc theo vai trò: ThucTapSinh, Mentor, HR, Admin, NhaTruong"),
+    trang_thai: Optional[str] = Query(None, description="Lọc theo trạng thái: HoatDong, Khoa"),
+    search: Optional[str] = Query(None, description="Tìm kiếm theo tên, email, SĐT"),
+    db: Session = Depends(get_db)
+):
+    query = db.query(NguoiDung)
+
+    if vai_tro and vai_tro.strip():
+        vt = vai_tro.strip()
+        if vt.lower() == "mentor":
+            query = query.filter(NguoiDung.vai_tro.in_(["Mentor", "mentor"]))
+        elif vt.lower() == "hr" or vt.lower() == "admin":
+            query = query.filter(NguoiDung.vai_tro.in_(["HR", "Admin", "admin", "hr"]))
+        elif vt.lower() == "thuctapsinh" or vt.lower() == "student":
+            query = query.filter(NguoiDung.vai_tro.in_(["ThucTapSinh", "thuctapsinh", "SinhVien"]))
+        else:
+            query = query.filter(NguoiDung.vai_tro == vt)
+
+    if trang_thai and trang_thai.strip():
+        query = query.filter(NguoiDung.trang_thai == trang_thai.strip())
+
+    if search and search.strip():
+        kw = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                NguoiDung.ho_ten.ilike(kw),
+                NguoiDung.email.ilike(kw),
+                NguoiDung.so_dien_thoai.ilike(kw)
+            )
+        )
+
+    users = query.order_by(NguoiDung.ma_nguoi_dung.desc()).all()
+
+    all_users = db.query(NguoiDung).all()
+    tong_so = len(all_users)
+    tong_sv = sum(1 for u in all_users if (u.vai_tro or "").lower() in ["thuctapsinh", "sinhvien"])
+    tong_mentor = sum(1 for u in all_users if (u.vai_tro or "").lower() == "mentor")
+    tong_hr = sum(1 for u in all_users if (u.vai_tro or "").lower() in ["hr", "admin"])
+    tong_khoa = sum(1 for u in all_users if u.trang_thai == "Khoa")
+
+    data = []
+    for u in users:
+        hs = u.ho_so_thuc_tap
+        phong_ban_ten = u.phong_ban.ten_phong_ban if u.phong_ban else None
+        
+        info_sv = None
+        if hs:
+            prog = hs.chuong_trinh
+            truong = hs.truong
+            mentor_u = hs.mentor
+            info_sv = {
+                "ma_ho_so": hs.ma_ho_so,
+                "chuyen_nganh": hs.chuyen_nganh,
+                "lop": hs.lop,
+                "ten_truong": truong.ten_truong if truong else None,
+                "ten_mentor": mentor_u.ho_ten if mentor_u else None,
+                "ten_chuong_trinh": prog.ten_chuong_trinh if prog else None,
+                "trang_thai_xet_duyet": hs.trang_thai_xet_duyet,
+                "trang_thai_thuc_tap": hs.trang_thai_thuc_tap,
+            }
+
+        so_sv_huong_dan = 0
+        if (u.vai_tro or "").lower() == "mentor":
+            so_sv_huong_dan = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == u.ma_nguoi_dung).count()
+
+        data.append({
+            "ma_nguoi_dung": u.ma_nguoi_dung,
+            "ho_ten": u.ho_ten,
+            "email": u.email,
+            "so_dien_thoai": u.so_dien_thoai or "",
+            "vai_tro": u.vai_tro,
+            "trang_thai": u.trang_thai or "HoatDong",
+            "ma_phong_ban": u.ma_phong_ban,
+            "ten_phong_ban": phong_ban_ten,
+            "so_sinh_vien_huong_dan": so_sv_huong_dan,
+            "thong_tin_sinh_vien": info_sv,
+        })
+
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách người dùng thành công",
+        "total": len(data),
+        "summary": {
+            "tong_so": tong_so,
+            "sinh_vien": tong_sv,
+            "mentor": tong_mentor,
+            "hr_admin": tong_hr,
+            "bi_khoa": tong_khoa,
+        },
+        "data": data,
+    }
+
+
+@app.post("/api/v1/users", status_code=201)
+def create_user_admin(payload: UserCreateRequest, db: Session = Depends(get_db)):
+    email_clean = payload.email.strip().lower()
+    existing = db.query(NguoiDung).filter(NguoiDung.email == email_clean).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email này đã tồn tại trong hệ thống")
+
+    if payload.so_dien_thoai and payload.so_dien_thoai.strip():
+        existing_phone = db.query(NguoiDung).filter(NguoiDung.so_dien_thoai == payload.so_dien_thoai.strip()).first()
+        if existing_phone:
+            raise HTTPException(status_code=400, detail="Số điện thoại này đã được sử dụng")
+
+    pwd = payload.mat_khau or "123456"
+    new_user = NguoiDung(
+        ho_ten=payload.ho_ten.strip(),
+        email=email_clean,
+        so_dien_thoai=payload.so_dien_thoai.strip() if payload.so_dien_thoai else None,
+        vai_tro=payload.vai_tro,
+        trang_thai="HoatDong",
+        mat_khau_hash=get_password_hash(pwd),
+        ma_phong_ban=payload.ma_phong_ban
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "status_code": 201,
+        "message": "Tạo tài khoản người dùng thành công",
+        "data": {
+            "ma_nguoi_dung": new_user.ma_nguoi_dung,
+            "ho_ten": new_user.ho_ten,
+            "email": new_user.email,
+            "vai_tro": new_user.vai_tro,
+            "trang_thai": new_user.trang_thai
+        }
+    }
+
+
+@app.patch("/api/v1/users/{id}/status", status_code=200)
+def update_user_status(id: int, payload: UserStatusUpdate, db: Session = Depends(get_db)):
+    user = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy người dùng với ID: {id}")
+
+    tt = payload.trang_thai.strip()
+    if tt not in ["HoatDong", "Khoa"]:
+        raise HTTPException(status_code=400, detail="Trạng thái chỉ có thể là 'HoatDong' hoặc 'Khoa'")
+
+    user.trang_thai = tt
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "status_code": 200,
+        "message": f"Cập nhật trạng thái người dùng thành '{tt}' thành công",
+        "data": {
+            "ma_nguoi_dung": user.ma_nguoi_dung,
+            "ho_ten": user.ho_ten,
+            "trang_thai": user.trang_thai
+        }
+    }
+
+
+@app.patch("/api/v1/users/{id}/reset-password", status_code=200)
+def reset_user_password(id: int, payload: UserResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy người dùng với ID: {id}")
+
+    mat_khau = payload.mat_khau_moi or "123456"
+    if len(mat_khau) < 6:
+        raise HTTPException(status_code=400, detail="Mật khẩu mới phải có tối thiểu 6 ký tự")
+
+    user.mat_khau_hash = get_password_hash(mat_khau)
+    db.commit()
+
+    return {
+        "status_code": 200,
+        "message": f"Đặt lại mật khẩu cho tài khoản {user.email} thành công!",
+        "data": {
+            "ma_nguoi_dung": user.ma_nguoi_dung,
+            "email": user.email,
+            "mat_khau_moi": mat_khau
+        }
+    }
+
+
 # api get intern list
 @app.get("/api/v1/interns", status_code=200)
 def get_interns_list(
@@ -360,13 +552,14 @@ def get_interns_list(
     ma_chuong_trinh: Optional[int] = None,
     chuyen_nganh: Optional[str] = None,
     ma_mentor: Optional[int] = None,
+    ma_nguoi_dung: Optional[int] = None,
     limit: int = 100,
     offset: int = 0,
     db: Session = Depends(get_db)
 ):
     """
     Lấy danh sách hồ sơ thực tập sinh từ cơ sở dữ liệu.
-    Hỗ trợ lọc theo trạng thái xét duyệt, trạng thái thực tập, khóa thực tập, chuyên ngành/lớp, mentor.
+    Hỗ trợ lọc theo trạng thái xét duyệt, trạng thái thực tập, khóa thực tập, chuyên ngành/lớp, mentor, người dùng.
     Sắp xếp theo mã hồ sơ mới nhất (desc).
     """
     query = db.query(HoSoThucTap)
@@ -380,6 +573,8 @@ def get_interns_list(
         query = query.filter(HoSoThucTap.chuyen_nganh == chuyen_nganh)
     if ma_mentor:
         query = query.filter(HoSoThucTap.ma_mentor == ma_mentor)
+    if ma_nguoi_dung:
+        query = query.filter(HoSoThucTap.ma_nguoi_dung == ma_nguoi_dung)
 
     total = query.count()
     items = query.order_by(HoSoThucTap.ma_ho_so.desc()).offset(offset).limit(limit).all()
@@ -466,6 +661,13 @@ def update_intern(id: int, intern_data: InternUpdate, db: Session = Depends(get_
         ho_so.ma_chuong_trinh = intern_data.ma_chuong_trinh
     if intern_data.ma_mentor is not None:
         if intern_data.ma_mentor != ho_so.ma_mentor:
+            new_duyet = intern_data.trang_thai_xet_duyet or ho_so.trang_thai_xet_duyet
+            new_thuc_tap = intern_data.trang_thai_thuc_tap or ho_so.trang_thai_thuc_tap
+            if new_duyet != "DaDuyet" or new_thuc_tap != "DangThucTap":
+                raise HTTPException(
+                    status_code=400,
+                    detail="Chỉ có thể phân công Mentor cho sinh viên đã được duyệt hồ sơ và đã ký hợp đồng thực tập."
+                )
             count_mentor = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == intern_data.ma_mentor).count()
             if count_mentor >= 5:
                 raise HTTPException(status_code=400, detail="Mentor đã đủ chỉ tiêu hướng dẫn (tối đa 5 sinh viên)")
@@ -523,6 +725,17 @@ def update_intern_approval_status(
         ).all()
         for doc in pending_docs:
             doc.trang_thai_duyet = "DaDuyet"
+
+        existing_hd = db.query(HopDong).filter(HopDong.ma_ho_so == id).first()
+        if not existing_hd:
+            new_hd = HopDong(
+                ma_ho_so=id,
+                duong_dan_file=f"uploads/hop_dong_{id}.pdf",
+                ngay_tai_len=date.today(),
+                ngay_ky=None,
+                trang_thai="ChuaXacNhan"
+            )
+            db.add(new_hd)
     elif new_status == "TuChoi":
         pending_docs = db.query(TaiLieuHoSo).filter(
             TaiLieuHoSo.ma_ho_so == id,
@@ -596,6 +809,8 @@ def get_intern_allowances(id: int, db: Session = Depends(get_db)):
             thang_nam=item.thang_nam,
             so_tien=so_tien_val,
             trang_thai_chi_tra=item.trang_thai_chi_tra,
+            ngay_chi_tra=item.ngay_chi_tra.isoformat() if getattr(item, "ngay_chi_tra", None) else None,
+            ghi_chu=getattr(item, "ghi_chu", None),
         )
         danh_sach_phu_cap.append(item_schema)
 
@@ -623,6 +838,9 @@ def get_intern_allowances(id: int, db: Session = Depends(get_db)):
             "ma_ho_so": ho_so.ma_ho_so,
             "ho_ten": ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None,
             "email": ho_so.thuc_tap_sinh.email if ho_so.thuc_tap_sinh else None,
+            "lop": ho_so.lop or "KTPM-K19A",
+            "chuyen_nganh": ho_so.chuyen_nganh,
+            "ten_chuong_trinh": ho_so.chuong_trinh.ten_chuong_trinh if ho_so.chuong_trinh else None,
             "summary": summary,
             "danh_sach_phu_cap": danh_sach_phu_cap,
             "cac_khoan_da_nhan": cac_khoan_da_nhan,
@@ -711,6 +929,107 @@ def create_allowance(payload: AllowanceCreate, db: Session = Depends(get_db)):
             "so_tien": float(new_allowance.so_tien),
             "ngay_chi_tra": new_allowance.ngay_chi_tra.isoformat() if new_allowance.ngay_chi_tra else None,
             "trang_thai": new_allowance.trang_thai,
+        }
+    }
+
+
+@app.get("/api/v1/support-requests", response_model=SupportRequestListResponse, status_code=200)
+def get_support_requests(
+    ma_ho_so: Optional[int] = Query(None, description="Lọc theo mã hồ sơ"),
+    trang_thai: Optional[str] = Query(None, description="Lọc theo trạng thái (ChoXuLy, DaXuLy, TuChoi)"),
+    db: Session = Depends(get_db)
+):
+    """
+    Truy vấn danh sách yêu cầu hỗ trợ sinh viên:
+    - Hỗ trợ lọc theo mã hồ sơ hoặc trạng thái xử lý
+    - Trả về danh sách kèm họ tên và email sinh viên
+    """
+    query = db.query(YeuCauHoTro).order_by(YeuCauHoTro.ma_yeu_cau.desc())
+    if ma_ho_so is not None:
+        query = query.filter(YeuCauHoTro.ma_ho_so == ma_ho_so)
+    if trang_thai and trang_thai.strip():
+        query = query.filter(YeuCauHoTro.trang_thai == trang_thai.strip())
+
+    items = query.all()
+    res_items = []
+    for yc in items:
+        ho_ten = None
+        email = None
+        if yc.ho_so and yc.ho_so.thuc_tap_sinh:
+            ho_ten = yc.ho_so.thuc_tap_sinh.ho_ten
+            email = yc.ho_so.thuc_tap_sinh.email
+        res_items.append(
+            SupportRequestItemData(
+                ma_yeu_cau=yc.ma_yeu_cau,
+                ma_ho_so=yc.ma_ho_so,
+                loai_yeu_cau=yc.loai_yeu_cau,
+                noi_dung=yc.noi_dung,
+                phan_hoi_hr=yc.phan_hoi_hr,
+                trang_thai=yc.trang_thai,
+                ho_ten_sinh_vien=ho_ten,
+                email_sinh_vien=email,
+            )
+        )
+
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách yêu cầu hỗ trợ thành công",
+        "total": len(res_items),
+        "data": res_items,
+    }
+
+
+@app.post("/api/v1/support-requests", response_model=SupportRequestResponse, status_code=status.HTTP_201_CREATED)
+def create_support_request(
+    payload: SupportRequestCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Tiếp nhận và lưu mới yêu cầu hỗ trợ của sinh viên (POST /api/v1/support-requests):
+    - Kiểm tra mã hồ sơ sinh viên tồn tại (HTTP 404 nếu không tìm thấy)
+    - Validate nội dung và loại yêu cầu không được rỗng
+    - Khởi tạo trạng thái mặc định 'ChoXuLy'
+    - Trả về mã HTTP 201 Created
+    """
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == payload.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với ID: {payload.ma_ho_so}"
+        )
+
+    new_yc = YeuCauHoTro(
+        ma_ho_so=payload.ma_ho_so,
+        loai_yeu_cau=payload.loai_yeu_cau.strip(),
+        noi_dung=payload.noi_dung.strip(),
+        phan_hoi_hr=None,
+        trang_thai="ChoXuLy",
+    )
+    db.add(new_yc)
+    db.commit()
+    db.refresh(new_yc)
+
+    ho_ten = None
+    email = None
+    if ho_so.thuc_tap_sinh:
+        ho_ten = ho_so.thuc_tap_sinh.ho_ten
+        email = ho_so.thuc_tap_sinh.email
+
+    return {
+        "status_code": 201,
+        "message": "Gửi yêu cầu hỗ trợ thành công",
+        "data": {
+            "ma_yeu_cau": new_yc.ma_yeu_cau,
+            "ma_ho_so": new_yc.ma_ho_so,
+            "loai_yeu_cau": new_yc.loai_yeu_cau,
+            "noi_dung": new_yc.noi_dung,
+            "phan_hoi_hr": new_yc.phan_hoi_hr,
+            "trang_thai": new_yc.trang_thai,
+            "ho_ten_sinh_vien": ho_ten,
+            "email_sinh_vien": email,
+        }
+    }
+
 
 @app.patch("/api/v1/support-requests/{id}", response_model=SupportRequestResponse, status_code=200)
 def update_support_request_status(
@@ -779,11 +1098,58 @@ def update_support_request_status(
             "trang_thai": yeu_cau.trang_thai,
             "ho_ten_sinh_vien": ho_ten_sinh_vien,
             "email_sinh_vien": email_sinh_vien,
-
         }
     }
 
 
+# api get contract by id
+@app.get("/api/v1/contracts/{id}", status_code=200)
+def get_contract_by_id(id: int, db: Session = Depends(get_db)):
+    """
+    Lấy thông tin chi tiết hợp đồng thực tập theo mã hợp đồng (ID).
+    """
+    hop_dong = db.query(HopDong).filter(HopDong.ma_hop_dong == id).first()
+    if not hop_dong:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy hợp đồng ID: {id}")
+
+    return {
+        "status_code": 200,
+        "message": "Chi tiết hợp đồng thực tập",
+        "data": hop_dong.to_dict()
+    }
+
+
+# api get contract by ho_so_id
+@app.get("/api/v1/contracts/by-profile/{ho_so_id}", status_code=200)
+def get_contract_by_profile_id(ho_so_id: int, db: Session = Depends(get_db)):
+    """
+    Lấy thông tin hợp đồng thực tập theo mã hồ sơ (ho_so_id).
+    """
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == ho_so_id).first()
+    if not ho_so:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ ID: {ho_so_id}")
+
+    hop_dong = db.query(HopDong).filter(HopDong.ma_ho_so == ho_so_id).first()
+    if not hop_dong:
+        if ho_so.trang_thai_xet_duyet == "DaDuyet":
+            hop_dong = HopDong(
+                ma_ho_so=ho_so_id,
+                duong_dan_file=f"uploads/hop_dong_{ho_so_id}.pdf",
+                ngay_tai_len=date.today(),
+                ngay_ky=None,
+                trang_thai="ChuaXacNhan"
+            )
+            db.add(hop_dong)
+            db.commit()
+            db.refresh(hop_dong)
+        else:
+            raise HTTPException(status_code=404, detail=f"Hồ sơ ID {ho_so_id} chưa được phê duyệt tiếp nhận để tạo hợp đồng.")
+
+    return {
+        "status_code": 200,
+        "message": "Chi tiết hợp đồng thực tập theo hồ sơ",
+        "data": hop_dong.to_dict()
+    }
 
 # api patch confirm contract
 @app.patch("/api/v1/contracts/{id}/confirm", status_code=200)
@@ -811,6 +1177,12 @@ def confirm_contract(
     ho_so = hop_dong.ho_so or db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == hop_dong.ma_ho_so).first()
     if not ho_so:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ thực tập liên kết với hợp đồng ID: {id}")
+
+    if ho_so.trang_thai_xet_duyet != "DaDuyet":
+        raise HTTPException(
+            status_code=400,
+            detail="Hồ sơ thực tập chưa được phê duyệt tiếp nhận (hoặc đã bị từ chối), không thể ký hợp đồng."
+        )
 
     # 3. Cập nhật thông tin hợp đồng
     target_status = confirm_data.trang_thai or "DaXacNhan"
@@ -870,6 +1242,14 @@ async def upload_document(
     if not ho_so:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ thực tập ID: {ma_ho_so}")
 
+    # Chống spam: Giới hạn tối đa 5 tài liệu cho mỗi hồ sơ thực tập
+    current_doc_count = db.query(TaiLieuHoSo).filter(TaiLieuHoSo.ma_ho_so == ma_ho_so).count()
+    if current_doc_count >= 5:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Hồ sơ thực tập #{ma_ho_so} đã đạt giới hạn tối đa 5 tài liệu. Không thể tải lên thêm để tránh spam dữ liệu."
+        )
+
     # 3. Validate tệp tải lên
     if not file.filename:
         raise HTTPException(status_code=422, detail="Tên tệp không hợp lệ")
@@ -906,6 +1286,11 @@ async def upload_document(
         trang_thai_duyet="ChoDuyet"
     )
     db.add(tai_lieu)
+
+    # Nếu hồ sơ đang ở trạng thái từ chối, tự động chuyển về ChoDuyet khi nộp lại tài liệu bổ sung
+    if ho_so.trang_thai_xet_duyet in ["TuChoi", "BiTuChoi"]:
+        ho_so.trang_thai_xet_duyet = "ChoDuyet"
+
     db.commit()
     db.refresh(tai_lieu)
 
@@ -987,6 +1372,9 @@ def approve_all_documents_of_profile(ho_so_id: int, db: Session = Depends(get_db
     ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == ho_so_id).first()
     if not ho_so:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ ID: {ho_so_id}")
+
+    if ho_so.trang_thai_xet_duyet in ["TuChoi", "BiTuChoi"]:
+        raise HTTPException(status_code=400, detail="Hồ sơ đã bị từ chối, không thể phê duyệt tài liệu")
 
     docs = db.query(TaiLieuHoSo).filter(TaiLieuHoSo.ma_ho_so == ho_so_id).all()
     count = 0
@@ -1101,6 +1489,59 @@ def get_universities(db: Session = Depends(get_db)):
         "message": "Lấy danh sách trường đại học thành công",
         "data": data
     }
+
+
+# api get majors list
+@app.get("/api/v1/majors", status_code=200)
+def get_majors(
+    ma_truong: Optional[int] = Query(None, description="Lọc theo mã trường đại học"),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh sách các chuyên ngành đào tạo từ CSDL (bảng truong_dai_hoc).
+    Nếu truyền ma_truong, trả về danh sách chuyên ngành của trường đó.
+    Nếu không truyền, trả về danh sách tổng hợp tất cả chuyên ngành trong hệ thống.
+    """
+    if ma_truong is not None:
+        truong = db.query(TruongDaiHoc).filter(TruongDaiHoc.ma_truong == ma_truong).first()
+        if not truong:
+            raise HTTPException(status_code=404, detail=f"Không tìm thấy trường đại học với ID: {ma_truong}")
+        majors = []
+        if getattr(truong, "danh_sach_nganh", None):
+            try:
+                majors = json.loads(truong.danh_sach_nganh)
+            except Exception:
+                majors = [n.strip() for n in truong.danh_sach_nganh.split(",") if n.strip()]
+        return {
+            "status_code": 200,
+            "message": f"Danh sách chuyên ngành của trường {truong.ten_truong}",
+            "data": majors
+        }
+
+    all_majors = set()
+    universities = db.query(TruongDaiHoc).all()
+    for t in universities:
+        if getattr(t, "danh_sach_nganh", None):
+            try:
+                for m in json.loads(t.danh_sach_nganh):
+                    if m and m.strip():
+                        all_majors.add(m.strip())
+            except Exception:
+                for m in t.danh_sach_nganh.split(","):
+                    if m and m.strip():
+                        all_majors.add(m.strip())
+
+    profiles = db.query(HoSoThucTap.chuyen_nganh).filter(HoSoThucTap.chuyen_nganh.isnot(None)).distinct().all()
+    for p in profiles:
+        if p[0] and p[0].strip():
+            all_majors.add(p[0].strip())
+
+    return {
+        "status_code": 200,
+        "message": "Danh sách tất cả chuyên ngành trong hệ thống",
+        "data": sorted(list(all_majors))
+    }
+
 
 
 
@@ -1257,12 +1698,13 @@ def login_user(data: LoginRequest, db: Session = Depends(get_db)):
         portal = data.vai_tro.strip().lower()
         if portal == "student" and user.vai_tro != "ThucTapSinh":
             raise HTTPException(status_code=403, detail="Tài khoản này không thuộc vai trò Sinh viên")
-        elif portal == "mentor" and user.vai_tro == "ThucTapSinh":
-            raise HTTPException(status_code=403, detail="Tài khoản sinh viên không có quyền đăng nhập vào cổng Doanh nghiệp / Mentor")
-        elif portal == "faculty" and user.vai_tro == "ThucTapSinh":
-            raise HTTPException(status_code=403, detail="Tài khoản sinh viên không có quyền đăng nhập vào cổng Nhà trường / Quản lý")
+        elif portal == "mentor" and user.vai_tro not in ("Mentor", "mentor"):
+            raise HTTPException(status_code=403, detail="Tài khoản này không có quyền đăng nhập vào cổng Doanh nghiệp / Mentor")
+        elif portal in ("hr", "admin", "nhatruong", "faculty") and user.vai_tro not in ("HR", "Admin", "NhaTruong"):
+            raise HTTPException(status_code=403, detail="Tài khoản này không thuộc vai trò Quản lý / HR")
 
     profile = db.query(HoSoThucTap).filter(HoSoThucTap.ma_nguoi_dung == user.ma_nguoi_dung).first()
+    contract = db.query(HopDong).filter(HopDong.ma_ho_so == profile.ma_ho_so).first() if profile else None
 
     return {
         "status_code": 200,
@@ -1273,7 +1715,9 @@ def login_user(data: LoginRequest, db: Session = Depends(get_db)):
             "email": user.email,
             "vai_tro": user.vai_tro,
             "so_dien_thoai": user.so_dien_thoai,
-            "ma_ho_so": profile.ma_ho_so if profile else None
+            "ma_ho_so": profile.ma_ho_so if profile else None,
+            "ma_hop_dong": contract.ma_hop_dong if contract else None,
+            "trang_thai_hop_dong": contract.trang_thai if contract else None
         }
     }
 
@@ -1596,6 +2040,7 @@ def get_attendance_reports(
     thang: Optional[int] = Query(None, ge=1, le=12, description="Tháng báo cáo (1 - 12)"),
     nam: Optional[int] = Query(None, ge=2000, description="Năm báo cáo (mặc định năm hiện tại)"),
     ma_phong_ban: Optional[int] = Query(None, description="Lọc theo mã phòng ban"),
+    ma_mentor: Optional[int] = Query(None, description="Lọc theo mã mentor"),
     gio_chuan: str = Query("08:30:00", description="Giờ chuẩn bắt đầu làm việc (HH:MM:SS) để tính đi muộn"),
     page: int = Query(1, ge=1, description="Trang hiện tại (>= 1)"),
     page_size: int = Query(20, ge=1, le=100, description="Số lượng bản ghi trên một trang (1 - 100)"),
@@ -1645,6 +2090,8 @@ def get_attendance_reports(
                 NguoiDung.ma_phong_ban == ma_phong_ban
             )
         )
+    if ma_mentor is not None:
+        query_hs = query_hs.filter(HoSoThucTap.ma_mentor == ma_mentor)
 
     ho_so_list = query_hs.order_by(HoSoThucTap.ma_ho_so.asc()).all()
 
@@ -1697,6 +2144,10 @@ def get_attendance_reports(
         tong_so_lan_di_muon += so_lan_di_muon
         tong_so_ngay_nghi += so_ngay_nghi
 
+        hs_ma_mentor = hs.ma_mentor
+        hs_ten_mentor = hs.mentor.ho_ten if hs.mentor else None
+        hs_lop = hs.lop
+
         all_items.append(
             AttendanceReportItem(
                 ma_ho_so=hs.ma_ho_so,
@@ -1706,6 +2157,9 @@ def get_attendance_reports(
                 ma_phong_ban=hs_phong_ban_id,
                 ten_phong_ban=hs_ten_phong_ban,
                 chuyen_nganh=hs.chuyen_nganh,
+                lop=hs_lop,
+                ma_mentor=hs_ma_mentor,
+                ten_mentor=hs_ten_mentor,
                 so_ngay_di_lam=so_ngay_di_lam,
                 so_lan_di_muon=so_lan_di_muon,
                 so_ngay_nghi=so_ngay_nghi,
@@ -2102,10 +2556,7 @@ def get_attendance_shifts(ngay: Optional[str] = None, db: Session = Depends(get_
     if ngay:
         try:
             d_filter = datetime.strptime(ngay, "%Y-%m-%d").date()
-            # Lấy ca có ngày diễn ra đúng bằng d_filter HOẶC ca lặp lại không gán ngày cố định
-            query = query.filter(
-                (CaLamViec.ngay_dien_ra == d_filter) | (CaLamViec.ngay_dien_ra.is_(None))
-            )
+            query = query.filter(CaLamViec.ngay_dien_ra == d_filter)
         except Exception:
             pass
 
@@ -2157,6 +2608,7 @@ def create_attendance_shift(req: ShiftCreateRequest, db: Session = Depends(get_d
         cac_ngay_trong_tuan=req.cac_ngay_trong_tuan or "Tất cả các ngày",
         ngay_dien_ra=d_dien_ra,
         chuyen_nganh=req.chuyen_nganh or None,
+        lop=req.lop or None,
         ma_chuong_trinh=req.ma_chuong_trinh or None,
         ghi_chu=req.ghi_chu or "",
         trang_thai="HoatDong"
@@ -2585,6 +3037,88 @@ def create_evaluation(eval_data: EvaluationCreate, db: Session = Depends(get_db)
         "status_code": 201,
         "message": "Tạo đánh giá thực tập sinh thành công",
         "data": result_dict
+    }
+
+
+# api get evaluations by profile id
+@app.get("/api/v1/evaluations/by-profile/{ho_so_id}", status_code=200)
+def get_evaluations_by_profile_id(ho_so_id: int, db: Session = Depends(get_db)):
+    """
+    Lấy danh sách các kỳ đánh giá kết quả thực tập (Giữa kỳ, Cuối kỳ) của thực tập sinh theo mã hồ sơ.
+    """
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == ho_so_id).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với mã ID: {ho_so_id}"
+        )
+
+    evals = db.query(DanhGia).filter(DanhGia.ma_ho_so == ho_so_id).order_by(DanhGia.ma_danh_gia.asc()).all()
+    items = []
+    total_score = 0.0
+
+    for e in evals:
+        item = e.to_dict()
+        if not item.get("ten_nguoi_danh_gia") and e.nguoi_danh_gia:
+            item["ten_nguoi_danh_gia"] = e.nguoi_danh_gia.ho_ten
+        items.append(item)
+        total_score += e.diem_trung_binh
+
+    avg_score = round(total_score / len(items), 2) if items else 0.0
+    xep_loai_chung = "ChuaDanhGia"
+    if items:
+        if avg_score >= 9.0:
+            xep_loai_chung = "XuatSac"
+        elif avg_score >= 8.0:
+            xep_loai_chung = "Gioi"
+        elif avg_score >= 6.5:
+            xep_loai_chung = "Kha"
+        elif avg_score >= 5.0:
+            xep_loai_chung = "TrungBinh"
+        else:
+            xep_loai_chung = "Yeu"
+
+    return {
+        "status_code": 200,
+        "message": "Chi tiết kết quả đánh giá thực tập sinh",
+        "data": {
+            "ho_so_id": ho_so.ma_ho_so,
+            "ho_ten": ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None,
+            "email": ho_so.thuc_tap_sinh.email if ho_so.thuc_tap_sinh else None,
+            "chuyen_nganh": ho_so.chuyen_nganh,
+            "ten_truong": ho_so.truong.ten_truong if ho_so.truong else None,
+            "trang_thai_thuc_tap": ho_so.trang_thai_thuc_tap,
+            "mentor": ho_so.mentor.ho_ten if ho_so.mentor else None,
+            "diem_trung_binh_chung": avg_score,
+            "xep_loai_chung": xep_loai_chung,
+            "danh_sach_danh_gia": items
+        }
+    }
+
+
+# api get evaluations list
+@app.get("/api/v1/evaluations", status_code=200)
+def get_evaluations_list(
+    ma_ho_so: Optional[int] = Query(None, description="Lọc theo mã hồ sơ thực tập sinh"),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh sách các kỳ đánh giá. Nếu truyền ma_ho_so thì trả về chi tiết đánh giá của sinh viên đó.
+    """
+    if ma_ho_so is not None:
+        return get_evaluations_by_profile_id(ma_ho_so, db)
+
+    query = db.query(DanhGia).order_by(DanhGia.ma_danh_gia.desc()).all()
+    items = []
+    for e in query:
+        item = e.to_dict()
+        if not item.get("ten_nguoi_danh_gia") and e.nguoi_danh_gia:
+            item["ten_nguoi_danh_gia"] = e.nguoi_danh_gia.ho_ten
+        items.append(item)
+    return {
+        "status_code": 200,
+        "message": "Danh sách đánh giá thực tập",
+        "data": items
     }
 
 
@@ -3084,16 +3618,27 @@ def get_mentors_workload(
             max_tts = cnt
             mentor_max_name = r.ho_ten
 
+        is_overloaded = cnt > 5
         workload_list.append(
             MentorWorkloadItem(
                 ma_mentor=r.ma_mentor,
+                ma_nguoi_dung=r.ma_mentor,
                 ho_ten=r.ho_ten,
                 email=r.email,
-                so_dien_thoai=r.so_dien_thoai,
+                so_dien_thoai=r.so_dien_thoai or "",
+                vai_tro="Mentor",
                 ma_phong_ban=r.ma_phong_ban,
-                ten_phong_ban=r.ten_phong_ban,
-                trang_thai=r.trang_thai,
-                so_luong_thuc_tap_sinh=cnt
+                ten_phong_ban=r.ten_phong_ban or "Chưa phân bổ",
+                trang_thai=r.trang_thai or "HoatDong",
+                chuc_vu="Mentor Doanh nghiệp",
+                so_luong_thuc_tap_sinh=cnt,
+                so_sinh_vien_huong_dan=cnt,
+                chi_tieu_huong_dan=5,
+                ty_le_phan_tram=round((cnt / 5.0) * 100, 1),
+                trang_thai_tai="QuaTai" if is_overloaded else ("DaDu" if cnt == 5 else "BinhThuong"),
+                canh_bao_qua_tai=is_overloaded,
+                da_du_chi_tieu=cnt >= 5,
+                so_cho_trong=max(0, 5 - cnt)
             )
         )
 
@@ -3338,4 +3883,89 @@ def get_interns_by_faculty_report(
         message="Lấy báo cáo thống kê sinh viên theo trường và chuyên ngành thành công",
         data=data
     )
+
+
+# ==============================================================
+# API BÁO CÁO TỶ LỆ HOÀN THÀNH CHƯƠNG TRÌNH THỰC TẬP
+# (REPORTS COMPLETION RATE)
+# ==============================================================
+@app.get(
+    "/api/v1/reports/completion-rate",
+    response_model=CompletionRateResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Báo cáo tỷ lệ hoàn thành chương trình thực tập",
+)
+def get_completion_rate(db: Session = Depends(get_db)):
+    """
+    Endpoint truy vấn tổng số lượng sinh viên, đếm số lượng theo từng trạng thái
+    (DangThucTap, HoanThanh, ThoiHoc) và tự động tính toán tỷ lệ phần trăm (%) hoàn thành chương trình thực tập.
+    """
+    tong_so_sinh_vien = db.query(func.count(HoSoThucTap.ma_ho_so)).scalar() or 0
+
+    status_counts = (
+        db.query(HoSoThucTap.trang_thai_thuc_tap, func.count(HoSoThucTap.ma_ho_so))
+        .group_by(HoSoThucTap.trang_thai_thuc_tap)
+        .all()
+    )
+
+    status_map = {st: count for st, count in status_counts if st is not None}
+
+    so_luong_dang_thuc_tap = status_map.get("DangThucTap", 0)
+    so_luong_hoan_thanh = status_map.get("HoanThanh", 0)
+    so_luong_thoi_hoc = status_map.get("ThoiHoc", 0)
+
+    if tong_so_sinh_vien > 0:
+        ty_le_hoan_thanh = round((so_luong_hoan_thanh / tong_so_sinh_vien) * 100.0, 2)
+    else:
+        ty_le_hoan_thanh = 0.0
+
+    ty_le_hoan_thanh = max(0.0, min(100.0, ty_le_hoan_thanh))
+
+    return CompletionRateResponse(
+        tong_so_sinh_vien=tong_so_sinh_vien,
+        so_luong_dang_thuc_tap=so_luong_dang_thuc_tap,
+        so_luong_hoan_thanh=so_luong_hoan_thanh,
+        so_luong_thoi_hoc=so_luong_thoi_hoc,
+        ty_le_hoan_thanh=ty_le_hoan_thanh,
+        chi_tiet_theo_trang_thai=status_map,
+    )
+
+
+# ==============================================================
+# API XUẤT BÁO CÁO EXCEL / PDF
+# (REPORTS EXPORT)
+# ==============================================================
+@app.get("/api/v1/reports/export")
+def export_reports(
+    format: str = Query("excel", description="Định dạng xuất file: excel hoặc pdf"),
+    ma_truong: Optional[int] = Query(None, description="Lọc theo mã trường đại học"),
+    loai_danh_gia: Optional[str] = Query(None, description="Lọc theo đợt đánh giá"),
+    trang_thai_thuc_tap: Optional[str] = Query(None, description="Lọc theo trạng thái thực tập"),
+    de_xuat_tuyen_chinh_thuc: Optional[bool] = Query(None, description="Lọc theo đề xuất tuyển dụng"),
+    tu_khoa: Optional[str] = Query(None, description="Từ khóa tìm kiếm"),
+    db: Session = Depends(get_db),
+):
+    """
+    Endpoint kết xuất và tải về báo cáo tổng hợp đa định dạng:
+    - format=excel (hoặc xlsx): Xuất bảng tính Excel chuyên nghiệp (.xlsx)
+    - format=pdf: Xuất tài liệu PDF khổ A4 ngang (.pdf) hỗ trợ tiếng Việt có dấu
+    """
+    fmt = format.strip().lower() if format else "excel"
+    if fmt not in ["excel", "xlsx", "pdf"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Định dạng xuất file không được hỗ trợ. Chỉ chấp nhận: excel hoặc pdf"
+        )
+    return get_evaluations_summary(
+        ma_truong=ma_truong,
+        loai_danh_gia=loai_danh_gia,
+        trang_thai_thuc_tap=trang_thai_thuc_tap,
+        de_xuat_tuyen_chinh_thuc=de_xuat_tuyen_chinh_thuc,
+        tu_khoa=tu_khoa,
+        format=fmt,
+        page=1,
+        page_size=100,
+        db=db,
+    )
+
 

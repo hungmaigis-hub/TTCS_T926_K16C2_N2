@@ -1,4 +1,4 @@
-const duongDanApi = "http://127.0.0.1:8000/api/v1";
+const duongDanApi = typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1";
 
 let danhSachSinhVienData = {
   1: {
@@ -34,11 +34,35 @@ async function taiDanhSachSinhVienTuApi() {
     if (!res.ok) return;
 
     const json = await res.json();
-    const items = json.data || [];
+    let items = json.data || [];
     if (!items.length) return;
+
+    let user = null;
+    try {
+      const rawUser = localStorage.getItem("ictu_admin_session") || localStorage.getItem("user") || localStorage.getItem("currentUser");
+      if (rawUser) user = JSON.parse(rawUser);
+    } catch {}
+
+    const laMentor = user && (user.vai_tro === "Mentor" || user.vai_tro === "mentor");
+    if (laMentor) {
+      items = items.filter(it => {
+        if (it.ma_mentor && (it.ma_mentor === user.id || it.ma_mentor === user.ma_nguoi_dung)) return true;
+        if (user.ho_ten && it.ten_mentor && (it.ten_mentor.toLowerCase().includes(user.ho_ten.toLowerCase()) || user.ho_ten.toLowerCase().includes(it.ten_mentor.toLowerCase()))) return true;
+        return false;
+      });
+    }
 
     const newData = {};
     selectEl.innerHTML = "";
+
+    if (!items.length) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = laMentor ? "Bạn chưa có sinh viên nào được phân công hướng dẫn" : "Chưa có sinh viên nào trong danh sách";
+      selectEl.appendChild(opt);
+      danhSachSinhVienData = {};
+      return;
+    }
 
     items.forEach((it, idx) => {
       const maHs = it.ma_ho_so || (idx + 1);

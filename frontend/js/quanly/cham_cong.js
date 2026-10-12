@@ -1,4 +1,4 @@
-const duongDanApi = "http://127.0.0.1:8000/api/v1";
+const duongDanApi = typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1";
 
 let danhSachKhoa = [];
 let danhSachTatCaSinhVien = [];
@@ -9,23 +9,15 @@ let danhSachCaLamViec = [];
 let trangHienTai = 1;
 let soBanGhiTrenTrang = 10;
 
-const mockKhoaThucTap = [
-  { ma_chuong_trinh: 1, ten_chuong_trinh: "Chương trình Thực tập K19 (Niên khóa 2026 - 2027)" },
-  { ma_chuong_trinh: 22, ten_chuong_trinh: "Thực tập chuyên sâu Web & Cloud K19" },
-  { ma_chuong_trinh: 23, ten_chuong_trinh: "Thực tập cơ sở doanh nghiệp K20 - Đảm bảo chất lượng" },
-  { ma_chuong_trinh: 24, ten_chuong_trinh: "Chương trình thực tập Tài năng Trí tuệ Nhân tạo ICTU" }
-];
+function layNguoiDungDangNhap() {
+  try {
+    const raw = localStorage.getItem("ictu_admin_session") || localStorage.getItem("currentUser") || localStorage.getItem("user");
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
+}
 
-const mockSinhVienMacDinh = [
-  { ma_ho_so: 1, ma_sv: "DTC2051060124", ho_ten: "Nguyễn Văn An", email: "annv@ictu.edu.vn", ma_chuong_trinh: 1, chuyen_nganh: "Công nghệ thông tin", phong_ban: "Trung tâm Phần mềm" },
-  { ma_ho_so: 2, ma_sv: "DTC2051060188", ho_ten: "Trần Thị Mai Anh", email: "maianh@ictu.edu.vn", ma_chuong_trinh: 1, chuyen_nganh: "Khoa học máy tính", phong_ban: "Phòng AI & Big Data" },
-  { ma_ho_so: 9, ma_sv: "DTC2051060045", ho_ten: "Hoàng Minh Đức", email: "duchm@ictu.edu.vn", ma_chuong_trinh: 1, chuyen_nganh: "An toàn Thông tin & An ninh Mạng", phong_ban: "Phòng Hạ tầng Mạng & Cloud" },
-  { ma_ho_so: 14, ma_sv: "DTC2051060312", ho_ten: "Lê Thu Trang", email: "tranglt@ictu.edu.vn", ma_chuong_trinh: 1, chuyen_nganh: "Hệ thống Thông tin Quản lý (BA)", phong_ban: "Trung tâm Phần mềm" },
-  { ma_ho_so: 15, ma_sv: "DTC2051060244", ho_ten: "Vũ Quang Huy", email: "huyvq@ictu.edu.vn", ma_chuong_trinh: 1, chuyen_nganh: "Kỹ thuật Phần mềm (Frontend Lead)", phong_ban: "Trung tâm Phần mềm" },
-  { ma_ho_so: 16, ma_sv: "DTC2051060012", ho_ten: "Phạm Thùy Linh", email: "linhpt@ictu.edu.vn", ma_chuong_trinh: 22, chuyen_nganh: "Kỹ thuật Phần mềm", phong_ban: "Phòng Đào tạo & R&D" },
-  { ma_ho_so: 17, ma_sv: "DTC2051060199", ho_ten: "Đặng Thị Hoa", email: "hoadt@ictu.edu.vn", ma_chuong_trinh: 24, chuyen_nganh: "Khoa học máy tính", phong_ban: "Phòng AI & Big Data" },
-  { ma_ho_so: 18, ma_sv: "DTC2051060098", ho_ten: "Bùi Tiến Đạt", email: "datbt@ictu.edu.vn", ma_chuong_trinh: 23, chuyen_nganh: "An toàn Thông tin & An ninh Mạng", phong_ban: "Phòng Hạ tầng Mạng & Cloud" }
-];
+
 
 function layNgayHomNayYMD() {
   const d = new Date();
@@ -200,16 +192,16 @@ async function taiDanhSachKhoaThucTap() {
     const res = await fetch(`${duongDanApi}/programs?skip=0&limit=100`);
     if (res.ok) {
       const json = await res.json();
-      if (json && Array.isArray(json.data) && json.data.length > 0) {
+      if (json && Array.isArray(json.data)) {
         danhSachKhoa = json.data;
       } else {
-        danhSachKhoa = [...mockKhoaThucTap];
+        danhSachKhoa = [];
       }
     } else {
-      danhSachKhoa = [...mockKhoaThucTap];
+      danhSachKhoa = [];
     }
   } catch (e) {
-    danhSachKhoa = [...mockKhoaThucTap];
+    danhSachKhoa = [];
   }
 
   let html = `<option value="tat-ca">Tất cả các khóa thực tập</option>`;
@@ -224,27 +216,30 @@ async function taiDanhSachSinhVienVaLop() {
     const res = await fetch(`${duongDanApi}/interns?limit=200`);
     if (res.ok) {
       const json = await res.json();
-      if (json && Array.isArray(json.data) && json.data.length > 0) {
+      if (json && Array.isArray(json.data)) {
         danhSachTatCaSinhVien = json.data.map(it => {
           return {
             ma_ho_so: it.ma_ho_so,
-            ma_sv: `DTC20510${String(1000 + (it.ma_ho_so || 0)).slice(-4)}`,
+            ma_sv: it.ma_sinh_vien || `DTC20510${String(1000 + (it.ma_ho_so || 0)).slice(-4)}`,
             ho_ten: it.ho_ten || `Thực tập sinh #${it.ma_ho_so}`,
             email: it.email || `sv${it.ma_ho_so}@ictu.edu.vn`,
             ma_chuong_trinh: it.ma_chuong_trinh || 1,
             ten_chuong_trinh: it.ten_chuong_trinh || "Chương trình Thực tập K19",
-            chuyen_nganh: it.chuyen_nganh || "Công nghệ thông tin",
+            chuyen_nganh: it.chuyen_nganh || "Kỹ thuật phần mềm",
+            lop: it.lop || "KTPM-K19A",
+            ma_mentor: it.ma_mentor,
+            ten_mentor: it.ten_mentor,
             phong_ban: "Trung tâm Phát triển Phần mềm ICTU"
           };
         });
       } else {
-        danhSachTatCaSinhVien = [...mockSinhVienMacDinh];
+        danhSachTatCaSinhVien = [];
       }
     } else {
-      danhSachTatCaSinhVien = [...mockSinhVienMacDinh];
+      danhSachTatCaSinhVien = [];
     }
   } catch (e) {
-    danhSachTatCaSinhVien = [...mockSinhVienMacDinh];
+    danhSachTatCaSinhVien = [];
   }
 
   capNhatDanhSachLopTheoKhoa();
@@ -256,6 +251,9 @@ function capNhatDanhSachLopTheoKhoa() {
   const caEl = document.getElementById("boLocCaLamViec");
   if (!selectLop) return;
 
+  const admin = layNguoiDungDangNhap();
+  const laMentor = admin && (admin.vai_tro === "Mentor" || admin.vai_tro === "mentor");
+
   const khoaVal = selectKhoa ? selectKhoa.value : "tat-ca";
   let pool = danhSachTatCaSinhVien;
   if (khoaVal !== "tat-ca") {
@@ -263,24 +261,38 @@ function capNhatDanhSachLopTheoKhoa() {
     pool = pool.filter(sv => sv.ma_chuong_trinh === kId);
   }
 
-  const tenCa = caEl ? caEl.value : "";
-  const caHienTai = Array.isArray(danhSachCaLamViec) ? danhSachCaLamViec.find(c => c.ten_ca === tenCa) : null;
-  if (caHienTai && caHienTai.chuyen_nganh && caHienTai.chuyen_nganh !== "tat-ca") {
-    pool = pool.filter(sv => kiemTraSinhVienThuocChuyenNganh(sv.chuyen_nganh, caHienTai.chuyen_nganh));
-  }
-  if (caHienTai && caHienTai.ma_chuong_trinh) {
-    pool = pool.filter(sv => sv.ma_chuong_trinh === caHienTai.ma_chuong_trinh);
+  if (laMentor) {
+    pool = pool.filter(sv => {
+      if (sv.ma_mentor && admin.ma_nguoi_dung && Number(sv.ma_mentor) === Number(admin.ma_nguoi_dung)) return true;
+      if (sv.ten_mentor && admin.ho_ten && sv.ten_mentor.trim().toLowerCase() === admin.ho_ten.trim().toLowerCase()) return true;
+      return false;
+    });
   }
 
-  const dsLop = Array.from(new Set(pool.map(sv => sv.chuyen_nganh).filter(Boolean)));
-  const nhanTatCa = caHienTai && caHienTai.chuyen_nganh && caHienTai.chuyen_nganh !== "tat-ca"
-    ? `Tất cả các lớp trong ca họp (${pool.length} SV)`
-    : `Tất cả các lớp / chuyên ngành (${pool.length} SV)`;
+  const tenCa = caEl ? caEl.value : "";
+  const caHienTai = Array.isArray(danhSachCaLamViec) ? danhSachCaLamViec.find(c => c.ten_ca === tenCa) : null;
+  if (caHienTai) {
+    if (caHienTai.lop && caHienTai.lop !== "tat-ca" && caHienTai.lop !== "tat-ca-mentor") {
+      pool = pool.filter(sv => sv.lop === caHienTai.lop || sv.chuyen_nganh === caHienTai.lop);
+    } else if (caHienTai.chuyen_nganh && caHienTai.chuyen_nganh !== "tat-ca" && caHienTai.chuyen_nganh !== "tat-ca-mentor") {
+      pool = pool.filter(sv => sv.lop === caHienTai.chuyen_nganh || kiemTraSinhVienThuocChuyenNganh(sv.chuyen_nganh, caHienTai.chuyen_nganh));
+    }
+    if (caHienTai.ma_chuong_trinh) {
+      pool = pool.filter(sv => sv.ma_chuong_trinh === caHienTai.ma_chuong_trinh);
+    }
+  }
+
+  const dsLop = Array.from(new Set(pool.map(sv => sv.lop || sv.chuyen_nganh).filter(Boolean)));
+  const nhanTatCa = laMentor
+    ? `Tất cả lớp tôi phụ trách (${pool.length} SV)`
+    : (caHienTai && (caHienTai.lop || caHienTai.chuyen_nganh) && caHienTai.chuyen_nganh !== "tat-ca"
+        ? `Tất cả các lớp trong ca họp (${pool.length} SV)`
+        : `Tất cả các lớp sinh hoạt (${pool.length} SV)`);
 
   const giaTriHienTai = selectLop.value;
   let html = `<option value="tat-ca">${nhanTatCa}</option>`;
   dsLop.forEach(lop => {
-    const count = pool.filter(sv => sv.chuyen_nganh === lop).length;
+    const count = pool.filter(sv => (sv.lop || sv.chuyen_nganh) === lop).length;
     html += `<option value="${lop}">Lớp ${lop} (${count} SV)</option>`;
   });
   selectLop.innerHTML = html;
@@ -585,12 +597,24 @@ function locDuLieu() {
   });
 
   if (caHienTai) {
-    if (caHienTai.chuyen_nganh && caHienTai.chuyen_nganh !== "tat-ca") {
-      list = list.filter(sv => kiemTraSinhVienThuocChuyenNganh(sv.chuyen_nganh, caHienTai.chuyen_nganh));
+    if (caHienTai.lop && caHienTai.lop !== "tat-ca" && caHienTai.lop !== "tat-ca-mentor") {
+      list = list.filter(sv => (sv.lop === caHienTai.lop || sv.chuyen_nganh === caHienTai.lop));
+    } else if (caHienTai.chuyen_nganh && caHienTai.chuyen_nganh !== "tat-ca" && caHienTai.chuyen_nganh !== "tat-ca-mentor") {
+      list = list.filter(sv => (sv.lop === caHienTai.chuyen_nganh || kiemTraSinhVienThuocChuyenNganh(sv.chuyen_nganh, caHienTai.chuyen_nganh)));
     }
     if (caHienTai.ma_chuong_trinh) {
       list = list.filter(sv => sv.ma_chuong_trinh === caHienTai.ma_chuong_trinh);
     }
+  }
+
+  const adminHienTai = layNguoiDungDangNhap();
+  const laMentor = adminHienTai && (adminHienTai.vai_tro === "Mentor" || adminHienTai.vai_tro === "mentor");
+  if (laMentor) {
+    list = list.filter(sv => {
+      if (sv.ma_mentor && adminHienTai.ma_nguoi_dung && Number(sv.ma_mentor) === Number(adminHienTai.ma_nguoi_dung)) return true;
+      if (sv.ten_mentor && adminHienTai.ho_ten && sv.ten_mentor.trim().toLowerCase() === adminHienTai.ho_ten.trim().toLowerCase()) return true;
+      return false;
+    });
   }
 
   if (khoaVal !== "tat-ca") {
@@ -599,7 +623,7 @@ function locDuLieu() {
   }
 
   if (lopVal !== "tat-ca") {
-    list = list.filter(sv => sv.chuyen_nganh === lopVal);
+    list = list.filter(sv => (sv.lop === lopVal || sv.chuyen_nganh === lopVal));
   }
 
   if (ttVal !== "tat-ca") {
@@ -611,6 +635,7 @@ function locDuLieu() {
       (sv.ma_sv && sv.ma_sv.toLowerCase().includes(kw)) ||
       (sv.ho_ten && sv.ho_ten.toLowerCase().includes(kw)) ||
       (sv.email && sv.email.toLowerCase().includes(kw)) ||
+      (sv.lop && sv.lop.toLowerCase().includes(kw)) ||
       (sv.chuyen_nganh && sv.chuyen_nganh.toLowerCase().includes(kw))
     );
   }
@@ -815,7 +840,10 @@ function renderGiaoDien(list) {
           </div>
         </td>
         <td class="px-3 py-2.5">
-          <div class="font-semibold text-slate-800 text-xs truncate" title="${item.chuyen_nganh}">${item.chuyen_nganh}</div>
+          <div class="font-semibold text-slate-800 text-xs truncate flex items-center gap-1.5" title="${item.lop || item.chuyen_nganh}">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[10px] font-bold border border-slate-200 shrink-0">${item.lop || "KTPM-K19A"}</span>
+            <span class="truncate">${item.chuyen_nganh}</span>
+          </div>
           <div class="text-[10px] text-slate-400 truncate" title="${item.ten_chuong_trinh || "Khóa K19"}">${item.ten_chuong_trinh || "Khóa K19"}</div>
         </td>
         <td class="px-3 py-2.5 text-center">
@@ -1083,6 +1111,7 @@ async function luuSoDiemDanh() {
       ca_lam_viec: tenCa,
       ma_chuong_trinh: maChuongTrinh,
       chuyen_nganh: chuyenNganh,
+      lop: chuyenNganh,
       records: payloadRecords
     };
 
@@ -1354,7 +1383,7 @@ async function taiDanhSachCaLamViec(ngayYMD) {
         select.innerHTML = ds.map(ca => {
           const bd = String(ca.gio_bat_dau || "").slice(0, 5);
           const kt = String(ca.gio_ket_thuc || "").slice(0, 5);
-          const target = ca.chuyen_nganh ? ` • ${ca.chuyen_nganh}` : "";
+          const target = ca.lop ? ` • Lớp ${ca.lop}` : (ca.chuyen_nganh ? ` • ${ca.chuyen_nganh}` : "");
           return `<option value="${ca.ten_ca}">${ca.ten_ca} (${bd} - ${kt}${target})</option>`;
         }).join("");
 
@@ -1395,20 +1424,54 @@ function moModalThemCa() {
   }
 
   const selectCn = document.getElementById("chuyenNganhCaMoi");
+  const btnLuu = document.getElementById("btnLuuCaMoi");
+
+  const admin = layNguoiDungDangNhap();
+  const laMentor = admin && (admin.vai_tro === "Mentor" || admin.vai_tro === "mentor");
+
   if (selectCn) {
-    const dsLop = Array.from(new Set(danhSachTatCaSinhVien.map(sv => sv.chuyen_nganh).filter(Boolean)));
-    let opts = `<option value="tat-ca" selected>Tất cả các lớp / sinh viên</option>`;
-    opts += `<option value="KTPM">Kỹ thuật Phần mềm (KTPM)</option>`;
-    opts += `<option value="Công nghệ thông tin">Công nghệ thông tin (CNTT)</option>`;
-    opts += `<option value="Khoa học máy tính">Khoa học máy tính (AI / Data)</option>`;
-    opts += `<option value="An toàn Thông tin & An ninh Mạng">An toàn Thông tin & An ninh Mạng</option>`;
-    opts += `<option value="Hệ thống Thông tin Quản lý (BA)">Hệ thống Thông tin Quản lý (BA)</option>`;
-    dsLop.forEach(l => {
-      if (!opts.includes(`value="${l}"`)) {
-        opts += `<option value="${l}">${l}</option>`;
+    if (laMentor) {
+      const svCuaMentor = danhSachTatCaSinhVien.filter(sv => {
+        if (sv.ma_mentor && admin.ma_nguoi_dung && Number(sv.ma_mentor) === Number(admin.ma_nguoi_dung)) return true;
+        if (sv.ten_mentor && admin.ho_ten && sv.ten_mentor.trim().toLowerCase() === admin.ho_ten.trim().toLowerCase()) return true;
+        return false;
+      });
+
+      if (svCuaMentor.length === 0) {
+        selectCn.innerHTML = `<option value="" disabled selected>Chưa có lớp / sinh viên được HR phân công</option>`;
+        if (btnLuu) {
+          btnLuu.disabled = true;
+          btnLuu.classList.add("opacity-50", "cursor-not-allowed");
+          btnLuu.title = "Bạn chưa được HR phân công phụ trách sinh viên nào";
+        }
+      } else {
+        if (btnLuu) {
+          btnLuu.disabled = false;
+          btnLuu.classList.remove("opacity-50", "cursor-not-allowed");
+          btnLuu.title = "";
+        }
+        const dsLopMentor = Array.from(new Set(svCuaMentor.map(sv => sv.lop || sv.chuyen_nganh).filter(Boolean)));
+        let opts = `<option value="tat-ca-mentor" selected>Tất cả các lớp tôi phụ trách (${svCuaMentor.length} sinh viên)</option>`;
+        dsLopMentor.forEach(l => {
+          const count = svCuaMentor.filter(sv => (sv.lop || sv.chuyen_nganh) === l).length;
+          opts += `<option value="${l}">${l} (${count} sinh viên)</option>`;
+        });
+        selectCn.innerHTML = opts;
       }
-    });
-    selectCn.innerHTML = opts;
+    } else {
+      if (btnLuu) {
+        btnLuu.disabled = false;
+        btnLuu.classList.remove("opacity-50", "cursor-not-allowed");
+        btnLuu.title = "";
+      }
+      const dsLopTatCa = Array.from(new Set(danhSachTatCaSinhVien.map(sv => sv.lop || sv.chuyen_nganh).filter(Boolean)));
+      let opts = `<option value="tat-ca" selected>Tất cả các lớp / sinh viên (${danhSachTatCaSinhVien.length} SV)</option>`;
+      dsLopTatCa.forEach(l => {
+        const count = danhSachTatCaSinhVien.filter(sv => (sv.lop || sv.chuyen_nganh) === l).length;
+        opts += `<option value="${l}">${l} (${count} SV)</option>`;
+      });
+      selectCn.innerHTML = opts;
+    }
   }
 
   tinhThoiLuongCaMoi();
@@ -1465,7 +1528,14 @@ async function taoCaLamViecMoi() {
   const bd = bdInput ? bdInput.value.trim() : "";
   const kt = ktInput ? ktInput.value.trim() : "";
   const ngayDienRa = ngayDienRaInput && ngayDienRaInput.value ? ngayDienRaInput.value : layNgayHomNayYMD();
-  const chuyenNganh = chuyenNganhInput && chuyenNganhInput.value !== "tat-ca" ? chuyenNganhInput.value : null;
+  const chonLop = chuyenNganhInput ? chuyenNganhInput.value : "tat-ca";
+  let guiChuyenNganh = null;
+  let guiLop = null;
+
+  if (chonLop && chonLop !== "tat-ca" && chonLop !== "tat-ca-mentor") {
+    guiLop = chonLop;
+    guiChuyenNganh = chonLop;
+  }
   const ghiChu = ghiChuInput ? ghiChuInput.value.trim() : "";
 
   if (!tenCa) {
@@ -1506,7 +1576,8 @@ async function taoCaLamViecMoi() {
         gio_ket_thuc: kt,
         cac_ngay_trong_tuan: "Linh hoạt",
         ngay_dien_ra: ngayDienRa,
-        chuyen_nganh: chuyenNganh,
+        chuyen_nganh: guiChuyenNganh,
+        lop: guiLop,
         ghi_chu: ghiChu || null
       })
     });
@@ -1555,6 +1626,457 @@ async function taiDuLieuChamCong() {
   await doiPhienDiemDanh();
 }
 
+let duLieuBaoCaoGoc = [];
+let duLieuBaoCaoHienThi = [];
+let trangBaoCaoHienTai = 1;
+let soBanGhiBaoCaoTrenTrang = 10;
+let tabChamCongHienTai = "so-diem-danh";
+
+function capNhatBadgePhanQuyen() {
+  const badgeEl = document.getElementById("nhanPhanQuyenDangNhap");
+  const textEl = document.getElementById("textPhanQuyenChamCong");
+  const u = layNguoiDungDangNhap();
+  if (!textEl) return;
+  if (!u) {
+    textEl.textContent = "Vai trò: Khách / Quản trị viên";
+    return;
+  }
+  if (u.vai_tro === "Admin" || u.vai_tro === "HR") {
+    textEl.textContent = "HR / Quản trị viên (Toàn quyền)";
+    if (badgeEl) badgeEl.className = "text-xs font-semibold px-3 py-1.5 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1.5";
+  } else if (u.vai_tro === "Mentor") {
+    textEl.textContent = `Mentor: ${u.ho_ten || "Người hướng dẫn"} (SV phụ trách)`;
+    if (badgeEl) badgeEl.className = "text-xs font-semibold px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5";
+  } else {
+    textEl.textContent = `Sinh viên: ${u.ho_ten || ""}`;
+  }
+}
+
+function chuyenTabChamCong(tabKey) {
+  tabChamCongHienTai = tabKey;
+  const tabSoDiemDanh = document.getElementById("khuVucSoDiemDanh");
+  const tabBaoCao = document.getElementById("khuVucBaoCaoTongHop");
+  const btnSoDiemDanh = document.getElementById("tabNutSoDiemDanh");
+  const btnBaoCao = document.getElementById("tabNutBaoCaoTongHop");
+
+  if (tabKey === "bao-cao-tong-hop") {
+    if (tabSoDiemDanh) tabSoDiemDanh.classList.add("hidden");
+    if (tabBaoCao) tabBaoCao.classList.remove("hidden");
+
+    if (btnBaoCao) {
+      btnBaoCao.className = "px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 bg-ictu-600 text-white shadow-md shadow-ictu-600/20 cursor-pointer";
+    }
+    if (btnSoDiemDanh) {
+      btnSoDiemDanh.className = "px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 bg-white text-slate-600 hover:text-ictu-700 hover:bg-slate-100 border border-slate-200 cursor-pointer";
+    }
+
+    if (duLieuBaoCaoGoc.length === 0) {
+      taiDuLieuBaoCaoTongHop();
+    }
+  } else {
+    if (tabBaoCao) tabBaoCao.classList.add("hidden");
+    if (tabSoDiemDanh) tabSoDiemDanh.classList.remove("hidden");
+
+    if (btnSoDiemDanh) {
+      btnSoDiemDanh.className = "px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 bg-ictu-600 text-white shadow-md shadow-ictu-600/20 cursor-pointer";
+    }
+    if (btnBaoCao) {
+      btnBaoCao.className = "px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 bg-white text-slate-600 hover:text-ictu-700 hover:bg-slate-100 border border-slate-200 cursor-pointer";
+    }
+  }
+}
+
+async function taiDanhSachMentorBaoCao() {
+  const selectMentor = document.getElementById("boLocBaoCaoMentor");
+  if (!selectMentor) return;
+  try {
+    const res = await fetch(`${duongDanApi}/mentors`);
+    if (res.ok) {
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data.items || data.data || []);
+      if (list.length > 0) {
+        let opts = `<option value="tat-ca">Tất cả các Mentor</option>`;
+        list.forEach(m => {
+          opts += `<option value="${m.ma_nguoi_dung || m.id}">${m.ho_ten} (${m.email || m.ten_phong_ban || "Mentor"})</option>`;
+        });
+        selectMentor.innerHTML = opts;
+      }
+    }
+  } catch (e) {}
+}
+
+async function taiDuLieuBaoCaoTongHop() {
+  const tbody = document.getElementById("bangBaoCaoTongHopBody");
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="p-8 text-center text-slate-400">
+          <div class="flex flex-col items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-3xl animate-spin text-ictu-500">progress_activity</span>
+            <span>Đang tải số liệu báo cáo chuyên cần từ máy chủ...</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+  await taiDanhSachMentorBaoCao();
+
+  const thangEl = document.getElementById("boLocBaoCaoThang");
+  const namEl = document.getElementById("boLocBaoCaoNam");
+  const thangVal = thangEl && thangEl.value !== "tat-ca" ? parseInt(thangEl.value) : null;
+  const namVal = namEl && namEl.value ? parseInt(namEl.value) : 2026;
+
+  let url = `${duongDanApi}/attendance/reports?nam=${namVal}&page_size=100`;
+  if (thangVal !== null) {
+    url += `&thang=${thangVal}`;
+  }
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const msg = errData.detail || "Không thể tải báo cáo chấm công";
+      hienThiThongBao(typeof msg === "string" ? msg : JSON.stringify(msg), "error");
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" class="p-8 text-center text-rose-500">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-3xl">error</span>
+                <span>Lỗi khi tải dữ liệu: ${msg}</span>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+      return;
+    }
+
+    const resJson = await res.json();
+    const data = resJson.data || {};
+    const summary = data.summary || {};
+    const items = data.items || [];
+
+    duLieuBaoCaoGoc = items;
+
+    const elTongSV = document.getElementById("cardBcTongSV");
+    const elTongDiLam = document.getElementById("cardBcTongDiLam");
+    const elTyLeDiMuon = document.getElementById("cardBcTyLeDiMuon");
+    const elCanhBaoVang = document.getElementById("cardBcCanhBaoVang");
+
+    if (elTongSV) elTongSV.textContent = summary.tong_so_thuc_tap_sinh !== undefined ? summary.tong_so_thuc_tap_sinh : items.length;
+    if (elTongDiLam) elTongDiLam.textContent = summary.tong_so_ngay_di_lam !== undefined ? summary.tong_so_ngay_di_lam : 0;
+    if (elTyLeDiMuon) elTyLeDiMuon.textContent = `${summary.ty_le_di_muon !== undefined ? summary.ty_le_di_muon : 0}%`;
+
+    const soSvCanhBao = items.filter(it => (it.so_ngay_nghi || 0) >= 3).length;
+    if (elCanhBaoVang) elCanhBaoVang.textContent = soSvCanhBao;
+
+    locBaoCaoTongHop();
+  } catch (err) {
+    hienThiThongBao(`Mất kết nối máy chủ: ${err.message || err}`, "error");
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="10" class="p-8 text-center text-rose-500">
+            <div class="flex flex-col items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-3xl">wifi_off</span>
+              <span>Không thể kết nối đến máy chủ API: ${err.message || err}</span>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+  }
+}
+
+function locBaoCaoTongHop() {
+  const mentorEl = document.getElementById("boLocBaoCaoMentor");
+  const trangThaiEl = document.getElementById("boLocBaoCaoTrangThai");
+  const timKiemEl = document.getElementById("timKiemBaoCao");
+
+  const mentorVal = mentorEl ? mentorEl.value : "tat-ca";
+  const trangThaiVal = trangThaiEl ? trangThaiEl.value : "tat-ca";
+  const tuKhoa = timKiemEl ? timKiemEl.value.trim().toLowerCase() : "";
+
+  duLieuBaoCaoHienThi = duLieuBaoCaoGoc.filter(item => {
+    if (mentorVal !== "tat-ca") {
+      if (item.ma_mentor && String(item.ma_mentor) !== mentorVal) {
+        return false;
+      }
+      if (!item.ma_mentor && item.ten_mentor && !item.ten_mentor.toLowerCase().includes(mentorVal.toLowerCase())) {
+        return false;
+      }
+    }
+
+    const soNgayNghi = item.so_ngay_nghi || 0;
+    const soDiLam = item.so_ngay_di_lam || 0;
+    const soDiMuon = item.so_lan_di_muon || 0;
+    const tongBuoi = soDiLam + soNgayNghi;
+    const tyLe = tongBuoi > 0 ? (soDiLam / tongBuoi) * 100 : 100;
+
+    if (trangThaiVal === "canh-bao") {
+      if (soNgayNghi < 3) return false;
+    } else if (trangThaiVal === "dat-chuan") {
+      if (tyLe < 85 || soNgayNghi >= 3) return false;
+    } else if (trangThaiVal === "di-muon") {
+      if (soDiMuon === 0) return false;
+    }
+
+    if (tuKhoa) {
+      const hoTen = (item.ho_ten || "").toLowerCase();
+      const email = (item.email || "").toLowerCase();
+      const chuyenNganh = (item.chuyen_nganh || "").toLowerCase();
+      const phongBan = (item.ten_phong_ban || "").toLowerCase();
+      const lop = (item.lop || "").toLowerCase();
+      const mentor = (item.ten_mentor || "").toLowerCase();
+      const maHs = String(item.ma_ho_so || "");
+
+      const match = hoTen.includes(tuKhoa) || email.includes(tuKhoa) || chuyenNganh.includes(tuKhoa) || phongBan.includes(tuKhoa) || lop.includes(tuKhoa) || mentor.includes(tuKhoa) || maHs.includes(tuKhoa);
+      if (!match) return false;
+    }
+
+    return true;
+  });
+
+  trangBaoCaoHienTai = 1;
+  hienThiBangBaoCaoTongHop(1);
+}
+
+function hienThiBangBaoCaoTongHop(trang) {
+  trangBaoCaoHienTai = trang;
+  const tbody = document.getElementById("bangBaoCaoTongHopBody");
+  const theDemEl = document.getElementById("theDemBaoCaoTongHop");
+  const thongKePhanTrang = document.getElementById("theThongKePhanTrangBaoCao");
+  const cumNutPhanTrang = document.getElementById("phanTrangBaoCaoNut");
+
+  if (!tbody) return;
+
+  const tongSo = duLieuBaoCaoHienThi.length;
+  if (theDemEl) theDemEl.textContent = `(${tongSo} sinh viên)`;
+
+  if (tongSo === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="p-8 text-center text-slate-400">
+          <div class="flex flex-col items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-3xl">inbox</span>
+            <span>Không tìm thấy sinh viên nào phù hợp với điều kiện lọc</span>
+          </div>
+        </td>
+      </tr>
+    `;
+    if (thongKePhanTrang) thongKePhanTrang.textContent = "Hiển thị 0 sinh viên";
+    if (cumNutPhanTrang) cumNutPhanTrang.innerHTML = "";
+    return;
+  }
+
+  const tongTrang = Math.ceil(tongSo / soBanGhiBaoCaoTrenTrang);
+  const batDau = (trang - 1) * soBanGhiBaoCaoTrenTrang;
+  const ketThuc = Math.min(batDau + soBanGhiBaoCaoTrenTrang, tongSo);
+  const itemsTrang = duLieuBaoCaoHienThi.slice(batDau, ketThuc);
+
+  let html = "";
+  itemsTrang.forEach((item, idx) => {
+    const stt = batDau + idx + 1;
+    const soDiLam = item.so_ngay_di_lam || 0;
+    const soDiMuon = item.so_lan_di_muon || 0;
+    const soNgayNghi = item.so_ngay_nghi || 0;
+    const tongBuoi = soDiLam + soNgayNghi;
+    const tyLe = tongBuoi > 0 ? Math.round((soDiLam / tongBuoi) * 100) : 100;
+
+    let badgeKyLuat = "";
+    if (soNgayNghi >= 3) {
+      badgeKyLuat = `
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
+          Cảnh báo vắng (≥ 3 buổi)
+        </span>
+      `;
+    } else if (soDiMuon >= 3) {
+      badgeKyLuat = `
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+          Nhắc nhở giờ giấc
+        </span>
+      `;
+    } else if (tyLe >= 85) {
+      badgeKyLuat = `
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          Chuyên cần tốt
+        </span>
+      `;
+    } else {
+      badgeKyLuat = `
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+          Đang theo dõi
+        </span>
+      `;
+    }
+
+    const mentorName = item.ten_mentor || "Chưa phân công";
+
+    html += `
+      <tr class="hover:bg-slate-50/80 transition-colors">
+        <td class="p-3.5 text-center font-mono text-slate-400">${stt}</td>
+        <td class="p-3.5">
+          <div class="font-bold text-slate-900">${item.ho_ten || "Sinh viên #" + item.ma_ho_so}</div>
+          <div class="text-[11px] text-slate-500 font-mono">${item.email || "Chưa có email"}</div>
+        </td>
+        <td class="p-3.5">
+          <div class="font-semibold text-slate-800">${item.chuyen_nganh || "Công nghệ thông tin"}</div>
+          <div class="text-[11px] text-slate-500">${item.lop || item.ten_phong_ban || "K19"}</div>
+        </td>
+        <td class="p-3.5">
+          <div class="font-semibold text-ictu-700 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px] text-ictu-500">person</span>
+            <span>${mentorName}</span>
+          </div>
+        </td>
+        <td class="p-3.5 text-center font-mono font-bold text-emerald-600">${soDiLam}</td>
+        <td class="p-3.5 text-center font-mono font-bold text-amber-600">${soDiMuon}</td>
+        <td class="p-3.5 text-center font-mono font-bold text-purple-600">${soNgayNghi}</td>
+        <td class="p-3.5 text-center font-mono font-bold text-slate-800">${tyLe}%</td>
+        <td class="p-3.5 text-center">${badgeKyLuat}</td>
+        <td class="p-3.5 text-center">
+          <button
+            type="button"
+            onclick="nhacNhoChuyenCan(${item.ma_ho_so}, '${encodeURIComponent(item.ho_ten || "")}')"
+            class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-ictu-50 text-slate-700 hover:text-ictu-700 text-xs font-semibold transition-colors cursor-pointer"
+            title="Gửi thông báo nhắc nhở chuyên cần"
+          >
+            Nhắc nhở
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+
+  if (thongKePhanTrang) {
+    thongKePhanTrang.textContent = `Hiển thị ${batDau + 1} - ${ketThuc} trên tổng số ${tongSo} sinh viên`;
+  }
+
+  if (cumNutPhanTrang) {
+    let pBtns = "";
+    if (tongTrang > 1) {
+      pBtns += `
+        <button
+          type="button"
+          onclick="hienThiBangBaoCaoTongHop(${trang - 1})"
+          ${trang <= 1 ? "disabled" : ""}
+          class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-xs font-bold ${trang <= 1 ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-100 cursor-pointer"}"
+        >
+          <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+        </button>
+      `;
+
+      for (let p = 1; p <= tongTrang; p++) {
+        pBtns += `
+          <button
+            type="button"
+            onclick="hienThiBangBaoCaoTongHop(${p})"
+            class="w-8 h-8 rounded-lg text-xs font-bold transition-colors cursor-pointer ${p === trang ? "bg-ictu-600 text-white" : "border border-slate-200 text-slate-700 hover:bg-slate-100"}"
+          >
+            ${p}
+          </button>
+        `;
+      }
+
+      pBtns += `
+        <button
+          type="button"
+          onclick="hienThiBangBaoCaoTongHop(${trang + 1})"
+          ${trang >= tongTrang ? "disabled" : ""}
+          class="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center text-xs font-bold ${trang >= tongTrang ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-100 cursor-pointer"}"
+        >
+          <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        </button>
+      `;
+    }
+    cumNutPhanTrang.innerHTML = pBtns;
+  }
+}
+
+function nhacNhoChuyenCan(maHoSo, encodedName) {
+  const hoTen = decodeURIComponent(encodedName);
+  hienThiThongBao(`Đã gửi thông báo nhắc nhở chuyên cần đến sinh viên ${hoTen} (Mã HS: ${maHoSo})`, "success");
+}
+
+function xuatBaoCaoChuyenCanExcel() {
+  if (!duLieuBaoCaoHienThi || duLieuBaoCaoHienThi.length === 0) {
+    hienThiThongBao("Không có dữ liệu sinh viên nào để xuất báo cáo", "error");
+    return;
+  }
+
+  const thangEl = document.getElementById("boLocBaoCaoThang");
+  const namEl = document.getElementById("boLocBaoCaoNam");
+  const thang = thangEl && thangEl.value !== "tat-ca" ? `Thang_${thangEl.value}` : "Ca_Nam";
+  const nam = namEl ? namEl.value : "2026";
+
+  const headers = [
+    "STT",
+    "Mã Hồ Sơ",
+    "Họ Và Tên",
+    "Email",
+    "Chuyên Ngành",
+    "Lớp / Phòng Ban",
+    "Mentor Phụ Trách",
+    "Số Ngày Đi Làm",
+    "Số Lần Đi Muộn",
+    "Số Ngày Nghỉ Phép",
+    "Tỷ Lệ Chuyên Cần (%)",
+    "Kỷ Luật / Đánh Giá"
+  ];
+
+  const rows = duLieuBaoCaoHienThi.map((item, index) => {
+    const soDiLam = item.so_ngay_di_lam || 0;
+    const soDiMuon = item.so_lan_di_muon || 0;
+    const soNgayNghi = item.so_ngay_nghi || 0;
+    const tongBuoi = soDiLam + soNgayNghi;
+    const tyLe = tongBuoi > 0 ? Math.round((soDiLam / tongBuoi) * 100) : 100;
+
+    let kyLuat = "Đang theo dõi";
+    if (soNgayNghi >= 3) {
+      kyLuat = "Cảnh báo vắng (≥ 3 buổi)";
+    } else if (soDiMuon >= 3) {
+      kyLuat = "Nhắc nhở giờ giấc";
+    } else if (tyLe >= 85) {
+      kyLuat = "Chuyên cần tốt";
+    }
+
+    return [
+      index + 1,
+      item.ma_ho_so || "",
+      `"${(item.ho_ten || "").replace(/"/g, '""')}"`,
+      `"${(item.email || "").replace(/"/g, '""')}"`,
+      `"${(item.chuyen_nganh || "").replace(/"/g, '""')}"`,
+      `"${(item.lop || item.ten_phong_ban || "").replace(/"/g, '""')}"`,
+      `"${(item.ten_mentor || "Chưa phân công").replace(/"/g, '""')}"`,
+      soDiLam,
+      soDiMuon,
+      soNgayNghi,
+      `${tyLe}%`,
+      `"${kyLuat}"`
+    ].join(",");
+  });
+
+  const csvContent = "\uFEFF" + headers.join(",") + "\n" + rows.join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Bao_Cao_Chuyen_Can_ICTU_${thang}_${nam}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  hienThiThongBao("Đã xuất file báo cáo chuyên cần Excel (.csv UTF-8) thành công!", "success");
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   capNhatHocKyChamCong();
   const ngayEl = document.getElementById("boLocNgay");
@@ -1563,10 +2085,34 @@ document.addEventListener("DOMContentLoaded", async () => {
     ngayEl.value = homNay;
     capNhatHienThiNgayVN();
   }
-  await kiemTraKetNoiApi();
-  await taiDanhSachKhoaThucTap();
-  await taiDanhSachSinhVienVaLop();
-  await taiDanhSachCaLamViec(homNay);
+  capNhatBadgePhanQuyen();
+  const u = layNguoiDungDangNhap();
+  if (u && (u.vai_tro === "Admin" || u.vai_tro === "HR")) {
+    chuyenTabChamCong("bao-cao-tong-hop");
+  } else {
+    chuyenTabChamCong("so-diem-danh");
+  }
+
+  const tbody = document.getElementById("bangChamCongBody");
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="py-16 text-center text-slate-400">
+          <div class="flex flex-col items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-3xl animate-spin text-ictu-500">progress_activity</span>
+            <span class="text-xs font-semibold text-slate-500">Đang đồng bộ dữ liệu điểm danh từ hệ thống...</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }
+
+  await Promise.all([
+    kiemTraKetNoiApi(),
+    taiDanhSachKhoaThucTap(),
+    taiDanhSachSinhVienVaLop(),
+    taiDanhSachCaLamViec(homNay)
+  ]);
   await doiPhienDiemDanh(true);
   await taiDanhSachTatCaDonNghi();
 });
