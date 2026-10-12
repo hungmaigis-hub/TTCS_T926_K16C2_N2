@@ -284,6 +284,7 @@ def get_my_schedule(
         "data": {
             "ma_ho_so": ho_so.ma_ho_so,
             "ho_ten": ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None,
+            "mentor": ho_so.mentor.ho_ten if ho_so.mentor else None,
             "ten_chuong_trinh": ten_chuong_trinh,
             "ngay_bat_dau": ngay_bat_dau_str,
             "ngay_ket_thuc": ngay_ket_thuc_str,
@@ -2545,6 +2546,7 @@ def get_attendance_records(
     dung_gio_count = 0
     di_muon_count = 0
     ve_som_count = 0
+    vang_count = 0
 
     for cc in records:
         hs = cc.ho_so
@@ -2566,6 +2568,8 @@ def get_attendance_records(
             di_muon_count += 1
         elif st == "VeSom":
             ve_som_count += 1
+        elif st == "VangMat":
+            vang_count += 1
 
         pb_name = "Trung tâm Phát triển Phần mềm ICTU"
         if hs and hs.chuong_trinh and hs.chuong_trinh.phong_ban:
@@ -2593,7 +2597,6 @@ def get_attendance_records(
             "ghi_chu": cc.ghi_chu or ("Đúng giờ ca làm việc" if st == "DungGio" else ("Đi muộn" if st == "DiMuon" else "Về sớm")),
         })
 
-    vang_count = 0
     if not trang_thai or trang_thai in ["tat-ca", "VangMat"]:
         dnp_query = (
             db.query(DonNghiPhep)
@@ -2623,9 +2626,12 @@ def get_attendance_records(
             end_d = date(target_year + 1, 1, 1)
             dnp_query = dnp_query.filter(DonNghiPhep.ngay_nghi >= start_d, DonNghiPhep.ngay_nghi < end_d)
 
+        recorded_days_by_profile = {(cc.ma_ho_so, cc.ngay_cham_cong) for cc in records}
         leaves = dnp_query.order_by(DonNghiPhep.ngay_nghi.desc()).all()
-        vang_count = len(leaves)
         for lv in leaves:
+            if (lv.ma_ho_so, lv.ngay_nghi) in recorded_days_by_profile:
+                continue
+            vang_count += 1
             hs = lv.ho_so
             user = hs.thuc_tap_sinh if hs else None
             pb_name = "Trung tâm Phát triển Phần mềm ICTU"
@@ -2818,7 +2824,21 @@ def mentor_roll_call(req: RollCallRequest, db: Session = Depends(get_db)):
             except Exception:
                 pass
 
-        if item.trang_thai == "VangMat":
+        don_nghi_da_duyet = db.query(DonNghiPhep).filter(
+            DonNghiPhep.ma_ho_so == item.ma_ho_so,
+            DonNghiPhep.ngay_nghi == req.ngay_cham_cong,
+            DonNghiPhep.trang_thai == "DaDuyet"
+        ).first()
+
+        phuong_thuc_luu = "Mentor"
+        if don_nghi_da_duyet:
+            item.trang_thai = "VangMat"
+            t_in = None
+            t_out = None
+            phuong_thuc_luu = "NghiPhep"
+            note_prefix = f"[{req.ca_lam_viec}] " if req.ca_lam_viec else ""
+            item.ghi_chu = f"{note_prefix}Vắng mặt (Nghỉ phép có lý do: {don_nghi_da_duyet.ly_do})".strip()
+        elif item.trang_thai == "VangMat":
             t_in = None
             t_out = None
 
@@ -2839,7 +2859,7 @@ def mentor_roll_call(req: RollCallRequest, db: Session = Depends(get_db)):
             existing.gio_check_out = t_out
             existing.thoi_gian_checkin = dt_in
             existing.thoi_gian_checkout = dt_out
-            existing.phuong_thuc = "Mentor"
+            existing.phuong_thuc = phuong_thuc_luu
             if full_note:
                 existing.ghi_chu = full_note
             saved_items.append(existing.to_dict())
@@ -2852,7 +2872,7 @@ def mentor_roll_call(req: RollCallRequest, db: Session = Depends(get_db)):
                 gio_check_in=t_in,
                 gio_check_out=t_out,
                 trang_thai=item.trang_thai,
-                phuong_thuc="Mentor",
+                phuong_thuc=phuong_thuc_luu,
                 ghi_chu=full_note
             )
             db.add(new_record)
@@ -3058,6 +3078,21 @@ def update_leave_request_status(
                 ))
             else:
                 dnp.trang_thai = "DaDuyet"
+
+            # Tự động đồng bộ bản ghi điểm danh nếu ngày này đã có điểm danh trước đó
+            cc = db.query(ChamCong).filter(
+                ChamCong.ma_ho_so == don.ma_ho_so,
+                ChamCong.ngay_cham_cong == curr
+            ).first()
+            if cc:
+                cc.trang_thai = "VangMat"
+                cc.gio_check_in = None
+                cc.gio_check_out = None
+                cc.thoi_gian_checkin = None
+                cc.thoi_gian_checkout = None
+                cc.phuong_thuc = "NghiPhep"
+                cc.ghi_chu = f"Vắng mặt (Nghỉ phép có lý do: {don.ly_do})"
+
             curr += timedelta(days=1)
 
         # Tự động cập nhật các đơn chờ duyệt khác của sinh viên nếu không còn đủ quỹ phép
