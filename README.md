@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# TTCS_T926_K16C2_N2
-=======
 # 🎓 Intern Management System – Backend API
 
 > **Nhóm:** TTCS_T926_K16C2_N2  
@@ -329,4 +326,3 @@ const unassignMentor = (maHoSo) => assignMentor(maHoSo, null);
 ---
 
 *Cập nhật lần cuối: 07/10/2024*
->>>>>>> 9dea817 (feat: PATCH /api/v1/interns/{id}/mentor - assign mentor (Nguyen Van Hieu))

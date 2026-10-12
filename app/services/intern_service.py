@@ -145,6 +145,26 @@ def assign_mentor_service(
                 },
             )
 
+        # 2d. Kiểm tra giới hạn chỉ tiêu (Quota: tối đa 5 sinh viên theo GEMINI.md B.3)
+        current_count = (
+            db.query(HoSoThucTap)
+            .filter(HoSoThucTap.ma_mentor == ma_mentor, HoSoThucTap.ma_ho_so != intern_id)
+            .count()
+        )
+        if current_count >= 5:
+            logger.warning("Mentor '%s' đã đủ chỉ tiêu hướng dẫn: %d/5", ma_mentor, current_count)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error_code": "MENTOR_QUOTA_EXCEEDED",
+                    "message": (
+                        f"Mentor '{mentor_record.ho_ten}' đã đủ chỉ tiêu hướng dẫn tối đa "
+                        f"({current_count}/5 sinh viên), không thể tiếp nhận thêm."
+                    ),
+                    "field": "ma_mentor",
+                },
+            )
+
     # ----------------------------------------------------------
     # BƯỚC 3: Cập nhật ma_mentor
     # ----------------------------------------------------------
@@ -216,3 +236,32 @@ def assign_mentor_service(
             ngay_cap_nhat=ho_so.ngay_cap_nhat,
         ),
     )
+
+
+class InternService:
+    """Class wrapper hỗ trợ các endpoint v1 truy vấn dữ liệu"""
+
+    @staticmethod
+    def assign_mentor(db: Session, intern_id: int, request: any):
+        resp = assign_mentor_service(intern_id=str(intern_id), ma_mentor=request.ma_mentor, db=db)
+        return resp.data.ho_so
+
+    @staticmethod
+    def get_all_mentors(db: Session):
+        from app.models.mentor import Mentor
+        try:
+            return db.query(Mentor).all()
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_all_interns(db: Session, skip: int = 0, limit: int = 100):
+        return db.query(HoSoThucTap).offset(skip).limit(limit).all()
+
+    @staticmethod
+    def get_intern_by_id(db: Session, intern_id: int):
+        ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == str(intern_id)).first()
+        if not ho_so:
+            raise HTTPException(status_code=404, detail="Hồ sơ không tồn tại")
+        return ho_so
+
