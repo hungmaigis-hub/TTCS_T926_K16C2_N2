@@ -17,6 +17,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/env.js"></script>
     <script src="../../js/common.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../js/tailwind.config.js"></script>
@@ -483,21 +484,7 @@
                       required=""
                     >
                       <option disabled="" selected="" value="">
-                        Chọn trường Đại học bạn đang theo học...
-                      </option>
-                      <option value="vnuhcm">
-                        Đại học Quốc gia TP.HCM (VNU-HCM)
-                      </option>
-                      <option value="hust">Đại học Bách Khoa Hà Nội</option>
-                      <option value="fpt">Trường Đại học FPT</option>
-                      <option value="neu">
-                        Đại học Kinh tế Quốc dân (NEU)
-                      </option>
-                      <option value="uit">
-                        Đại học Công nghệ Thông tin - ĐHQG-HCM
-                      </option>
-                      <option value="other">
-                        Trường Đại học / Học viện khác
+                        Đang tải danh sách trường từ hệ thống...
                       </option>
                     </select>
                     <span
@@ -507,64 +494,32 @@
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div class="space-y-1">
-                    <label
-                      class="font-label-md text-label-md text-on-surface font-semibold"
-                      for="major"
+                <div class="space-y-1">
+                  <label
+                    class="font-label-md text-label-md text-on-surface font-semibold"
+                    for="major"
+                  >
+                    Chuyên ngành đào tạo <span class="text-error">*</span>
+                  </label>
+                  <div class="relative">
+                    <span
+                      class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]"
+                      >computer</span
                     >
-                      Chuyên ngành đào tạo <span class="text-error">*</span>
-                    </label>
-                    <div class="relative">
-                      <span
-                        class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]"
-                        >computer</span
-                      >
-                      <input
-                        class="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest shadow-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md"
-                        id="major"
-                        placeholder="Công nghệ thông tin, Kinh tế đối ngoại..."
-                        required=""
-                        type="text"
-                      />
-                    </div>
-                  </div>
-                  <div class="space-y-1">
-                    <label
-                      class="font-label-md text-label-md text-on-surface font-semibold"
-                      for="cohort"
+                    <select
+                      class="w-full h-10 pl-9 pr-8 rounded-lg bg-surface-container-lowest shadow-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md appearance-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      id="major"
+                      required=""
+                      disabled=""
                     >
-                      Niên khóa <span class="text-error">*</span>
-                    </label>
-                    <div class="relative">
-                      <span
-                        class="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-[18px]"
-                        >event_repeat</span
-                      >
-                      <select
-                        class="w-full h-10 pl-9 pr-8 rounded-lg bg-surface-container-lowest shadow-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary font-body-md text-body-md appearance-none"
-                        id="cohort"
-                        required=""
-                      >
-                        <option disabled="" selected="" value="">
-                          Chọn niên khóa...
-                        </option>
-                        <option value="2021-2025">
-                          Khóa 2021 - 2025 (Năm 4)
-                        </option>
-                        <option value="2022-2026">
-                          Khóa 2022 - 2026 (Năm 3)
-                        </option>
-                        <option value="2023-2027">
-                          Khóa 2023 - 2027 (Năm 2)
-                        </option>
-                        <option value="master">Cao học / Văn bằng 2</option>
-                      </select>
-                      <span
-                        class="material-symbols-outlined absolute right-3 top-2.5 text-on-surface-variant text-[20px] pointer-events-none"
-                        >expand_more</span
-                      >
-                    </div>
+                      <option disabled="" selected="" value="">
+                        Vui lòng chọn trường Đại học trước...
+                      </option>
+                    </select>
+                    <span
+                      class="material-symbols-outlined absolute right-3 top-2.5 text-on-surface-variant text-[20px] pointer-events-none"
+                      >expand_more</span
+                    >
                   </div>
                 </div>
 

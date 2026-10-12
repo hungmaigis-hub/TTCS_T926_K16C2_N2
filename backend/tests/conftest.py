@@ -27,6 +27,7 @@ from database.models import (
     DonXinNghi,
     CaLamViec,
     PhuCap,
+    YeuCauHoTro,
 )
 from main import app
 
@@ -85,10 +86,11 @@ def reseed_sqlite_db():
         u1 = NguoiDung(ma_nguoi_dung=1, ma_phong_ban=1, ho_ten="Nguyễn Văn A", email="vana@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0912345678", vai_tro="ThucTapSinh", trang_thai="HoatDong")
         u2 = NguoiDung(ma_nguoi_dung=2, ma_phong_ban=1, ho_ten="Trần Thị B", email="thib@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0987654321", vai_tro="ThucTapSinh", trang_thai="HoatDong")
         u3 = NguoiDung(ma_nguoi_dung=3, ma_phong_ban=1, ho_ten="Nguyễn Hướng Dẫn", email="mentor@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0905123456", vai_tro="Mentor", trang_thai="HoatDong")
-        session.add_all([u1, u2, u3])
+        u4 = NguoiDung(ma_nguoi_dung=4, ma_phong_ban=1, ho_ten="Lê Thị Mentor", email="mentor2@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0905999888", vai_tro="Mentor", trang_thai="HoatDong")
+        session.add_all([u1, u2, u3, u4])
 
-        hs1 = HoSoThucTap(ma_ho_so=1, ma_nguoi_dung=1, ma_truong=1, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Công nghệ thông tin", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="ChuaThucTap")
-        hs2 = HoSoThucTap(ma_ho_so=2, ma_nguoi_dung=2, ma_truong=2, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Khoa học máy tính", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="DangThucTap")
+        hs1 = HoSoThucTap(ma_ho_so=1, ma_nguoi_dung=1, ma_truong=1, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Công nghệ thông tin", lop="CNTT-K19A", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="ChuaThucTap")
+        hs2 = HoSoThucTap(ma_ho_so=2, ma_nguoi_dung=2, ma_truong=2, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Khoa học máy tính", lop="KHMT-K19A", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="DangThucTap")
         session.add_all([hs1, hs2])
 
         tl1 = TaiLieuHoSo(ma_tai_lieu=1, ma_ho_so=1, loai_tai_lieu="CV", duong_dan_file="uploads/cv_nguyen_van_a.pdf", trang_thai_duyet="ChoDuyet")
@@ -125,17 +127,21 @@ def reseed_sqlite_db():
         dnp3 = DonNghiPhep(ma_don=3, ma_ho_so=2, ngay_nghi=date(2026, 9, 8), ly_do="Thi học phần", trang_thai="DaDuyet")
         session.add_all([dnp1, dnp2, dnp3])
 
-        clv1 = CaLamViec(ma_ca=1, ten_ca="Ca Sáng", gio_bat_dau=time(8, 0, 0), gio_ket_thuc=time(12, 0, 0), cac_ngay_trong_tuan="Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6", ghi_chu="Ca làm việc buổi sáng", trang_thai="HoatDong")
-        clv2 = CaLamViec(ma_ca=2, ten_ca="Ca Chiều", gio_bat_dau=time(13, 30, 0), gio_ket_thuc=time(17, 30, 0), cac_ngay_trong_tuan="Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6", ghi_chu="Ca làm việc buổi chiều", trang_thai="HoatDong")
-        clv3 = CaLamViec(ma_ca=3, ten_ca="Ca Hành Chính", gio_bat_dau=time(8, 0, 0), gio_ket_thuc=time(17, 30, 0), cac_ngay_trong_tuan="Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6", ghi_chu="Ca làm việc cả ngày", trang_thai="HoatDong")
+        clv1 = CaLamViec(ma_ca=1, ten_ca="Ca Sáng", gio_bat_dau=time(8, 0, 0), gio_ket_thuc=time(12, 0, 0), cac_ngay_trong_tuan="Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6", lop="KTPM-K19A", ghi_chu="Ca làm việc buổi sáng", trang_thai="HoatDong")
+        clv2 = CaLamViec(ma_ca=2, ten_ca="Ca Chiều", gio_bat_dau=time(13, 30, 0), gio_ket_thuc=time(17, 30, 0), cac_ngay_trong_tuan="Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6", lop="CNTT-K19A", ghi_chu="Ca làm việc buổi chiều", trang_thai="HoatDong")
+        clv3 = CaLamViec(ma_ca=3, ten_ca="Ca Hành Chính", gio_bat_dau=time(8, 0, 0), gio_ket_thuc=time(17, 30, 0), cac_ngay_trong_tuan="Thứ 2, Thứ 3, Thứ 4, Thứ 5, Thứ 6", lop=None, ghi_chu="Ca làm việc cả ngày", trang_thai="HoatDong")
         session.add_all([clv1, clv2, clv3])
 
-        pc1 = PhuCap(ma_phu_cap=1, ma_ho_so=1, thang_nam="2026-09", so_tien=3000000.00, trang_thai_chi_tra="DaChiTra")
-        pc2 = PhuCap(ma_phu_cap=2, ma_ho_so=1, thang_nam="2026-10", so_tien=3000000.00, trang_thai_chi_tra="DaChiTra")
-        pc3 = PhuCap(ma_phu_cap=3, ma_ho_so=1, thang_nam="2026-11", so_tien=3500000.00, trang_thai_chi_tra="ChuaChiTra")
-        pc4 = PhuCap(ma_phu_cap=4, ma_ho_so=2, thang_nam="2026-09", so_tien=2500000.00, trang_thai_chi_tra="DaChiTra")
-        pc5 = PhuCap(ma_phu_cap=5, ma_ho_so=2, thang_nam="2026-10", so_tien=2500000.00, trang_thai_chi_tra="ChuaChiTra")
+        pc1 = PhuCap(ma_phu_cap=1, ma_ho_so=1, thang=9, nam=2026, thang_nam="2026-09", so_tien=3000000.00, ngay_chi_tra=date(2026, 9, 30), trang_thai="DaChiTra", trang_thai_chi_tra="DaChiTra")
+        pc2 = PhuCap(ma_phu_cap=2, ma_ho_so=1, thang=10, nam=2026, thang_nam="2026-10", so_tien=3000000.00, ngay_chi_tra=date(2026, 10, 31), trang_thai="DaChiTra", trang_thai_chi_tra="DaChiTra")
+        pc3 = PhuCap(ma_phu_cap=3, ma_ho_so=1, thang=11, nam=2026, thang_nam="2026-11", so_tien=3500000.00, ngay_chi_tra=None, trang_thai="ChuaChiTra", trang_thai_chi_tra="ChuaChiTra")
+        pc4 = PhuCap(ma_phu_cap=4, ma_ho_so=2, thang=9, nam=2026, thang_nam="2026-09", so_tien=2500000.00, ngay_chi_tra=date(2026, 9, 30), trang_thai="DaChiTra", trang_thai_chi_tra="DaChiTra")
+        pc5 = PhuCap(ma_phu_cap=5, ma_ho_so=2, thang=10, nam=2026, thang_nam="2026-10", so_tien=2500000.00, ngay_chi_tra=None, trang_thai="ChuaChiTra", trang_thai_chi_tra="ChuaChiTra")
         session.add_all([pc1, pc2, pc3, pc4, pc5])
+
+        yc1 = YeuCauHoTro(ma_yeu_cau=1, ma_ho_so=1, loai_yeu_cau="XinChungNhan", noi_dung="Em xin giấy chứng nhận thực tập để nộp về trường", phan_hoi_hr=None, trang_thai="ChoXuLy")
+        yc2 = YeuCauHoTro(ma_yeu_cau=2, ma_ho_so=2, loai_yeu_cau="GiayXacNhan", noi_dung="Em xin xác nhận số giờ thực tập tháng 9", phan_hoi_hr=None, trang_thai="ChoXuLy")
+        session.add_all([yc1, yc2])
 
         session.commit()
     finally:

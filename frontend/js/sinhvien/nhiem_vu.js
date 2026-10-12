@@ -1,4 +1,4 @@
-const duongDanApi = "http://127.0.0.1:8000/api/v1";
+const duongDanApi = typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1";
 
 function layMaHoSoHienTai() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -224,7 +224,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const badge = document.getElementById("badgeTrangThaiApi");
     if (!badge) return;
     try {
-      await fetch("http://127.0.0.1:8000/docs", {
+      const baseUrlDocs = typeof layDuongDanGocBackend === "function" ? layDuongDanGocBackend() : "http://127.0.0.1:8000";
+      await fetch(`${baseUrlDocs}/docs`, {
         method: "HEAD",
         mode: "no-cors",
       });

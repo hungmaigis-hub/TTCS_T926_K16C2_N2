@@ -20,6 +20,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/env.js"></script>
     <script src="../../js/common.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../js/tailwind.config.js"></script>
@@ -163,6 +164,17 @@
             >fact_check</span
           >
           <span>Điểm danh &amp; Chuyên cần</span>
+        </a>
+
+        <a
+          href="quan_ly_nguoi_dung.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+            >manage_accounts</span
+          >
+          <span>Quản lý tài khoản</span>
         </a>
 
         <a
@@ -751,6 +763,7 @@
                 <button
                   type="button"
                   id="btnDuyetTatCaTaiLieu"
+                  style="display: none;"
                   onclick="duyetTatCaTaiLieuTrongModal()"
                   class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                   title="Phê duyệt toàn bộ các tài liệu đính kèm của hồ sơ này"

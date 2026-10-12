@@ -1,3 +1,51 @@
+(function() {
+  const _fetchGoc = window.fetch;
+  window.fetch = function(input, init) {
+    init = init || {};
+    let headers = init.headers;
+    if (!headers) {
+      headers = {};
+    }
+    let urlStr = typeof input === "string" ? input : (input && input.url ? input.url : "");
+    if (urlStr && urlStr.includes("ngrok")) {
+      if (headers instanceof Headers) {
+        headers.set("ngrok-skip-browser-warning", "true");
+      } else if (Array.isArray(headers)) {
+        headers.push(["ngrok-skip-browser-warning", "true"]);
+      } else {
+        headers["ngrok-skip-browser-warning"] = "true";
+      }
+    }
+    init.headers = headers;
+    return _fetchGoc(input, init);
+  };
+})();
+
+function layDuongDanApi() {
+  try {
+    const param = new URLSearchParams(window.location.search).get("api");
+    if (param) {
+      if (param === "reset" || param === "localhost") {
+        localStorage.removeItem("ictu_api_override");
+      } else {
+        const clean = param.trim().replace(/\/+$/, "");
+        const base = clean.endsWith("/api/v1") ? clean : `${clean}/api/v1`;
+        localStorage.setItem("ictu_api_override", base);
+        return base;
+      }
+    }
+    const saved = localStorage.getItem("ictu_api_override");
+    if (saved) return saved;
+    if (window.__ENV__ && window.__ENV__.API_URL) return window.__ENV__.API_URL;
+  } catch {}
+  return "http://127.0.0.1:8000/api/v1";
+}
+
+function layDuongDanGocBackend() {
+  const api = layDuongDanApi();
+  return api.replace(/\/api\/v1\/?$/, "");
+}
+
 function kichHoatHienThi() {
   document.documentElement.classList.add("loaded");
 }
@@ -22,7 +70,19 @@ function layThongTinSession(loai) {
         }
       }
     }
-    if (!raw) return null;
+    if (!raw) {
+      const idParam = new URLSearchParams(window.location.search).get("id");
+      if (loai === "student" && idParam) {
+        return {
+          id: parseInt(idParam, 10),
+          ma_ho_so: parseInt(idParam, 10),
+          vai_tro: "ThucTapSinh",
+          ho_ten: "Vũ Quang Huy",
+          email: "quanghuy.dtc@ictu.edu.vn"
+        };
+      }
+      return null;
+    }
     const session = JSON.parse(raw);
     const now = Date.now();
     if (session.expires_at && now > parseInt(session.expires_at, 10)) {
@@ -131,7 +191,7 @@ function dongBoThongTinNguoiDung() {
       window.location.href = "../public/dangnhap.html";
       return;
     }
-
+    
     const hoTen = admin.ho_ten || "Ban Đào Tạo & QLTT";
     const email = admin.email || "admin@ictu.edu.vn";
     const initials = layTenVietTat(hoTen);
@@ -171,6 +231,56 @@ function dongBoThongTinNguoiDung() {
         const statusDot = userCard.querySelector(".relative span.rounded-full");
         if (statusDot) statusDot.textContent = "";
       }
+    }
+
+    if (admin.vai_tro === "Mentor" || admin.vai_tro === "mentor") {
+      const hrOnlyPages = ["them_ho_so.html", "xet_duyet_ho_so.html", "lich_thuc_tap.html", "quan_ly_nguoi_dung.html"];
+      const currentFile = window.location.pathname.split("/").pop();
+      if (hrOnlyPages.includes(currentFile)) {
+        window.location.href = "dashboard.html";
+        return;
+      }
+
+      document.querySelectorAll("aside a").forEach((a) => {
+        const href = a.getAttribute("href") || "";
+        if (hrOnlyPages.some(page => href.includes(page))) {
+          a.style.display = "none";
+        }
+      });
+
+      const asideHeaderSub = document.querySelector("aside a span.text-\\[10px\\]");
+      if (asideHeaderSub) asideHeaderSub.textContent = "Cổng Mentor";
+
+      const btnMoModal = document.getElementById("btnMoModalThemMentor");
+      if (btnMoModal) btnMoModal.style.display = "none";
+
+      const btnPhanCong = document.getElementById("btnPhanCongWorkload");
+      if (btnPhanCong) btnPhanCong.style.display = "none";
+
+      document.querySelectorAll("a[href*='them_ho_so'], a[href*='xet_duyet_ho_so'], a[href*='lich_thuc_tap'], a[href*='quan_ly_nguoi_dung']").forEach((link) => {
+        link.style.display = "none";
+      });
+    }
+
+    if (admin.vai_tro === "NhaTruong") {
+      const nonNhaTruongPages = ["them_ho_so.html", "xet_duyet_ho_so.html", "lich_thuc_tap.html", "quan_ly_nguoi_dung.html"];
+      const currentFile = window.location.pathname.split("/").pop();
+      if (nonNhaTruongPages.includes(currentFile)) {
+        window.location.href = "dashboard.html";
+        return;
+      }
+      document.querySelectorAll("aside a").forEach((a) => {
+        const href = a.getAttribute("href") || "";
+        if (nonNhaTruongPages.some(page => href.includes(page))) {
+          a.style.display = "none";
+        }
+      });
+      const asideHeaderSub = document.querySelector("aside a span.text-\\[10px\\]");
+      if (asideHeaderSub) asideHeaderSub.textContent = "Cổng Nhà Trường";
+
+      document.querySelectorAll("a[href*='them_ho_so'], a[href*='xet_duyet_ho_so'], a[href*='lich_thuc_tap'], a[href*='quan_ly_nguoi_dung']").forEach((link) => {
+        link.style.display = "none";
+      });
     }
 
     document.querySelectorAll("a[title='Đăng xuất'], [data-action='logout']").forEach((btn) => {

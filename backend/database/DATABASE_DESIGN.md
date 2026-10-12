@@ -165,10 +165,15 @@ erDiagram
     PHU_CAP {
         int ma_phu_cap PK
         int ma_ho_so FK
-        string thang_nam
-        decimal so_tien
-        string trang_thai_chi_tra "DaChiTra, ChuaChiTra"
+        int thang "1-12"
+        int nam
+        string thang_nam "YYYY-MM (tuong thich)"
+        decimal so_tien "> 0"
+        date ngay_chi_tra
+        string trang_thai "ChuaChiTra, DaChiTra, ChoDuyet"
+        string trang_thai_chi_tra "DaChiTra, ChuaChiTra (tuong thich)"
     }
+
 
     YEU_CAU_HO_TRO {
         int ma_yeu_cau PK
@@ -176,7 +181,7 @@ erDiagram
         string loai_yeu_cau "XinChungNhan, GiayXacNhan, Khac"
         string noi_dung
         string phan_hoi_hr
-        string trang_thai "ChoXuLy, DaXuLy"
+        string trang_thai "ChoXuLy, DaXuLy, TuChoi"
     }
 
     THONG_BAO {
@@ -414,9 +419,13 @@ erDiagram
 | :--- | :--- | :--- | :--- | :--- |
 | `ma_phu_cap` | `INT` | **PK** | `AUTO_INCREMENT` | Mã bản ghi phụ cấp |
 | `ma_ho_so` | `INT` | **FK** | `NOT NULL` | Hồ sơ nhận phụ cấp (`HO_SO_THUC_TAP`) |
-| `thang_nam` | `VARCHAR(7)` | | Định dạng `YYYY-MM` (VD: `2026-09`) | Kỳ chi trả |
-| `so_tien` | `DECIMAL(12,2)` | | `>= 0` | Số tiền phụ cấp (VND) |
-| `trang_thai_chi_tra`| `VARCHAR(50)`| | `DaChiTra`, `ChuaChiTra` | Tình trạng kế toán thanh toán |
+| `thang` | `INT` | | `1 <= thang <= 12` | Tháng nhận phụ cấp |
+| `nam` | `INT` | | `nam >= 2000` | Năm nhận phụ cấp |
+| `thang_nam` | `VARCHAR(7)` | | Định dạng `YYYY-MM` (VD: `2026-09`) | Kỳ chi trả (tương thích) |
+| `so_tien` | `DECIMAL(12,2)` | | `> 0` | Số tiền phụ cấp (VND) |
+| `ngay_chi_tra` | `DATE` | | Có thể NULL | Ngày thực tế giải ngân / chi trả |
+| `trang_thai` | `VARCHAR(50)` | | `ChuaChiTra`, `DaChiTra`, `ChoDuyet` | Trạng thái giải ngân phụ cấp |
+| `trang_thai_chi_tra`| `VARCHAR(50)`| | `DaChiTra`, `ChuaChiTra` | Tình trạng kế toán thanh toán (tương thích) |
 
 ---
 
@@ -430,7 +439,7 @@ erDiagram
 | `loai_yeu_cau` | `VARCHAR(50)` | | `XinChungNhan`, `GiayXacNhan`, `Khac` | Phân loại đề xuất |
 | `noi_dung` | `TEXT` | | `NOT NULL` | Chi tiết nội dung cần hỗ trợ |
 | `phan_hoi_hr` | `TEXT` | | `NULL` | Trả lời / hướng dẫn từ HR |
-| `trang_thai` | `VARCHAR(50)` | | `ChoXuLy`, `DaXuLy` | Tiến độ xử lý |
+| `trang_thai` | `VARCHAR(50)` | | `ChoXuLy`, `DaXuLy`, `TuChoi` | Tiến độ xử lý (Mặc định: `ChoXuLy`) |
 
 ---
 
@@ -470,7 +479,7 @@ erDiagram
 | `PHONG_BAN` | 1 - N | `CHUONG_TRINH_THUC_TAP` | `CHUONG_TRINH_THUC_TAP.ma_phong_ban` | Một phòng ban quản lý nhiều đợt thực tập |
 | `PHONG_BAN` | 1 - N | `NGUOI_DUNG` | `NGUOI_DUNG.ma_phong_ban` | Người dùng (Mentor, HR) thuộc phòng ban |
 | `NGUOI_DUNG` | 1 - 1 | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_nguoi_dung` | Mỗi tài khoản TTS có 1 hồ sơ thực tập tương ứng |
-| `NGUOI_DUNG` (Mentor) | 1 - N | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_mentor` | Một Mentor hướng dẫn nhiều hồ sơ thực tập |
+| `NGUOI_DUNG` (Mentor) | 1 - N | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_mentor` | Một Mentor hướng dẫn nhiều hồ sơ thực tập (Truy vấn Workload qua LEFT OUTER JOIN & GROUP BY) |
 | `NGUOI_DUNG` | 1 - N | `THONG_BAO` | `THONG_BAO.ma_nguoi_dung` | Một người dùng nhận nhiều thông báo |
 | `NGUOI_DUNG` | 1 - N | `NHAT_KY_HE_THONG` | `NHAT_KY_HE_THONG.ma_nguoi_dung` | Một người dùng tạo ra nhiều nhật ký hành động |
 | `CHUONG_TRINH_THUC_TAP` | 1 - N | `HO_SO_THUC_TAP` | `HO_SO_THUC_TAP.ma_chuong_trinh` | Một chương trình có nhiều hồ sơ tham gia |
@@ -491,7 +500,7 @@ erDiagram
 
 | Thực thể (Entity) | Vai trò hệ thống & Ánh xạ tới User Stories | User Stories liên quan |
 | :--- | :--- | :--- |
-| **`NGUOI_DUNG`** | Quản lý thông tin tài khoản chung và phân quyền tài khoản (Admin, HR, Mentor, Thực tập sinh). | US 39, US 40 |
+| **`NGUOI_DUNG`** | Quản lý thông tin tài khoản chung, phân quyền tài khoản (Admin, HR, Mentor, Thực tập sinh) và thống kê phân bổ tải hướng dẫn (Mentor Workload). | US 39, US 40, US 43 |
 | **`TRUONG_DAI_HOC`** | Quản lý danh mục trường đại học để lọc, thống kê nguồn ứng viên và gửi báo cáo liên kết. | US 3, US 20, US 32, US 34 |
 | **`PHONG_BAN`** | Quản lý cơ cấu phòng ban công ty để phân bổ thực tập sinh và mentor. | US 11, US 29, US 31 |
 | **`CHUONG_TRINH_THUC_TAP`** | Quản lý đợt/chương trình thực tập, thời gian bắt đầu & kết thúc. | US 11, US 13 |

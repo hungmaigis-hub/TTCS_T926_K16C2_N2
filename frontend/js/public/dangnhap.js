@@ -1,3 +1,4 @@
+const duongDanApi = typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1";
 let vaiTroHienTai = "student";
 
 function showToast(message, type = "error", title = "") {
@@ -135,12 +136,12 @@ function selectRole(role, targetButton) {
     inputField.placeholder = "Ví dụ: an.nguyen@ictu.edu.vn hoặc quanghuy.dtc@ictu.edu.vn";
   } else if (role === "mentor") {
     inputLabel.innerHTML =
-      'Email Doanh nghiệp / Mã Mentor <span class="text-error">*</span>';
-    inputField.placeholder = "Ví dụ: mentor@example.com hoặc tuantq@fsoft.com.vn";
-  } else if (role === "faculty") {
+      'Email Mentor / Người hướng dẫn <span class="text-error">*</span>';
+    inputField.placeholder = "Ví dụ: mentor@example.com hoặc hoangnam@ictu.edu.vn";
+  } else if (role === "hr" || role === "admin" || role === "faculty") {
     inputLabel.innerHTML =
-      'Email Giảng viên / Quản lý khoa <span class="text-error">*</span>';
-    inputField.placeholder = "Ví dụ: admin@ictu.edu.vn hoặc mailtq@ictu.edu.vn";
+      'Email Cán bộ HR / Quản lý <span class="text-error">*</span>';
+    inputField.placeholder = "Ví dụ: hr@ictu.edu.vn hoặc admin@ictu.edu.vn";
   }
 }
 
@@ -178,7 +179,7 @@ async function submitLogin() {
   submitBtn.disabled = true;
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+    const res = await fetch(`${duongDanApi}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -191,9 +192,9 @@ async function submitLogin() {
     if (res.ok && data.data) {
       const userData = data.data;
 
-      if (vaiTroHienTai === "mentor" && userData.vai_tro === "ThucTapSinh") {
+      if (vaiTroHienTai === "mentor" && userData.vai_tro !== "Mentor" && userData.vai_tro !== "mentor") {
         showToast(
-          "Tài khoản Sinh viên không có quyền đăng nhập vào cổng Doanh nghiệp / Mentor. Vui lòng chuyển sang cổng Sinh viên.",
+          "Tài khoản này không thuộc vai trò Mentor hướng dẫn. Vui lòng chọn đúng cổng đăng nhập.",
           "error",
           "Truy cập bị từ chối"
         );
@@ -202,9 +203,9 @@ async function submitLogin() {
         return;
       }
 
-      if (vaiTroHienTai === "faculty" && userData.vai_tro === "ThucTapSinh") {
+      if ((vaiTroHienTai === "hr" || vaiTroHienTai === "admin" || vaiTroHienTai === "faculty") && userData.vai_tro !== "HR" && userData.vai_tro !== "Admin" && userData.vai_tro !== "NhaTruong") {
         showToast(
-          "Tài khoản Sinh viên không có quyền đăng nhập vào cổng Nhà trường / Quản lý. Vui lòng chuyển sang cổng Sinh viên.",
+          "Tài khoản này không thuộc vai trò Quản lý / HR. Vui lòng chọn đúng cổng đăng nhập.",
           "error",
           "Truy cập bị từ chối"
         );
@@ -215,7 +216,7 @@ async function submitLogin() {
 
       if (vaiTroHienTai === "student" && userData.vai_tro !== "ThucTapSinh") {
         showToast(
-          "Tài khoản này thuộc vai trò Quản lý / Mentor. Vui lòng chuyển sang cổng Doanh nghiệp hoặc Nhà trường.",
+          "Tài khoản này không thuộc vai trò Sinh viên. Vui lòng chọn cổng Mentor hoặc HR / Admin.",
           "error",
           "Sai cổng đăng nhập"
         );
@@ -259,7 +260,7 @@ async function submitLogin() {
     submitBtn.disabled = false;
   } catch (err) {
     showToast(
-      "Không thể kết nối đến máy chủ cơ sở dữ liệu (Backend: 127.0.0.1:8000). Vui lòng đảm bảo máy chủ FastAPI và MySQL đang chạy!",
+      "Không thể kết nối đến máy chủ cơ sở dữ liệu. Vui lòng đảm bảo máy chủ Backend đang chạy!",
       "error",
       "Mất kết nối máy chủ"
     );

@@ -20,6 +20,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/env.js"></script>
     <script src="../../js/common.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../js/tailwind.config.js"></script>
@@ -158,43 +159,42 @@
         </a>
 
         <a
-          href="javascript:void(0)"
-          data-coming-soon="Báo cáo tuần &amp; Nhật ký thực tập"
-          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+          href="phu_cap.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
         >
           <div class="flex items-center gap-3">
             <span
-              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
-              >edit_note</span
+              class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+              >payments</span
             >
-            <span>Báo cáo tuần</span>
+            <span>Phụ cấp &amp; Thu nhập</span>
           </div>
           <span
-            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+            class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-full"
+            >Mới</span
           >
-            <span class="material-symbols-outlined text-[12px]">lock</span>
-            Sắp có
-          </span>
         </a>
 
         <a
-          href="javascript:void(0)"
-          data-coming-soon="Kết quả đánh giá &amp; Điểm số thực tập"
-          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+          href="bao_cao.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
         >
-          <div class="flex items-center gap-3">
-            <span
-              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
-              >rate_review</span
-            >
-            <span>Đánh giá &amp; Điểm</span>
-          </div>
           <span
-            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >edit_note</span
           >
-            <span class="material-symbols-outlined text-[12px]">lock</span>
-            Sắp có
-          </span>
+          <span>Báo cáo tuần</span>
+        </a>
+
+        <a
+          href="danh_gia.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >rate_review</span
+          >
+          <span>Đánh giá &amp; Điểm</span>
         </a>
 
         <a
@@ -478,22 +478,20 @@
                     class="space-y-2.5 font-body-md text-body-md text-on-surface"
                   >
                     <p>
-                      <strong class="font-semibold">Họ và tên:</strong> NGUYỄN
-                      VĂN AN
+                      <strong class="font-semibold">Họ và tên:</strong> <span id="benBHoTen">NGUYỄN VĂN AN</span>
                     </p>
                     <p>
                       <strong class="font-semibold">Mã sinh viên:</strong>
-                      <span class="font-code text-code font-bold text-primary"
+                      <span id="benBMaSinhVien" class="font-code text-code font-bold text-primary"
                         >DTC2051060124</span
                       >
                     </p>
                     <p>
-                      <strong class="font-semibold">Lớp sinh hoạt:</strong> K19
-                      Kỹ thuật Phần mềm
+                      <strong class="font-semibold">Lớp sinh hoạt:</strong> <span id="benBLop">K19 Kỹ thuật Phần mềm</span>
                     </p>
                     <p>
                       <strong class="font-semibold">Cơ sở đào tạo:</strong>
-                      Trường ĐH CNTT &amp; Truyền thông - ĐH Thái Nguyên
+                      <span id="benBCoSo">Trường ĐH CNTT &amp; Truyền thông - ĐH Thái Nguyên</span>
                     </p>
                     <p>
                       <strong class="font-semibold">Số CCCD:</strong>
@@ -501,8 +499,7 @@
                       (Cấp: 10/05/2021)
                     </p>
                     <p>
-                      <strong class="font-semibold">Liên hệ:</strong> 0912345678
-                      - an.nguyen@ictu.edu.vn
+                      <strong class="font-semibold">Liên hệ:</strong> <span id="benBLienHe">0912345678 - an.nguyen@ictu.edu.vn</span>
                     </p>
                   </div>
                 </div>
@@ -582,7 +579,7 @@
                     <li>
                       Mức hỗ trợ phụ cấp đào tạo thực tập sinh:
                       <strong class="font-semibold text-secondary"
-                        >6.500.000 VNĐ / tháng</strong
+                        >3.000.000 VNĐ / tháng</strong
                       >
                       (Chi trả định kỳ vào ngày 05 hàng tháng qua tài khoản ngân
                       hàng).
