@@ -85,6 +85,64 @@ def test_create_support_request_intern_not_found():
     assert "không tồn tại" in response.json()["detail"]
 
 
+def test_create_support_request_empty_title_returns_422():
+    """Bắt lỗi khi bỏ trống tiêu đề hoặc chỉ chứa khoảng trắng (422)"""
+    # 1. Tiêu đề rỗng ""
+    res_empty = client.post("/api/v1/support-requests", json={
+        "ma_ho_so": "HS001",
+        "loai_yeu_cau": "GiayTo",
+        "tieu_de": "",
+        "noi_dung": "Nội dung hợp lệ"
+    })
+    assert res_empty.status_code == 422
+
+    # 2. Tiêu đề chỉ toàn khoảng trắng "   "
+    res_spaces = client.post("/api/v1/support-requests", json={
+        "ma_ho_so": "HS001",
+        "loai_yeu_cau": "GiayTo",
+        "tieu_de": "   ",
+        "noi_dung": "Nội dung hợp lệ"
+    })
+    assert res_spaces.status_code == 422
+
+    # 3. Thiếu trường tiêu đề trong payload
+    res_missing = client.post("/api/v1/support-requests", json={
+        "ma_ho_so": "HS001",
+        "loai_yeu_cau": "GiayTo",
+        "noi_dung": "Nội dung hợp lệ"
+    })
+    assert res_missing.status_code == 422
+
+
+def test_create_support_request_empty_content_returns_422():
+    """Bắt lỗi khi bỏ trống nội dung hoặc chỉ chứa khoảng trắng (422)"""
+    # 1. Nội dung rỗng ""
+    res_empty = client.post("/api/v1/support-requests", json={
+        "ma_ho_so": "HS001",
+        "loai_yeu_cau": "GiayTo",
+        "tieu_de": "Tiêu đề hợp lệ",
+        "noi_dung": ""
+    })
+    assert res_empty.status_code == 422
+
+    # 2. Nội dung chỉ toàn khoảng trắng "   "
+    res_spaces = client.post("/api/v1/support-requests", json={
+        "ma_ho_so": "HS001",
+        "loai_yeu_cau": "GiayTo",
+        "tieu_de": "Tiêu đề hợp lệ",
+        "noi_dung": "   "
+    })
+    assert res_spaces.status_code == 422
+
+    # 3. Thiếu trường nội dung trong payload
+    res_missing = client.post("/api/v1/support-requests", json={
+        "ma_ho_so": "HS001",
+        "loai_yeu_cau": "GiayTo",
+        "tieu_de": "Tiêu đề hợp lệ"
+    })
+    assert res_missing.status_code == 422
+
+
 def test_get_support_requests_list():
     """Lấy danh sách yêu cầu hỗ trợ"""
     client.post("/api/v1/support-requests", json={

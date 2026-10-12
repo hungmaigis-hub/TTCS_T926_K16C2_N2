@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional
 from datetime import datetime
 from enum import Enum
@@ -16,6 +16,13 @@ class YeuCauHoTroBase(BaseModel):
     loai_yeu_cau: str = Field(..., examples=["GiayTo"], description="Loại yêu cầu hỗ trợ (GiayTo, ChungNhan, KyThuat, PhuCap, Khac)")
     tieu_de: str = Field(..., min_length=1, max_length=255, examples=["Xin giấy xác nhận thực tập"], description="Tiêu đề yêu cầu")
     noi_dung: str = Field(..., min_length=1, examples=["Em cần giấy xác nhận hoàn thành thực tập để nộp về trường."], description="Nội dung chi tiết yêu cầu")
+
+    @field_validator("tieu_de", "noi_dung")
+    @classmethod
+    def validate_not_blank(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Trường này không được để trống")
+        return v.strip()
 
 
 class YeuCauHoTroCreate(YeuCauHoTroBase):
