@@ -1,4 +1,6 @@
+const duongDanApi = typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1";
 let selectedRole = "intern";
+let danhSachTruongDaiHoc = [];
 
 function showToast(message, type = "error", title = "") {
   let container = document.getElementById("toastContainer");
@@ -168,6 +170,63 @@ function assessPasswordStrength(val) {
   }
 }
 
+async function taiDanhSachTruongVaNganh() {
+  const institutionSelect = document.getElementById("institution");
+  if (!institutionSelect) return;
+
+  try {
+    const res = await fetch(`${duongDanApi}/universities`);
+    if (!res.ok) {
+      institutionSelect.innerHTML = `<option value="" disabled selected>Không thể tải danh sách trường từ hệ thống</option>`;
+      return;
+    }
+    const json = await res.json();
+    danhSachTruongDaiHoc = json.data || [];
+
+    if (danhSachTruongDaiHoc.length === 0) {
+      institutionSelect.innerHTML = `<option value="" disabled selected>Chưa có dữ liệu trường học</option>`;
+      return;
+    }
+
+    let htmlOptions = `<option value="" disabled selected>Chọn trường Đại học / Viện Đào tạo...</option>`;
+    danhSachTruongDaiHoc.forEach((t) => {
+      htmlOptions += `<option value="${t.ma_truong}">${t.ten_truong}</option>`;
+    });
+    institutionSelect.innerHTML = htmlOptions;
+  } catch (e) {
+    institutionSelect.innerHTML = `<option value="" disabled selected>Lỗi kết nối tải danh sách trường học</option>`;
+  }
+}
+
+function xuLyThayDoiTruong() {
+  const institutionSelect = document.getElementById("institution");
+  const majorSelect = document.getElementById("major");
+  if (!institutionSelect || !majorSelect) return;
+
+  const selectedMaTruong = parseInt(institutionSelect.value, 10);
+  if (!selectedMaTruong || isNaN(selectedMaTruong)) {
+    majorSelect.disabled = true;
+    majorSelect.innerHTML = `<option value="" disabled selected>Vui lòng chọn trường Đại học trước...</option>`;
+    return;
+  }
+
+  const truong = danhSachTruongDaiHoc.find((t) => t.ma_truong === selectedMaTruong);
+  const dsNganh = truong && Array.isArray(truong.chuyen_nganh) ? truong.chuyen_nganh : [];
+
+  if (dsNganh.length === 0) {
+    majorSelect.disabled = false;
+    majorSelect.innerHTML = `<option value="" disabled selected>Trường này chưa có danh mục chuyên ngành</option>`;
+    return;
+  }
+
+  let htmlNganh = `<option value="" disabled selected>Chọn chuyên ngành đào tạo...</option>`;
+  dsNganh.forEach((nganh) => {
+    htmlNganh += `<option value="${nganh}">${nganh}</option>`;
+  });
+  majorSelect.innerHTML = htmlNganh;
+  majorSelect.disabled = false;
+}
+
 async function handleRegistrationSubmit() {
   const fullName = document.getElementById("fullName") ? document.getElementById("fullName").value.trim() : "";
   const email = document.getElementById("email") ? document.getElementById("email").value.trim() : "";
@@ -186,6 +245,15 @@ async function handleRegistrationSubmit() {
     showToast("Địa chỉ email không đúng định dạng chuẩn (ví dụ: sinhvien@ictu.edu.vn).", "warning", "Email không hợp lệ");
     return;
   }
+  const ma_truong = parseInt(institution, 10);
+  if (!institution || isNaN(ma_truong)) {
+    showToast("Vui lòng chọn Trường Đại học bạn đang theo học từ danh sách.", "warning", "Thiếu trường học");
+    return;
+  }
+  if (!major) {
+    showToast("Vui lòng chọn Chuyên ngành đào tạo từ danh sách.", "warning", "Thiếu chuyên ngành");
+    return;
+  }
   if (!pwd || pwd.length < 6) {
     showToast("Mật khẩu phải có tối thiểu 6 ký tự.", "warning", "Mật khẩu quá ngắn");
     return;
@@ -199,17 +267,6 @@ async function handleRegistrationSubmit() {
     return;
   }
 
-  const universityMapping = {
-    vnuhcm: 3,
-    hust: 2,
-    fpt: 4,
-    neu: 5,
-    uit: 6,
-    other: 1
-  };
-
-  const ma_truong = universityMapping[institution] || 1;
-
   const submitBtn = document.querySelector('button[type="submit"]');
   const originalContent = submitBtn ? submitBtn.innerHTML : "";
   if (submitBtn) {
@@ -221,7 +278,7 @@ async function handleRegistrationSubmit() {
   }
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/v1/auth/register", {
+    const res = await fetch(`${duongDanApi}/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -231,7 +288,7 @@ async function handleRegistrationSubmit() {
         email: email,
         mat_khau: pwd,
         vai_tro: "ThucTapSinh",
-        chuyen_nganh: major || null,
+        chuyen_nganh: major,
         ma_truong: ma_truong
       })
     });
@@ -265,7 +322,7 @@ async function handleRegistrationSubmit() {
     }
   } catch (err) {
     showToast(
-      "Không thể kết nối đến máy chủ cơ sở dữ liệu (Backend: 127.0.0.1:8000). Vui lòng đảm bảo máy chủ FastAPI và MySQL đang chạy!",
+      "Không thể kết nối đến máy chủ cơ sở dữ liệu. Vui lòng đảm bảo máy chủ Backend đang chạy!",
       "error",
       "Mất kết nối máy chủ"
     );
@@ -275,3 +332,12 @@ async function handleRegistrationSubmit() {
     }
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  taiDanhSachTruongVaNganh();
+  const institutionSelect = document.getElementById("institution");
+  if (institutionSelect) {
+    institutionSelect.addEventListener("change", xuLyThayDoiTruong);
+  }
+});
+

@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Báo Cáo Tuần &amp; Nhật Ký Thực Tập - ICTU Internship</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/env.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/tailwind.config.js"></script>
+  </head>
+  <body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex">
+    <aside
+      class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 h-screen sticky top-0 self-start z-20 shadow-[1px_0_12px_rgba(0,0,0,0.02)]"
+    >
+      <div class="h-20 px-6 border-b border-slate-100 flex items-center gap-3">
+        <a href="dashboard.html" class="flex items-center gap-3">
+          <img
+            src="../../image/ictu_logo.png"
+            alt="ICTU Internship Logo"
+            class="h-10 w-auto object-contain"
+          />
+          <div>
+            <span class="text-sm font-bold text-slate-900 block leading-tight"
+              >ICTU INTERN</span
+            >
+            <span
+              class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider block"
+              >Cổng Sinh Viên</span
+            >
+          </div>
+        </a>
+      </div>
+
+      <div
+        class="p-4 mx-3 my-3 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-slate-50 border border-emerald-100 flex items-center gap-3.5"
+      >
+        <div class="relative shrink-0">
+          <div
+            id="avatarInitials"
+            class="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-bold text-base shadow-sm ring-2 ring-white"
+          >
+            NA
+          </div>
+          <span
+            class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white"
+          ></span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h4
+              id="sidebarTenSinhVien"
+              class="text-sm font-bold text-slate-900 truncate"
+            >
+              Nguyễn Văn An
+            </h4>
+            <span
+              class="material-symbols-outlined text-[15px] text-emerald-600 fill"
+              >verified</span
+            >
+          </div>
+          <p id="sidebarMaSinhVien" class="text-xs text-slate-500 truncate">
+            DTC2051060124 - K19
+          </p>
+          <span
+            class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800"
+            >Thực tập sinh</span
+          >
+        </div>
+      </div>
+
+      <div class="px-3 flex-1 overflow-y-auto space-y-1">
+        <p
+          class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+        >
+          Cổng Thực Tập Sinh
+        </p>
+
+        <a
+          href="dashboard.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >space_dashboard</span
+          >
+          <span>Tổng quan thực tập</span>
+        </a>
+
+        <a
+          href="tai_tai_lieu.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >upload_file</span
+          >
+          <span>Nộp tài liệu &amp; CV</span>
+        </a>
+
+        <a
+          href="hop_dong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >history_edu</span
+          >
+          <span>Hợp đồng thực tập</span>
+        </a>
+
+        <a
+          href="nhiem_vu.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >checklist</span
+          >
+          <span>Nhiệm vụ &amp; Tiến độ</span>
+        </a>
+
+        <a
+          href="cham_cong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >schedule</span
+          >
+          <span>Chấm công &amp; Điểm danh</span>
+        </a>
+
+        <a
+          href="nghi_phep.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >event_busy</span
+          >
+          <span>Đăng ký nghỉ phép</span>
+        </a>
+
+        <a
+          href="phu_cap.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >payments</span
+          >
+          <span>Phụ cấp &amp; Thu nhập</span>
+        </a>
+
+        <a
+          href="bao_cao.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-800 shadow-sm border border-emerald-200 transition-colors"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-emerald-600 fill"
+              >edit_note</span
+            >
+            <span>Báo cáo tuần</span>
+          </div>
+          <span
+            class="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full"
+            >Active</span
+          >
+        </a>
+
+        <a
+          href="danh_gia.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >rate_review</span
+          >
+          <span>Đánh giá &amp; Điểm</span>
+        </a>
+
+        <a
+          href="../public/thamquan.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >360</span
+          >
+          <span>Tham quan trường ICTU</span>
+        </a>
+      </div>
+
+      <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Học kỳ 2026 - 2027
+          </span>
+          <a
+            href="../public/index.html"
+            class="text-slate-400 hover:text-rose-600 transition-colors p-1"
+            title="Đăng xuất"
+          >
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-1 min-w-0 flex flex-col h-screen overflow-y-auto bg-slate-50">
+      <header
+        class="h-20 bg-white border-b border-slate-200/80 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-10 shrink-0"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center"
+          >
+            <span class="material-symbols-outlined text-[24px]">edit_note</span>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-slate-900 leading-tight">
+              Báo Cáo Tuần &amp; Nhật Ký Thực Tập
+            </h1>
+            <p class="text-xs text-slate-500">
+              Ghi nhận công việc định kỳ, kết quả đạt được và tiếp nhận phản hồi từ Mentor
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            onclick="taiDuLieuBaoCao()"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs"
+          >
+            <span class="material-symbols-outlined text-[16px]">refresh</span>
+            <span>Làm mới</span>
+          </button>
+          <button
+            type="button"
+            onclick="moModalBaoCao()"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[18px]">add_circle</span>
+            <span>Nộp Báo Cáo Tuần</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto w-full">
+        <div id="hopThongBao" class="hidden"></div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between"
+          >
+            <div class="space-y-1">
+              <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Tổng Số Báo Cáo
+              </p>
+              <h3
+                id="kpiTongBaoCao"
+                class="text-xl sm:text-2xl font-extrabold text-slate-900 font-mono"
+              >
+                0
+              </h3>
+              <p class="text-[11px] text-slate-400">Đã nộp lên hệ thống</p>
+            </div>
+            <div
+              class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"
+            >
+              <span class="material-symbols-outlined text-[26px]">assignment</span>
+            </div>
+          </div>
+
+          <div
+            class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between"
+          >
+            <div class="space-y-1">
+              <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Mentor Đã Nhận Xét
+              </p>
+              <h3
+                id="kpiDaNhanXet"
+                class="text-xl sm:text-2xl font-extrabold text-emerald-600 font-mono"
+              >
+                0
+              </h3>
+              <p class="text-[11px] text-emerald-700 font-medium">
+                Đã có ý kiến phản hồi
+              </p>
+            </div>
+            <div
+              class="w-12 h-12 rounded-2xl bg-emerald-100/60 text-emerald-700 flex items-center justify-center shrink-0"
+            >
+              <span class="material-symbols-outlined text-[26px]">verified</span>
+            </div>
+          </div>
+
+          <div
+            class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between"
+          >
+            <div class="space-y-1">
+              <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Chờ Mentor Đánh Giá
+              </p>
+              <h3
+                id="kpiChoPhanHoi"
+                class="text-xl sm:text-2xl font-extrabold text-amber-600 font-mono"
+              >
+                0
+              </h3>
+              <p class="text-[11px] text-amber-700 font-medium">
+                Đang chờ ghi nhận
+              </p>
+            </div>
+            <div
+              class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0"
+            >
+              <span class="material-symbols-outlined text-[26px]">pending_actions</span>
+            </div>
+          </div>
+
+          <div
+            class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between"
+          >
+            <div class="space-y-1">
+              <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Tuần Gần Nhất
+              </p>
+              <h3
+                id="kpiTuanGanNhat"
+                class="text-xl sm:text-2xl font-extrabold text-blue-600 font-mono"
+              >
+                --
+              </h3>
+              <p class="text-[11px] text-blue-700 font-medium">
+                Cập nhật mới nhất
+              </p>
+            </div>
+            <div
+              class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"
+            >
+              <span class="material-symbols-outlined text-[26px]">calendar_month</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+          <div
+            class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          >
+            <div class="flex items-center gap-2.5">
+              <div
+                class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"
+              >
+                <span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">
+                  Lịch Sử Báo Cáo Định Kỳ
+                </h3>
+                <p class="text-xs text-slate-500">
+                  Toàn bộ các bản ghi nhật ký tiến độ được gửi tới Mentor hướng dẫn
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="relative">
+                <span class="material-symbols-outlined text-[16px] text-slate-400 absolute left-3 top-2.5 pointer-events-none">search</span>
+                <input
+                  type="text"
+                  id="oTimKiemBaoCao"
+                  oninput="apDungBoLoc()"
+                  placeholder="Tìm nội dung, kết quả..."
+                  class="pl-8 pr-3 py-1.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:border-emerald-500 focus:bg-white transition-all w-44 sm:w-56"
+                />
+              </div>
+
+              <div class="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl">
+                <button
+                  type="button"
+                  id="btnLocTatCa"
+                  onclick="thayDoiTabLoc('tat_ca')"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-emerald-700 shadow-2xs border border-slate-200/60 transition-colors"
+                >
+                  Tất cả (<span id="demTatCa">0</span>)
+                </button>
+                <button
+                  type="button"
+                  id="btnLocChoPhanHoi"
+                  onclick="thayDoiTabLoc('cho_phan_hoi')"
+                  class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                  Chờ phản hồi (<span id="demChoPhanHoi">0</span>)
+                </button>
+                <button
+                  type="button"
+                  id="btnLocDaNhanXet"
+                  onclick="thayDoiTabLoc('da_nhan_xet')"
+                  class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                  Đã nhận xét (<span id="demDaNhanXet">0</span>)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-100 bg-slate-50/75 text-slate-500 font-semibold uppercase tracking-wider">
+                  <th class="py-3.5 px-6">Tuần &amp; Thời Gian</th>
+                  <th class="py-3.5 px-6">Nhiệm Vụ Liên Kết</th>
+                  <th class="py-3.5 px-6">Nội Dung Công Việc</th>
+                  <th class="py-3.5 px-6">Kết Quả Đạt Được</th>
+                  <th class="py-3.5 px-6">Đánh Giá Từ Mentor</th>
+                  <th class="py-3.5 px-6 text-center">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyDanhSachBaoCao" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                <tr>
+                  <td colspan="6" class="py-12 text-center text-slate-400">
+                    <span class="inline-block w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mb-2"></span>
+                    <p>Đang tải danh sách báo cáo tuần...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div
+      id="modalBaoCaoTuan"
+      class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 hidden"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150"
+      >
+        <div
+          class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center"
+            >
+              <span class="material-symbols-outlined text-[22px]">post_add</span>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">
+                Nộp Báo Cáo Tiến Độ Tuần
+              </h3>
+              <p class="text-xs text-slate-500">
+                Ghi nhận nội dung công việc và kết quả đầu ra thực tế
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="dongModalBaoCao()"
+            class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <form id="formNopBaoCao" onsubmit="xuLyGuiBaoCao(event)" class="p-6 overflow-y-auto space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="baoCaoTuanSo" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Tuần báo cáo <span class="text-rose-500">*</span>
+              </label>
+              <div class="relative">
+                <span class="material-symbols-outlined text-[18px] text-slate-400 absolute left-3.5 top-3 pointer-events-none">tag</span>
+                <input
+                  type="number"
+                  id="baoCaoTuanSo"
+                  min="1"
+                  max="52"
+                  required
+                  placeholder="Ví dụ: 1, 2, 3..."
+                  class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all bg-white"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label for="baoCaoNhiemVu" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Nhiệm vụ liên quan
+              </label>
+              <div class="relative">
+                <span class="material-symbols-outlined text-[18px] text-slate-400 absolute left-3.5 top-3 pointer-events-none">task</span>
+                <select
+                  id="baoCaoNhiemVu"
+                  class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all bg-white"
+                >
+                  <option value="">-- Đang tải danh sách nhiệm vụ... --</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="baoCaoNoiDung" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Nội dung công việc thực hiện <span class="text-rose-500">*</span>
+            </label>
+            <textarea
+              id="baoCaoNoiDung"
+              rows="4"
+              required
+              minlength="10"
+              placeholder="Mô tả chi tiết những công việc, nghiên cứu và đầu việc bạn đã tiến hành trong tuần này..."
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all bg-white resize-y"
+            ></textarea>
+            <p class="text-[11px] text-slate-400 mt-1">Tối thiểu 10 ký tự mô tả cụ thể.</p>
+          </div>
+
+          <div>
+            <label for="baoCaoKetQua" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Kết quả đạt được &amp; Sản phẩm hoàn thành
+            </label>
+            <textarea
+              id="baoCaoKetQua"
+              rows="3"
+              placeholder="Nêu rõ sản phẩm đầu ra, link demo hoặc tài liệu bàn giao, khó khăn gặp phải nếu có..."
+              class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all bg-white resize-y"
+            ></textarea>
+          </div>
+
+          <div id="loiFormBaoCao" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs"></div>
+
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onclick="dongModalBaoCao()"
+              class="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="submit"
+              id="nutGuiBaoCao"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-[18px]">send</span>
+              <span>Gửi Báo Cáo</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div
+      id="modalChiTietBaoCao"
+      class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 hidden"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150"
+      >
+        <div
+          class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center"
+            >
+              <span class="material-symbols-outlined text-[22px]">feed</span>
+            </div>
+            <div>
+              <h3 id="ctTieuDeBaoCao" class="text-base font-bold text-slate-900">
+                Chi Tiết Báo Cáo Tuần
+              </h3>
+              <p id="ctThoiGianNop" class="text-xs text-slate-500">
+                --
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="dongModalChiTiet()"
+            class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/60">
+            <div>
+              <span class="text-[11px] text-slate-400 font-semibold uppercase tracking-wider block">Tuần báo cáo</span>
+              <span id="ctTuanSo" class="text-sm font-bold text-emerald-700">Tuần --</span>
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-400 font-semibold uppercase tracking-wider block">Nhiệm vụ liên kết</span>
+              <span id="ctNhiemVu" class="text-sm font-medium text-slate-800">Không gắn nhiệm vụ</span>
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-400 font-semibold uppercase tracking-wider block">Sinh viên báo cáo</span>
+              <span id="ctSinhVien" class="text-sm font-medium text-slate-800">--</span>
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-400 font-semibold uppercase tracking-wider block">Mentor phụ trách</span>
+              <span id="ctMentor" class="text-sm font-medium text-slate-800">--</span>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-emerald-600">work</span>
+              Nội dung công việc thực hiện
+            </h4>
+            <div id="ctNoiDung" class="p-4 rounded-2xl bg-slate-50 text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line border border-slate-100">
+              --
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-blue-600">output</span>
+              Kết quả &amp; Sản phẩm đạt được
+            </h4>
+            <div id="ctKetQua" class="p-4 rounded-2xl bg-slate-50 text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line border border-slate-100">
+              --
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] text-amber-600">reviews</span>
+              Phản hồi &amp; Đánh giá từ Mentor
+            </h4>
+            <div id="ctPhanHoiMentor" class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs sm:text-sm text-amber-950 leading-relaxed whitespace-pre-line">
+              Chưa có phản hồi từ Mentor hướng dẫn.
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+          <button
+            type="button"
+            onclick="dongModalChiTiet()"
+            class="px-5 py-2.5 rounded-xl bg-slate-800 text-white text-xs font-semibold hover:bg-slate-900 transition-colors cursor-pointer"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../js/sinhvien/bao_cao.js"></script>
+  </body>
+</html>

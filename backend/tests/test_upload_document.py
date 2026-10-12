@@ -249,3 +249,70 @@ def test_upload_document_exceeds_max_size():
     response = client.post("/api/v1/documents/upload", data=data, files=files)
     assert response.status_code == 400
     assert "vượt quá giới hạn cho phép" in response.json()["detail"]
+
+
+def test_upload_document_resets_profile_from_tuchoi_to_choduyet():
+    """Kiểm tra khi hồ sơ đang ở trạng thái TuChoi, nộp lại tài liệu sẽ tự động chuyển về ChoDuyet"""
+    from tests.conftest import TestSessionLocal
+    from database.models.ho_so import HoSoThucTap
+
+    db = TestSessionLocal()
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == 1).first()
+    if ho_so:
+        ho_so.trang_thai_xet_duyet = "TuChoi"
+        db.commit()
+    db.close()
+
+    file_obj = io.BytesIO(b"%PDF-1.4 Re-upload replacement document")
+    files = {
+        "file": ("replacement_cv.pdf", file_obj, "application/pdf")
+    }
+    data = {
+        "ma_ho_so": 1,
+        "loai_tai_lieu": "CV"
+    }
+
+    res = client.post("/api/v1/documents/upload", data=data, files=files)
+    assert res.status_code == 201
+
+    # Kiểm tra hồ sơ #1 đã tự động quay về ChoDuyet
+    db = TestSessionLocal()
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == 1).first()
+    assert ho_so.trang_thai_xet_duyet == "ChoDuyet"
+    db.close()
+
+
+def test_upload_document_anti_spam_limit():
+    """Kiểm tra chặn spam khi hồ sơ đã đạt giới hạn tối đa 5 tài liệu -> 400 Bad Request"""
+    from tests.conftest import TestSessionLocal
+    from database.models.tai_lieu import TaiLieuHoSo
+
+    # Thêm tài liệu giả lập để đạt 5 tài liệu cho ma_ho_so = 1
+    db = TestSessionLocal()
+    existing_count = db.query(TaiLieuHoSo).filter(TaiLieuHoSo.ma_ho_so == 1).count()
+    for i in range(existing_count, 5):
+        dummy = TaiLieuHoSo(
+            ma_ho_so=1,
+            loai_tai_lieu=f"TaiLieuPhu_{i}",
+            duong_dan_file=f"uploads/dummy_{i}.pdf",
+            trang_thai_duyet="DaDuyet"
+        )
+        db.add(dummy)
+    db.commit()
+    db.close()
+
+    # Thử nộp thêm tài liệu thứ 6 -> Hệ thống phải chặn với 400 Bad Request
+    file_obj = io.BytesIO(b"%PDF-1.4 Spam 6th document")
+    files = {
+        "file": ("spam_doc_6.pdf", file_obj, "application/pdf")
+    }
+    data = {
+        "ma_ho_so": 1,
+        "loai_tai_lieu": "ChungChi"
+    }
+
+    res = client.post("/api/v1/documents/upload", data=data, files=files)
+    assert res.status_code == 400
+    assert "đã đạt giới hạn tối đa 5 tài liệu" in res.json()["detail"]
+
+

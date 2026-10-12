@@ -1,4 +1,4 @@
-const duongDanApi = "http://127.0.0.1:8000/api/v1";
+const duongDanApi = typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1";
 
 let danhSachHoSo = [];
 
@@ -438,10 +438,35 @@ async function moHopThoaiTaiLieu(maHoSo, tenUngVien) {
   const tieuDe = document.getElementById("tieuDeTaiLieuHoSo");
   const moTa = document.getElementById("moTaTaiLieuHoSo");
   const container = document.getElementById("danhSachTaiLieuContainer");
+  const btnDuyetTatCa = document.getElementById("btnDuyetTatCaTaiLieu");
 
-  if (tieuDe) tieuDe.textContent = `Hồ Sơ & Tài Liệu: ${tenUngVien}`;
-  if (moTa)
-    moTa.textContent = `Mã hồ sơ: #${maHoSo} - Kiểm tra và đối soát tài liệu thẩm định`;
+  if (btnDuyetTatCa) {
+    btnDuyetTatCa.style.display = "none";
+  }
+
+  const hoSo = (danhSachHoSo || []).find((h) => h.ma_ho_so === maHoSo);
+  const daTuChoi = hoSo && (hoSo.trang_thai_xet_duyet === "TuChoi" || hoSo.trang_thai_xet_duyet === "BiTuChoi");
+  const daDuyet = hoSo && hoSo.trang_thai_xet_duyet === "DaDuyet";
+
+  let badgeTrangThai = "";
+  if (daTuChoi) {
+    badgeTrangThai = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Bị từ chối</span>`;
+  } else if (daDuyet) {
+    badgeTrangThai = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Đã duyệt</span>`;
+  } else {
+    badgeTrangThai = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Chờ duyệt</span>`;
+  }
+
+  if (tieuDe) {
+    tieuDe.innerHTML = `<span class="flex items-center gap-2 flex-wrap"><span>Hồ Sơ & Tài Liệu: ${tenUngVien}</span> ${badgeTrangThai}</span>`;
+  }
+  if (moTa) {
+    if (daTuChoi) {
+      moTa.textContent = `Mã hồ sơ: #${maHoSo} - Hồ sơ đã bị từ chối tiếp nhận (Chỉ xem đối soát)`;
+    } else {
+      moTa.textContent = `Mã hồ sơ: #${maHoSo} - Kiểm tra và đối soát tài liệu thẩm định`;
+    }
+  }
   if (modal) modal.classList.remove("hidden");
 
   if (!container) return;
@@ -464,6 +489,10 @@ async function moHopThoaiTaiLieu(maHoSo, tenUngVien) {
     }
   } catch (err) {}
 
+  if (btnDuyetTatCa) {
+    btnDuyetTatCa.style.display = "none";
+  }
+
   container.innerHTML = `
     <div class="py-12 text-center text-slate-400">
       <span class="material-symbols-outlined text-[36px] text-slate-300 block mb-1">folder_off</span>
@@ -476,17 +505,25 @@ function hienThiDanhSachTaiLieuTrongModal(docs, maHoSo) {
   const container = document.getElementById("danhSachTaiLieuContainer");
   if (!container) return;
 
+  const hoSo = (danhSachHoSo || []).find((h) => h.ma_ho_so === maHoSo);
+  const daTuChoi = hoSo && (hoSo.trang_thai_xet_duyet === "TuChoi" || hoSo.trang_thai_xet_duyet === "BiTuChoi");
   const btnDuyetTatCa = document.getElementById("btnDuyetTatCaTaiLieu");
-  const chuaDuyet = docs.filter((d) => d.trang_thai_duyet !== "DaDuyet").length;
+
   if (btnDuyetTatCa) {
-    if (chuaDuyet === 0 && docs.length > 0) {
-      btnDuyetTatCa.disabled = true;
-      btnDuyetTatCa.className = "px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs flex items-center gap-1.5 border border-slate-200 cursor-not-allowed";
-      btnDuyetTatCa.innerHTML = `<span class="material-symbols-outlined text-[16px]">verified</span> <span>Đã duyệt tất cả</span>`;
+    if (daTuChoi || !docs || docs.length === 0) {
+      btnDuyetTatCa.style.display = "none";
     } else {
-      btnDuyetTatCa.disabled = false;
-      btnDuyetTatCa.className = "px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95";
-      btnDuyetTatCa.innerHTML = `<span class="material-symbols-outlined text-[16px]">done_all</span> <span>Duyệt tất cả (${chuaDuyet})</span>`;
+      const chuaDuyet = docs.filter((d) => d.trang_thai_duyet !== "DaDuyet").length;
+      btnDuyetTatCa.style.display = "";
+      if (chuaDuyet === 0) {
+        btnDuyetTatCa.disabled = true;
+        btnDuyetTatCa.className = "px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs flex items-center gap-1.5 border border-slate-200 cursor-not-allowed";
+        btnDuyetTatCa.innerHTML = `<span class="material-symbols-outlined text-[16px]">verified</span> <span>Đã duyệt tất cả</span>`;
+      } else {
+        btnDuyetTatCa.disabled = false;
+        btnDuyetTatCa.className = "px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95";
+        btnDuyetTatCa.innerHTML = `<span class="material-symbols-outlined text-[16px]">done_all</span> <span>Duyệt tất cả (${chuaDuyet})</span>`;
+      }
     }
   }
 
@@ -504,10 +541,17 @@ function hienThiDanhSachTaiLieuTrongModal(docs, maHoSo) {
 
       const fileUrl = doc.duong_dan_file.startsWith("http")
         ? doc.duong_dan_file
-        : `http://127.0.0.1:8000/${doc.duong_dan_file.replace(/^\/+/, "")}`;
+        : `${typeof layDuongDanGocBackend === "function" ? layDuongDanGocBackend() : "http://127.0.0.1:8000"}/${doc.duong_dan_file.replace(/^\/+/, "")}`;
 
       let actionButtons = "";
-      if (doc.trang_thai_duyet === "DaDuyet") {
+      if (daTuChoi) {
+        actionButtons = `
+          <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-500 font-medium text-xs border border-slate-200">
+            <span class="material-symbols-outlined text-[14px]">block</span>
+            <span>Hồ sơ đã từ chối</span>
+          </span>
+        `;
+      } else if (doc.trang_thai_duyet === "DaDuyet") {
         actionButtons = `
           <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
             <span class="material-symbols-outlined text-[15px]">verified</span>
@@ -612,7 +656,7 @@ function xemTrucTuyen(duongDan, tieuDe) {
 
   const fullUrl = duongDan.startsWith("http")
     ? duongDan
-    : `http://127.0.0.1:8000/${duongDan.replace(/^\/+/, "")}`;
+    : `${typeof layDuongDanGocBackend === "function" ? layDuongDanGocBackend() : "http://127.0.0.1:8000"}/${duongDan.replace(/^\/+/, "")}`;
 
   if (tieuDeEl) tieuDeEl.textContent = `Xem ${tieuDe || "Tài Liệu / CV"}`;
   if (duongDanEl) duongDanEl.textContent = duongDan;
@@ -631,6 +675,8 @@ function dongHopThoaiXemPdf() {
 function dongHopThoaiTaiLieu() {
   const modal = document.getElementById("hopThoaiTaiLieu");
   if (modal) modal.classList.add("hidden");
+  const btnDuyetTatCa = document.getElementById("btnDuyetTatCaTaiLieu");
+  if (btnDuyetTatCa) btnDuyetTatCa.style.display = "none";
   dangChonMa = null;
   dangChonTen = "";
 }

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 from datetime import date, datetime, time
 import re
 
@@ -429,6 +429,8 @@ class UserAuthData(BaseModel):
     vai_tro: str
     so_dien_thoai: Optional[str] = None
     ma_ho_so: Optional[int] = None
+    ma_hop_dong: Optional[int] = None
+    trang_thai_hop_dong: Optional[str] = None
 
 
 class AuthResponse(BaseModel):
@@ -710,6 +712,9 @@ class AttendanceReportItem(BaseModel):
     ma_phong_ban: Optional[int] = None
     ten_phong_ban: Optional[str] = None
     chuyen_nganh: Optional[str] = None
+    lop: Optional[str] = None
+    ma_mentor: Optional[int] = None
+    ten_mentor: Optional[str] = None
     so_ngay_di_lam: int = 0
     so_lan_di_muon: int = 0
     so_ngay_nghi: int = 0
@@ -873,6 +878,7 @@ class RollCallRequest(BaseModel):
     ca_lam_viec: Optional[str] = Field(default="Ca Sáng", description="Ca làm việc / buổi gặp mặt")
     ma_chuong_trinh: Optional[int] = Field(default=None, description="Mã chương trình / khóa thực tập")
     chuyen_nganh: Optional[str] = Field(default=None, description="Lớp hoặc chuyên ngành")
+    lop: Optional[str] = Field(default=None, description="Lớp sinh hoạt cụ thể (ví dụ KTPM-K19A)")
     records: List[RollCallRecordItem] = Field(..., min_items=1, description="Danh sách điểm danh sinh viên")
 
 
@@ -892,6 +898,7 @@ class ShiftCreateRequest(BaseModel):
     cac_ngay_trong_tuan: Optional[str] = Field(default="Tất cả các ngày", description="Các ngày áp dụng trong tuần")
     ngay_dien_ra: Optional[str] = Field(default=None, description="Ngày diễn ra cụ thể (định dạng YYYY-MM-DD)")
     chuyen_nganh: Optional[str] = Field(default=None, description="Lớp hoặc chuyên ngành áp dụng")
+    lop: Optional[str] = Field(default=None, description="Lớp sinh hoạt áp dụng (ví dụ KTPM-K19A)")
     ma_chuong_trinh: Optional[int] = Field(default=None, description="Mã chương trình thực tập")
     ghi_chu: Optional[str] = Field(default="", description="Ghi chú chi tiết ca làm việc")
     trang_thai: Optional[str] = Field(default="HoatDong", description="Trạng thái hoạt động")
@@ -1129,6 +1136,8 @@ class AllowanceItem(BaseModel):
     thang_nam: str
     so_tien: float
     trang_thai_chi_tra: str
+    ngay_chi_tra: Optional[str] = None
+    ghi_chu: Optional[str] = None
 
 
 class AllowanceSummary(BaseModel):
@@ -1145,6 +1154,10 @@ class AllowanceDetailData(BaseModel):
     ma_ho_so: int
     ho_ten: Optional[str] = None
     email: Optional[str] = None
+    lop: Optional[str] = None
+    chuyen_nganh: Optional[str] = None
+    ten_chuong_trinh: Optional[str] = None
+    so_dien_thoai: Optional[str] = None
     summary: AllowanceSummary
     danh_sach_phu_cap: List[AllowanceItem]
     cac_khoan_da_nhan: List[AllowanceItem]
@@ -1265,13 +1278,23 @@ class MentorResponse(BaseModel):
 class MentorWorkloadItem(BaseModel):
     """Chi tiết khối lượng công việc của một người hướng dẫn"""
     ma_mentor: int
+    ma_nguoi_dung: Optional[int] = None
     ho_ten: str
     email: str
     so_dien_thoai: Optional[str] = None
+    vai_tro: Optional[str] = "Mentor"
     ma_phong_ban: Optional[int] = None
     ten_phong_ban: Optional[str] = None
-    trang_thai: str = "HoatDong"
+    trang_thai: Optional[str] = "HoatDong"
+    chuc_vu: Optional[str] = "Mentor Doanh nghiệp"
     so_luong_thuc_tap_sinh: int = 0
+    so_sinh_vien_huong_dan: Optional[int] = 0
+    chi_tieu_huong_dan: Optional[int] = 5
+    ty_le_phan_tram: Optional[float] = 0.0
+    trang_thai_tai: Optional[str] = "BinhThuong"
+    canh_bao_qua_tai: Optional[bool] = False
+    da_du_chi_tieu: Optional[bool] = False
+    so_cho_trong: Optional[int] = 5
 
 
 class MentorWorkloadSummary(BaseModel):
@@ -1394,11 +1417,40 @@ class SupportRequestItemData(BaseModel):
     email_sinh_vien: Optional[str] = None
 
 
+class SupportRequestCreate(BaseModel):
+    """Schema tiếp nhận thông tin gửi yêu cầu hỗ trợ (POST /api/v1/support-requests)"""
+    ma_ho_so: int = Field(..., description="Mã hồ sơ thực tập sinh", ge=1)
+    loai_yeu_cau: str = Field(..., description="Loại yêu cầu hỗ trợ: XinChungNhan, GiayXacNhan, DongDauMoc, TaiLieu, Khac")
+    noi_dung: str = Field(..., min_length=1, description="Nội dung chi tiết yêu cầu hỗ trợ")
+
+    @field_validator("noi_dung")
+    def validate_noi_dung(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Nội dung yêu cầu không được để trống")
+        return cleaned
+
+    @field_validator("loai_yeu_cau")
+    def validate_loai_yeu_cau(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Loại yêu cầu không được để trống")
+        return cleaned
+
+
 class SupportRequestResponse(BaseModel):
     """Response chuẩn trả về sau khi cập nhật trạng thái yêu cầu hỗ trợ thành công (HTTP 200)"""
     status_code: int = 200
     message: str = "Cập nhật trạng thái yêu cầu hỗ trợ thành công"
     data: SupportRequestItemData
+
+
+class SupportRequestListResponse(BaseModel):
+    """Response danh sách các yêu cầu hỗ trợ (GET /api/v1/support-requests)"""
+    status_code: int = 200
+    message: str = "Lấy danh sách yêu cầu hỗ trợ thành công"
+    total: int = 0
+    data: List[SupportRequestItemData]
 
 
 class SupportRequestCreate(BaseModel):
@@ -1434,6 +1486,19 @@ class AssignMentorResponse(BaseModel):
     data: dict
 
 
+class CompletionRateResponse(BaseModel):
+    """Schema báo cáo tỷ lệ hoàn thành chương trình thực tập (GET /api/v1/reports/completion-rate)"""
+    tong_so_sinh_vien: int = Field(..., description="Tổng số lượng sinh viên trong hệ thống", ge=0)
+    so_luong_dang_thuc_tap: int = Field(..., description="Số lượng sinh viên trạng thái DangThucTap", ge=0)
+    so_luong_hoan_thanh: int = Field(..., description="Số lượng sinh viên trạng thái HoanThanh", ge=0)
+    so_luong_thoi_hoc: int = Field(..., description="Số lượng sinh viên trạng thái ThoiHoc", ge=0)
+    ty_le_hoan_thanh: float = Field(..., description="Tỷ lệ phần trăm (%) hoàn thành chương trình thực tập", ge=0.0, le=100.0)
+    chi_tiet_theo_trang_thai: Dict[str, int] = Field(default_factory=dict, description="Chi tiết số lượng theo từng trạng thái")
+
+    class Config:
+        from_attributes = True
+
+
 class CompletionRateSummary(BaseModel):
     """Khối số liệu thống kê tỷ lệ hoàn thành thực tập"""
     tong_so_sinh_vien: int = 0
@@ -1449,6 +1514,23 @@ class CompletionRateReportResponse(BaseModel):
     status_code: int = 200
     message: str = "Lấy báo cáo tỷ lệ hoàn thành thực tập thành công"
     data: CompletionRateSummary
+
+
+class UserStatusUpdate(BaseModel):
+    trang_thai: str = Field(..., description="Trạng thái tài khoản: HoatDong hoặc Khoa")
+
+
+class UserResetPasswordRequest(BaseModel):
+    mat_khau_moi: Optional[str] = Field("123456", description="Mật khẩu mới cần đặt lại")
+
+
+class UserCreateRequest(BaseModel):
+    ho_ten: str = Field(..., min_length=2, max_length=100, description="Họ và tên người dùng")
+    email: str = Field(..., min_length=5, max_length=100, description="Email đăng nhập")
+    so_dien_thoai: Optional[str] = Field(None, max_length=20, description="Số điện thoại")
+    vai_tro: str = Field("ThucTapSinh", description="Vai trò: ThucTapSinh, Mentor, HR, Admin, NhaTruong")
+    mat_khau: Optional[str] = Field("123456", min_length=6, description="Mật khẩu ban đầu")
+    ma_phong_ban: Optional[int] = Field(None, description="Mã phòng ban nếu là Mentor hoặc Cán bộ")
 
 
 

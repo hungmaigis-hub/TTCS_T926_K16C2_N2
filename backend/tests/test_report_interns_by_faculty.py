@@ -170,15 +170,15 @@ def test_get_faculty_report_multi_student_aggregation():
     try:
         # Thêm 2 người dùng và 2 hồ sơ mới vào trường Thái Nguyên (ma_truong=1)
         pass_hash = get_password_hash("123456")
-        u4 = NguoiDung(ma_nguoi_dung=4, ma_phong_ban=1, ho_ten="Lê Văn C", email="vanc@example.com", mat_khau_hash=pass_hash, vai_tro="ThucTapSinh")
-        u5 = NguoiDung(ma_nguoi_dung=5, ma_phong_ban=1, ho_ten="Hoàng Thị D", email="thid@example.com", mat_khau_hash=pass_hash, vai_tro="ThucTapSinh")
+        u4 = NguoiDung(ma_phong_ban=1, ho_ten="Lê Văn C", email="vanc_agg@example.com", mat_khau_hash=pass_hash, vai_tro="ThucTapSinh")
+        u5 = NguoiDung(ma_phong_ban=1, ho_ten="Hoàng Thị D", email="thid_agg@example.com", mat_khau_hash=pass_hash, vai_tro="ThucTapSinh")
         db.add_all([u4, u5])
         db.flush()
 
         # u4 học Công nghệ thông tin (ma_truong=1) -> Thái Nguyên có 2 sinh viên CNTT
         # u5 học An toàn thông tin (ma_truong=1) -> Thái Nguyên có 1 sinh viên ATTT
-        hs3 = HoSoThucTap(ma_ho_so=3, ma_nguoi_dung=4, ma_truong=1, ma_chuong_trinh=1, chuyen_nganh="Công nghệ thông tin", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="DangThucTap")
-        hs4 = HoSoThucTap(ma_ho_so=4, ma_nguoi_dung=5, ma_truong=1, ma_chuong_trinh=1, chuyen_nganh="An toàn thông tin", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="DangThucTap")
+        hs3 = HoSoThucTap(ma_nguoi_dung=u4.ma_nguoi_dung, ma_truong=1, ma_chuong_trinh=1, chuyen_nganh="Công nghệ thông tin", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="DangThucTap")
+        hs4 = HoSoThucTap(ma_nguoi_dung=u5.ma_nguoi_dung, ma_truong=1, ma_chuong_trinh=1, chuyen_nganh="An toàn thông tin", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="DangThucTap")
         db.add_all([hs3, hs4])
         db.commit()
 
