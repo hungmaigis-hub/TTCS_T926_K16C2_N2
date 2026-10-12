@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-from app.core.database import get_db
+from app.database import get_db
 from app.schemas.report import CompletionRateResponse
 from app.services.report_service import ReportService
 

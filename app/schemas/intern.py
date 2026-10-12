@@ -153,3 +153,38 @@ class AssignMentorData(BaseModel):
 
 # Resolve forward references (Python < 3.11 cần)
 AssignMentorResponse.model_rebuild()
+
+
+# ============================================================
+# Schemas cho quản lý danh sách hồ sơ thực tập sinh
+# ============================================================
+class HoSoThucTapCreate(BaseModel):
+    ma_sv: str = Field(..., description="Mã sinh viên")
+    ho_ten: str = Field(..., description="Họ và tên")
+    email: Optional[str] = None
+    so_dien_thoai: Optional[str] = None
+    truong_hoc: Optional[str] = None
+    chuyen_nganh: Optional[str] = None
+    ma_mentor: Optional[int] = None
+    trang_thai: Optional[str] = "DangThucTap"
+    ngay_bat_dau: Optional[date] = None
+    ngay_ket_thuc: Optional[date] = None
+
+
+class HoSoThucTapResponse(BaseModel):
+    id: Optional[int] = None
+    ma_ho_so: Optional[str] = None
+    ma_sv: Optional[str] = None
+    ho_ten: str
+    email: Optional[str] = None
+    so_dien_thoai: Optional[str] = None
+    truong_hoc: Optional[str] = None
+    chuyen_nganh: Optional[str] = None
+    ma_mentor: Optional[int] = None
+    trang_thai: Optional[str] = None
+    ngay_bat_dau: Optional[date] = None
+    ngay_ket_thuc: Optional[date] = None
+    mentor: Optional[dict] = None
+
+    model_config = {"from_attributes": True}
+

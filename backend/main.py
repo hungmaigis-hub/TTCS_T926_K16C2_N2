@@ -86,6 +86,10 @@ from schemas import (
     SupportRequestCreate,
     SupportRequestResponse,
     SupportRequestListResponse,
+    SupportRequestCreateResponse,
+    AssignMentorRequest,
+    AssignMentorResponse,
+    CompletionRateReportResponse,
     MentorWorkloadItem,
     MentorWorkloadSummary,
     MentorWorkloadData,
@@ -1149,6 +1153,138 @@ def get_contract_by_profile_id(ho_so_id: int, db: Session = Depends(get_db)):
         "status_code": 200,
         "message": "Chi tiết hợp đồng thực tập theo hồ sơ",
         "data": hop_dong.to_dict()
+    }
+
+
+@app.patch("/api/v1/interns/{id}/mentor", response_model=AssignMentorResponse, status_code=200)
+@app.patch("/api/v1/interns/{id}/assign-mentor", response_model=AssignMentorResponse, status_code=200)
+def assign_mentor_to_intern(id: int, payload: AssignMentorRequest, db: Session = Depends(get_db)):
+    """
+    Phân công hoặc thay đổi Mentor cho thực tập sinh (NV15):
+    - Kiểm tra hồ sơ tồn tại (404 INTERN_NOT_FOUND).
+    - Nếu ma_mentor != None:
+        + Kiểm tra mentor tồn tại (404 MENTOR_NOT_FOUND).
+        + Kiểm tra vai trò == 'Mentor' (422 INVALID_MENTOR_ROLE).
+        + Kiểm tra trạng thái hoạt động (403 MENTOR_INACTIVE nếu Khoa).
+    - Cập nhật ho_so.ma_mentor.
+    """
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == id).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập với mã '{id}'."
+        )
+
+    mentor_data = None
+    if payload.ma_mentor is not None:
+        mentor = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == payload.ma_mentor).first()
+        if not mentor:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Không tìm thấy người dùng với mã '{payload.ma_mentor}' trong hệ thống."
+            )
+        if mentor.vai_tro != "Mentor":
+            raise HTTPException(
+                status_code=422,
+                detail=f"Người dùng '{mentor.ho_ten}' có vai trò '{mentor.vai_tro}', không phải 'Mentor'."
+            )
+        if mentor.trang_thai in ["Khoa", "Inactive"]:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Tài khoản của Mentor '{mentor.ho_ten}' đã bị vô hiệu hóa, không thể gán."
+            )
+        current_count = db.query(HoSoThucTap).filter(
+            HoSoThucTap.ma_mentor == mentor.ma_nguoi_dung,
+            HoSoThucTap.ma_ho_so != id
+        ).count()
+        if current_count >= 5:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Mentor '{mentor.ho_ten}' đã đủ chỉ tiêu hướng dẫn tối đa ({current_count}/5 sinh viên), không thể tiếp nhận thêm."
+            )
+        ho_so.ma_mentor = mentor.ma_nguoi_dung
+        mentor_data = {
+            "ma_mentor": mentor.ma_nguoi_dung,
+            "ho_ten": mentor.ho_ten,
+            "email": mentor.email,
+            "so_dien_thoai": mentor.so_dien_thoai,
+        }
+    else:
+        ho_so.ma_mentor = None
+
+    db.commit()
+    db.refresh(ho_so)
+
+    ho_ten_sv = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else f"Hồ sơ {ho_so.ma_ho_so}"
+    email_sv = ho_so.thuc_tap_sinh.email if ho_so.thuc_tap_sinh else None
+
+    return {
+        "status_code": 200,
+        "message": f"Gán Mentor cho hồ sơ '{id}' thành công." if payload.ma_mentor else f"Hủy gán Mentor cho hồ sơ '{id}' thành công.",
+        "data": {
+            "ho_so": {
+                "ma_ho_so": ho_so.ma_ho_so,
+                "ho_ten": ho_ten_sv,
+                "email": email_sv,
+                "vi_tri_thuc_tap": ho_so.chuyen_nganh or "Thực tập sinh",
+                "trang_thai": ho_so.trang_thai_thuc_tap or "DangThucTap",
+            },
+            "mentor": mentor_data,
+            "ngay_cap_nhat": datetime.utcnow().isoformat(),
+        }
+    }
+
+
+@app.get("/api/v1/reports/completion-rate-by-unit", response_model=CompletionRateReportResponse, status_code=200)
+def get_internship_completion_rate(
+    university: Optional[str] = Query(None, description="Lọc theo tên trường đại học"),
+    department: Optional[str] = Query(None, description="Lọc theo phòng ban"),
+    db: Session = Depends(get_db)
+):
+    """
+    Báo cáo tỷ lệ hoàn thành chương trình thực tập theo đơn vị:
+    - Đếm số lượng theo các trạng thái thực tập (DangThucTap, HoanThanh, ThoiHoc).
+    - Tính toán tỷ lệ hoàn thành = round((so_luong_hoan_thanh / tong_so_sinh_vien) * 100, 2).
+    """
+    query = db.query(HoSoThucTap)
+    if university:
+        query = query.join(TruongDaiHoc, HoSoThucTap.ma_truong == TruongDaiHoc.ma_truong).filter(
+            TruongDaiHoc.ten_truong.ilike(f"%{university.strip()}%")
+        )
+    if department:
+        query = query.join(ChuongTrinhThucTap, HoSoThucTap.ma_chuong_trinh == ChuongTrinhThucTap.ma_chuong_trinh)\
+                     .join(PhongBan, ChuongTrinhThucTap.ma_phong_ban == PhongBan.ma_phong_ban).filter(
+            PhongBan.ten_phong_ban.ilike(f"%{department.strip()}%")
+        )
+
+    all_records = query.all()
+    tong_so = len(all_records)
+
+    counts = {"DangThucTap": 0, "HoanThanh": 0, "ThoiHoc": 0}
+    for r in all_records:
+        st = r.trang_thai_thuc_tap or "DangThucTap"
+        if st in counts:
+            counts[st] += 1
+        else:
+            counts[st] = 1
+
+    dang_thuc_tap = counts.get("DangThucTap", 0)
+    hoan_thanh = counts.get("HoanThanh", 0)
+    thoi_hoc = counts.get("ThoiHoc", 0)
+
+    ty_le = round((hoan_thanh / tong_so) * 100.0, 2) if tong_so > 0 else 0.0
+
+    return {
+        "status_code": 200,
+        "message": "Lấy báo cáo tỷ lệ hoàn thành thực tập thành công",
+        "data": {
+            "tong_so_sinh_vien": tong_so,
+            "so_luong_dang_thuc_tap": dang_thuc_tap,
+            "so_luong_hoan_thanh": hoan_thanh,
+            "so_luong_thoi_hoc": thoi_hoc,
+            "ty_le_hoan_thanh": ty_le,
+            "chi_tiet_theo_trang_thai": counts,
+        }
     }
 
 # api patch confirm contract

@@ -40,9 +40,6 @@ def override_get_db():
         db.close()
 
 
-# Override dependency
-app.dependency_overrides[get_db] = override_get_db
-
 # Client
 client = TestClient(app)
 
@@ -53,6 +50,7 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def setup_database():
     """Tạo bảng và seed data trước mỗi test, xóa sau khi test xong."""
+    app.dependency_overrides[get_db] = override_get_db
     Base.metadata.create_all(bind=engine_test)
 
     db = TestingSessionLocal()
@@ -138,6 +136,7 @@ def setup_database():
 
     # Teardown
     Base.metadata.drop_all(bind=engine_test)
+    app.dependency_overrides.pop(get_db, None)
 
 
 # ============================================================
@@ -286,3 +285,32 @@ class TestAssignMentorInputValidation:
         # Sau khi strip → None → hủy gán → 200
         assert response.status_code == 200
         assert response.json()["data"]["mentor"] is None
+
+
+class TestAssignMentorQuota:
+    """Test case kiểm tra giới hạn chỉ tiêu (Quota: tối đa 5 sinh viên theo GEMINI.md B.3)."""
+
+    def test_assign_mentor_exceeds_quota(self):
+        """Khi mentor đã hướng dẫn đủ 5 sinh viên, gán thêm sinh viên thứ 6 phải trả về 400 Bad Request."""
+        db = TestingSessionLocal()
+        for i in range(10, 14):
+            hs = HoSoThucTap(
+                ma_ho_so=f"HS0{i}",
+                ma_sinh_vien="TTS001",
+                ho_ten=f"Sinh viên {i}",
+                vi_tri_thuc_tap="Tester",
+                trang_thai="DangThucTap",
+                ma_mentor="MENTOR01",
+            )
+            db.add(hs)
+        db.commit()
+        db.close()
+
+        response = client.patch(
+            "/api/v1/interns/HS001/mentor",
+            json={"ma_mentor": "MENTOR01"},
+        )
+        assert response.status_code == 400
+        detail = response.json()["detail"]
+        assert detail["error_code"] == "MENTOR_QUOTA_EXCEEDED"
+

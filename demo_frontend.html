@@ -48,6 +48,7 @@
     .badge-primary { background: var(--primary-light); color: var(--primary); }
     .badge-success { background: #dcfce7; color: #15803d; }
     .badge-warning { background: #fef3c7; color: #b45309; }
+    .badge-danger { background: #fee2e2; color: #b91c1c; }
     .badge-unassigned { background: #fee2e2; color: #b91c1c; }
 
     .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
@@ -99,10 +100,12 @@
     }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-secondary { background: #334155; color: white; }
     .btn-secondary:hover { background: #475569; }
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover { background: #dc2626; }
+    .btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .form-group { margin-bottom: 16px; }
     label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); }
@@ -134,7 +137,6 @@
       word-break: break-all;
     }
 
-    /* Modal */
     .modal-backdrop {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.7);
@@ -152,7 +154,6 @@
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
-    /* Toast */
     #toast {
       position: fixed; bottom: 24px; right: 24px;
       padding: 12px 20px; border-radius: 10px;
@@ -168,7 +169,7 @@
       <div>
         <h1 style="font-size: 24px; font-weight: 800; color: #fff;">Quản Lý Thực Tập Sinh & Phân Công Mentor</h1>
         <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">
-          Nhiệm vụ: <strong>Nguyễn Văn Hiếu</strong> | Endpoint: <code>PATCH /api/v1/interns/{id}/assign-mentor</code>
+          Nhiệm vụ: <strong>Nguyễn Văn Hiếu</strong> | Endpoint: <code>PATCH /api/v1/interns/{id}/mentor</code>
         </p>
       </div>
       <div>
@@ -177,16 +178,15 @@
     </header>
 
     <div class="grid">
-      <!-- Cột trái: Bảng thực tập sinh -->
       <div class="card">
         <div class="card-title">
-          <span> Danh Sách Hồ Sơ Thực Tập Sinh</span>
+          <span>Danh Sách Hồ Sơ Thực Tập Sinh</span>
           <button class="btn btn-secondary" style="margin-left: auto;" onclick="loadData()">Làm Mới</button>
         </div>
         <table>
           <thead>
             <tr>
-              <th>Mã SV</th>
+              <th>Mã HS / Mã SV</th>
               <th>Họ và Tên</th>
               <th>Trường & Ngành</th>
               <th>Mentor Hướng Dẫn</th>
@@ -199,33 +199,25 @@
         </table>
       </div>
 
-      <!-- Cột phải: Inspector API & Hướng dẫn cho Frontend -->
       <div style="display: flex; flex-direction: column; gap: 20px;">
         <div class="card">
           <div class="card-title">📡 API Live Inspector</div>
           <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Request payload & phản hồi từ máy chủ FastAPI:</p>
-          <div id="inspector" class="code-box">// Bấm "Phân công Mentor" để xem request/response trực tiếp</div>
+          <div id="inspector" class="code-box">Bấm "Phân Công" để xem kết quả gọi API trực tiếp</div>
         </div>
 
         <div class="card">
-          <div class="card-title">💡 Mẫu Code cho Frontend (Axios / Fetch)</div>
-          <pre class="code-box">// Gọi phân công mentor:
-await axios.patch(`http://127.0.0.1:8000/api/v1/interns/${id}/assign-mentor`, {
-  ma_mentor: 1, // ID của Mentor
-  ghi_chu: "Phân công hướng dẫn Backend"
-});
-
-// Gọi hủy phân công mentor:
-await axios.patch(`http://127.0.0.1:8000/api/v1/interns/${id}/assign-mentor`, {
-  ma_mentor: null,
-  ghi_chu: "Hủy gán mentor"
+          <div class="card-title">💡 Mẫu Code Gọi API (Axios / Fetch)</div>
+          <pre class="code-box">await fetch(`http://127.0.0.1:8000/api/v1/interns/${id}/mentor`, {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ ma_mentor: 1 })
 });</pre>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal Phân Công Mentor -->
   <div class="modal-backdrop" id="assignModal">
     <div class="modal">
       <div class="modal-header">
@@ -252,7 +244,7 @@ await axios.patch(`http://127.0.0.1:8000/api/v1/interns/${id}/assign-mentor`, {
       <div class="modal-footer">
         <button class="btn btn-danger" id="btnUnassign" onclick="submitAssign(null)" style="display:none; margin-right: auto;">Hủy Gán</button>
         <button class="btn btn-secondary" onclick="closeModal()">Đóng</button>
-        <button class="btn btn-primary" onclick="submitAssignFromSelect()">Lưu Phân Công</button>
+        <button class="btn btn-primary" id="btnSubmitAssign" onclick="submitAssignFromSelect()">Lưu Phân Công</button>
       </div>
     </div>
   </div>
@@ -266,14 +258,14 @@ await axios.patch(`http://127.0.0.1:8000/api/v1/interns/${id}/assign-mentor`, {
 
     async function checkHealth() {
       try {
-        const res = await fetch(`${API_BASE}/`);
+        const res = await fetch(`${API_BASE}/health`);
         if (res.ok) {
           document.getElementById("api-status").innerText = "API: Sẵn sàng (Port 8000)";
           document.getElementById("api-status").className = "badge badge-success";
           return true;
         }
       } catch (err) {
-        document.getElementById("api-status").innerText = "API: Chưa bật backend";
+        document.getElementById("api-status").innerText = "API: Chưa kết nối backend";
         document.getElementById("api-status").className = "badge badge-danger";
         return false;
       }
@@ -287,37 +279,47 @@ await axios.patch(`http://127.0.0.1:8000/api/v1/interns/${id}/assign-mentor`, {
           fetch(`${API_BASE}/api/v1/mentors`)
         ]);
 
-        internsList = await internsRes.json();
-        mentorsList = await mentorsRes.json();
+        const internsRaw = await internsRes.json();
+        const mentorsRaw = await mentorsRes.json();
+
+        internsList = Array.isArray(internsRaw) ? internsRaw : (internsRaw.data || []);
+        mentorsList = Array.isArray(mentorsRaw) ? mentorsRaw : (mentorsRaw.data || []);
 
         renderInternsTable();
         populateMentorSelect();
       } catch (error) {
-        console.error("Lỗi khi tải dữ liệu:", error);
+        showToast("Lỗi khi tải dữ liệu từ API máy chủ", "danger");
       }
     }
 
     function renderInternsTable() {
       const tbody = document.getElementById("interns-table");
       if (!internsList.length) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Chưa có dữ liệu. Hãy chạy <code>python seed_data.py</code></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Chưa có dữ liệu sinh viên trong hệ thống.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = internsList.map(intern => {
-        const hasMentor = intern.mentor != null;
+        const idVal = intern.ma_ho_so ?? intern.id;
+        const svCode = intern.ma_sinh_vien || intern.ma_sv || idVal;
+        const hoTen = intern.ho_ten || "Sinh viên";
+        const truong = intern.ten_truong || intern.truong_hoc || "-";
+        const nganh = intern.chuyen_nganh || "";
+        const mentorTen = intern.ten_mentor || (intern.mentor ? intern.mentor.ho_ten : null);
+        const hasMentor = !!(intern.ma_mentor || mentorTen);
+
         const mentorBadge = hasMentor
-          ? `<span class="badge badge-success">👨‍🏫 ${intern.mentor.ho_ten} (${intern.mentor.phong_ban})</span>`
+          ? `<span class="badge badge-success">👨‍🏫 ${mentorTen || "Đã gán Mentor"}</span>`
           : `<span class="badge badge-unassigned">Chưa có mentor</span>`;
 
         return `
           <tr>
-            <td><strong>${intern.ma_sv}</strong></td>
-            <td>${intern.ho_ten}</td>
-            <td><div style="font-size:13px;">${intern.truong_hoc || '-'}</div><div style="font-size:12px; color:var(--text-muted);">${intern.chuyen_nganh || ''}</div></td>
+            <td><strong>#${idVal}</strong> (${svCode})</td>
+            <td>${hoTen}</td>
+            <td><div style="font-size:13px;">${truong}</div><div style="font-size:12px; color:var(--text-muted);">${nganh}</div></td>
             <td>${mentorBadge}</td>
             <td>
-              <button class="btn btn-primary" onclick="openAssignModal(${intern.id})">Phân Công</button>
+              <button class="btn btn-primary" onclick="openAssignModal('${idVal}')">Phân Công</button>
             </td>
           </tr>
         `;
@@ -327,23 +329,32 @@ await axios.patch(`http://127.0.0.1:8000/api/v1/interns/${id}/assign-mentor`, {
     function populateMentorSelect() {
       const select = document.getElementById("modalMentorSelect");
       select.innerHTML = `<option value="">-- Chọn Mentor từ danh sách --</option>` +
-        mentorsList.map(m => `
-          <option value="${m.id}">
-            ${m.ho_ten} - ${m.chuc_vu} (${m.phong_ban}) [Đang HD: ${m.so_luong_dang_huong_dan}/${m.so_luong_toi_da}]
-          </option>
-        `).join("");
+        mentorsList.map(m => {
+          const mId = m.ma_nguoi_dung ?? m.id;
+          const ten = m.ho_ten || "Mentor";
+          const chucVu = m.chuc_vu || m.phong_ban || "Mentor";
+          const count = m.so_sinh_vien_huong_dan ?? m.so_luong_dang_huong_dan ?? 0;
+          const max = m.chi_tieu_huong_dan ?? m.so_luong_toi_da ?? 5;
+          const isFull = m.da_du_chi_tieu || (count >= max);
+          const quotaLabel = isFull ? " [Đã đủ chỉ tiêu 5/5]" : ` [Đang HD: ${count}/${max}]`;
+          const dis = isFull ? " disabled" : "";
+
+          return `<option value="${mId}"${dis}>${ten} - ${chucVu}${quotaLabel}</option>`;
+        }).join("");
     }
 
     function openAssignModal(internId) {
-      const intern = internsList.find(i => i.id === internId);
+      const intern = internsList.find(i => String(i.ma_ho_so ?? i.id) === String(internId));
       if (!intern) return;
 
-      document.getElementById("modalInternId").value = intern.id;
-      document.getElementById("modalInternName").value = `${intern.ho_ten} (${intern.ma_sv})`;
+      const idVal = intern.ma_ho_so ?? intern.id;
+      const svCode = intern.ma_sinh_vien || intern.ma_sv || idVal;
+      document.getElementById("modalInternId").value = idVal;
+      document.getElementById("modalInternName").value = `${intern.ho_ten} (#${idVal} - ${svCode})`;
       document.getElementById("modalNote").value = intern.ghi_chu_phan_cong || "";
 
       const select = document.getElementById("modalMentorSelect");
-      select.value = intern.ma_mentor ? intern.ma_mentor : "";
+      select.value = intern.ma_mentor ? String(intern.ma_mentor) : "";
 
       const btnUnassign = document.getElementById("btnUnassign");
       if (intern.ma_mentor) {
@@ -371,13 +382,19 @@ await axios.patch(`http://127.0.0.1:8000/api/v1/interns/${id}/assign-mentor`, {
     async function submitAssign(ma_mentor) {
       const internId = document.getElementById("modalInternId").value;
       const ghiChu = document.getElementById("modalNote").value;
+      const btnSubmit = document.getElementById("btnSubmitAssign");
+      const btnUnassign = document.getElementById("btnUnassign");
+
+      btnSubmit.disabled = true;
+      btnUnassign.disabled = true;
+      const originalSubmitText = btnSubmit.innerText;
+      btnSubmit.innerText = "Đang xử lý...";
 
       const payload = {
-        ma_mentor: ma_mentor,
-        ghi_chu: ghiChu || (ma_mentor ? "Phân công người hướng dẫn" : "Hủy gán mentor")
+        ma_mentor: ma_mentor
       };
 
-      const endpoint = `${API_BASE}/api/v1/interns/${internId}/assign-mentor`;
+      const endpoint = `${API_BASE}/api/v1/interns/${internId}/mentor`;
 
       try {
         const res = await fetch(endpoint, {
@@ -388,19 +405,30 @@ await axios.patch(`http://127.0.0.1:8000/api/v1/interns/${id}/assign-mentor`, {
 
         const data = await res.json();
 
-        // Hiển thị inspector
         document.getElementById("inspector").innerText =
           `METHOD: PATCH\nURL: ${endpoint}\n\n[REQUEST BODY]:\n${JSON.stringify(payload, null, 2)}\n\n[RESPONSE (${res.status})]:\n${JSON.stringify(data, null, 2)}`;
 
         if (res.ok) {
-          showToast(data.message || "Thao tác thành công!", "success");
+          showToast(data.message || "Thao tác phân công thành công!", "success");
           closeModal();
-          loadData();
+          await loadData();
         } else {
-          showToast(data.detail || "Đã xảy ra lỗi!", "danger");
+          let errorMsg = "Đã xảy ra lỗi!";
+          if (typeof data.detail === "string") {
+            errorMsg = data.detail;
+          } else if (data.detail && data.detail.message) {
+            errorMsg = data.detail.message;
+          } else if (Array.isArray(data.detail)) {
+            errorMsg = data.detail.map(d => d.msg || JSON.stringify(d)).join(", ");
+          }
+          showToast(errorMsg, "danger");
         }
       } catch (err) {
         showToast("Lỗi kết nối tới Backend!", "danger");
+      } finally {
+        btnSubmit.disabled = false;
+        btnUnassign.disabled = false;
+        btnSubmit.innerText = originalSubmitText;
       }
     }
 
