@@ -56,6 +56,7 @@ async function taiDanhSachDonTuApi() {
           }
 
           return {
+            maDonRaw: item.ma_don,
             maDon: `NP-2026-${String(100 + item.ma_don).slice(-3)}`,
             tuNgay: item.tu_ngay,
             denNgay: item.den_ngay,
@@ -143,7 +144,7 @@ function renderBangLichSu() {
   if (danhSach.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="py-8 text-center text-slate-400">
+        <td colspan="8" class="py-8 text-center text-slate-400">
           <span class="material-symbols-outlined text-[32px] text-slate-300 block mb-1">event_available</span>
           <span>Chưa có đơn xin nghỉ phép nào được ghi nhận</span>
         </td>
@@ -163,7 +164,14 @@ function renderBangLichSu() {
           badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
         } else if (item.trangThai === "Từ chối") {
           badgeClass = "bg-rose-50 text-rose-700 border-rose-200";
+        } else if (item.trangThai.includes("hủy") || item.trangThai.includes("Hủy")) {
+          badgeClass = "bg-slate-100 text-slate-700 border-slate-300";
         }
+
+        const coTheHuy = (item.trangThai === "Chờ duyệt" || item.trangThai === "Đã duyệt");
+        const actionHtml = coTheHuy && item.maDonRaw
+          ? `<button type="button" onclick="huyDonNghiPhep(${item.maDonRaw})" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 transition-colors shadow-2xs cursor-pointer"><span class="material-symbols-outlined text-[14px]">cancel</span><span>Hủy đơn</span></button>`
+          : `<span class="text-slate-400 font-mono text-[11px]">—</span>`;
 
         return `
           <tr class="hover:bg-slate-50/60 transition-colors">
@@ -179,6 +187,9 @@ function renderBangLichSu() {
               <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${badgeClass}">
                 ${item.trangThai}
               </span>
+            </td>
+            <td class="py-3 px-4 text-center">
+              ${actionHtml}
             </td>
           </tr>
         `;
@@ -222,6 +233,41 @@ async function taiLaiLichSuDon() {
     "Đã làm mới dữ liệu",
     "Bảng theo dõi lịch sử đơn nghỉ phép đã được cập nhật mới nhất từ cơ sở dữ liệu."
   );
+}
+
+async function huyDonNghiPhep(maDonId) {
+  if (!confirm("Bạn có chắc chắn muốn hủy đơn xin nghỉ phép này để tham gia học tập / làm việc thực tế không? Quỹ ngày phép sẽ được hoàn trả lại cho bạn.")) {
+    return;
+  }
+  try {
+    const res = await fetch(`${duongDanApi}/leave-requests/${maDonId}/cancel`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    if (res.ok) {
+      hienThiThongBao(
+        "success",
+        "Hủy đơn thành công",
+        "Đơn xin nghỉ phép đã được hủy thành công. Quỹ ngày phép đã được tự động hoàn trả."
+      );
+      await taiDanhSachDonTuApi();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      hienThiThongBao(
+        "error",
+        "Không thể hủy đơn",
+        err.detail || err.message || "Lỗi khi gửi yêu cầu hủy đơn lên máy chủ"
+      );
+    }
+  } catch (e) {
+    hienThiThongBao(
+      "error",
+      "Lỗi kết nối",
+      "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng."
+    );
+  }
 }
 
 async function guiDonNghiPhep() {

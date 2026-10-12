@@ -2832,12 +2832,28 @@ def mentor_roll_call(req: RollCallRequest, db: Session = Depends(get_db)):
 
         phuong_thuc_luu = "Mentor"
         if don_nghi_da_duyet:
-            item.trang_thai = "VangMat"
-            t_in = None
-            t_out = None
-            phuong_thuc_luu = "NghiPhep"
-            note_prefix = f"[{req.ca_lam_viec}] " if req.ca_lam_viec else ""
-            item.ghi_chu = f"{note_prefix}Vắng mặt (Nghỉ phép có lý do: {don_nghi_da_duyet.ly_do})".strip()
+            if item.trang_thai in ["DungGio", "DiMuon", "VeSom"]:
+                don_nghi_da_duyet.trang_thai = "DaHuy"
+                don_goc = db.query(DonXinNghi).filter(
+                    DonXinNghi.ma_ho_so == item.ma_ho_so,
+                    DonXinNghi.tu_ngay <= req.ngay_cham_cong,
+                    DonXinNghi.den_ngay >= req.ngay_cham_cong,
+                    DonXinNghi.trang_thai.in_(["Đã duyệt", "DaDuyet"])
+                ).first()
+                if don_goc:
+                    don_goc.trang_thai = "Đã hủy (Đi học thực tế)"
+                    don_goc.ly_do = f"{don_goc.ly_do} [Hệ thống tự động hoàn trả 1 ngày phép do sinh viên tham gia thực tế ngày {req.ngay_cham_cong.strftime('%d/%m/%Y')}]"
+
+                phuong_thuc_luu = "Mentor"
+                note_prefix = f"[{req.ca_lam_viec}] " if req.ca_lam_viec else ""
+                item.ghi_chu = f"{note_prefix}Tham gia thực tế (Tự động hoàn trả ngày phép)".strip()
+            else:
+                item.trang_thai = "VangMat"
+                t_in = None
+                t_out = None
+                phuong_thuc_luu = "NghiPhep"
+                note_prefix = f"[{req.ca_lam_viec}] " if req.ca_lam_viec else ""
+                item.ghi_chu = f"{note_prefix}Vắng mặt (Nghỉ phép có lý do: {don_nghi_da_duyet.ly_do})".strip()
         elif item.trang_thai == "VangMat":
             t_in = None
             t_out = None
@@ -3138,6 +3154,43 @@ def update_leave_request_status(
     }
 
 
+@app.patch("/api/v1/leave-requests/{id}/cancel", status_code=200)
+def cancel_leave_request(id: int, db: Session = Depends(get_db)):
+    don = db.query(DonXinNghi).filter(DonXinNghi.ma_don == id).first()
+    if not don:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy đơn xin nghỉ phép với ID: {id}")
+
+    if don.trang_thai in ["Từ chối", "Đã hủy"]:
+        raise HTTPException(status_code=400, detail=f"Đơn này đã ở trạng thái {don.trang_thai}, không thể hủy.")
+
+    don.trang_thai = "Đã hủy"
+    don.ly_do = f"{don.ly_do} [Sinh viên chủ động hủy đơn để tham gia học/làm việc thực tế]"
+
+    curr = don.tu_ngay
+    while curr <= don.den_ngay:
+        dnp = db.query(DonNghiPhep).filter(
+            DonNghiPhep.ma_ho_so == don.ma_ho_so,
+            DonNghiPhep.ngay_nghi == curr
+        ).first()
+        if dnp:
+            dnp.trang_thai = "DaHuy"
+
+        cc = db.query(ChamCong).filter(
+            ChamCong.ma_ho_so == don.ma_ho_so,
+            ChamCong.ngay_cham_cong == curr
+        ).first()
+        if cc and cc.phuong_thuc == "NghiPhep":
+            db.delete(cc)
+
+        curr += timedelta(days=1)
+
+    db.commit()
+    db.refresh(don)
+    return {
+        "status_code": 200,
+        "message": "Hủy đơn xin nghỉ phép thành công, hệ thống đã hoàn trả lại ngày phép cho sinh viên",
+        "data": don.to_dict()
+    }
 
 
 # ==============================================================
