@@ -4068,8 +4068,7 @@ def get_completion_rate(db: Session = Depends(get_db)):
 
 
 # ==============================================================
-# API XUẤT BÁO CÁO EXCEL / PDF
-# (REPORTS EXPORT)
+# API XUẤT BÁO CÁO EXCEL / PDF (REPORTS EXPORT)
 # ==============================================================
 @app.get("/api/v1/reports/export")
 def export_reports(
@@ -4083,8 +4082,9 @@ def export_reports(
 ):
     """
     Endpoint kết xuất và tải về báo cáo tổng hợp đa định dạng:
-    - format=excel (hoặc xlsx): Xuất bảng tính Excel chuyên nghiệp (.xlsx)
-    - format=pdf: Xuất tài liệu PDF khổ A4 ngang (.pdf) hỗ trợ tiếng Việt có dấu
+    - format=excel (hoặc xlsx): Xuất bảng tính Excel chuyên nghiệp (.xlsx) bằng openpyxl
+    - format=pdf: Xuất tài liệu PDF khổ A4 ngang (.pdf) hỗ trợ tiếng Việt có dấu bằng ReportLab
+    - Trả về StreamingResponse với Content-Disposition header tải file
     """
     fmt = format.strip().lower() if format else "excel"
     if fmt not in ["excel", "xlsx", "pdf"]:

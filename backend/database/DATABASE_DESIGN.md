@@ -509,7 +509,7 @@ erDiagram
 | **`HOP_DONG`** | Lưu trữ hợp đồng thực tập và trạng thái xác nhận trực tuyến. | US 9, US 10 |
 | **`NHIEM_VU`** | Giao việc cho thực tập sinh, theo dõi tiến độ công việc. | US 15, US 16 |
 | **`BAO_CAO_TUAN`** | Thực tập sinh nộp báo cáo tuần và Mentor xem/phản hồi. | US 17, US 18 |
-| **`DANH_GIA`** | Ghi nhận điểm kỹ năng, thái độ, nhận xét cuối kỳ và tỷ lệ đề xuất tuyển chính thức. | US 19, US 20, US 33 |
+| **`DANH_GIA`** | Ghi nhận điểm kỹ năng, thái độ, nhận xét cuối kỳ và tỷ lệ đề xuất tuyển chính thức. Hỗ trợ xuất báo cáo đa định dạng bằng ReportLab (PDF khổ A4 ngang hỗ trợ tiếng Việt có dấu) và openpyxl (Excel định dạng bảng chuyên nghiệp) qua endpoint `GET /api/v1/reports/export`. | US 19, US 20, US 33, US 34 |
 | **`CHAM_CONG`** | Ghi nhận Check-in/Check-out qua Web/QR/Thẻ. | US 21, US 22, US 38 |
 | **`CA_LAM_VIEC`** | Cấu hình ca làm việc, thời gian bắt đầu, kết thúc và các ngày áp dụng. | US 21, US 22 |
 | **`DON_NGHI_PHEP`** | Tạo và quản lý yêu cầu xin nghỉ phép đơn lẻ. | US 22, US 24 |

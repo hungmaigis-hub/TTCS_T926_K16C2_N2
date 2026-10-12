@@ -4,6 +4,24 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.24.0] - 2026-10-12
+
+### Đã hoàn thành (Added & Enhanced)
+- **Dịch vụ Xuất Báo cáo Đa định dạng (`services/export_service.py`)**:
+  - Hỗ trợ xuất file Excel định dạng bảng chuyên nghiệp bằng `openpyxl`: gồm Sheet 1 (Tổng hợp chỉ số KPI, phân bổ xếp loại rèn luyện, thống kê theo trường đại học) và Sheet 2 (Danh sách chi tiết thực tập sinh với màu sắc header nhận diện `#1F4E78`, zebra striping `#F2F5F9`, border viền, căn lề và tự động co giãn độ rộng cột).
+  - Hỗ trợ xuất file PDF khổ **A4 ngang (`landscape(A4)`)** bằng `ReportLab`: đăng ký font TrueType Unicode tiếng Việt (`VN-Arial` từ Windows Fonts), layout bảng ghép ngang cân đối vừa vặn trang in và hiển thị 100% tiếng Việt có dấu chuẩn xác.
+  - Xử lý mượt mà và an toàn trong cả trường hợp dữ liệu rỗng (không có bản ghi nào phù hợp bộ lọc).
+- **Endpoint Xuất Báo Cáo Đa Định Dạng (`GET /api/v1/reports/export`)**:
+  - Nhận tham số `format=excel` (hoặc alias `xlsx`) hoặc `format=pdf` để kết xuất và trả về `StreamingResponse`.
+  - Validate tham số `format`: bắt lỗi và trả về `HTTP 400 Bad Request` nếu định dạng không được hỗ trợ.
+  - Hỗ trợ các bộ lọc linh hoạt: `ma_truong`, `loai_danh_gia`, `trang_thai_thuc_tap`, `de_xuat_tuyen_chinh_thuc`, `tu_khoa`.
+  - Đính kèm headers `Content-Disposition: attachment; filename=Bao_cao_tong_hop_{timestamp}.[xlsx|pdf]` và `Access-Control-Expose-Headers: Content-Disposition`.
+- **Kiểm thử tự động (Unit Test & Regression Test)**:
+  - Tạo mới bộ test [tests/test_reports_export.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_reports_export.py) gồm 10 test cases: xuất Excel thành công, alias `xlsx`, mặc định không truyền format, xuất PDF ReportLab thành công, xuất kết hợp bộ lọc, xuất trường hợp dữ liệu rỗng và bắt lỗi format không hợp lệ -> **10/10 PASS 100%**.
+  - Kiểm thử hồi quy `test_evaluation_summary.py` -> **25/25 PASS 100%**.
+
+---
+
 ## [1.23.0] - 2026-10-10
 
 ### Đã hoàn thành (Added & Enhanced)
@@ -62,8 +80,6 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 - **Kiểm thử tự động**:
   - Tạo mới bộ test [tests/test_mentor_workload.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_mentor_workload.py) gồm 7 test cases bao phủ gọi mặc định, mentor có sinh viên, mentor 0 sinh viên (outerjoin), lọc theo phòng ban (200 & 404), lọc từ khóa, lọc trạng thái (200 & 400) và tính toán KPI summary -> **7/7 PASS 100%**.
   - Kiểm tra hồi quy toàn bộ cụm Mentor -> **18/18 PASS 100%**.
-
-
 
 ---
 
