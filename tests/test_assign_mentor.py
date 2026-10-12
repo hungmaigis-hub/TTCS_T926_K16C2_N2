@@ -17,6 +17,7 @@ from app.database import Base, get_db
 from app.main import app
 from app.models.nguoi_dung import NguoiDung
 from app.models.ho_so_thuc_tap import HoSoThucTap
+from app.services.intern_service import MAX_INTERNS_PER_MENTOR
 
 # ============================================================
 # Setup: SQLite in-memory database
@@ -288,14 +289,16 @@ class TestAssignMentorInputValidation:
 
 
 class TestAssignMentorQuota:
-    """Test case kiểm tra giới hạn chỉ tiêu (Quota: tối đa 5 sinh viên theo GEMINI.md B.3)."""
+    """Test case kiểm tra giới hạn chỉ tiêu (Quota: tối đa MAX_INTERNS_PER_MENTOR sinh viên)."""
 
     def test_assign_mentor_exceeds_quota(self):
-        """Khi mentor đã hướng dẫn đủ 5 sinh viên, gán thêm sinh viên thứ 6 phải trả về 400 Bad Request."""
+        """Khi mentor đã hướng dẫn đủ MAX_INTERNS_PER_MENTOR sinh viên, gán thêm sinh viên mới phải trả về 400 Bad Request."""
         db = TestingSessionLocal()
-        for i in range(10, 14):
+        # Đã có 1 sinh viên (HS002) được gán cho MENTOR01 trong fixture.
+        # Tạo thêm (MAX_INTERNS_PER_MENTOR - 1) sinh viên để đạt đúng ngưỡng tối đa.
+        for i in range(10, 10 + (MAX_INTERNS_PER_MENTOR - 1)):
             hs = HoSoThucTap(
-                ma_ho_so=f"HS0{i}",
+                ma_ho_so=f"HS{i:05d}",
                 ma_sinh_vien="TTS001",
                 ho_ten=f"Sinh viên {i}",
                 vi_tri_thuc_tap="Tester",
