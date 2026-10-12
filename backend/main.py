@@ -158,6 +158,9 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg"}
 MAX_FILE_SIZE = 10 * 1024 * 1024
 
+# Giới hạn chỉ tiêu phân công sinh viên cho mỗi Mentor
+MAX_INTERNS_PER_MENTOR = 100
+
 # api post create intern
 @app.post("/api/v1/interns", status_code=201)
 def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
@@ -199,8 +202,8 @@ def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
         if not mentor:
             raise HTTPException(status_code=400, detail="Mã người hướng dẫn (mentor) không tồn tại trong hệ thống")
         count_mentor = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == intern_data.ma_mentor).count()
-        if count_mentor >= 5:
-            raise HTTPException(status_code=400, detail="Mentor đã đủ chỉ tiêu hướng dẫn (tối đa 5 sinh viên)")
+        if count_mentor >= MAX_INTERNS_PER_MENTOR:
+            raise HTTPException(status_code=400, detail=f"Mentor đã đủ chỉ tiêu hướng dẫn (tối đa {MAX_INTERNS_PER_MENTOR} sinh viên)")
 
     try:
         # 6. Khởi tạo tài khoản người dùng hoặc tái sử dụng tài khoản sinh viên đã đăng ký
@@ -674,8 +677,8 @@ def update_intern(id: int, intern_data: InternUpdate, db: Session = Depends(get_
                     detail="Chỉ có thể phân công Mentor cho sinh viên đã được duyệt hồ sơ và đã ký hợp đồng thực tập."
                 )
             count_mentor = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == intern_data.ma_mentor).count()
-            if count_mentor >= 5:
-                raise HTTPException(status_code=400, detail="Mentor đã đủ chỉ tiêu hướng dẫn (tối đa 5 sinh viên)")
+            if count_mentor >= MAX_INTERNS_PER_MENTOR:
+                raise HTTPException(status_code=400, detail=f"Mentor đã đủ chỉ tiêu hướng dẫn (tối đa {MAX_INTERNS_PER_MENTOR} sinh viên)")
         ho_so.ma_mentor = intern_data.ma_mentor
     if intern_data.trang_thai_xet_duyet:
         ho_so.trang_thai_xet_duyet = intern_data.trang_thai_xet_duyet
@@ -1198,10 +1201,10 @@ def assign_mentor_to_intern(id: int, payload: AssignMentorRequest, db: Session =
             HoSoThucTap.ma_mentor == mentor.ma_nguoi_dung,
             HoSoThucTap.ma_ho_so != id
         ).count()
-        if current_count >= 5:
+        if current_count >= MAX_INTERNS_PER_MENTOR:
             raise HTTPException(
                 status_code=400,
-                detail=f"Mentor '{mentor.ho_ten}' đã đủ chỉ tiêu hướng dẫn tối đa ({current_count}/5 sinh viên), không thể tiếp nhận thêm."
+                detail=f"Mentor '{mentor.ho_ten}' đã đủ chỉ tiêu hướng dẫn tối đa ({current_count}/{MAX_INTERNS_PER_MENTOR} sinh viên), không thể tiếp nhận thêm."
             )
         ho_so.ma_mentor = mentor.ma_nguoi_dung
         mentor_data = {

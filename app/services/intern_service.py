@@ -23,6 +23,9 @@ from app.schemas.intern import (
 
 logger = logging.getLogger(__name__)
 
+# Giới hạn chỉ tiêu phân công sinh viên cho mỗi Mentor
+MAX_INTERNS_PER_MENTOR = 100
+
 
 # ============================================================
 # assign_mentor_service
@@ -145,21 +148,26 @@ def assign_mentor_service(
                 },
             )
 
-        # 2d. Kiểm tra giới hạn chỉ tiêu (Quota: tối đa 5 sinh viên theo GEMINI.md B.3)
+        # 2d. Kiểm tra giới hạn chỉ tiêu (Quota: tối đa MAX_INTERNS_PER_MENTOR sinh viên)
         current_count = (
             db.query(HoSoThucTap)
             .filter(HoSoThucTap.ma_mentor == ma_mentor, HoSoThucTap.ma_ho_so != intern_id)
             .count()
         )
-        if current_count >= 5:
-            logger.warning("Mentor '%s' đã đủ chỉ tiêu hướng dẫn: %d/5", ma_mentor, current_count)
+        if current_count >= MAX_INTERNS_PER_MENTOR:
+            logger.warning(
+                "Mentor '%s' đã đủ chỉ tiêu hướng dẫn: %d/%d",
+                ma_mentor,
+                current_count,
+                MAX_INTERNS_PER_MENTOR,
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
                     "error_code": "MENTOR_QUOTA_EXCEEDED",
                     "message": (
                         f"Mentor '{mentor_record.ho_ten}' đã đủ chỉ tiêu hướng dẫn tối đa "
-                        f"({current_count}/5 sinh viên), không thể tiếp nhận thêm."
+                        f"({current_count}/{MAX_INTERNS_PER_MENTOR} sinh viên), không thể tiếp nhận thêm."
                     ),
                     "field": "ma_mentor",
                 },
