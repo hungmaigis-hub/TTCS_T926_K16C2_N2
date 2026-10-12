@@ -506,6 +506,7 @@ class TaskItemResponse(BaseModel):
 class MyScheduleData(BaseModel):
     ma_ho_so: int
     ho_ten: Optional[str] = None
+    mentor: Optional[str] = None
     ten_chuong_trinh: Optional[str] = None
     ngay_bat_dau: Optional[str] = None
     ngay_ket_thuc: Optional[str] = None

@@ -191,6 +191,34 @@ async function taiDanhSachLichSuTuApi() {
             ghiChu: it.ghi_chu || "-"
           };
         });
+        const dungGioCount = danhSachTuDb.filter((it) => it.trangThai === "Đúng giờ").length;
+        const diMuonCount = danhSachTuDb.filter((it) => it.trangThai === "Đi muộn" || it.trangThai === "Về sớm").length;
+        const vangCount = danhSachTuDb.filter((it) => it.trangThai === "Vắng mặt").length;
+        const tongDiLam = dungGioCount + diMuonCount;
+
+        const elSoNgayDiLam = document.getElementById("soNgayDiLam");
+        if (elSoNgayDiLam) elSoNgayDiLam.textContent = `${tongDiLam} / 24`;
+
+        const elDungGio = document.getElementById("soNgayDungGio");
+        if (elDungGio) elDungGio.textContent = String(dungGioCount);
+
+        const elDiMuon = document.getElementById("soNgayDiMuon");
+        if (elDiMuon) elDiMuon.textContent = String(diMuonCount);
+
+        const elNghiPhep = document.getElementById("soNgayNghiPhep");
+        if (elNghiPhep) elNghiPhep.textContent = String(vangCount);
+
+        const elSubDiLam = elSoNgayDiLam?.parentElement?.querySelector("p:last-child");
+        if (elSubDiLam) {
+          const pct = ((tongDiLam / 24) * 100).toFixed(1);
+          elSubDiLam.textContent = `Đạt ${pct}% chỉ tiêu`;
+        }
+
+        const elSubDiMuon = elDiMuon?.parentElement?.querySelector("p:last-child");
+        if (elSubDiMuon) {
+          elSubDiMuon.textContent = diMuonCount > 0 ? `${diMuonCount} lần trễ` : "Không bị trừ điểm";
+        }
+
         luuDanhSachLichSu(danhSachTuDb);
         renderBangLichSu();
         return;

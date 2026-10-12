@@ -1,4 +1,7 @@
 const duongDanApi = typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1";
+let danhSachSinhVienMentorCuaToi = [];
+let maHoSoDangXemNhiemVu = null;
+let hoTenDangXemNhiemVu = "";
 
 function layTenVietTat(hoTen) {
   if (!hoTen) return "NA";
@@ -1124,7 +1127,7 @@ async function renderGiaoDienChoMentor(myMentor, containerCard) {
       </div>
     </div>
 
-    <div class="col-span-full bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
+    <div id="khuVucMentorInterns" class="col-span-full bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
       <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="material-symbols-outlined text-[18px] text-ictu-600">groups</span>
@@ -1132,7 +1135,12 @@ async function renderGiaoDienChoMentor(myMentor, containerCard) {
             Danh Sách Sinh Viên Bạn Đang Kèm Cặp (${sl} sinh viên)
           </h4>
         </div>
-        <span class="text-[11px] text-slate-400">Dữ liệu thực tế phân công</span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="moModalGiaoViecNhanhMentor()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">add_task</span>
+            <span>+ Giao nhiệm vụ</span>
+          </button>
+        </div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
@@ -1169,6 +1177,7 @@ async function renderGiaoDienChoMentor(myMentor, containerCard) {
     }
     const json = await res.json();
     const ds = json.data || [];
+    danhSachSinhVienMentorCuaToi = ds;
     if (ds.length === 0) {
       tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">Bạn chưa có sinh viên nào được phân công.</td></tr>`;
       return;
@@ -1219,6 +1228,14 @@ async function renderGiaoDienChoMentor(myMentor, containerCard) {
           </td>
           <td class="py-3 px-4 text-right">
             <div class="inline-flex items-center gap-1.5">
+              <button type="button" onclick="moModalGiaoViec(${sv.ma_ho_so}, '${encodeURIComponent(hoTenSv)}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer">
+                <span class="material-symbols-outlined text-[13px]">add_task</span>
+                <span>Giao việc</span>
+              </button>
+              <button type="button" onclick="moModalXemNhiemVuSv(${sv.ma_ho_so}, '${encodeURIComponent(hoTenSv)}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 transition-colors flex items-center gap-1 cursor-pointer">
+                <span class="material-symbols-outlined text-[13px]">checklist</span>
+                <span>Nhiệm vụ</span>
+              </button>
               <a href="cham_cong.html" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
                 Điểm danh
               </a>
@@ -1878,6 +1895,94 @@ async function xuLyThemMentor(event) {
   }
 }
 
+function capNhatSelectSinhVienGiaoViec(maChon) {
+  const select = document.getElementById("giaoViecSelectSinhVien");
+  if (!select) return;
+  const ds = (danhSachSinhVienMentorCuaToi && danhSachSinhVienMentorCuaToi.length > 0)
+    ? danhSachSinhVienMentorCuaToi
+    : (danhSachInternsFallback || []);
+  let html = '<option value="">-- Chọn sinh viên --</option>';
+  ds.forEach(sv => {
+    const isSelected = maChon && String(sv.ma_ho_so) === String(maChon);
+    html += `<option value="${sv.ma_ho_so}" ${isSelected ? 'selected' : ''}>${sv.ho_ten} (${sv.lop || 'ICTU'} - #${sv.ma_ho_so})</option>`;
+  });
+  select.innerHTML = html;
+}
+
+async function thayDoiSinhVienGiaoViec(maHoSoVal) {
+  const inputMaHs = document.getElementById("giaoViecMaHoSo");
+  const moTaSv = document.getElementById("moTaGiaoViecSv");
+  if (inputMaHs) inputMaHs.value = maHoSoVal || "";
+  if (!maHoSoVal) {
+    if (moTaSv) moTaSv.textContent = "Dành cho thực tập sinh bạn phụ trách";
+    const khung = document.getElementById("khungNhiemVuHienCoCuaSv");
+    if (khung) khung.classList.add("hidden");
+    return;
+  }
+  const ds = (danhSachSinhVienMentorCuaToi && danhSachSinhVienMentorCuaToi.length > 0)
+    ? danhSachSinhVienMentorCuaToi
+    : (danhSachInternsFallback || []);
+  const found = ds.find(s => String(s.ma_ho_so) === String(maHoSoVal));
+  if (found && moTaSv) {
+    moTaSv.textContent = `Sinh viên: ${found.ho_ten} (Mã HS #${found.ma_ho_so})`;
+  }
+  await taiNhiemVuHienCoChoModal(maHoSoVal);
+}
+
+async function taiNhiemVuHienCoChoModal(maHoSo) {
+  const khung = document.getElementById("khungNhiemVuHienCoCuaSv");
+  const soLuongEl = document.getElementById("soLuongNhiemVuHienCo");
+  const danhSachEl = document.getElementById("danhSachNhiemVuHienCo");
+  if (!khung || !soLuongEl || !danhSachEl || !maHoSo) return;
+  khung.classList.remove("hidden");
+  danhSachEl.innerHTML = '<p class="text-slate-400 italic text-[11px]">Đang tải nhiệm vụ...</p>';
+  try {
+    const res = await fetch(`${duongDanApi}/interns/my-schedule?ho_so_id=${maHoSo}`);
+    if (!res.ok) {
+      danhSachEl.innerHTML = '<p class="text-slate-400 italic text-[11px]">Chưa có dữ liệu nhiệm vụ.</p>';
+      soLuongEl.textContent = "0 nhiệm vụ";
+      return;
+    }
+    const json = await res.json();
+    const tasks = (json.data && json.data.danh_sach_nhiem_vu) || [];
+    soLuongEl.textContent = `${tasks.length} nhiệm vụ`;
+    if (tasks.length === 0) {
+      danhSachEl.innerHTML = '<p class="text-slate-400 italic text-[11px]">Sinh viên chưa có nhiệm vụ nào được giao.</p>';
+      return;
+    }
+    let html = "";
+    tasks.forEach(t => {
+      const pct = t.tien_do_phantram ?? 0;
+      let badgeCls = "bg-slate-100 text-slate-700";
+      if (pct === 100) badgeCls = "bg-emerald-100 text-emerald-800";
+      else if (pct > 0) badgeCls = "bg-blue-100 text-blue-800";
+      html += `
+        <div class="p-2 rounded-lg bg-white border border-slate-200/80 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <p class="font-bold text-slate-800 truncate leading-tight">${t.ten_nhiem_vu || t.tieu_de || "Nhiệm vụ"}</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">Hạn: ${t.han_hoan_thanh || "Không thời hạn"}</p>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${badgeCls}">${pct}%</span>
+        </div>
+      `;
+    });
+    danhSachEl.innerHTML = html;
+  } catch {
+    danhSachEl.innerHTML = '<p class="text-slate-400 italic text-[11px]">Không thể tải danh sách nhiệm vụ.</p>';
+  }
+}
+
+function moModalGiaoViecNhanhMentor() {
+  const firstSv = (danhSachSinhVienMentorCuaToi && danhSachSinhVienMentorCuaToi.length > 0)
+    ? danhSachSinhVienMentorCuaToi[0]
+    : null;
+  if (firstSv) {
+    moModalGiaoViec(firstSv.ma_ho_so, encodeURIComponent(firstSv.ho_ten || ""));
+  } else {
+    moModalGiaoViec(null, "");
+  }
+}
+
 function moModalGiaoViec(maHoSo, encodedName) {
   const modal = document.getElementById("modalGiaoViecMentor");
   const inputMaHs = document.getElementById("giaoViecMaHoSo");
@@ -1886,9 +1991,13 @@ function moModalGiaoViec(maHoSo, encodedName) {
   const inputTieuDe = document.getElementById("giaoViecTieuDe");
   const inputMoTa = document.getElementById("giaoViecMoTa");
 
+  capNhatSelectSinhVienGiaoViec(maHoSo);
+
   const hoTen = decodeURIComponent(encodedName || "");
-  if (inputMaHs) inputMaHs.value = maHoSo;
-  if (moTaSv) moTaSv.textContent = `Sinh viên: ${hoTen} (Mã HS #${maHoSo})`;
+  if (inputMaHs) inputMaHs.value = maHoSo || "";
+  if (moTaSv) {
+    moTaSv.textContent = maHoSo ? `Sinh viên: ${hoTen} (Mã HS #${maHoSo})` : "Dành cho thực tập sinh bạn phụ trách";
+  }
 
   const d = new Date();
   d.setDate(d.getDate() + 7);
@@ -1903,6 +2012,13 @@ function moModalGiaoViec(maHoSo, encodedName) {
   if (inputTieuDe) inputTieuDe.value = "";
   if (inputMoTa) inputMoTa.value = "";
 
+  if (maHoSo) {
+    taiNhiemVuHienCoChoModal(maHoSo);
+  } else {
+    const khung = document.getElementById("khungNhiemVuHienCoCuaSv");
+    if (khung) khung.classList.add("hidden");
+  }
+
   if (modal) modal.classList.remove("hidden");
   if (inputTieuDe) inputTieuDe.focus();
 }
@@ -1912,8 +2028,128 @@ function dongModalGiaoViec() {
   if (modal) modal.classList.add("hidden");
 }
 
+async function moModalXemNhiemVuSv(maHoSo, encodedName) {
+  maHoSoDangXemNhiemVu = maHoSo;
+  const hoTen = decodeURIComponent(encodedName || "Sinh viên");
+  hoTenDangXemNhiemVu = hoTen;
+
+  const modal = document.getElementById("modalXemNhiemVuMentor");
+  const tieuDe = document.getElementById("tieuDeModalXemNhiemVu");
+  const moTa = document.getElementById("moTaModalXemNhiemVu");
+  const vungNoiDung = document.getElementById("vungNoiDungNhiemVuSv");
+
+  if (tieuDe) tieuDe.textContent = `Nhiệm Vụ Của: ${hoTen}`;
+  if (moTa) moTa.textContent = `Mã hồ sơ #${maHoSo} - Theo dõi tiến độ Sprint`;
+  if (vungNoiDung) {
+    vungNoiDung.innerHTML = `
+      <div class="py-8 text-center text-slate-400">
+        <span class="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-2"></span>
+        <p class="text-xs">Đang tải danh sách nhiệm vụ...</p>
+      </div>
+    `;
+  }
+  if (modal) modal.classList.remove("hidden");
+
+  try {
+    const res = await fetch(`${duongDanApi}/interns/my-schedule?ho_so_id=${maHoSo}`);
+    if (!res.ok) {
+      if (vungNoiDung) {
+        vungNoiDung.innerHTML = `<p class="text-center text-xs text-rose-500 py-6">Không thể tải dữ liệu nhiệm vụ từ máy chủ.</p>`;
+      }
+      return;
+    }
+    const json = await res.json();
+    const tasks = (json.data && json.data.danh_sach_nhiem_vu) || [];
+
+    if (tasks.length === 0) {
+      if (vungNoiDung) {
+        vungNoiDung.innerHTML = `
+          <div class="py-10 text-center space-y-3">
+            <span class="material-symbols-outlined text-4xl text-slate-300">task_alt</span>
+            <p class="text-sm font-bold text-slate-700">Sinh viên chưa có nhiệm vụ nào được phân công</p>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto">Hãy bắt đầu giao các đầu việc trong đợt thực tập để sinh viên cập nhật tiến độ.</p>
+            <button type="button" onclick="chuyenSangGiaoViecTuModalXem()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5 mt-2">
+              <span class="material-symbols-outlined text-[16px]">add_task</span>
+              <span>Giao nhiệm vụ ngay</span>
+            </button>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    let rowsHtml = "";
+    tasks.forEach((t, i) => {
+      const pct = t.tien_do_phantram ?? 0;
+      let badgeCls = "bg-slate-100 text-slate-600 border border-slate-200";
+      let barCls = "bg-slate-300";
+      let statusText = t.trang_thai || "Chưa bắt đầu";
+      if (pct === 100) {
+        badgeCls = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+        barCls = "bg-emerald-500";
+        statusText = "Hoàn thành";
+      } else if (pct > 0) {
+        badgeCls = "bg-blue-50 text-blue-700 border border-blue-200";
+        barCls = "bg-blue-500";
+        statusText = "Đang thực hiện";
+      }
+
+      rowsHtml += `
+        <div class="p-4 rounded-2xl border border-slate-200 bg-white shadow-xs space-y-2.5">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 font-bold text-[11px] flex items-center justify-center shrink-0">#${i + 1}</span>
+                <h4 class="font-bold text-sm text-slate-900 leading-tight">${t.ten_nhiem_vu || t.tieu_de || "Nhiệm vụ"}</h4>
+              </div>
+              ${t.moTa || t.mo_ta ? `<p class="text-xs text-slate-500 mt-1 pl-8 leading-relaxed">${t.moTa || t.mo_ta}</p>` : ''}
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 ${badgeCls}">${statusText}</span>
+          </div>
+          <div class="pl-8 space-y-1.5 pt-1">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400 text-[11px]">Hạn chót: <strong>${t.han_hoan_thanh || "Chưa đặt"}</strong></span>
+              <span class="font-bold text-slate-700">${pct}%</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+              <div class="${barCls} h-2 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    if (vungNoiDung) {
+      vungNoiDung.innerHTML = `
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100 text-xs text-slate-500">
+          <span>Tổng số <strong>${tasks.length}</strong> nhiệm vụ</span>
+          <span>Cập nhật theo thời gian thực</span>
+        </div>
+        ${rowsHtml}
+      `;
+    }
+  } catch (err) {
+    if (vungNoiDung) {
+      vungNoiDung.innerHTML = `<p class="text-center text-xs text-rose-500 py-6">Lỗi kết nối: ${err.message || err}</p>`;
+    }
+  }
+}
+
+function dongModalXemNhiemVuSv() {
+  const modal = document.getElementById("modalXemNhiemVuMentor");
+  if (modal) modal.classList.add("hidden");
+}
+
+function chuyenSangGiaoViecTuModalXem() {
+  const ma = maHoSoDangXemNhiemVu;
+  const name = hoTenDangXemNhiemVu;
+  dongModalXemNhiemVuSv();
+  moModalGiaoViec(ma, encodeURIComponent(name));
+}
+
 async function guiNhiemVuMoi() {
   const inputMaHs = document.getElementById("giaoViecMaHoSo");
+  const selectSv = document.getElementById("giaoViecSelectSinhVien");
   const inputTieuDe = document.getElementById("giaoViecTieuDe");
   const inputHan = document.getElementById("giaoViecHanHoanThanh");
   const inputMoTa = document.getElementById("giaoViecMoTa");
@@ -1921,13 +2157,17 @@ async function guiNhiemVuMoi() {
   const icon = document.getElementById("iconLuuGiaoViec");
   const text = document.getElementById("textLuuGiaoViec");
 
-  const maHoSo = inputMaHs ? parseInt(inputMaHs.value) : null;
+  let maHoSo = inputMaHs ? parseInt(inputMaHs.value) : null;
+  if (!maHoSo && selectSv && selectSv.value) {
+    maHoSo = parseInt(selectSv.value);
+  }
   const tieuDe = inputTieuDe ? inputTieuDe.value.trim() : "";
   const hanHoanThanh = inputHan ? inputHan.value : "";
   const moTa = inputMoTa ? inputMoTa.value.trim() : "";
 
   if (!maHoSo) {
-    alert("Không tìm thấy mã hồ sơ sinh viên hợp lệ");
+    alert("Vui lòng chọn sinh viên tiếp nhận nhiệm vụ");
+    if (selectSv) selectSv.focus();
     return;
   }
 
@@ -1978,6 +2218,9 @@ async function guiNhiemVuMoi() {
     if (res.ok) {
       alert(`Đã giao nhiệm vụ '${tieuDe}' cho sinh viên thành công!`);
       dongModalGiaoViec();
+      if (maHoSoDangXemNhiemVu && maHoSoDangXemNhiemVu === maHoSo) {
+        moModalXemNhiemVuSv(maHoSo, encodeURIComponent(hoTenDangXemNhiemVu));
+      }
     } else {
       let msg = "Không thể tạo nhiệm vụ";
       if (typeof resJson.detail === "string") {

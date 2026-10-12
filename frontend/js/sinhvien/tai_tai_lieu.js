@@ -157,10 +157,13 @@ async function taiDanhSachTaiLieu() {
         `;
       } else if (doc.trang_thai_duyet === "TuChoi") {
         statusBadge = `
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-800 font-label-sm text-label-sm font-semibold border border-red-200">
-            <span class="material-symbols-outlined text-[14px]">cancel</span>
-            <span>Từ chối</span>
-          </span>
+          <div class="flex flex-col gap-1">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-800 font-label-sm text-label-sm font-semibold border border-red-200 w-fit">
+              <span class="material-symbols-outlined text-[14px]">cancel</span>
+              <span>Từ chối</span>
+            </span>
+            ${doc.ghi_chu ? `<span class="text-[11px] text-red-700 font-medium bg-red-50/70 p-1.5 rounded border border-red-100 max-w-xs block leading-snug"><strong class="font-bold">Lý do:</strong> ${doc.ghi_chu}</span>` : ""}
+          </div>
         `;
       } else {
         statusBadge = `

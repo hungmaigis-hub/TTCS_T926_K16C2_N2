@@ -1,15 +1,19 @@
 const duongDanApi = typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1";
 
+let danhSachNhiemVuGoc = [];
+let tenMentorGoc = "TS. Nguyễn Hướng Dẫn";
+
 function layMaHoSoHienTai() {
   const urlParams = new URLSearchParams(window.location.search);
   const idFromUrl = urlParams.get("id");
-  if (idFromUrl) return parseInt(idFromUrl);
+  if (idFromUrl) return parseInt(idFromUrl, 10);
 
   try {
-    const userStr = localStorage.getItem("currentUser");
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      if (user.ma_ho_so) return parseInt(user.ma_ho_so);
+    const raw = localStorage.getItem("ictu_student_session") || localStorage.getItem("currentUser") || localStorage.getItem("user");
+    if (raw) {
+      const u = JSON.parse(raw);
+      if (u.ma_ho_so) return parseInt(u.ma_ho_so, 10);
+      if (u.id) return parseInt(u.id, 10);
     }
   } catch (e) {}
 
@@ -137,15 +141,156 @@ async function guiBaoCaoTuan() {
   }
 }
 
+function dinhDangNgayVN(str) {
+  if (!str) return "--";
+  const pts = str.split("-");
+  return pts.length === 3 ? `${pts[2]}/${pts[1]}/${pts[0]}` : str;
+}
+
+function renderDanhSachNhiemVu(tasks) {
+  const container = document.getElementById("danhSachTheNhiemVu");
+  if (!container) return;
+
+  const total = tasks.length;
+  const completed = tasks.filter((t) => (t.tien_do_phantram || 0) === 100).length;
+  const inProgress = tasks.filter((t) => (t.tien_do_phantram || 0) > 0 && (t.tien_do_phantram || 0) < 100).length;
+  const notStarted = tasks.filter((t) => (t.tien_do_phantram || 0) === 0).length;
+  const avg = total > 0 ? Math.round(tasks.reduce((sum, t) => sum + (t.tien_do_phantram || 0), 0) / total) : 0;
+
+  const elAvg = document.getElementById("tienDoTongThePhanTram");
+  if (elAvg) elAvg.textContent = `${avg}%`;
+  const elBar = document.getElementById("thanhTienDoTongThe");
+  if (elBar) elBar.style.width = `${avg}%`;
+
+  const elTong = document.getElementById("soTongNhiemVu");
+  if (elTong) elTong.textContent = `${total} việc`;
+  const elHoanThanh = document.getElementById("soNhiemVuHoanThanh");
+  if (elHoanThanh) elHoanThanh.textContent = `${completed} việc`;
+  const elDangLam = document.getElementById("soNhiemVuDangTienHanh");
+  if (elDangLam) elDangLam.textContent = `${inProgress} việc`;
+  const elChuaLam = document.getElementById("soNhiemVuChuaBatDau");
+  if (elChuaLam) elChuaLam.textContent = `${notStarted} việc`;
+  const elBadge = document.getElementById("soLuongNhiemVuBadge");
+  if (elBadge) elBadge.textContent = `${total} mục hiển thị`;
+
+  if (tasks.length === 0) {
+    container.innerHTML = `
+      <div class="bg-white rounded-2xl p-10 text-center border border-slate-200/80 shadow-xs space-y-3">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
+          <span class="material-symbols-outlined text-[32px]">task</span>
+        </div>
+        <h4 class="text-base font-bold text-slate-800">Chưa có nhiệm vụ nào được phân công</h4>
+        <p class="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+          Mentor phụ trách chưa giao nhiệm vụ Sprint cho bạn. Khi Mentor phân công nhiệm vụ mới, các đầu việc và thanh trượt tiến độ sẽ xuất hiện tại đây.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = tasks
+    .map((task) => {
+      const progress = task.tien_do_phantram !== undefined ? task.tien_do_phantram : 0;
+      let badgeClass = "bg-blue-50 text-blue-700 border border-blue-200";
+      let ttText = "Đang thực hiện";
+
+      if (progress === 0) {
+        badgeClass = "bg-slate-100 text-slate-600 border border-slate-200";
+        ttText = "Chưa bắt đầu";
+      } else if (progress === 100) {
+        badgeClass = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+        ttText = "Hoàn thành";
+      }
+
+      const fDate = dinhDangNgayVN(task.han_hoan_thanh);
+
+      return `
+        <article data-task-id="${task.ma_nhiem_vu}" class="bg-white rounded-2xl p-6 shadow-xs border border-slate-200/80 space-y-4 hover:shadow-md transition-all">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2.5 flex-wrap">
+                <span class="font-label-sm px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">Sprint Task</span>
+                <span class="trang-thai-chu font-label-sm px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeClass}">Trạng thái: ${ttText}</span>
+              </div>
+              <h4 class="font-headline-sm text-slate-900 font-bold text-base pt-1">${task.ten_nhiem_vu}</h4>
+            </div>
+            <div class="flex items-center gap-1.5 text-xs bg-slate-50 border border-slate-200/70 text-slate-700 px-3 py-1.5 rounded-xl shrink-0 font-medium">
+              <span class="material-symbols-outlined text-[16px] text-slate-500">event</span>
+              <span>Hạn chót: ${fDate}</span>
+            </div>
+          </div>
+          <p class="text-sm text-slate-600 leading-relaxed">${task.mo_ta || "Hoàn thành đầu việc theo yêu cầu phân công của Mentor hướng dẫn."}</p>
+          <div class="bg-slate-50/80 p-4 rounded-xl space-y-2 border border-slate-200/70">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[18px] text-emerald-600">linear_scale</span>
+                <span>Điều chỉnh thanh trượt tiến độ công việc:</span>
+              </label>
+              <span class="chi-so-tien-do text-lg font-bold text-emerald-700 font-mono">${progress}%</span>
+            </div>
+            <div class="relative flex items-center">
+              <input class="thanh-tien-do w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600" max="100" min="0" type="range" value="${progress}" />
+            </div>
+            <div class="flex justify-between text-[11px] text-slate-400 px-0.5 font-medium">
+              <span>0% (Bắt đầu)</span>
+              <span>50% (Đang test)</span>
+              <span>100% (Hoàn thiện)</span>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1 border-t border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-bold text-xs shadow-xs">MT</div>
+              <div>
+                <p class="text-[11px] text-slate-400">Mentor hướng dẫn:</p>
+                <p class="text-xs font-bold text-slate-800">${tenMentorGoc}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <button class="nut-luu-tien-do flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer" type="button">
+                <span class="material-symbols-outlined text-[18px]">save</span>
+                <span>Lưu tiến độ</span>
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function locNhiemVuTheoTrangThai() {
+  const filterVal = document.getElementById("boLocTrangThai")?.value || "tat-ca";
+  if (filterVal === "tat-ca") {
+    renderDanhSachNhiemVu(danhSachNhiemVuGoc);
+    return;
+  }
+
+  const filtered = danhSachNhiemVuGoc.filter((t) => {
+    const p = t.tien_do_phantram || 0;
+    if (filterVal === "HoanThanh") return p === 100;
+    if (filterVal === "ChuaBatDau") return p === 0;
+    if (filterVal === "DangThucHien") return p > 0 && p < 100;
+    return true;
+  });
+
+  renderDanhSachNhiemVu(filtered);
+}
+
 async function taiLichTrinhVaNhiemVu() {
   const maHoSo = layMaHoSoHienTai();
   try {
     const res = await fetch(`${duongDanApi}/interns/my-schedule?ho_so_id=${maHoSo}`);
-    if (!res.ok) return;
+    if (!res.ok) {
+      renderDanhSachNhiemVu([]);
+      return;
+    }
 
     const resJson = await res.json();
     const data = resJson.data;
-    if (!data) return;
+    if (!data) {
+      renderDanhSachNhiemVu([]);
+      return;
+    }
 
     if (data.ho_ten) {
       const tenSinhVienEl = document.querySelector("header h2");
@@ -157,45 +302,24 @@ async function taiLichTrinhVaNhiemVu() {
       if (bannerEl) bannerEl.textContent = data.ten_chuong_trinh;
     }
 
-    const tasks = data.danh_sach_nhiem_vu || [];
-    if (tasks.length > 0) {
-      const danhSachEl = document.getElementById("danhSachNhiemVu");
-      if (danhSachEl) {
-        const danhSachArticles = danhSachEl.querySelectorAll("article");
-        tasks.forEach((task, idx) => {
-          if (danhSachArticles[idx]) {
-            const card = danhSachArticles[idx];
-            if (task.ma_nhiem_vu) {
-              card.setAttribute("data-task-id", task.ma_nhiem_vu);
-            }
-            const h4 = card.querySelector("h4");
-            if (h4) h4.textContent = task.ten_nhiem_vu;
-
-            const pDesc = card.querySelector("p");
-            if (pDesc && task.mo_ta) pDesc.textContent = task.mo_ta;
-
-            const badgeHan = card.querySelector("div.shrink-0 span:last-child");
-            if (badgeHan && task.han_hoan_thanh) {
-              const pts = task.han_hoan_thanh.split("-");
-              const fDate = pts.length === 3 ? `${pts[2]}/${pts[1]}/${pts[0]}` : task.han_hoan_thanh;
-              badgeHan.textContent = `Hạn chót: ${fDate}`;
-            }
-
-            const slider = card.querySelector(".thanh-tien-do");
-            const labelChiSo = card.querySelector(".chi-so-tien-do");
-            const badgeTrangThai = card.querySelector(".trang-thai-chu");
-            if (slider && task.tien_do_phantram !== undefined) {
-              slider.value = task.tien_do_phantram;
-              if (labelChiSo) labelChiSo.textContent = `${task.tien_do_phantram}%`;
-              if (badgeTrangThai && task.trang_thai) {
-                badgeTrangThai.textContent = `Trạng thái: ${task.trang_thai}`;
-              }
-            }
-          }
-        });
-      }
+    if (data.mentor) {
+      tenMentorGoc = data.mentor;
     }
-  } catch (e) {}
+
+    if (data.ngay_ket_thuc) {
+      const dEnd = new Date(data.ngay_ket_thuc);
+      const now = new Date();
+      const diffMs = dEnd.getTime() - now.getTime();
+      const diffDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+      const elRemaining = document.getElementById("soNgayConLai");
+      if (elRemaining) elRemaining.textContent = `${diffDays} ngày`;
+    }
+
+    danhSachNhiemVuGoc = data.danh_sach_nhiem_vu || [];
+    renderDanhSachNhiemVu(danhSachNhiemVuGoc);
+  } catch (e) {
+    renderDanhSachNhiemVu([]);
+  }
 }
 
 function capNhatNienKhoaNhiemVu() {
@@ -215,8 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
   capNhatNienKhoaNhiemVu();
   taiLichTrinhVaNhiemVu();
 
-  const danhSach = document.getElementById("danhSachNhiemVu");
-  const hopThongBao = document.getElementById("hopThongBao");
+  const danhSach = document.getElementById("danhSachTheNhiemVu");
 
   kiemTraKetNoiApi();
 
@@ -229,13 +352,11 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "HEAD",
         mode: "no-cors",
       });
-      badge.className =
-        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs";
+      badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-xs";
       badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Máy chủ: Đã kết nối`;
       badge.classList.remove("hidden");
     } catch {
-      badge.className =
-        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs";
+      badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 shadow-xs";
       badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> Ngoại tuyến`;
       badge.classList.remove("hidden");
     }
@@ -254,10 +375,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (badgeTrangThai) {
           if (value === 0) {
+            badgeTrangThai.className = "trang-thai-chu font-label-sm px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200";
             badgeTrangThai.textContent = "Trạng thái: Chưa bắt đầu";
           } else if (value === 100) {
+            badgeTrangThai.className = "trang-thai-chu font-label-sm px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200";
             badgeTrangThai.textContent = "Trạng thái: Hoàn thành";
           } else {
+            badgeTrangThai.className = "trang-thai-chu font-label-sm px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200";
             badgeTrangThai.textContent = "Trạng thái: Đang thực hiện";
           }
         }
@@ -269,9 +393,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!nutLuu) return;
 
       const card = nutLuu.closest("article");
-      const taskId = card?.getAttribute("data-task-id") || "1";
-      const tenNhiemVu =
-        card?.querySelector("h4")?.textContent.trim() || "Nhiệm vụ";
+      const taskId = card?.getAttribute("data-task-id");
+      if (!taskId) return;
+
+      const tenNhiemVu = card?.querySelector("h4")?.textContent.trim() || "Nhiệm vụ";
       const thanhTienDo = card?.querySelector(".thanh-tien-do");
       const rawTienDo = parseInt(thanhTienDo ? thanhTienDo.value : "0", 10);
       const tienDo = Math.min(100, Math.max(0, isNaN(rawTienDo) ? 0 : rawTienDo));
@@ -308,9 +433,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const taskData = resJson.data;
 
+        const idx = danhSachNhiemVuGoc.findIndex((t) => String(t.ma_nhiem_vu) === String(taskId));
+        if (idx !== -1) {
+          danhSachNhiemVuGoc[idx].tien_do_phantram = tienDo;
+          if (taskData?.trang_thai) danhSachNhiemVuGoc[idx].trang_thai = taskData.trang_thai;
+        }
+
         if (badgeTrangThai && taskData && taskData.trang_thai) {
           badgeTrangThai.textContent = `Trạng thái: ${taskData.trang_thai}`;
         }
+
+        const total = danhSachNhiemVuGoc.length;
+        const avg = total > 0 ? Math.round(danhSachNhiemVuGoc.reduce((sum, t) => sum + (t.tien_do_phantram || 0), 0) / total) : 0;
+        const elAvg = document.getElementById("tienDoTongThePhanTram");
+        if (elAvg) elAvg.textContent = `${avg}%`;
+        const elBar = document.getElementById("thanhTienDoTongThe");
+        if (elBar) elBar.style.width = `${avg}%`;
 
         hienThiThongBaoChung(
           "success",
