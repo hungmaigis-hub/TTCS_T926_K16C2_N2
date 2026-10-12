@@ -3053,3 +3053,206 @@ def get_interns_by_faculty_report(
         data=data
     )
 
+
+# ==============================================================
+# API XUẤT BÁO CÁO ĐA ĐỊNH DẠNG (REPORTS EXPORT - EXCEL / PDF)
+# ==============================================================
+@app.get("/api/v1/reports/export")
+def export_reports_multiformat(
+    format: str = Query("excel", description="Định dạng xuất file: 'excel' hoặc 'pdf'"),
+    ma_truong: Optional[int] = Query(None, description="Lọc theo mã trường đại học"),
+    loai_danh_gia: Optional[str] = Query(None, description="Lọc theo đợt đánh giá (GiuaKy, CuoiKy)"),
+    trang_thai_thuc_tap: Optional[str] = Query(None, description="Lọc theo trạng thái thực tập (DangThucTap, HoanThanh, ThoiHoc)"),
+    de_xuat_tuyen_chinh_thuc: Optional[bool] = Query(None, description="Lọc theo đề xuất tuyển dụng (true/false)"),
+    tu_khoa: Optional[str] = Query(None, description="Tìm kiếm theo tên sinh viên, email, trường hoặc chuyên ngành"),
+    db: Session = Depends(get_db),
+):
+    """
+    Endpoint xuất báo cáo tổng hợp đa định dạng:
+    - Hỗ trợ ReportLab (PDF khổ A4 ngang hỗ trợ tiếng Việt có dấu chuẩn Unicode).
+    - Hỗ trợ openpyxl (Excel định dạng bảng chuyên nghiệp kèm bảng thống kê và chi tiết).
+    - Trả về StreamingResponse với Content-Disposition header tải file.
+    - Validate định dạng xuất (format): chỉ chấp nhận 'excel' (hoặc 'xlsx') và 'pdf',
+      trả về lỗi 400 Bad Request nếu định dạng không hợp lệ.
+    """
+    # 1. Kiểm tra tham số format
+    fmt = format.strip().lower() if format else "excel"
+    if fmt not in ["excel", "xlsx", "pdf"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Định dạng xuất file không được hỗ trợ. Chỉ chấp nhận 'excel' hoặc 'pdf'"
+        )
+
+    # 2. Xây dựng câu truy vấn kết hợp các bảng dữ liệu
+    query = (
+        db.query(DanhGia, HoSoThucTap, TruongDaiHoc, NguoiDung)
+        .join(HoSoThucTap, DanhGia.ma_ho_so == HoSoThucTap.ma_ho_so)
+        .outerjoin(TruongDaiHoc, HoSoThucTap.ma_truong == TruongDaiHoc.ma_truong)
+        .outerjoin(NguoiDung, HoSoThucTap.ma_nguoi_dung == NguoiDung.ma_nguoi_dung)
+    )
+
+    # 3. Áp dụng các bộ lọc tìm kiếm
+    if ma_truong is not None:
+        query = query.filter(HoSoThucTap.ma_truong == ma_truong)
+
+    if loai_danh_gia and loai_danh_gia.strip():
+        query = query.filter(DanhGia.loai_danh_gia.ilike(f"%{loai_danh_gia.strip()}%"))
+
+    if trang_thai_thuc_tap and trang_thai_thuc_tap.strip():
+        query = query.filter(HoSoThucTap.trang_thai_thuc_tap.ilike(f"%{trang_thai_thuc_tap.strip()}%"))
+
+    if de_xuat_tuyen_chinh_thuc is not None:
+        query = query.filter(DanhGia.de_xuat_tuyen_chinh_thuc == de_xuat_tuyen_chinh_thuc)
+
+    if tu_khoa and tu_khoa.strip():
+        kw = f"%{tu_khoa.strip()}%"
+        query = query.filter(
+            or_(
+                NguoiDung.ho_ten.ilike(kw),
+                NguoiDung.email.ilike(kw),
+                HoSoThucTap.chuyen_nganh.ilike(kw),
+                TruongDaiHoc.ten_truong.ilike(kw),
+            )
+        )
+
+    # 4. Thực thi truy vấn lấy toàn bộ kết quả phù hợp sắp xếp theo mã đánh giá giảm dần
+    records = query.order_by(DanhGia.ma_danh_gia.desc()).all()
+
+    # 5. Xây dựng danh sách chi tiết các đánh giá
+    all_items = []
+    unique_ho_so_ids = set()
+    total_evaluations = len(records)
+    total_ky_nang = 0.0
+    total_thai_do = 0.0
+    total_tong_ket = 0.0
+    so_luong_de_xuat = 0
+
+    phan_bo_xep_loai = {
+        "XuatSac": 0,
+        "Gioi": 0,
+        "Kha": 0,
+        "TrungBinh": 0,
+        "Yeu": 0,
+    }
+
+    truong_stats_map = {}
+
+    for dg, hs, tr, nd in records:
+        unique_ho_so_ids.add(dg.ma_ho_so)
+        total_ky_nang += float(dg.diem_ky_nang or 0)
+        total_thai_do += float(dg.diem_thai_do or 0)
+        diem_tb = float(dg.diem_trung_binh or 0)
+        total_tong_ket += diem_tb
+
+        if dg.de_xuat_tuyen_chinh_thuc:
+            so_luong_de_xuat += 1
+
+        xep_loai = dg.xep_loai or "TrungBinh"
+        if xep_loai in phan_bo_xep_loai:
+            phan_bo_xep_loai[xep_loai] += 1
+        else:
+            if diem_tb >= 9.0:
+                phan_bo_xep_loai["XuatSac"] += 1
+            elif diem_tb >= 8.0:
+                phan_bo_xep_loai["Gioi"] += 1
+            elif diem_tb >= 6.5:
+                phan_bo_xep_loai["Kha"] += 1
+            elif diem_tb >= 5.0:
+                phan_bo_xep_loai["TrungBinh"] += 1
+            else:
+                phan_bo_xep_loai["Yeu"] += 1
+
+        m_tr = hs.ma_truong or 0
+        t_tr = tr.ten_truong if tr else "Chưa xác định"
+        if m_tr not in truong_stats_map:
+            truong_stats_map[m_tr] = {
+                "ma_truong": m_tr if m_tr > 0 else None,
+                "ten_truong": t_tr,
+                "scores": [],
+            }
+        truong_stats_map[m_tr]["scores"].append(diem_tb)
+
+        nguoi_dg_name = dg.nguoi_danh_gia.ho_ten if dg.nguoi_danh_gia else None
+        mentor_name = None
+        if not nguoi_dg_name and hs.ma_mentor:
+            mentor_user = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == hs.ma_mentor).first()
+            if mentor_user:
+                mentor_name = mentor_user.ho_ten
+
+        all_items.append({
+            "ma_danh_gia": dg.ma_danh_gia,
+            "ma_ho_so": dg.ma_ho_so,
+            "ho_ten": nd.ho_ten if nd else "",
+            "email": nd.email if nd else "",
+            "so_dien_thoai": nd.so_dien_thoai if nd else "",
+            "chuyen_nganh": hs.chuyen_nganh or "",
+            "ma_truong": hs.ma_truong,
+            "ten_truong": tr.ten_truong if tr else "",
+            "trang_thai_thuc_tap": hs.trang_thai_thuc_tap or "",
+            "loai_danh_gia": dg.loai_danh_gia or "",
+            "diem_ky_nang": float(dg.diem_ky_nang or 0),
+            "diem_thai_do": float(dg.diem_thai_do or 0),
+            "diem_trung_binh": diem_tb,
+            "xep_loai": xep_loai,
+            "nhan_xet_chi_tiet": dg.nhan_xet_chi_tiet or "",
+            "de_xuat_tuyen_chinh_thuc": bool(dg.de_xuat_tuyen_chinh_thuc),
+            "nguoi_danh_gia": nguoi_dg_name or mentor_name or f"Mentor #{hs.ma_mentor or '-'}",
+        })
+
+    diem_ky_nang_tb = round(total_ky_nang / total_evaluations, 2) if total_evaluations > 0 else 0.0
+    diem_thai_do_tb = round(total_thai_do / total_evaluations, 2) if total_evaluations > 0 else 0.0
+    diem_tong_ket_tb = round(total_tong_ket / total_evaluations, 2) if total_evaluations > 0 else 0.0
+    ty_le_de_xuat = round((so_luong_de_xuat / total_evaluations) * 100, 1) if total_evaluations > 0 else 0.0
+
+    thong_ke_theo_truong = []
+    for m_tr, data in truong_stats_map.items():
+        scs = data["scores"]
+        avg_s = round(sum(scs) / len(scs), 2) if scs else 0.0
+        thong_ke_theo_truong.append({
+            "ma_truong": data["ma_truong"],
+            "ten_truong": data["ten_truong"],
+            "so_luong_danh_gia": len(scs),
+            "diem_trung_binh": avg_s
+        })
+    thong_ke_theo_truong.sort(key=lambda x: x["so_luong_danh_gia"], reverse=True)
+
+    summary_data = {
+        "tong_so_ho_so": len(unique_ho_so_ids),
+        "tong_so_danh_gia": total_evaluations,
+        "diem_ky_nang_tb": diem_ky_nang_tb,
+        "diem_thai_do_tb": diem_thai_do_tb,
+        "diem_tong_ket_tb": diem_tong_ket_tb,
+        "so_luong_de_xuat_tuyen_dung": so_luong_de_xuat,
+        "ty_le_de_xuat_tuyen_dung": ty_le_de_xuat,
+        "phan_bo_xep_loai": phan_bo_xep_loai,
+        "thong_ke_theo_truong": thong_ke_theo_truong,
+    }
+
+    # 6. Xử lý xuất file theo format
+    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    if fmt in ["excel", "xlsx"]:
+        excel_stream = export_evaluations_to_excel(summary_data, all_items)
+        filename = f"Bao_cao_tong_hop_{timestamp_str}.xlsx"
+        return StreamingResponse(
+            excel_stream,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
+
+    if fmt == "pdf":
+        pdf_stream = export_evaluations_to_pdf(summary_data, all_items)
+        filename = f"Bao_cao_tong_hop_{timestamp_str}.pdf"
+        return StreamingResponse(
+            pdf_stream,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Access-Control-Expose-Headers": "Content-Disposition"
+            }
+        )
+
+
