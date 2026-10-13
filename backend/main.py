@@ -98,6 +98,9 @@ from schemas import (
     UserStatusUpdate,
     UserResetPasswordRequest,
     UserCreateRequest,
+    MeetingCreateRequest,
+    MeetingCreateResponse,
+    MeetingResponseData,
 )
 from security import get_password_hash, verify_password
 
@@ -120,6 +123,7 @@ from database.models import (
     CaLamViec,
     PhuCap,
     YeuCauHoTro,
+    LichHop,
 )
 
 from services.export_service import export_evaluations_to_excel, export_evaluations_to_pdf
@@ -136,6 +140,7 @@ from services.email_service import (
     send_profile_approval_email,
     send_contract_confirmed_email,
     send_support_request_email,
+    send_meeting_invitation_email,
 )
 
 # Khởi tạo ứng dụng FastAPI
@@ -4193,6 +4198,164 @@ def export_reports(
         page=1,
         page_size=100,
         db=db,
+    )
+
+
+# ==============================================================================
+# ENDPOINT LÊN LỊCH HỌP VÀ GỬI EMAIL HTML TỰ ĐỘNG ĐẾN THỰC TẬP SINH
+# ==============================================================================
+@app.post("/api/v1/meetings", status_code=201, response_model=MeetingCreateResponse)
+def create_meeting(
+    meeting_data: MeetingCreateRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """
+    Tạo mới lịch họp trong hệ thống và tự động gửi email thư mời HTML đến danh sách thực tập sinh được mời
+    thông qua fastapi.BackgroundTasks.
+    
+    Quy tắc nghiệp vụ & Bắt trọn vẹn ngoại lệ:
+    1. Kiểm tra trường bắt buộc và chuỗi rỗng: tieu_de, dia_diem, ma_nguoi_chu_tri.
+    2. Kiểm tra tính hợp lệ thời gian:
+       - thoi_gian_ket_thuc phải lớn hơn thoi_gian_bat_dau.
+       - thoi_gian_bat_dau không được nằm trong quá khứ so với thời điểm tạo.
+    3. Kiểm tra người chủ trì:
+       - ma_nguoi_chu_tri phải tồn tại trong bảng NguoiDung (HTTP 404).
+       - Tài khoản người chủ trì phải đang ở trạng thái hoạt động (HTTP 400).
+    4. Kiểm tra danh sách thực tập sinh được mời:
+       - Không được để trống (HTTP 400).
+       - Từng mã sinh viên/thực tập sinh phải tồn tại và có email hợp lệ trong hệ thống (HTTP 404 nếu không tìm thấy).
+    5. Lưu bản ghi LichHop vào CSDL.
+    6. Đăng ký gửi email HTML với BackgroundTasks để phản hồi nhanh chóng mà không chặn luồng chính.
+    """
+    # 1. Kiểm tra chuỗi rỗng tiêu đề và địa điểm
+    tieu_de_clean = meeting_data.tieu_de.strip() if meeting_data.tieu_de else ""
+    dia_diem_clean = meeting_data.dia_diem.strip() if meeting_data.dia_diem else ""
+
+    if not tieu_de_clean:
+        raise HTTPException(
+            status_code=400,
+            detail="Tiêu đề cuộc họp không được để trống hoặc chỉ chứa khoảng trắng"
+        )
+
+    if not dia_diem_clean:
+        raise HTTPException(
+            status_code=400,
+            detail="Địa điểm cuộc họp không được để trống hoặc chỉ chứa khoảng trắng"
+        )
+
+    # 2. Kiểm tra tính hợp lệ của thời gian
+    if meeting_data.thoi_gian_ket_thuc <= meeting_data.thoi_gian_bat_dau:
+        raise HTTPException(
+            status_code=400,
+            detail="Thời gian kết thúc cuộc họp phải lớn hơn thời gian bắt đầu"
+        )
+
+    # Cho phép dung sai 60 giây để tránh lỗi trễ mạng hoặc clock lệch nhẹ
+    now = datetime.now()
+    if meeting_data.thoi_gian_bat_dau < (now - timedelta(seconds=60)):
+        raise HTTPException(
+            status_code=400,
+            detail="Thời gian bắt đầu cuộc họp không được nằm trong quá khứ"
+        )
+
+    # 3. Kiểm tra người chủ trì cuộc họp
+    host = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == meeting_data.ma_nguoi_chu_tri).first()
+    if not host:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy người chủ trì với mã {meeting_data.ma_nguoi_chu_tri}"
+        )
+
+    if host.trang_thai == "Khoa":
+        raise HTTPException(
+            status_code=400,
+            detail="Tài khoản người chủ trì hiện đang bị khóa, không thể lên lịch họp"
+        )
+
+    # 4. Kiểm tra danh sách thực tập sinh được mời
+    if not meeting_data.danh_sach_thuc_tap_sinh or len(meeting_data.danh_sach_thuc_tap_sinh) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Danh sách thực tập sinh được mời không được để trống"
+        )
+
+    # Thu thập và kiểm tra từng thực tập sinh (chống trùng lặp ID)
+    unique_intern_ids = list(dict.fromkeys(meeting_data.danh_sach_thuc_tap_sinh))
+    invited_interns = []
+    invited_emails = []
+
+    for intern_id in unique_intern_ids:
+        # Tìm theo ma_nguoi_dung
+        user_intern = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == intern_id).first()
+        if not user_intern:
+            # Dự phòng tìm theo ma_ho_so nếu client truyền ma_ho_so
+            hs = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == intern_id).first()
+            if hs and hs.thuc_tap_sinh:
+                user_intern = hs.thuc_tap_sinh
+
+        if not user_intern:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Không tìm thấy thực tập sinh với mã {intern_id} trong hệ thống"
+            )
+
+        if not user_intern.email or not user_intern.email.strip():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Thực tập sinh '{user_intern.ho_ten}' (mã {intern_id}) chưa được cập nhật email"
+            )
+
+        invited_interns.append(user_intern)
+        invited_emails.append(user_intern.email.strip())
+
+    # 5. Lưu thông tin lịch họp vào CSDL
+    new_meeting = LichHop(
+        tieu_de=tieu_de_clean,
+        thoi_gian_bat_dau=meeting_data.thoi_gian_bat_dau,
+        thoi_gian_ket_thuc=meeting_data.thoi_gian_ket_thuc,
+        dia_diem=dia_diem_clean,
+        ma_nguoi_chu_tri=meeting_data.ma_nguoi_chu_tri,
+    )
+    db.add(new_meeting)
+    db.commit()
+    db.refresh(new_meeting)
+
+    # 6. Chuẩn bị định dạng thời gian và gửi email HTML tự động qua fastapi.BackgroundTasks
+    start_str = meeting_data.thoi_gian_bat_dau.strftime("%H:%M ngày %d/%m/%Y")
+    end_str = meeting_data.thoi_gian_ket_thuc.strftime("%H:%M ngày %d/%m/%Y")
+
+    for intern in invited_interns:
+        background_tasks.add_task(
+            send_meeting_invitation_email,
+            to_email=intern.email.strip(),
+            intern_name=intern.ho_ten,
+            meeting_title=new_meeting.tieu_de,
+            start_time=start_str,
+            end_time=end_str,
+            location=new_meeting.dia_diem,
+            host_name=host.ho_ten,
+            note=meeting_data.noi_dung,
+        )
+
+    # 7. Trả về kết quả HTTP 201 Created
+    response_data = MeetingResponseData(
+        ma_lich_hop=new_meeting.ma_lich_hop,
+        tieu_de=new_meeting.tieu_de,
+        thoi_gian_bat_dau=new_meeting.thoi_gian_bat_dau,
+        thoi_gian_ket_thuc=new_meeting.thoi_gian_ket_thuc,
+        dia_diem=new_meeting.dia_diem,
+        ma_nguoi_chu_tri=new_meeting.ma_nguoi_chu_tri,
+        ten_nguoi_chu_tri=host.ho_ten,
+        so_luong_nguoi_moi=len(invited_interns),
+        danh_sach_email_duoc_moi=invited_emails,
+        danh_sach_thuc_tap_sinh_moi=unique_intern_ids,
+    )
+
+    return MeetingCreateResponse(
+        code=201,
+        message=f"Tạo lịch họp thành công và đã lên lịch gửi email HTML tự động tới {len(invited_interns)} thực tập sinh",
+        data=response_data,
     )
 
 

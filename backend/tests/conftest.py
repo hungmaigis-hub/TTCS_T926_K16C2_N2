@@ -28,6 +28,7 @@ from database.models import (
     CaLamViec,
     PhuCap,
     YeuCauHoTro,
+    LichHop,
 )
 from main import app
 

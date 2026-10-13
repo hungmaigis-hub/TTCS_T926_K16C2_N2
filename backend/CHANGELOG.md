@@ -4,6 +4,28 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 
 ---
 
+## [1.25.0] - 2026-10-13
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model LichHop (`database/models/lich_hop.py`)**:
+  - Tạo model `LichHop` ánh xạ bảng `lich_hop` (`ma_lich_hop`, `tieu_de`, `thoi_gian_bat_dau`, `thoi_gian_ket_thuc`, `dia_diem`, `ma_nguoi_chu_tri`).
+  - Thiết lập quan hệ hai chiều `nguoi_chu_tri` và `danh_sach_lich_hop_chu_tri` với `nguoi_dung.py`.
+  - Bổ sung hàm `to_dict()` và export tại `database/models/__init__.py`.
+- **Pydantic Schemas (`schemas.py`)**:
+  - `MeetingCreateRequest`: Schema tạo lịch họp, validate `thoi_gian_ket_thuc > thoi_gian_bat_dau`, cấm chuỗi rỗng `tieu_de`, `dia_diem`.
+  - `MeetingResponseData` & `MeetingCreateResponse`: Schema response HTTP 201 Created.
+- **Dịch vụ Email (`services/email_service.py`)**:
+  - Cập nhật `send_email_smtp`: Hỗ trợ MIME multipart gửi nội dung HTML kèm plain text fallback.
+  - Thêm hàm `send_meeting_invitation_email`: Gửi thư mời họp định dạng HTML cho thực tập sinh.
+- **Endpoint Tạo Lịch Họp (`POST /api/v1/meetings`)**:
+  - Thêm endpoint tạo lịch họp tại `main.py`, tích hợp `fastapi.BackgroundTasks` tự động gửi email cho danh sách thực tập sinh được mời.
+  - Xử lý ngoại lệ: 400 (thời gian không hợp lệ, thời gian trong quá khứ, tiêu đề/địa điểm rỗng, host bị khóa, danh sách sinh viên rỗng), 404 (không tìm thấy host hoặc sinh viên).
+- **Kiểm thử tự động**:
+  - Tạo bộ test `tests/test_meetings.py` gồm 12 test cases bao phủ tạo lịch họp, gửi email nền và xử lý ngoại lệ -> **12/12 PASS 100%**.
+  - Kiểm thử hồi quy toàn bộ backend -> **364/364 PASS 100%**.
+
+---
+
 ## [1.24.0] - 2026-10-12
 
 ### Đã hoàn thành (Added & Enhanced)
