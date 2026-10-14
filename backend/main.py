@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import re
 import uuid
 from datetime import date, timedelta, datetime, time
 from pathlib import Path
@@ -61,6 +62,9 @@ from schemas import (
     CheckOutRequest,
     CheckInResponse,
     CheckOutResponse,
+    AttendanceScanRequest,
+    AttendanceScanResponse,
+    AttendanceScanResponseData,
     RollCallRequest,
     RollCallResponse,
     ShiftCreateRequest,
@@ -2499,6 +2503,187 @@ def attendance_check_out(req: CheckOutRequest, db: Session = Depends(get_db)):
         "status_code": 200,
         "message": "Check-out thành công",
         "data": attendance.to_dict()
+    }
+
+
+@app.post("/api/v1/attendance/scan", status_code=200, response_model=AttendanceScanResponse)
+def scan_attendance_identifier(req: AttendanceScanRequest, db: Session = Depends(get_db)):
+    """
+    Endpoint tiếp nhận yêu cầu quét mã định danh (QR Code hoặc Card RFID) để chấm công:
+    - Nhận payload quét mã định danh và phương thức ('QR', 'Card', 'QR/Card').
+    - Xác thực định danh thực tập sinh và tính hợp lệ của hồ sơ (phải ở trạng thái 'DaDuyet', không 'ThoiHoc').
+    - Tự động ghi nhận lượt Check-in (nếu chưa có trong ngày/ca) hoặc Check-out (nếu đã check-in nhưng chưa check-out).
+    - Chặn quét trùng lặp trong cùng ca làm việc (chặn quét liên tiếp ngay sau check-in và chặn quét khi đã hoàn thành cả check-in & check-out).
+    """
+    dinh_danh = req.ma_dinh_danh.strip()
+    if not dinh_danh:
+        raise HTTPException(
+            status_code=400,
+            detail="Mã định danh không được để trống hoặc chỉ chứa khoảng trắng"
+        )
+
+    # 1. Phân giải mã định danh sang hồ sơ thực tập sinh
+    ho_so = None
+    num_match = re.search(r'\d+', dinh_danh)
+    if num_match:
+        try:
+            parsed_id = int(num_match.group(0))
+            ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == parsed_id).first()
+        except Exception:
+            ho_so = None
+
+    if not ho_so:
+        user = db.query(NguoiDung).filter(
+            or_(
+                NguoiDung.email == dinh_danh,
+                NguoiDung.so_dien_thoai == dinh_danh
+            )
+        ).first()
+        if user:
+            ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_nguoi_dung == user.ma_nguoi_dung).first()
+
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh tương ứng với mã định danh '{dinh_danh}'"
+        )
+
+    # 2. Kiểm tra điều kiện nghiệp vụ của hồ sơ
+    if ho_so.trang_thai_xet_duyet != "DaDuyet":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Hồ sơ thực tập sinh ID {ho_so.ma_ho_so} chưa được phê duyệt (trạng thái: {ho_so.trang_thai_xet_duyet}), không thể chấm công"
+        )
+
+    if ho_so.trang_thai_thuc_tap == "ThoiHoc":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Thực tập sinh ID {ho_so.ma_ho_so} đã thôi học, không thể chấm công"
+        )
+
+    # 3. Xác định thời điểm quét mã
+    now_dt = req.thoi_gian_quet if req.thoi_gian_quet is not None else datetime.now()
+    target_date = now_dt.date()
+    target_time = now_dt.time()
+
+    # 4. Tìm bản ghi chấm công trong ngày của thực tập sinh
+    attendance = db.query(ChamCong).filter(
+        ChamCong.ma_ho_so == ho_so.ma_ho_so,
+        ChamCong.ngay_cham_cong == target_date
+    ).first()
+
+    phuong_thuc_val = req.phuong_thuc or "QR/Card"
+
+    # TH1: Chưa có bản ghi chấm công trong ngày -> Thực hiện CHECK-IN
+    if not attendance:
+        gio_chuan = time(8, 30, 0)
+        trang_thai = "DiMuon" if target_time > gio_chuan else "DungGio"
+
+        new_record = ChamCong(
+            ma_ho_so=ho_so.ma_ho_so,
+            ngay_cham_cong=target_date,
+            gio_checkin=target_time,
+            gio_checkout=None,
+            thoi_gian_checkin=now_dt,
+            thoi_gian_checkout=None,
+            trang_thai=trang_thai,
+            phuong_thuc=phuong_thuc_val,
+            ghi_chu=req.ghi_chu
+        )
+        db.add(new_record)
+        db.commit()
+        db.refresh(new_record)
+
+        sinh_vien_name = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None
+        return {
+            "status_code": 200,
+            "message": "Quét mã check-in thành công",
+            "data": {
+                "ma_cham_cong": new_record.ma_cham_cong,
+                "ma_ho_so": new_record.ma_ho_so,
+                "ho_ten": sinh_vien_name,
+                "ngay_cham_cong": new_record.ngay_cham_cong.isoformat(),
+                "gio_checkin": new_record.gio_checkin.isoformat() if new_record.gio_checkin else None,
+                "gio_checkout": None,
+                "gio_check_in": new_record.gio_check_in.isoformat() if new_record.gio_check_in else None,
+                "gio_check_out": None,
+                "hanh_dong": "CHECK_IN",
+                "trang_thai": new_record.trang_thai,
+                "phuong_thuc": new_record.phuong_thuc,
+                "ghi_chu": new_record.ghi_chu,
+            }
+        }
+
+    # TH2: Đã có bản ghi chấm công trong ngày
+    # Kiểm tra xem đã check-out chưa -> Nếu đã có check-out thì chặn quét trùng lặp
+    has_checked_out = (
+        attendance.gio_checkout is not None
+        or attendance.gio_check_out is not None
+        or attendance.thoi_gian_checkout is not None
+    )
+    if has_checked_out:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Thực tập sinh ID {ho_so.ma_ho_so} đã hoàn thành check-in và check-out trong ca làm việc ngày {target_date}. Không thể quét trùng lặp"
+        )
+
+    # Kiểm tra tính hợp lệ thời gian check-out so với check-in
+    if attendance.thoi_gian_checkin and now_dt < attendance.thoi_gian_checkin:
+        raise HTTPException(
+            status_code=400,
+            detail="Thời gian check-out không thể trước thời gian check-in"
+        )
+    elif attendance.gio_checkin and target_time < attendance.gio_checkin:
+        raise HTTPException(
+            status_code=400,
+            detail="Giờ check-out không thể trước giờ check-in"
+        )
+
+    # Chặn quét trùng lặp liên tiếp ngay sau khi vừa check-in trong vòng 60 giây
+    if attendance.thoi_gian_checkin:
+        delta_seconds = abs((now_dt - attendance.thoi_gian_checkin).total_seconds())
+        if delta_seconds < 60:
+            raise HTTPException(
+                status_code=400,
+                detail="Bạn vừa thực hiện quét check-in cho ca này. Vui lòng không quét trùng lặp"
+            )
+
+    # Cập nhật thông tin CHECK-OUT
+    attendance.gio_checkout = target_time
+    attendance.thoi_gian_checkout = now_dt
+    attendance.phuong_thuc = phuong_thuc_val
+
+    if req.ghi_chu:
+        if attendance.ghi_chu:
+            attendance.ghi_chu = f"{attendance.ghi_chu}; {req.ghi_chu}"
+        else:
+            attendance.ghi_chu = req.ghi_chu
+
+    gio_tan_ca = time(17, 0, 0)
+    if target_time < gio_tan_ca and attendance.trang_thai == "DungGio":
+        attendance.trang_thai = "VeSom"
+
+    db.commit()
+    db.refresh(attendance)
+
+    sinh_vien_name = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None
+    return {
+        "status_code": 200,
+        "message": "Quét mã check-out thành công",
+        "data": {
+            "ma_cham_cong": attendance.ma_cham_cong,
+            "ma_ho_so": attendance.ma_ho_so,
+            "ho_ten": sinh_vien_name,
+            "ngay_cham_cong": attendance.ngay_cham_cong.isoformat(),
+            "gio_checkin": attendance.gio_checkin.isoformat() if attendance.gio_checkin else None,
+            "gio_checkout": attendance.gio_checkout.isoformat() if attendance.gio_checkout else None,
+            "gio_check_in": attendance.gio_check_in.isoformat() if attendance.gio_check_in else None,
+            "gio_check_out": attendance.gio_check_out.isoformat() if attendance.gio_check_out else None,
+            "hanh_dong": "CHECK_OUT",
+            "trang_thai": attendance.trang_thai,
+            "phuong_thuc": attendance.phuong_thuc,
+            "ghi_chu": attendance.ghi_chu,
+        }
     }
 
 

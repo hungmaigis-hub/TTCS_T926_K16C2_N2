@@ -2,6 +2,31 @@
 
 Tất cả các thay đổi của module Backend sẽ được ghi lại trong tài liệu này.
 
+## [1.26.0] - 2026-10-14
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model ChamCong (`database/models/cham_cong.py`)**:
+  - Tối ưu hóa và thiết kế model `ChamCong` ánh xạ bảng `cham_cong` (`ma_cham_cong`, `ma_ho_so`, `ngay_cham_cong`, `gio_checkin`, `gio_checkout`, `phuong_thuc = "QR/Card"`, `trang_thai`, `thoi_gian_checkin`, `thoi_gian_checkout`, `ghi_chu`).
+  - Hỗ trợ `synonym` ORM cho phép truy cập linh hoạt hai chiều giữa `gio_checkin` / `gio_check_in` và `gio_checkout` / `gio_check_out` mà không làm đứt gãy tương thích ngược với code cũ.
+  - Cập nhật hàm `to_dict()` xuất đầy đủ định dạng trường mới cho API client.
+- **Pydantic Schemas (`schemas.py`)**:
+  - `AttendanceScanRequest`: Schema nhận payload quét mã định danh (`ma_dinh_danh`, `phuong_thuc = "QR/Card"`, `thoi_gian_quet`, `ghi_chu`), validate không cho phép chuỗi rỗng / khoảng trắng.
+  - `AttendanceScanResponseData` & `AttendanceScanResponse`: Schema phản hồi chuẩn RESTful (HTTP 200 OK) trả về chi tiết lượt chấm công, hành động (`CHECK_IN` hoặc `CHECK_OUT`), trạng thái và thời gian.
+- **API Endpoint Quét Mã Định Danh (`POST /api/v1/attendance/scan`)**:
+  - Tiếp nhận mã định danh từ máy quét QR Code hoặc đầu đọc thẻ Card RFID.
+  - Tự động phân giải mã định danh: hỗ trợ mã hồ sơ trực tiếp, tiền tố `CARD-...`, `INTERN-...`, `HS...` hoặc tra cứu theo `email`, `so_dien_thoai`.
+  - Kiểm tra và xử lý ngoại lệ nghiệp vụ toàn diện theo quy tắc TTCS:
+    + Trả về `404 Not Found` nếu mã định danh không tồn tại.
+    + Trả về `400 Bad Request` nếu hồ sơ sinh viên chưa được phê duyệt (`ChoDuyet`/`TuChoi`).
+    + Trả về `400 Bad Request` nếu sinh viên đã thôi học (`ThoiHoc`).
+    + Tự động xác định lượt Check-in: phân loại `DungGio` (trước 08:30) hoặc `DiMuon` (sau 08:30).
+    + Tự động xác định lượt Check-out: cập nhật `VeSom` (trước 17:00), kiểm tra giờ ra không được trước giờ vào.
+    + Chặn quét trùng lặp trong cùng ca làm việc: chặn quét đúp liên tiếp sau check-in (< 60s) và chặn quét khi đã hoàn thành cả check-in & check-out trong ca.
+- **Kiểm thử tự động (Unit Test & Regression Test)**:
+  - Tạo mới bộ kiểm thử [tests/test_attendance_scan.py](file:///d:/clone/ttcs/backend/tests/test_attendance_scan.py) bao phủ 14 test cases chuyên sâu -> **14/14 PASS 100%**.
+  - Kiểm thử đồng bộ với các module liên quan (`test_attendance_checkin_checkout.py`, `test_attendance_reports.py`, `test_meetings.py`) -> **51/51 PASS 100%**.
+  - Kiểm thử hồi quy toàn bộ hệ thống backend (378 test cases) -> **378/378 PASS 100%**.
+
 ---
 
 ## [1.25.0] - 2026-10-13

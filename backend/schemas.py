@@ -864,6 +864,44 @@ class CheckOutResponse(BaseModel):
     data: Optional[AttendanceItemData] = None
 
 
+class AttendanceScanRequest(BaseModel):
+    """Schema yêu cầu quét mã định danh chấm công (POST /api/v1/attendance/scan)"""
+    ma_dinh_danh: str = Field(..., description="Mã định danh của thực tập sinh (mã hồ sơ, mã thẻ RFID hoặc mã QR)")
+    phuong_thuc: Optional[str] = Field(default="QR/Card", description="Phương thức quét: QR, Card, QR/Card")
+    thoi_gian_quet: Optional[datetime] = Field(default=None, description="Thời điểm quét mã (ISO 8601). Mặc định thời gian hiện tại.")
+    ghi_chu: Optional[str] = Field(default=None, max_length=255, description="Ghi chú thêm")
+
+    @field_validator('ma_dinh_danh')
+    def validate_ma_dinh_danh(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Mã định danh không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+
+class AttendanceScanResponseData(BaseModel):
+    """Dữ liệu phản hồi chi tiết sau khi quét mã định danh thành công"""
+    ma_cham_cong: int
+    ma_ho_so: int
+    ho_ten: Optional[str] = None
+    ngay_cham_cong: str
+    gio_checkin: Optional[str] = None
+    gio_checkout: Optional[str] = None
+    gio_check_in: Optional[str] = None
+    gio_check_out: Optional[str] = None
+    hanh_dong: str = Field(..., description="Hành động được ghi nhận: CHECK_IN hoặc CHECK_OUT")
+    trang_thai: str = "DungGio"
+    phuong_thuc: str = "QR/Card"
+    ghi_chu: Optional[str] = None
+
+
+class AttendanceScanResponse(BaseModel):
+    """Phản hồi sau khi quét mã định danh chấm công thành công (HTTP 200 OK)"""
+    status_code: int = 200
+    message: str = "Quét mã chấm công thành công"
+    data: Optional[AttendanceScanResponseData] = None
+
+
 class RollCallRecordItem(BaseModel):
     """Chi tiết điểm danh từng sinh viên trong sổ điểm danh của Mentor"""
     ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập sinh")
