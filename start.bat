@@ -5,10 +5,31 @@ echo ==========================================
 echo   TTCS - Quan ly Thuc tap sinh
 echo ==========================================
 
-:: Start MySQL (XAMPP)
-echo [1/3] Khoi dong MySQL...
-start "" "C:\xampp\mysql\bin\mysqld.exe" --defaults-file="C:\xampp\mysql\bin\my.ini"
-timeout /t 3 /nobreak >nul
+:: Start MySQL (XAMPP / Standalone)
+echo [1/3] Kiem tra va khoi dong MySQL...
+netstat -ano | findstr :3306 | findstr LISTENING >nul
+if %errorlevel% equ 0 (
+    echo   -> MySQL dang chay tren cong 3306!
+) else (
+    set "MYSQL_STARTED=0"
+    if exist "D:\SQL\mysql\bin\mysqld.exe" (
+        echo   -> Phat hien MySQL tai D:\SQL\mysql
+        start "" "D:\SQL\mysql\bin\mysqld.exe" --defaults-file="D:\SQL\mysql\bin\my.ini"
+        set "MYSQL_STARTED=1"
+    ) else if exist "C:\xampp\mysql\bin\mysqld.exe" (
+        echo   -> Phat hien MySQL tai C:\xampp\mysql
+        start "" "C:\xampp\mysql\bin\mysqld.exe" --defaults-file="C:\xampp\mysql\bin\my.ini"
+        set "MYSQL_STARTED=1"
+    ) else if exist "D:\xampp\mysql\bin\mysqld.exe" (
+        echo   -> Phat hien MySQL tai D:\xampp\mysql
+        start "" "D:\xampp\mysql\bin\mysqld.exe" --defaults-file="D:\xampp\mysql\bin\my.ini"
+        set "MYSQL_STARTED=1"
+    )
+    if "!MYSQL_STARTED!"=="0" (
+        echo   [CANH BAO] Khong tim thay mysqld.exe tu dong. Vui long bat MySQL bang XAMPP Control Panel!
+    )
+    timeout /t 3 /nobreak >nul
+)
 
 :: Start Backend FastAPI
 echo [2/3] Khoi dong Backend API (port 8000)...

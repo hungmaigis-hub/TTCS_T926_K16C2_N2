@@ -6,7 +6,7 @@ import uuid
 from datetime import date, timedelta, datetime, time
 from pathlib import Path
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query, Path as FastApiPath, status
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query, Path as FastApiPath, Header, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -105,8 +105,22 @@ from schemas import (
     MeetingCreateRequest,
     MeetingCreateResponse,
     MeetingResponseData,
+    HRMSyncRequest,
+    HRMSyncResponse,
+    RolePermissionsUpdateRequest,
+    RolePermissionsResponse,
+    PermissionListResponse,
+    PermissionItemResponse,
 )
 from security import get_password_hash, verify_password
+from services.hrm_service import sync_hrm_data
+from services.rbac_service import (
+    require_permissions,
+    get_all_permissions,
+    get_role_permissions,
+    update_role_permissions,
+    seed_default_permissions_and_roles,
+)
 
 # Thư mục database & models
 from database.session import get_db, Base, engine
@@ -128,6 +142,8 @@ from database.models import (
     PhuCap,
     YeuCauHoTro,
     LichHop,
+    QuyenHan,
+    VaiTroQuyenHan,
 )
 
 from services.export_service import export_evaluations_to_excel, export_evaluations_to_pdf
@@ -4542,5 +4558,149 @@ def create_meeting(
         message=f"Tạo lịch họp thành công và đã lên lịch gửi email HTML tự động tới {len(invited_interns)} thực tập sinh",
         data=response_data,
     )
+
+
+# ==============================================================
+# HRM INTEGRATION & DATA RECONCILIATION API
+# ==============================================================
+@app.post(
+    "/api/v1/integrations/hrm/sync",
+    response_model=HRMSyncResponse,
+    status_code=200,
+    tags=["Integrations - HRM"]
+)
+def sync_hrm_integration_endpoint(
+    payload: HRMSyncRequest,
+    x_hrm_secret_key: Optional[str] = Header(None, alias="X-HRM-Secret-Key"),
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint tiếp nhận Webhook / REST API đối soát và đồng bộ dữ liệu từ hệ thống HRM bên ngoài:
+    - Đối soát và đồng bộ danh sách nhân viên (Mentor / HR).
+    - Đối soát và đồng bộ danh sách sinh viên thực tập (NguoiDung + HoSoThucTap).
+    - Tự động cập nhật bản ghi cũ hoặc thêm mới bản ghi chưa tồn tại (Idempotent Upsert).
+    - Hỗ trợ xác thực khóa bí mật qua header X-HRM-Secret-Key.
+    """
+    # 1. Xác thực bảo mật header nếu có cấu hình biến môi trường HRM_WEBHOOK_SECRET
+    configured_secret = os.getenv("HRM_WEBHOOK_SECRET")
+    if configured_secret:
+        if not x_hrm_secret_key or x_hrm_secret_key.strip() != configured_secret.strip():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Khóa bí mật xác thực HRM (X-HRM-Secret-Key) không hợp lệ hoặc bị thiếu"
+            )
+
+    # 2. Xử lý nghiệp vụ đối soát và đồng bộ trong service
+    result = sync_hrm_data(payload=payload, db=db)
+    return result
+
+
+# ==============================================================
+# RBAC - PHÂN QUYỀN VAI TRÒ & QUẢN TRỊ QUYỀN HẠN
+# ==============================================================
+@app.put(
+    "/api/v1/admin/roles/{role}/permissions",
+    response_model=RolePermissionsResponse,
+    status_code=200,
+    tags=["Admin - RBAC"]
+)
+def update_role_permissions_endpoint(
+    role: str = FastApiPath(..., description="Tên vai trò cần cập nhật quyền hạn (Admin, HR, Mentor, ThucTapSinh, ...)"),
+    payload: RolePermissionsUpdateRequest = ...,
+    current_user: NguoiDung = Depends(require_permissions("role:manage")),
+    db: Session = Depends(get_db)
+):
+    """
+    Cập nhật danh sách quyền hạn cho một vai trò cụ thể trong hệ thống.
+    Yêu cầu quyền: role:manage (hoặc tài khoản vai trò Admin/Superadmin).
+    """
+    updated_perms = update_role_permissions(role=role, permissions_input=payload.permissions, db=db)
+    perms_response = [
+        PermissionItemResponse(
+            ma_quyen_han=p.ma_quyen_han,
+            ma_quyen=p.ma_quyen,
+            ten_quyen=p.ten_quyen,
+            mo_ta=p.mo_ta,
+            nhom_quyen=p.nhom_quyen
+        )
+        for p in updated_perms
+    ]
+    return RolePermissionsResponse(
+        status_code=200,
+        message=f"Cập nhật danh sách quyền hạn cho vai trò '{role}' thành công",
+        role=role,
+        total_permissions=len(perms_response),
+        permissions=perms_response
+    )
+
+
+@app.get(
+    "/api/v1/admin/roles/{role}/permissions",
+    response_model=RolePermissionsResponse,
+    status_code=200,
+    tags=["Admin - RBAC"]
+)
+def get_role_permissions_endpoint(
+    role: str = FastApiPath(..., description="Tên vai trò cần tra cứu quyền hạn"),
+    current_user: NguoiDung = Depends(require_permissions("role:manage")),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh sách các quyền hạn đang được gán cho một vai trò.
+    Yêu cầu quyền: role:manage (hoặc tài khoản vai trò Admin/Superadmin).
+    """
+    perms = get_role_permissions(role=role, db=db)
+    perms_response = [
+        PermissionItemResponse(
+            ma_quyen_han=p.ma_quyen_han,
+            ma_quyen=p.ma_quyen,
+            ten_quyen=p.ten_quyen,
+            mo_ta=p.mo_ta,
+            nhom_quyen=p.nhom_quyen
+        )
+        for p in perms
+    ]
+    return RolePermissionsResponse(
+        status_code=200,
+        message=f"Lấy danh sách quyền hạn của vai trò '{role}' thành công",
+        role=role,
+        total_permissions=len(perms_response),
+        permissions=perms_response
+    )
+
+
+@app.get(
+    "/api/v1/admin/permissions",
+    response_model=PermissionListResponse,
+    status_code=200,
+    tags=["Admin - RBAC"]
+)
+def get_all_permissions_endpoint(
+    current_user: NguoiDung = Depends(require_permissions("role:manage")),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh mục toàn bộ quyền hạn có trong hệ thống.
+    Yêu cầu quyền: role:manage (hoặc tài khoản vai trò Admin/Superadmin).
+    """
+    all_perms = get_all_permissions(db=db)
+    data = [
+        PermissionItemResponse(
+            ma_quyen_han=p.ma_quyen_han,
+            ma_quyen=p.ma_quyen,
+            ten_quyen=p.ten_quyen,
+            mo_ta=p.mo_ta,
+            nhom_quyen=p.nhom_quyen
+        )
+        for p in all_perms
+    ]
+    return PermissionListResponse(
+        status_code=200,
+        message="Lấy danh mục quyền hạn thành công",
+        total=len(data),
+        data=data
+    )
+
+
 
 

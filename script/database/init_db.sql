@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS truong_dai_hoc (
     ten_truong VARCHAR(200) NOT NULL,
     dia_chi VARCHAR(255),
     nguoi_lien_he VARCHAR(100),
-    email_lien_he VARCHAR(100)
+    email_lien_he VARCHAR(100),
+    danh_sach_nganh TEXT
 );
 
 -- 3. BẢNG CHƯƠNG TRÌNH THỰC TẬP
@@ -52,6 +53,7 @@ CREATE TABLE IF NOT EXISTS ho_so_thuc_tap (
     ma_chuong_trinh INT,
     ma_mentor INT,
     chuyen_nganh VARCHAR(100),
+    lop VARCHAR(50),
     trang_thai_xet_duyet VARCHAR(50) DEFAULT 'ChoDuyet',
     trang_thai_thuc_tap VARCHAR(50) DEFAULT 'DangThucTap',
     FOREIGN KEY (ma_nguoi_dung) REFERENCES nguoi_dung(ma_nguoi_dung) ON DELETE CASCADE,
@@ -143,9 +145,14 @@ CREATE TABLE IF NOT EXISTS ca_lam_viec (
     gio_bat_dau TIME NOT NULL,
     gio_ket_thuc TIME NOT NULL,
     cac_ngay_trong_tuan VARCHAR(255) NOT NULL,
+    ngay_dien_ra DATE NULL,
+    chuyen_nganh VARCHAR(100) NULL,
+    lop VARCHAR(50) NULL,
+    ma_chuong_trinh INT NULL,
     ghi_chu VARCHAR(255) NULL,
     trang_thai VARCHAR(50) DEFAULT 'HoatDong' COMMENT 'HoatDong, TamNgung',
-    ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP
+    ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ma_chuong_trinh) REFERENCES chuong_trinh_thuc_tap(ma_chuong_trinh) ON DELETE SET NULL
 );
 
 -- 12. BẢNG ĐƠN NGHỈ PHÉP (Leave Requests)
@@ -181,6 +188,7 @@ CREATE TABLE IF NOT EXISTS phu_cap (
     ngay_chi_tra DATE NULL,
     trang_thai VARCHAR(50) DEFAULT 'ChuaChiTra' COMMENT 'ChuaChiTra, DaChiTra, ChoDuyet',
     trang_thai_chi_tra VARCHAR(50) DEFAULT 'ChuaChiTra' COMMENT 'DaChiTra, ChuaChiTra',
+    ghi_chu VARCHAR(255) NULL,
     FOREIGN KEY (ma_ho_so) REFERENCES ho_so_thuc_tap(ma_ho_so) ON DELETE CASCADE
 );
 
@@ -215,6 +223,26 @@ CREATE TABLE IF NOT EXISTS nhat_ky_he_thong (
     dia_chi_ip VARCHAR(45) NULL,
     thoi_gian DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (ma_nguoi_dung) REFERENCES nguoi_dung(ma_nguoi_dung) ON DELETE SET NULL
+);
+
+-- 18. BẢNG QUYỀN HẠN (RBAC Permissions)
+CREATE TABLE IF NOT EXISTS quyen_han (
+    ma_quyen_han INT AUTO_INCREMENT PRIMARY KEY,
+    ma_quyen VARCHAR(100) NOT NULL UNIQUE,
+    ten_quyen VARCHAR(150) NOT NULL,
+    mo_ta VARCHAR(255) NULL,
+    nhom_quyen VARCHAR(50) NOT NULL DEFAULT 'HeThong',
+    INDEX idx_quyen_han_ma_quyen (ma_quyen)
+);
+
+-- 19. BẢNG VAI TRÒ - QUYỀN HẠN (RBAC Role-Permission Mapping)
+CREATE TABLE IF NOT EXISTS vai_tro_quyen_han (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    vai_tro VARCHAR(50) NOT NULL,
+    ma_quyen_han INT NOT NULL,
+    UNIQUE KEY uq_vai_tro_quyen_han (vai_tro, ma_quyen_han),
+    INDEX idx_vai_tro (vai_tro),
+    FOREIGN KEY (ma_quyen_han) REFERENCES quyen_han(ma_quyen_han) ON DELETE CASCADE
 );
 
 -- DỮ LIỆU MẪU (SEED DATA) ĐỂ TEST API
@@ -315,6 +343,44 @@ VALUES
 (1, 1, 'XinChungNhan', 'Em xin giấy chứng nhận thực tập để nộp về trường', NULL, 'ChoXuLy'),
 (2, 2, 'GiayXacNhan', 'Em xin xác nhận số giờ thực tập tháng 9', NULL, 'ChoXuLy')
 ON DUPLICATE KEY UPDATE loai_yeu_cau = VALUES(loai_yeu_cau), noi_dung = VALUES(noi_dung);
+
+-- 20. SEED QUYỀN HẠN MẪU CHO RBAC
+INSERT INTO quyen_han (ma_quyen_han, ma_quyen, ten_quyen, mo_ta, nhom_quyen)
+VALUES
+(1, 'intern:read', 'Xem danh sách và hồ sơ thực tập sinh', 'Cho phép truy cập thông tin chi tiết và danh sách sinh viên thực tập', 'ThucTapSinh'),
+(2, 'intern:create', 'Thêm mới thực tập sinh', 'Cho phép tạo mới hoặc import hồ sơ thực tập sinh vào hệ thống', 'ThucTapSinh'),
+(3, 'intern:update', 'Cập nhật thông tin thực tập sinh', 'Cho phép sửa hồ sơ, phân công mentor hoặc đổi trạng thái thực tập', 'ThucTapSinh'),
+(4, 'intern:delete', 'Xóa hồ sơ thực tập sinh', 'Cho phép xóa hoặc đưa hồ sơ vào trạng thái thôi học', 'ThucTapSinh'),
+(5, 'task:read', 'Xem danh sách công việc và nhiệm vụ', 'Cho phép tra cứu công việc được giao hoặc danh sách task của nhóm', 'NhiemVu'),
+(6, 'task:create', 'Giao nhiệm vụ cho thực tập sinh', 'Cho phép tạo task mới và phân công người thực hiện', 'NhiemVu'),
+(7, 'task:update', 'Cập nhật tiến độ nhiệm vụ', 'Cho phép đổi trạng thái tiến độ công việc hoặc duyệt hoàn thành', 'NhiemVu'),
+(8, 'report:read', 'Xem báo cáo thực tập tuần', 'Cho phép đọc nội dung báo cáo nộp định kỳ của sinh viên', 'BaoCao'),
+(9, 'report:feedback', 'Đánh giá và nhận xét báo cáo tuần', 'Cho phép gửi phản hồi nhận xét và chấm điểm báo cáo tuần', 'BaoCao'),
+(10, 'evaluation:create', 'Đánh giá kết quả cuối kỳ thực tập', 'Cho phép lập bảng điểm và nhận xét tổng kết cho sinh viên', 'BaoCao'),
+(11, 'attendance:scan', 'Quét mã điểm danh và chấm công', 'Cho phép ghi nhận check-in, check-out và điểm danh trực tiếp', 'ChamCong'),
+(12, 'leave:approve', 'Xét duyệt đơn xin nghỉ phép', 'Cho phép phê duyệt hoặc từ chối đơn xin nghỉ phép của thực tập sinh', 'ChamCong'),
+(13, 'meeting:create', 'Tạo và chủ trì lịch họp', 'Cho phép lên lịch họp trực tuyến/trực tiếp và mời người tham gia', 'LichHop'),
+(14, 'support:process', 'Tiếp nhận và xử lý yêu cầu hỗ trợ', 'Cho phép phản hồi, xử lý giấy xác nhận, chứng nhận thực tập', 'HoTro'),
+(15, 'role:manage', 'Quản trị vai trò và phân quyền hệ thống', 'Cho phép xem danh mục quyền, phân quyền vai trò cho người dùng', 'HeThong'),
+(16, 'system:config', 'Cấu hình tham số hệ thống và tích hợp HRM', 'Cho phép quản trị thiết lập hệ thống và kết nối ngoại vi', 'HeThong')
+ON DUPLICATE KEY UPDATE ten_quyen = VALUES(ten_quyen), mo_ta = VALUES(mo_ta), nhom_quyen = VALUES(nhom_quyen);
+
+-- 21. SEED PHÂN QUYỀN MẶC ĐỊNH CHO CÁC VAI TRÒ
+INSERT INTO vai_tro_quyen_han (vai_tro, ma_quyen_han)
+VALUES
+-- Admin sở hữu toàn bộ các quyền
+('Admin', 1), ('Admin', 2), ('Admin', 3), ('Admin', 4), ('Admin', 5), ('Admin', 6), ('Admin', 7), ('Admin', 8),
+('Admin', 9), ('Admin', 10), ('Admin', 11), ('Admin', 12), ('Admin', 13), ('Admin', 14), ('Admin', 15), ('Admin', 16),
+-- HR
+('HR', 1), ('HR', 2), ('HR', 3), ('HR', 4), ('HR', 11), ('HR', 12), ('HR', 13), ('HR', 14), ('HR', 15),
+-- Mentor
+('Mentor', 1), ('Mentor', 5), ('Mentor', 6), ('Mentor', 7), ('Mentor', 8), ('Mentor', 9), ('Mentor', 10), ('Mentor', 13),
+-- ThucTapSinh
+('ThucTapSinh', 5), ('ThucTapSinh', 7), ('ThucTapSinh', 8),
+-- NhaTruong
+('NhaTruong', 1), ('NhaTruong', 8)
+ON DUPLICATE KEY UPDATE vai_tro = VALUES(vai_tro);
+
 
 
 

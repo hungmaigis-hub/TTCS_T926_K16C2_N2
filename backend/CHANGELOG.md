@@ -2,6 +2,63 @@
 
 Tất cả các thay đổi của module Backend sẽ được ghi lại trong tài liệu này.
 
+## [1.28.0] - 2026-10-15
+
+### Đã hoàn thành (Added & Enhanced)
+- **Cấu trúc Bảng CSDL RBAC (`database/models/quyen_han.py`)**:
+  - Thiết kế bảng `quyen_han` (`ma_quyen_han`, `ma_quyen`, `ten_quyen`, `mo_ta`, `nhom_quyen`) lưu trữ danh mục quyền hạn của hệ thống.
+  - Thiết kế bảng `vai_tro_quyen_han` (`id`, `vai_tro`, `ma_quyen_han`) lưu trữ liên kết giữa vai trò và quyền hạn với ràng buộc `UniqueConstraint("vai_tro", "ma_quyen_han")`.
+  - Xuất models ra `database/models/__init__.py`.
+  - Cập nhật script khởi tạo CSDL `script/database/init_db.sql` và tự động seed 16 quyền hạn mặc định cùng bảng phân quyền mẫu cho các vai trò `Admin`, `HR`, `Mentor`, `ThucTapSinh`, `NhaTruong`.
+- **RBAC Service & Dependency (`services/rbac_service.py`)**:
+  - Xây dựng Dependency Factory `require_permissions(*required_perms)` cho FastAPI:
+    + Trích xuất định danh người dùng qua Header `X-User-Email` hoặc `X-User-Id` (hỗ trợ Bearer Token).
+    + Chặn người dùng chưa xác thực (HTTP 401 Unauthorized).
+    + Chặn tài khoản bị khóa `trang_thai == "Khoa"` (HTTP 403 Forbidden).
+    + Superadmin bypass: vai trò `Admin` được bypass toàn bộ quyền hạn.
+    + Kiểm tra vai trò của người dùng có đầy đủ các quyền yêu cầu hay không, từ chối với HTTP 403 Forbidden nếu thiếu quyền.
+  - Xây dựng các hàm nghiệp vụ: `seed_default_permissions_and_roles`, `get_all_permissions`, `get_role_permissions`, `update_role_permissions`.
+- **Pydantic Schemas (`schemas.py`)**:
+  - `PermissionItemResponse`: Schema thông tin chi tiết của một quyền hạn.
+  - `RolePermissionsUpdateRequest`: Schema tiếp nhận payload cập nhật danh sách quyền hạn cho vai trò (hỗ trợ cả danh sách mã quyền chuỗi hoặc mảng ID số nguyên).
+  - `RolePermissionsResponse`: Schema phản hồi thông tin phân quyền vai trò.
+  - `PermissionListResponse`: Schema danh mục toàn bộ quyền hạn hệ thống.
+- **API Endpoints Quản trị Phân quyền (`backend/main.py`)**:
+  - `PUT /api/v1/admin/roles/{role}/permissions`: Cập nhật toàn diện danh sách quyền hạn cho từng vai trò trong hệ thống (yêu cầu quyền `role:manage`).
+  - `GET /api/v1/admin/roles/{role}/permissions`: Lấy danh sách quyền hạn đang được gán cho một vai trò.
+  - `GET /api/v1/admin/permissions`: Lấy danh mục tất cả quyền hạn có trong hệ thống.
+- **Kiểm thử tự động (Unit Test & Integration Test)**:
+  - Tạo mới bộ kiểm thử chuyên biệt [tests/test_rbac_permissions.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_rbac_permissions.py) bao phủ 10 test cases -> **10/10 PASS 100%**.
+  - Tích hợp seed dữ liệu mẫu trong `backend/tests/conftest.py`.
+- **Tài liệu kỹ thuật**:
+  - Cập nhật Mục 7 trong [database/DATABASE_DESIGN.md](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/DATABASE_DESIGN.md) đặc tả cấu trúc bảng, cơ chế dependency `require_permissions` và danh sách API.
+
+---
+
+## [1.27.0] - 2026-10-15
+
+### Đã hoàn thành (Added & Enhanced)
+- **HRM Integration Service (`services/hrm_service.py`)**:
+  - Xây dựng module dịch vụ xử lý đối soát và đồng bộ dữ liệu hai chiều với hệ thống Quản trị Nhân sự HRM bên ngoài (qua REST API / Webhook).
+  - Áp dụng kỹ thuật Idempotent Upsert: tự động phát hiện bản ghi đã tồn tại theo khóa định danh duy nhất `email` để cập nhật thông tin mới nhất (`action: "UPDATED"`), hoặc thêm mới bản ghi chưa có (`action: "CREATED"`).
+  - Tự động phân giải phòng ban (tạo mới phòng ban nếu chưa có trong hệ thống), tự động phân giải `mentor_email` sang `ma_mentor` chính xác và liên kết trường đại học cho sinh viên thực tập.
+  - Bảo vệ an toàn mật khẩu người dùng cũ (không ghi đè mật khẩu đã thay đổi).
+- **Pydantic Schemas (`schemas.py`)**:
+  - `HRMEmployeeSyncItem`: Schema nhân sự nội bộ (Mentor, HR, Quản lý) kèm chuẩn hóa và kiểm tra hợp lệ email, số điện thoại, vai trò.
+  - `HRMInternSyncItem`: Schema sinh viên thực tập kèm thông tin chuyên ngành, lớp, trường học và mentor phụ trách.
+  - `HRMSyncRequest`: Payload yêu cầu đồng bộ tiếp nhận nguồn dữ liệu (`source`) và danh sách nhân sự/sinh viên.
+  - `HRMSyncResponse`, `HRMSyncSummary`, `HRMSyncDetailItem`: Cấu trúc phản hồi chi tiết mã 200 OK kèm bảng thống kê đối soát (`total_received`, `created`, `updated`, `failed`).
+- **API Endpoint Đồng bộ HRM (`POST /api/v1/integrations/hrm/sync`)**:
+  - Đăng ký endpoint tại `backend/main.py`.
+  - Hỗ trợ xác thực bảo mật thông qua Header `X-HRM-Secret-Key` (kiểm tra so khớp với biến môi trường `HRM_WEBHOOK_SECRET`).
+  - Xử lý lỗi chuẩn RESTful: `401 Unauthorized` nếu sai khóa bí mật, `422 Unprocessable Entity` nếu dữ liệu payload không hợp lệ.
+- **Kiểm thử tự động (Unit Test & Integration Test)**:
+  - Tạo mới bộ kiểm thử chuyên biệt [tests/test_hrm_sync.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_hrm_sync.py) bao phủ 11 test cases -> **11/11 PASS 100%**.
+- **Tài liệu thiết kế CSDL (`database/DATABASE_DESIGN.md`)**:
+  - Cập nhật Mục 6 đặc tả Kiến trúc tích hợp HRM & Đối soát dữ liệu (HRM Integration & Reconciliation) kèm sơ đồ Mermaid Sequence Diagram.
+
+---
+
 ## [1.26.0] - 2026-10-14
 
 ### Đã hoàn thành (Added & Enhanced)

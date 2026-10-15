@@ -19,5 +19,5 @@ class Mentor(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Quan hệ 1-nhiều với hồ sơ thực tập sinh
-    danh_sach_thuc_tap_sinh = relationship("HoSoThucTap", back_populates="mentor", lazy="select")
+    # Quan hệ với hồ sơ thực tập sinh (nếu cần dùng, chỉ định primaryjoin cụ thể)
+    # danh_sach_thuc_tap_sinh = relationship("HoSoThucTap", back_populates="mentor", lazy="select")
