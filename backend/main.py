@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import re
 import uuid
 from datetime import date, timedelta, datetime, time
 from pathlib import Path
@@ -61,6 +62,9 @@ from schemas import (
     CheckOutRequest,
     CheckInResponse,
     CheckOutResponse,
+    AttendanceScanRequest,
+    AttendanceScanResponse,
+    AttendanceScanResponseData,
     RollCallRequest,
     RollCallResponse,
     ShiftCreateRequest,
@@ -98,6 +102,9 @@ from schemas import (
     UserStatusUpdate,
     UserResetPasswordRequest,
     UserCreateRequest,
+    MeetingCreateRequest,
+    MeetingCreateResponse,
+    MeetingResponseData,
 )
 from security import get_password_hash, verify_password
 
@@ -120,6 +127,7 @@ from database.models import (
     CaLamViec,
     PhuCap,
     YeuCauHoTro,
+    LichHop,
 )
 
 from services.export_service import export_evaluations_to_excel, export_evaluations_to_pdf
@@ -136,6 +144,7 @@ from services.email_service import (
     send_profile_approval_email,
     send_contract_confirmed_email,
     send_support_request_email,
+    send_meeting_invitation_email,
 )
 
 # Khởi tạo ứng dụng FastAPI
@@ -2497,6 +2506,187 @@ def attendance_check_out(req: CheckOutRequest, db: Session = Depends(get_db)):
     }
 
 
+@app.post("/api/v1/attendance/scan", status_code=200, response_model=AttendanceScanResponse)
+def scan_attendance_identifier(req: AttendanceScanRequest, db: Session = Depends(get_db)):
+    """
+    Endpoint tiếp nhận yêu cầu quét mã định danh (QR Code hoặc Card RFID) để chấm công:
+    - Nhận payload quét mã định danh và phương thức ('QR', 'Card', 'QR/Card').
+    - Xác thực định danh thực tập sinh và tính hợp lệ của hồ sơ (phải ở trạng thái 'DaDuyet', không 'ThoiHoc').
+    - Tự động ghi nhận lượt Check-in (nếu chưa có trong ngày/ca) hoặc Check-out (nếu đã check-in nhưng chưa check-out).
+    - Chặn quét trùng lặp trong cùng ca làm việc (chặn quét liên tiếp ngay sau check-in và chặn quét khi đã hoàn thành cả check-in & check-out).
+    """
+    dinh_danh = req.ma_dinh_danh.strip()
+    if not dinh_danh:
+        raise HTTPException(
+            status_code=400,
+            detail="Mã định danh không được để trống hoặc chỉ chứa khoảng trắng"
+        )
+
+    # 1. Phân giải mã định danh sang hồ sơ thực tập sinh
+    ho_so = None
+    num_match = re.search(r'\d+', dinh_danh)
+    if num_match:
+        try:
+            parsed_id = int(num_match.group(0))
+            ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == parsed_id).first()
+        except Exception:
+            ho_so = None
+
+    if not ho_so:
+        user = db.query(NguoiDung).filter(
+            or_(
+                NguoiDung.email == dinh_danh,
+                NguoiDung.so_dien_thoai == dinh_danh
+            )
+        ).first()
+        if user:
+            ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_nguoi_dung == user.ma_nguoi_dung).first()
+
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh tương ứng với mã định danh '{dinh_danh}'"
+        )
+
+    # 2. Kiểm tra điều kiện nghiệp vụ của hồ sơ
+    if ho_so.trang_thai_xet_duyet != "DaDuyet":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Hồ sơ thực tập sinh ID {ho_so.ma_ho_so} chưa được phê duyệt (trạng thái: {ho_so.trang_thai_xet_duyet}), không thể chấm công"
+        )
+
+    if ho_so.trang_thai_thuc_tap == "ThoiHoc":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Thực tập sinh ID {ho_so.ma_ho_so} đã thôi học, không thể chấm công"
+        )
+
+    # 3. Xác định thời điểm quét mã
+    now_dt = req.thoi_gian_quet if req.thoi_gian_quet is not None else datetime.now()
+    target_date = now_dt.date()
+    target_time = now_dt.time()
+
+    # 4. Tìm bản ghi chấm công trong ngày của thực tập sinh
+    attendance = db.query(ChamCong).filter(
+        ChamCong.ma_ho_so == ho_so.ma_ho_so,
+        ChamCong.ngay_cham_cong == target_date
+    ).first()
+
+    phuong_thuc_val = req.phuong_thuc or "QR/Card"
+
+    # TH1: Chưa có bản ghi chấm công trong ngày -> Thực hiện CHECK-IN
+    if not attendance:
+        gio_chuan = time(8, 30, 0)
+        trang_thai = "DiMuon" if target_time > gio_chuan else "DungGio"
+
+        new_record = ChamCong(
+            ma_ho_so=ho_so.ma_ho_so,
+            ngay_cham_cong=target_date,
+            gio_checkin=target_time,
+            gio_checkout=None,
+            thoi_gian_checkin=now_dt,
+            thoi_gian_checkout=None,
+            trang_thai=trang_thai,
+            phuong_thuc=phuong_thuc_val,
+            ghi_chu=req.ghi_chu
+        )
+        db.add(new_record)
+        db.commit()
+        db.refresh(new_record)
+
+        sinh_vien_name = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None
+        return {
+            "status_code": 200,
+            "message": "Quét mã check-in thành công",
+            "data": {
+                "ma_cham_cong": new_record.ma_cham_cong,
+                "ma_ho_so": new_record.ma_ho_so,
+                "ho_ten": sinh_vien_name,
+                "ngay_cham_cong": new_record.ngay_cham_cong.isoformat(),
+                "gio_checkin": new_record.gio_checkin.isoformat() if new_record.gio_checkin else None,
+                "gio_checkout": None,
+                "gio_check_in": new_record.gio_check_in.isoformat() if new_record.gio_check_in else None,
+                "gio_check_out": None,
+                "hanh_dong": "CHECK_IN",
+                "trang_thai": new_record.trang_thai,
+                "phuong_thuc": new_record.phuong_thuc,
+                "ghi_chu": new_record.ghi_chu,
+            }
+        }
+
+    # TH2: Đã có bản ghi chấm công trong ngày
+    # Kiểm tra xem đã check-out chưa -> Nếu đã có check-out thì chặn quét trùng lặp
+    has_checked_out = (
+        attendance.gio_checkout is not None
+        or attendance.gio_check_out is not None
+        or attendance.thoi_gian_checkout is not None
+    )
+    if has_checked_out:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Thực tập sinh ID {ho_so.ma_ho_so} đã hoàn thành check-in và check-out trong ca làm việc ngày {target_date}. Không thể quét trùng lặp"
+        )
+
+    # Kiểm tra tính hợp lệ thời gian check-out so với check-in
+    if attendance.thoi_gian_checkin and now_dt < attendance.thoi_gian_checkin:
+        raise HTTPException(
+            status_code=400,
+            detail="Thời gian check-out không thể trước thời gian check-in"
+        )
+    elif attendance.gio_checkin and target_time < attendance.gio_checkin:
+        raise HTTPException(
+            status_code=400,
+            detail="Giờ check-out không thể trước giờ check-in"
+        )
+
+    # Chặn quét trùng lặp liên tiếp ngay sau khi vừa check-in trong vòng 60 giây
+    if attendance.thoi_gian_checkin:
+        delta_seconds = abs((now_dt - attendance.thoi_gian_checkin).total_seconds())
+        if delta_seconds < 60:
+            raise HTTPException(
+                status_code=400,
+                detail="Bạn vừa thực hiện quét check-in cho ca này. Vui lòng không quét trùng lặp"
+            )
+
+    # Cập nhật thông tin CHECK-OUT
+    attendance.gio_checkout = target_time
+    attendance.thoi_gian_checkout = now_dt
+    attendance.phuong_thuc = phuong_thuc_val
+
+    if req.ghi_chu:
+        if attendance.ghi_chu:
+            attendance.ghi_chu = f"{attendance.ghi_chu}; {req.ghi_chu}"
+        else:
+            attendance.ghi_chu = req.ghi_chu
+
+    gio_tan_ca = time(17, 0, 0)
+    if target_time < gio_tan_ca and attendance.trang_thai == "DungGio":
+        attendance.trang_thai = "VeSom"
+
+    db.commit()
+    db.refresh(attendance)
+
+    sinh_vien_name = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None
+    return {
+        "status_code": 200,
+        "message": "Quét mã check-out thành công",
+        "data": {
+            "ma_cham_cong": attendance.ma_cham_cong,
+            "ma_ho_so": attendance.ma_ho_so,
+            "ho_ten": sinh_vien_name,
+            "ngay_cham_cong": attendance.ngay_cham_cong.isoformat(),
+            "gio_checkin": attendance.gio_checkin.isoformat() if attendance.gio_checkin else None,
+            "gio_checkout": attendance.gio_checkout.isoformat() if attendance.gio_checkout else None,
+            "gio_check_in": attendance.gio_check_in.isoformat() if attendance.gio_check_in else None,
+            "gio_check_out": attendance.gio_check_out.isoformat() if attendance.gio_check_out else None,
+            "hanh_dong": "CHECK_OUT",
+            "trang_thai": attendance.trang_thai,
+            "phuong_thuc": attendance.phuong_thuc,
+            "ghi_chu": attendance.ghi_chu,
+        }
+    }
+
+
 @app.get("/api/v1/attendance/records")
 def get_attendance_records(
     ma_ho_so: Optional[int] = Query(None, description="Lọc theo mã hồ sơ"),
@@ -4193,6 +4383,164 @@ def export_reports(
         page=1,
         page_size=100,
         db=db,
+    )
+
+
+# ==============================================================================
+# ENDPOINT LÊN LỊCH HỌP VÀ GỬI EMAIL HTML TỰ ĐỘNG ĐẾN THỰC TẬP SINH
+# ==============================================================================
+@app.post("/api/v1/meetings", status_code=201, response_model=MeetingCreateResponse)
+def create_meeting(
+    meeting_data: MeetingCreateRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """
+    Tạo mới lịch họp trong hệ thống và tự động gửi email thư mời HTML đến danh sách thực tập sinh được mời
+    thông qua fastapi.BackgroundTasks.
+    
+    Quy tắc nghiệp vụ & Bắt trọn vẹn ngoại lệ:
+    1. Kiểm tra trường bắt buộc và chuỗi rỗng: tieu_de, dia_diem, ma_nguoi_chu_tri.
+    2. Kiểm tra tính hợp lệ thời gian:
+       - thoi_gian_ket_thuc phải lớn hơn thoi_gian_bat_dau.
+       - thoi_gian_bat_dau không được nằm trong quá khứ so với thời điểm tạo.
+    3. Kiểm tra người chủ trì:
+       - ma_nguoi_chu_tri phải tồn tại trong bảng NguoiDung (HTTP 404).
+       - Tài khoản người chủ trì phải đang ở trạng thái hoạt động (HTTP 400).
+    4. Kiểm tra danh sách thực tập sinh được mời:
+       - Không được để trống (HTTP 400).
+       - Từng mã sinh viên/thực tập sinh phải tồn tại và có email hợp lệ trong hệ thống (HTTP 404 nếu không tìm thấy).
+    5. Lưu bản ghi LichHop vào CSDL.
+    6. Đăng ký gửi email HTML với BackgroundTasks để phản hồi nhanh chóng mà không chặn luồng chính.
+    """
+    # 1. Kiểm tra chuỗi rỗng tiêu đề và địa điểm
+    tieu_de_clean = meeting_data.tieu_de.strip() if meeting_data.tieu_de else ""
+    dia_diem_clean = meeting_data.dia_diem.strip() if meeting_data.dia_diem else ""
+
+    if not tieu_de_clean:
+        raise HTTPException(
+            status_code=400,
+            detail="Tiêu đề cuộc họp không được để trống hoặc chỉ chứa khoảng trắng"
+        )
+
+    if not dia_diem_clean:
+        raise HTTPException(
+            status_code=400,
+            detail="Địa điểm cuộc họp không được để trống hoặc chỉ chứa khoảng trắng"
+        )
+
+    # 2. Kiểm tra tính hợp lệ của thời gian
+    if meeting_data.thoi_gian_ket_thuc <= meeting_data.thoi_gian_bat_dau:
+        raise HTTPException(
+            status_code=400,
+            detail="Thời gian kết thúc cuộc họp phải lớn hơn thời gian bắt đầu"
+        )
+
+    # Cho phép dung sai 60 giây để tránh lỗi trễ mạng hoặc clock lệch nhẹ
+    now = datetime.now()
+    if meeting_data.thoi_gian_bat_dau < (now - timedelta(seconds=60)):
+        raise HTTPException(
+            status_code=400,
+            detail="Thời gian bắt đầu cuộc họp không được nằm trong quá khứ"
+        )
+
+    # 3. Kiểm tra người chủ trì cuộc họp
+    host = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == meeting_data.ma_nguoi_chu_tri).first()
+    if not host:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy người chủ trì với mã {meeting_data.ma_nguoi_chu_tri}"
+        )
+
+    if host.trang_thai == "Khoa":
+        raise HTTPException(
+            status_code=400,
+            detail="Tài khoản người chủ trì hiện đang bị khóa, không thể lên lịch họp"
+        )
+
+    # 4. Kiểm tra danh sách thực tập sinh được mời
+    if not meeting_data.danh_sach_thuc_tap_sinh or len(meeting_data.danh_sach_thuc_tap_sinh) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Danh sách thực tập sinh được mời không được để trống"
+        )
+
+    # Thu thập và kiểm tra từng thực tập sinh (chống trùng lặp ID)
+    unique_intern_ids = list(dict.fromkeys(meeting_data.danh_sach_thuc_tap_sinh))
+    invited_interns = []
+    invited_emails = []
+
+    for intern_id in unique_intern_ids:
+        # Tìm theo ma_nguoi_dung
+        user_intern = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == intern_id).first()
+        if not user_intern:
+            # Dự phòng tìm theo ma_ho_so nếu client truyền ma_ho_so
+            hs = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == intern_id).first()
+            if hs and hs.thuc_tap_sinh:
+                user_intern = hs.thuc_tap_sinh
+
+        if not user_intern:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Không tìm thấy thực tập sinh với mã {intern_id} trong hệ thống"
+            )
+
+        if not user_intern.email or not user_intern.email.strip():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Thực tập sinh '{user_intern.ho_ten}' (mã {intern_id}) chưa được cập nhật email"
+            )
+
+        invited_interns.append(user_intern)
+        invited_emails.append(user_intern.email.strip())
+
+    # 5. Lưu thông tin lịch họp vào CSDL
+    new_meeting = LichHop(
+        tieu_de=tieu_de_clean,
+        thoi_gian_bat_dau=meeting_data.thoi_gian_bat_dau,
+        thoi_gian_ket_thuc=meeting_data.thoi_gian_ket_thuc,
+        dia_diem=dia_diem_clean,
+        ma_nguoi_chu_tri=meeting_data.ma_nguoi_chu_tri,
+    )
+    db.add(new_meeting)
+    db.commit()
+    db.refresh(new_meeting)
+
+    # 6. Chuẩn bị định dạng thời gian và gửi email HTML tự động qua fastapi.BackgroundTasks
+    start_str = meeting_data.thoi_gian_bat_dau.strftime("%H:%M ngày %d/%m/%Y")
+    end_str = meeting_data.thoi_gian_ket_thuc.strftime("%H:%M ngày %d/%m/%Y")
+
+    for intern in invited_interns:
+        background_tasks.add_task(
+            send_meeting_invitation_email,
+            to_email=intern.email.strip(),
+            intern_name=intern.ho_ten,
+            meeting_title=new_meeting.tieu_de,
+            start_time=start_str,
+            end_time=end_str,
+            location=new_meeting.dia_diem,
+            host_name=host.ho_ten,
+            note=meeting_data.noi_dung,
+        )
+
+    # 7. Trả về kết quả HTTP 201 Created
+    response_data = MeetingResponseData(
+        ma_lich_hop=new_meeting.ma_lich_hop,
+        tieu_de=new_meeting.tieu_de,
+        thoi_gian_bat_dau=new_meeting.thoi_gian_bat_dau,
+        thoi_gian_ket_thuc=new_meeting.thoi_gian_ket_thuc,
+        dia_diem=new_meeting.dia_diem,
+        ma_nguoi_chu_tri=new_meeting.ma_nguoi_chu_tri,
+        ten_nguoi_chu_tri=host.ho_ten,
+        so_luong_nguoi_moi=len(invited_interns),
+        danh_sach_email_duoc_moi=invited_emails,
+        danh_sach_thuc_tap_sinh_moi=unique_intern_ids,
+    )
+
+    return MeetingCreateResponse(
+        code=201,
+        message=f"Tạo lịch họp thành công và đã lên lịch gửi email HTML tự động tới {len(invited_interns)} thực tập sinh",
+        data=response_data,
     )
 
 

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 from typing import Optional, List, Union, Dict
 from datetime import date, datetime, time
 import re
@@ -864,6 +864,44 @@ class CheckOutResponse(BaseModel):
     data: Optional[AttendanceItemData] = None
 
 
+class AttendanceScanRequest(BaseModel):
+    """Schema yêu cầu quét mã định danh chấm công (POST /api/v1/attendance/scan)"""
+    ma_dinh_danh: str = Field(..., description="Mã định danh của thực tập sinh (mã hồ sơ, mã thẻ RFID hoặc mã QR)")
+    phuong_thuc: Optional[str] = Field(default="QR/Card", description="Phương thức quét: QR, Card, QR/Card")
+    thoi_gian_quet: Optional[datetime] = Field(default=None, description="Thời điểm quét mã (ISO 8601). Mặc định thời gian hiện tại.")
+    ghi_chu: Optional[str] = Field(default=None, max_length=255, description="Ghi chú thêm")
+
+    @field_validator('ma_dinh_danh')
+    def validate_ma_dinh_danh(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Mã định danh không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+
+class AttendanceScanResponseData(BaseModel):
+    """Dữ liệu phản hồi chi tiết sau khi quét mã định danh thành công"""
+    ma_cham_cong: int
+    ma_ho_so: int
+    ho_ten: Optional[str] = None
+    ngay_cham_cong: str
+    gio_checkin: Optional[str] = None
+    gio_checkout: Optional[str] = None
+    gio_check_in: Optional[str] = None
+    gio_check_out: Optional[str] = None
+    hanh_dong: str = Field(..., description="Hành động được ghi nhận: CHECK_IN hoặc CHECK_OUT")
+    trang_thai: str = "DungGio"
+    phuong_thuc: str = "QR/Card"
+    ghi_chu: Optional[str] = None
+
+
+class AttendanceScanResponse(BaseModel):
+    """Phản hồi sau khi quét mã định danh chấm công thành công (HTTP 200 OK)"""
+    status_code: int = 200
+    message: str = "Quét mã chấm công thành công"
+    data: Optional[AttendanceScanResponseData] = None
+
+
 class RollCallRecordItem(BaseModel):
     """Chi tiết điểm danh từng sinh viên trong sổ điểm danh của Mentor"""
     ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập sinh")
@@ -1532,6 +1570,63 @@ class UserCreateRequest(BaseModel):
     vai_tro: str = Field("ThucTapSinh", description="Vai trò: ThucTapSinh, Mentor, HR, Admin, NhaTruong")
     mat_khau: Optional[str] = Field("123456", min_length=6, description="Mật khẩu ban đầu")
     ma_phong_ban: Optional[int] = Field(None, description="Mã phòng ban nếu là Mentor hoặc Cán bộ")
+
+
+# ==============================================================
+# SCHEMA CHO LỊCH HỌP (MEETINGS)
+# ==============================================================
+class MeetingCreateRequest(BaseModel):
+    """Schema yêu cầu tạo mới lịch họp"""
+    tieu_de: str = Field(..., min_length=1, max_length=255, description="Tiêu đề cuộc họp")
+    thoi_gian_bat_dau: datetime = Field(..., description="Thời gian bắt đầu họp")
+    thoi_gian_ket_thuc: datetime = Field(..., description="Thời gian kết thúc họp")
+    dia_diem: str = Field(..., min_length=1, max_length=255, description="Địa điểm hoặc phòng họp/link họp")
+    ma_nguoi_chu_tri: int = Field(..., gt=0, description="Mã người dùng của người chủ trì cuộc họp")
+    danh_sach_thuc_tap_sinh: List[int] = Field(..., min_length=1, description="Danh sách mã thực tập sinh được mời")
+    noi_dung: Optional[str] = Field(None, description="Nội dung hoặc mô tả chi tiết cuộc họp")
+
+    @field_validator('tieu_de')
+    def validate_tieu_de(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Tiêu đề cuộc họp không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+    @field_validator('dia_diem')
+    def validate_dia_diem(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Địa điểm không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+    @model_validator(mode='after')
+    def validate_meeting_time(self):
+        if self.thoi_gian_ket_thuc <= self.thoi_gian_bat_dau:
+            raise ValueError("Thời gian kết thúc phải lớn hơn thời gian bắt đầu")
+        return self
+
+
+class MeetingResponseData(BaseModel):
+    """Dữ liệu chi tiết lịch họp trả về"""
+    ma_lich_hop: int
+    tieu_de: str
+    thoi_gian_bat_dau: datetime
+    thoi_gian_ket_thuc: datetime
+    dia_diem: str
+    ma_nguoi_chu_tri: int
+    ten_nguoi_chu_tri: Optional[str] = None
+    so_luong_nguoi_moi: int
+    danh_sach_email_duoc_moi: List[str]
+    danh_sach_thuc_tap_sinh_moi: List[int]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MeetingCreateResponse(BaseModel):
+    """Phản hồi sau khi tạo lịch họp thành công (HTTP 201)"""
+    code: int = 201
+    message: str = "Tạo lịch họp thành công và đã gửi email mời tới thực tập sinh"
+    data: MeetingResponseData
 
 
 
