@@ -1629,4 +1629,156 @@ class MeetingCreateResponse(BaseModel):
     data: MeetingResponseData
 
 
+# ==============================================================
+# SCHEMA TÍCH HỢP HRM (HRM INTEGRATION & RECONCILIATION)
+# ==============================================================
+EMAIL_REGEX_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+
+class HRMEmployeeSyncItem(BaseModel):
+    """Thông tin cán bộ/nhân viên (Mentor, HR, Quản lý) từ HRM"""
+    email: str = Field(..., min_length=5, max_length=100, description="Email định danh nhân viên")
+    ho_ten: str = Field(..., min_length=1, max_length=100, description="Họ và tên nhân viên")
+    so_dien_thoai: Optional[str] = Field(None, max_length=20, description="Số điện thoại")
+    vai_tro: Optional[str] = Field("Mentor", description="Vai trò: Mentor, HR, Admin, QuanLy")
+    ten_phong_ban: Optional[str] = Field(None, description="Tên phòng ban làm việc")
+    ma_phong_ban: Optional[int] = Field(None, description="Mã phòng ban nếu có")
+    trang_thai: Optional[str] = Field("HoatDong", description="Trạng thái tài khoản: HoatDong hoặc Khoa")
+
+    @field_validator("email")
+    def validate_email(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Email không được để trống")
+        if not re.match(EMAIL_REGEX_PATTERN, cleaned):
+            raise ValueError("Email không đúng định dạng hợp lệ")
+        return cleaned.lower()
+
+    @field_validator("ho_ten")
+    def validate_ho_ten(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Họ tên nhân viên không được để trống")
+        return cleaned
+
+
+class HRMInternSyncItem(BaseModel):
+    """Thông tin sinh viên thực tập từ HRM"""
+    email: str = Field(..., min_length=5, max_length=100, description="Email định danh sinh viên thực tập")
+    ho_ten: str = Field(..., min_length=1, max_length=100, description="Họ và tên sinh viên")
+    so_dien_thoai: Optional[str] = Field(None, max_length=20, description="Số điện thoại")
+    chuyen_nganh: Optional[str] = Field(None, max_length=100, description="Chuyên ngành đào tạo")
+    lop: Optional[str] = Field(None, max_length=50, description="Lớp sinh hoạt")
+    ten_truong: Optional[str] = Field(None, description="Tên trường đại học")
+    ma_truong: Optional[int] = Field(None, description="Mã trường đại học nếu có")
+    mentor_email: Optional[str] = Field(None, max_length=100, description="Email của Mentor trực tiếp hướng dẫn")
+    ma_chuong_trinh: Optional[int] = Field(None, description="Mã chương trình thực tập")
+    trang_thai_thuc_tap: Optional[str] = Field("DangThucTap", description="Trạng thái thực tập: DangThucTap, HoanThanh, ThoiHoc")
+    trang_thai_xet_duyet: Optional[str] = Field("DaDuyet", description="Trạng thái hồ sơ: DaDuyet, ChoDuyet, TuChoi")
+
+    @field_validator("email")
+    def validate_email(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Email không được để trống")
+        if not re.match(EMAIL_REGEX_PATTERN, cleaned):
+            raise ValueError("Email không đúng định dạng hợp lệ")
+        return cleaned.lower()
+
+    @field_validator("mentor_email")
+    def validate_mentor_email(cls, value: Optional[str]):
+        if not value or not value.strip():
+            return None
+        cleaned = value.strip()
+        if not re.match(EMAIL_REGEX_PATTERN, cleaned):
+            raise ValueError("Email mentor không đúng định dạng hợp lệ")
+        return cleaned.lower()
+
+    @field_validator("ho_ten")
+    def validate_ho_ten(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Họ tên sinh viên không được để trống")
+        return cleaned
+
+
+class HRMSyncRequest(BaseModel):
+    """Payload gửi lên từ HRM để đối soát và đồng bộ"""
+    source: Optional[str] = Field("HRM_WEBHOOK", description="Tên nguồn dữ liệu HRM: HRM_WEBHOOK, SAP, WORKDAY...")
+    sync_timestamp: Optional[datetime] = Field(default_factory=datetime.now, description="Thời điểm gửi đồng bộ")
+    employees: List[HRMEmployeeSyncItem] = Field(default_factory=list, description="Danh sách nhân sự (Mentor, HR)")
+    interns: List[HRMInternSyncItem] = Field(default_factory=list, description="Danh sách sinh viên thực tập")
+
+
+class HRMSyncDetailItem(BaseModel):
+    """Chi tiết kết quả xử lý của từng bản ghi"""
+    email: str
+    type: str                  # "EMPLOYEE" hoặc "INTERN"
+    action: str                # "CREATED", "UPDATED", "FAILED", "SKIPPED"
+    message: str
+
+
+class HRMSyncSummary(BaseModel):
+    """Thống kê tổng hợp kết quả đối soát"""
+    total_received: int = 0
+    employees_created: int = 0
+    employees_updated: int = 0
+    interns_created: int = 0
+    interns_updated: int = 0
+    failed_count: int = 0
+
+
+class HRMSyncResponse(BaseModel):
+    """Response trả về kết quả đồng bộ HRM (HTTP 200)"""
+    status_code: int = 200
+    message: str = "Đồng bộ và đối soát dữ liệu HRM thành công"
+    summary: HRMSyncSummary
+    details: List[HRMSyncDetailItem] = []
+
+
+# ==============================================================
+# SCHEMA PHÂN QUYỀN VAI TRÒ (RBAC - ROLE BASED ACCESS CONTROL)
+# ==============================================================
+class PermissionItemResponse(BaseModel):
+    """Thông tin quyền hạn trả về cho API"""
+    ma_quyen_han: int
+    ma_quyen: str
+    ten_quyen: str
+    mo_ta: Optional[str] = None
+    nhom_quyen: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RolePermissionsUpdateRequest(BaseModel):
+    """Payload cập nhật danh sách quyền hạn cho một vai trò"""
+    permissions: List[Union[str, int]] = Field(
+        ...,
+        description="Danh sách mã quyền dạng chuỗi (VD: ['intern:read', 'role:manage']) hoặc mã số nguyên ID (VD: [1, 2])"
+    )
+
+    @field_validator("permissions")
+    def validate_permissions_list(cls, value: List[Union[str, int]]):
+        if not isinstance(value, list):
+            raise ValueError("Danh sách quyền hạn phải là một mảng")
+        return value
+
+
+class RolePermissionsResponse(BaseModel):
+    """Response trả về danh sách quyền của vai trò sau cập nhật hoặc truy vấn"""
+    status_code: int = 200
+    message: str = "Thành công"
+    role: str
+    total_permissions: int = 0
+    permissions: List[PermissionItemResponse] = []
+
+
+class PermissionListResponse(BaseModel):
+    """Response danh mục toàn bộ quyền hạn trong hệ thống"""
+    status_code: int = 200
+    message: str = "Lấy danh mục quyền hạn thành công"
+    total: int = 0
+    data: List[PermissionItemResponse] = []
+
+
+
 

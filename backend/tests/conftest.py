@@ -83,12 +83,18 @@ def reseed_sqlite_db():
         session.add(ct)
 
         from security import get_password_hash
+        from services.rbac_service import seed_default_permissions_and_roles
         pass_hash = get_password_hash("123456")
         u1 = NguoiDung(ma_nguoi_dung=1, ma_phong_ban=1, ho_ten="Nguyễn Văn A", email="vana@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0912345678", vai_tro="ThucTapSinh", trang_thai="HoatDong")
         u2 = NguoiDung(ma_nguoi_dung=2, ma_phong_ban=1, ho_ten="Trần Thị B", email="thib@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0987654321", vai_tro="ThucTapSinh", trang_thai="HoatDong")
         u3 = NguoiDung(ma_nguoi_dung=3, ma_phong_ban=1, ho_ten="Nguyễn Hướng Dẫn", email="mentor@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0905123456", vai_tro="Mentor", trang_thai="HoatDong")
         u4 = NguoiDung(ma_nguoi_dung=4, ma_phong_ban=1, ho_ten="Lê Thị Mentor", email="mentor2@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0905999888", vai_tro="Mentor", trang_thai="HoatDong")
-        session.add_all([u1, u2, u3, u4])
+        u5 = NguoiDung(ma_nguoi_dung=5, ma_phong_ban=1, ho_ten="Quản Trị Viên", email="admin@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0999888777", vai_tro="Admin", trang_thai="HoatDong")
+        u6 = NguoiDung(ma_nguoi_dung=6, ma_phong_ban=1, ho_ten="Cán Bộ Tuyển Dụng", email="hr@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0999888666", vai_tro="HR", trang_thai="HoatDong")
+        u7 = NguoiDung(ma_nguoi_dung=7, ma_phong_ban=1, ho_ten="Tài Khoản Bị Khóa", email="locked@example.com", mat_khau_hash=pass_hash, so_dien_thoai="0999888555", vai_tro="Mentor", trang_thai="Khoa")
+        session.add_all([u1, u2, u3, u4, u5, u6, u7])
+
+        seed_default_permissions_and_roles(session)
 
         hs1 = HoSoThucTap(ma_ho_so=1, ma_nguoi_dung=1, ma_truong=1, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Công nghệ thông tin", lop="CNTT-K19A", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="ChuaThucTap")
         hs2 = HoSoThucTap(ma_ho_so=2, ma_nguoi_dung=2, ma_truong=2, ma_chuong_trinh=1, ma_mentor=3, chuyen_nganh="Khoa học máy tính", lop="KHMT-K19A", trang_thai_xet_duyet="DaDuyet", trang_thai_thuc_tap="DangThucTap")
