@@ -45,3 +45,7 @@ htmlcov/
 # Uploaded files
 backend/uploads/*
 !backend/uploads/.gitkeep
+
+# Backup files
+backend/backups/*
+!backend/backups/.gitkeep
