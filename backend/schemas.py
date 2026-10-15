@@ -1780,5 +1780,71 @@ class PermissionListResponse(BaseModel):
     data: List[PermissionItemResponse] = []
 
 
+# ==============================================================
+# SCHEMA SAO LƯU DỮ LIỆU HỆ THỐNG (SYSTEM BACKUP & RECOVERY)
+# ==============================================================
+class BackupItemResponse(BaseModel):
+    """Thông tin chi tiết một tệp sao lưu dữ liệu (.sql.gz)"""
+    filename: str = Field(..., description="Tên tệp sao lưu nén định dạng .sql.gz")
+    size_bytes: int = Field(..., description="Kích thước tệp tính theo bytes")
+    size_human: str = Field(..., description="Kích thước tệp định dạng dễ đọc (KB, MB, GB)")
+    created_at: str = Field(..., description="Thời gian tạo bản sao lưu")
+    checksum_sha256: Optional[str] = Field(default=None, description="Mã băm SHA-256 đối soát tính toàn vẹn")
+    download_url: str = Field(..., description="Đường dẫn API stream tải file về")
+    note: Optional[str] = Field(default=None, description="Ghi chú về bản sao lưu")
+
+
+class BackupSchedulerStatus(BaseModel):
+    """Trạng thái tiến trình chạy nền sao lưu tự động định kỳ"""
+    enabled: bool = Field(..., description="Trạng thái bật/tắt của sao lưu tự động")
+    running: bool = Field(..., description="Trạng thái luồng scheduler đang chạy")
+    interval_hours: float = Field(..., description="Chu kỳ sao lưu tự động (giờ)")
+    last_run: Optional[str] = Field(default=None, description="Thời điểm sao lưu gần nhất")
+    status: str = Field(..., description="Mô tả trạng thái hiện tại của scheduler")
+    backup_dir: str = Field(..., description="Đường dẫn thư mục lưu trữ file sao lưu")
+
+
+class BackupListResponse(BaseModel):
+    """Phản hồi danh sách các tệp sao lưu trong hệ thống (HTTP 200)"""
+    status_code: int = 200
+    message: str = "Lấy danh sách tệp sao lưu thành công"
+    total_files: int = Field(..., description="Tổng số lượng tệp sao lưu")
+    total_size_bytes: int = Field(..., description="Tổng dung lượng lưu trữ tính theo bytes")
+    total_size_human: str = Field(..., description="Tổng dung lượng định dạng dễ đọc")
+    scheduler: Optional[BackupSchedulerStatus] = Field(default=None, description="Thông tin trạng thái scheduler định kỳ")
+    backups: List[BackupItemResponse] = Field(default_factory=list, description="Danh sách chi tiết các tệp sao lưu")
+
+
+class BackupCreateRequest(BaseModel):
+    """Payload yêu cầu kích hoạt sao lưu dữ liệu thủ công (POST)"""
+    note: Optional[str] = Field(default=None, max_length=255, description="Ghi chú về mục đích bản sao lưu")
+    prefix: Optional[str] = Field(default=None, max_length=50, description="Tiền tố tên file (mặc định: backup_intern_management)")
+
+    @field_validator("note")
+    def validate_note(cls, value: Optional[str]):
+        if value is not None:
+            cleaned = value.strip()
+            if len(cleaned) > 255:
+                raise ValueError("Ghi chú không được vượt quá 255 ký tự")
+            return cleaned if cleaned else None
+        return None
+
+    @field_validator("prefix")
+    def validate_prefix(cls, value: Optional[str]):
+        if value is not None:
+            cleaned = value.strip()
+            if not re.match(r"^[a-zA-Z0-9_\-]+$", cleaned):
+                raise ValueError("Tiền tố tên tệp chỉ được chứa chữ cái, số, dấu gạch dưới hoặc gạch ngang")
+            return cleaned
+        return None
+
+
+class BackupCreateResponse(BaseModel):
+    """Phản hồi sau khi tạo thành công bản sao lưu mới (HTTP 201)"""
+    status_code: int = 201
+    message: str = "Tạo bản sao lưu cơ sở dữ liệu thành công"
+    backup: BackupItemResponse
+
+
 
 

@@ -111,6 +111,11 @@ from schemas import (
     RolePermissionsResponse,
     PermissionListResponse,
     PermissionItemResponse,
+    BackupItemResponse,
+    BackupListResponse,
+    BackupSchedulerStatus,
+    BackupCreateRequest,
+    BackupCreateResponse,
 )
 from security import get_password_hash, verify_password
 from services.hrm_service import sync_hrm_data
@@ -121,9 +126,20 @@ from services.rbac_service import (
     update_role_permissions,
     seed_default_permissions_and_roles,
 )
+from services.backup_service import (
+    create_backup,
+    list_backups,
+    get_backup_file_stream,
+    delete_backup,
+    backup_scheduler,
+    BackupInProgressError,
+    BackupExecutionError,
+    BackupSecurityError,
+    BackupNotFoundError,
+)
 
 # Thư mục database & models
-from database.session import get_db, Base, engine
+from database.session import get_db, Base, engine, SessionLocal
 from database.models import (
     HoSoThucTap,
     NguoiDung,
@@ -185,6 +201,22 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 
 # Giới hạn chỉ tiêu phân công sinh viên cho mỗi Mentor
 MAX_INTERNS_PER_MENTOR = 100
+
+# Quản lý vòng đời khởi động/dừng dịch vụ sao lưu định kỳ
+@app.on_event("startup")
+def startup_backup_scheduler():
+    try:
+        backup_scheduler.initialize(SessionLocal)
+        backup_scheduler.start()
+    except Exception:
+        pass
+
+@app.on_event("shutdown")
+def shutdown_backup_scheduler():
+    try:
+        backup_scheduler.stop()
+    except Exception:
+        pass
 
 # api post create intern
 @app.post("/api/v1/interns", status_code=201)
@@ -4700,6 +4732,190 @@ def get_all_permissions_endpoint(
         total=len(data),
         data=data
     )
+
+
+# ==============================================================
+# API QUẢN TRỊ SAO LƯU DỮ LIỆU HỆ THỐNG (SYSTEM BACKUP & RECOVERY)
+# ==============================================================
+@app.post(
+    "/api/v1/system/backup",
+    response_model=BackupCreateResponse,
+    status_code=201,
+    tags=["Hệ thống - Sao lưu dữ liệu"]
+)
+def trigger_manual_backup(
+    payload: Optional[BackupCreateRequest] = None,
+    current_user: NguoiDung = Depends(require_permissions("system:backup")),
+    db: Session = Depends(get_db)
+):
+    """
+    Kích hoạt tiến trình sao lưu cơ sở dữ liệu thủ công bằng mysqldump.
+    Dữ liệu được nén an toàn thành tệp .sql.gz và tính checksum SHA-256.
+    Chống xung đột sao lưu đồng thời (Concurrency Lock).
+    Yêu cầu quyền: system:backup (hoặc tài khoản Admin).
+    """
+    note = payload.note if payload else None
+    prefix = payload.prefix if payload else None
+
+    try:
+        result = create_backup(db=db, note=note, filename_prefix=prefix)
+        return BackupCreateResponse(
+            status_code=201,
+            message="Tạo bản sao lưu cơ sở dữ liệu thành công",
+            backup=BackupItemResponse(
+                filename=result["filename"],
+                size_bytes=result["size_bytes"],
+                size_human=result["size_human"],
+                created_at=result["created_at"],
+                checksum_sha256=result["checksum_sha256"],
+                download_url=result["download_url"],
+                note=result["note"]
+            )
+        )
+    except BackupInProgressError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+    except BackupExecutionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi thực thi sao lưu dữ liệu: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi máy chủ không mong muốn trong quá trình sao lưu: {str(e)}"
+        )
+
+
+@app.get(
+    "/api/v1/system/backups",
+    response_model=BackupListResponse,
+    status_code=200,
+    tags=["Hệ thống - Sao lưu dữ liệu"]
+)
+def get_backup_list(
+    current_user: NguoiDung = Depends(require_permissions("system:backup"))
+):
+    """
+    Lấy danh sách toàn bộ các file backup đã tạo trong hệ thống.
+    Kèm theo dung lượng tổng và trạng thái bộ lập lịch sao lưu tự động định kỳ.
+    Yêu cầu quyền: system:backup (hoặc tài khoản Admin).
+    """
+    backups_data = list_backups()
+    scheduler_status = backup_scheduler.get_status()
+
+    backup_items = [
+        BackupItemResponse(
+            filename=item["filename"],
+            size_bytes=item["size_bytes"],
+            size_human=item["size_human"],
+            created_at=item["created_at"],
+            checksum_sha256=item.get("checksum_sha256"),
+            download_url=item["download_url"],
+            note=item.get("note")
+        )
+        for item in backups_data["backups"]
+    ]
+
+    return BackupListResponse(
+        status_code=200,
+        message="Lấy danh sách tệp sao lưu thành công",
+        total_files=backups_data["total_files"],
+        total_size_bytes=backups_data["total_size_bytes"],
+        total_size_human=backups_data["total_size_human"],
+        scheduler=BackupSchedulerStatus(
+            enabled=scheduler_status["enabled"],
+            running=scheduler_status["running"],
+            interval_hours=scheduler_status["interval_hours"],
+            last_run=scheduler_status["last_run"],
+            status=scheduler_status["status"],
+            backup_dir=scheduler_status["backup_dir"]
+        ),
+        backups=backup_items
+    )
+
+
+@app.get(
+    "/api/v1/system/backups/{filename}/download",
+    status_code=200,
+    tags=["Hệ thống - Sao lưu dữ liệu"]
+)
+def download_backup_file(
+    filename: str = FastApiPath(..., description="Tên tệp sao lưu cần tải về"),
+    current_user: NguoiDung = Depends(require_permissions("system:backup"))
+):
+    """
+    Stream tải tệp sao lưu nén định dạng .sql.gz về client.
+    Áp dụng streaming chunks để tối ưu bộ nhớ RAM máy chủ khi file lớn.
+    Chống tấn công Path Traversal.
+    Yêu cầu quyền: system:backup (hoặc tài khoản Admin).
+    """
+    try:
+        stream_gen, file_size, file_path = get_backup_file_stream(filename)
+    except BackupSecurityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except BackupNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi đọc tệp sao lưu: {str(e)}"
+        )
+
+    headers = {
+        "Content-Disposition": f'attachment; filename="{file_path.name}"',
+        "Content-Length": str(file_size),
+        "Content-Type": "application/gzip",
+    }
+    return StreamingResponse(
+        content=stream_gen,
+        media_type="application/gzip",
+        headers=headers
+    )
+
+
+@app.delete(
+    "/api/v1/system/backups/{filename}",
+    status_code=200,
+    tags=["Hệ thống - Sao lưu dữ liệu"]
+)
+def delete_backup_file(
+    filename: str = FastApiPath(..., description="Tên tệp sao lưu cần xóa"),
+    current_user: NguoiDung = Depends(require_permissions("system:backup"))
+):
+    """
+    Xóa an toàn một tệp sao lưu khỏi hệ thống.
+    Yêu cầu quyền: system:backup (hoặc tài khoản Admin).
+    """
+    try:
+        delete_backup(filename)
+        return {
+            "status_code": 200,
+            "message": f"Đã xóa bản sao lưu '{filename}' thành công"
+        }
+    except BackupSecurityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except BackupNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi xóa tệp sao lưu: {str(e)}"
+        )
 
 
 

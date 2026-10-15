@@ -116,6 +116,12 @@ DEFAULT_PERMISSIONS = [
         "mo_ta": "Cho phép quản trị thiết lập hệ thống và kết nối ngoại vi",
         "nhom_quyen": "HeThong",
     },
+    {
+        "ma_quyen": "system:backup",
+        "ten_quyen": "Quản trị sao lưu và phục hồi dữ liệu hệ thống",
+        "mo_ta": "Cho phép kích hoạt sao lưu thủ công, xem danh sách và tải file sao lưu (.sql.gz)",
+        "nhom_quyen": "HeThong",
+    },
 ]
 
 # Gán quyền mặc định cho từng vai trò cơ bản

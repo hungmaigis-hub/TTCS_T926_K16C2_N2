@@ -2,6 +2,31 @@
 
 Tất cả các thay đổi của module Backend sẽ được ghi lại trong tài liệu này.
 
+## [1.29.0] - 2026-10-15
+
+### Đã hoàn thành (Added & Enhanced)
+- **Dịch vụ sao lưu CSDL (`services/backup_service.py`)**:
+  - Hỗ trợ `mysqldump` nén trực tiếp ra file `.sql.gz` (có fallback SQLite dumper cho môi trường test/dev).
+  - Sinh mã SHA-256 để đối soát toàn vẹn file.
+  - Khóa lock chống chạy 2 tiến trình backup cùng lúc (HTTP 409 Conflict).
+  - Chặn Path Traversal với tên file (`validate_backup_filename`).
+  - Tự động dọn file cũ, giữ lại tối đa 30 bản mới nhất (`BACKUP_MAX_KEEP`).
+  - Thêm `BackupScheduler` chạy nền định kỳ theo cấu hình `BACKUP_INTERVAL_HOURS`.
+- **Phân quyền RBAC (`services/rbac_service.py`)**:
+  - Thêm quyền `system:backup` gán mặc định cho vai trò `Admin`.
+- **API Endpoints (`main.py`)**:
+  - `POST /api/v1/system/backup`: Kích hoạt sao lưu thủ công.
+  - `GET /api/v1/system/backups`: Lấy danh sách file backup và trạng thái scheduler.
+  - `GET /api/v1/system/backups/{filename}/download`: Stream tải file `.sql.gz` theo chunk 64KB.
+  - `DELETE /api/v1/system/backups/{filename}`: Xóa file backup.
+- **Schemas (`schemas.py`)**:
+  - Thêm các schema: `BackupItemResponse`, `BackupListResponse`, `BackupCreateRequest`, `BackupCreateResponse`.
+- **Cấu hình & Kiểm thử**:
+  - Thêm biến môi trường vào `.env.example`.
+  - Thêm bộ test [tests/test_system_backup.py](file:///d:/clone/ttcs/backend/tests/test_system_backup.py) (13/13 test cases PASS).
+
+---
+
 ## [1.28.0] - 2026-10-15
 
 ### Đã hoàn thành (Added & Enhanced)
