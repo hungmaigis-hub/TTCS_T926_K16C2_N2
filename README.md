@@ -1,53 +1,105 @@
-# Dashboard Quản Lý Sinh Viên - KPI & Tỷ Lệ Hoàn Thành Thời Gian Thực
+# Giao diện Quản trị Nhật ký Hoạt động (Audit Logs Management)
 
-Giao diện Frontend (HTML5, CSS3, Vanilla JavaScript) thiết kế hiện đại hiển thị các khối thẻ thông số KPI số lượng sinh viên theo từng trạng thái và vòng tròn phần trăm tiến độ hoàn thành (Circular Progress Bar SVG). Hệ thống sử dụng Fetch API gọi endpoint `GET /api/v1/reports/completion-rate` với cơ chế cập nhật tự động theo thời gian thực (Real-time Polling).
-
----
-
-## 1. Cấu Trúc Thành Phần Giao Diện
-
-### A. Khối Thẻ Nổi Bật (Hero Card) - Vòng Tròn Phần Trăm Hoàn Thành:
-- **Vòng tròn SVG (Circular Progress Bar)**: Thiết kế bằng vector SVG với hiệu ứng Gradient màu hiện đại (Indigo -> Cyan -> Emerald), viền phát sáng (Glow effect), chuyển động quay mượt mà qua thuộc tính `stroke-dashoffset`.
-- **Số phần trăm ở tâm**: Hiển thị tỷ lệ hoàn thành kèm hiệu ứng số nhảy mượt mà (Count-up animation).
-- **Phân tích chỉ số kỳ học**: So sánh tỷ lệ thực tế với KPI Target, số lượng tốt nghiệp đúng hạn, gia hạn luận văn và cảnh báo học vụ.
-
-### B. Các Khối Thẻ Thống Số KPI Trạng Thái Sinh Viên:
-1. **Tổng Sinh Viên (Total Students)**: Quy mô toàn trường, thống kê xu hướng tăng trưởng so với kỳ trước (`+4.8%`).
-2. **Đang Theo Học (Active Students)**: Số lượng đang có lịch học/học phần hoạt động bình thường kèm thanh tỷ lệ % trực quan.
-3. **Đã Hoàn Thành / Tốt Nghiệp (Completed Students)**: Số lượng sinh viên đã đủ điều kiện tốt nghiệp và nhận văn bằng.
-4. **Bảo Lưu / Chờ Xử Lý (On Leave Students)**: Thống kê số lượng sinh viên tạm dừng tiến độ hoặc đang xét duyệt bảo lưu.
-5. **Thôi Học / Cảnh Báo (Dropped / Warning)**: Cảnh báo học vụ, nguy cơ buộc thôi học cần cố vấn học tập can thiệp.
+Hệ thống giao diện bảng HTML5 / CSS3 / Vanilla JavaScript hiện đại, trực quan, chuyên nghiệp dành cho trang quản trị hệ thống (Admin Portal).
 
 ---
 
-## 2. Đặc Tả API Backend Contract
+## 📁 Cấu trúc thư mục
 
-### Endpoint:
-```http
-GET /api/v1/reports/completion-rate
+```
+audit-logs/
+├── index.html       # Giao diện HTML gồm Form bộ lọc, Bảng hiển thị, Phân trang và Modal
+├── style.css        # Toàn bộ CSS giao diện bảng, huy hiệu trạng thái, hiệu ứng chuyển trang
+├── app.js           # JavaScript Fetch API GET /api/v1/admin/audit-logs, bộ lọc & Mock fallback
+└── README.md        # Hướng dẫn chi tiết & tài liệu kỹ thuật
 ```
 
-### Response Định Dạng Chuẩn JSON:
+---
+
+## 🚀 Tính năng nổi bật
+
+1. **Bộ lọc đa tiêu chí (Smart Filters)**:
+   - **Người dùng**: Tìm kiếm theo tên, email hoặc mã User ID.
+   - **Hành động (Action)**: `LOGIN`, `LOGOUT`, `CREATE`, `UPDATE`, `DELETE`, `EXPORT`, `PERMISSION_CHANGE`.
+   - **Khoảng thời gian (Date Range)**: Lọc từ ngày (`from_date`) đến ngày (`to_date`).
+   - **Trạng thái**: `SUCCESS`, `FAILED`, `WARNING`.
+   - Lựa chọn kích thước trang linh hoạt: 10, 20, 50 dòng/trang.
+
+2. **Giao thức Fetch API chuẩn RESTful**:
+   - Gửi yêu cầu HTTP GET tới `/api/v1/admin/audit-logs` với chuỗi `URLSearchParams`.
+   - Đính kèm headers `Accept: application/json` và `Authorization: Bearer <token>`.
+   - Quản lý trạng thái: Skeleton loading, Empty state (không tìm thấy kết quả), Error handling & Retry.
+
+3. **Phân trang thông minh (Smart Pagination)**:
+   - Hiển thị số bản ghi: `Đang hiển thị X - Y trong tổng Z bản ghi`.
+   - Nút chuyển: Trang đầu, Trang trước, Trang sau, Trang cuối.
+   - Nút số trang thông minh dạng rút gọn (VD: `1`, `...`, `4`, `[5]`, `6`, `...`, `15`).
+
+4. **Huy hiệu trực quan (Visual Badges) & Modal xem chi tiết**:
+   - Màu sắc riêng biệt cho từng hành động và trạng thái.
+   - Avatar người dùng tự động sinh màu pastel theo tên.
+   - Xem chi tiết từng lượt thao tác: IP, User Agent, JSON payload thay đổi (old_value, new_value).
+
+5. **Chế độ Mock Fallback thông minh**:
+   - Khi chưa khởi động backend server, hệ thống tự động sinh 45 bản ghi mẫu giả lập ngay trên trình duyệt để kiểm thử toàn diện thao tác lọc và phân trang mà không bị lỗi.
+
+---
+
+## 📡 Đặc tả API Endpoint
+
+### Request
+```http
+GET /api/v1/admin/audit-logs?user=nguyen&action=UPDATE&from_date=2026-10-01&to_date=2026-10-16&page=1&limit=10
+Accept: application/json
+Authorization: Bearer <your_jwt_token>
+```
+
+### Query Parameters
+
+| Tham số | Kiểu | Mô tả | Mặc định |
+|---|---|---|---|
+| `page` | `integer` | Số trang hiện tại | `1` |
+| `limit` | `integer` | Số lượng bản ghi trên một trang | `10` |
+| `user` | `string` | Từ khóa tìm kiếm người dùng (tên / email / id) | `""` |
+| `action` | `string` | Mã hành động (`CREATE`, `UPDATE`, `DELETE`, ...) | `""` |
+| `from_date` | `string` | Ngày bắt đầu định dạng `YYYY-MM-DD` | `""` |
+| `to_date` | `string` | Ngày kết thúc định dạng `YYYY-MM-DD` | `""` |
+| `status` | `string` | Trạng thái thực thi (`SUCCESS`, `FAILED`) | `""` |
+
+### Chuẩn JSON Response mong đợi
+
 ```json
 {
   "success": true,
-  "timestamp": "2026-10-09T20:15:00.000Z",
   "data": {
-    "totalStudents": 12500,
-    "active": 9850,
-    "completed": 2100,
-    "onLeave": 380,
-    "dropped": 170,
-    "completionRate": 84.5,
-    "targetRate": 85.0,
-    "trend": {
-      "totalChange": "+4.8%",
-      "completionRateChange": "+2.5%"
-    },
-    "details": {
-      "onTimeGraduation": 1850,
-      "delayedGraduation": 250,
-      "academicWarning": 110
+    "items": [
+      {
+        "id": 1001,
+        "timestamp": "2026-10-16T15:30:00Z",
+        "user": {
+          "id": 101,
+          "name": "Nguyễn Văn An",
+          "email": "an.nguyen@company.com",
+          "role": "Super Admin"
+        },
+        "action": "UPDATE",
+        "resource": "Hợp đồng lao động #HD-2026-89",
+        "description": "Cập nhật trạng thái hợp đồng nhân sự",
+        "ip_address": "192.168.1.15",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "status": "SUCCESS",
+        "details": {
+          "field_modified": "status",
+          "old_value": "PENDING",
+          "new_value": "ACTIVE"
+        }
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total_records": 45,
+      "total_pages": 5
     }
   }
 }
@@ -55,9 +107,5 @@ GET /api/v1/reports/completion-rate
 
 ---
 
-## 3. Tính Năng JavaScript Fetch API & Real-time
-- **Fetch API không đồng bộ (`async/await`)**: Tự động gửi request với `Cache-Control: no-cache` để đảm bảo luôn nhận dữ liệu mới nhất.
-- **Cơ chế Cập nhật Tự động (Polling Interval)**: Có thể tùy chỉnh tần suất gọi API (mỗi 5s, 10s, 30s hoặc Tắt).
-- **Count-Up Animation (`requestAnimationFrame`)**: Khi dữ liệu cập nhật, các con số không bị giật mà tăng/giảm mượt mà.
-- **Chế độ kiểm thử Demo (Mock Mode)**: Khi mở trực tiếp file `index.html` trong trình duyệt mà chưa có server backend chạy, hệ thống tự động phát hiện và cung cấp dữ liệu giả lập có biến động thời gian thực để test trơn tru ngay lập tức.
-- **Badge trạng thái kết nối Live**: Hiển thị chấm tròn nhấp nháy xanh (Pulse dot) và thời điểm cập nhật lần cuối (`HH:mm:ss`).
+## 💻 Cách sử dụng
+Mở file `index.html` trực tiếp trên trình duyệt web (Google Chrome, Microsoft Edge, Firefox, Brave) hoặc chạy qua bất kỳ static web server nào (Live Server, VSCode, Nginx, Apache).
