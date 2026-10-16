@@ -1,388 +1,594 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notification Bell Component</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản lý người dùng - Thêm mới tài khoản</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    :root {
-      --primary-color: #2563eb;
-      --bg-unread: #eff6ff;
-      --text-main: #1f2937;
-      --text-muted: #6b7280;
-      --border-color: #e5e7eb;
+    .input-error {
+      border-color: #ef4444 !important;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f9fafb;
-      color: var(--text-main);
-    }
-
-    /* Header & Navigation Bar */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 2rem;
-      background: #ffffff;
-      border-bottom: 1px solid var(--border-color);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    .logo {
-      font-weight: 700;
-      font-size: 1.25rem;
-      color: var(--primary-color);
-    }
-
-    /* Notification Bell Container */
-    .notification-wrapper {
-      position: relative;
-    }
-
-    .bell-btn {
-      position: relative;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #4b5563;
-      transition: background 0.2s, color 0.2s;
-    }
-
-    .bell-btn:hover {
-      background: #f3f4f6;
-      color: var(--text-main);
-    }
-
-    .bell-icon {
-      width: 24px;
-      height: 24px;
-    }
-
-    /* Badge đếm số thông báo */
-    .badge {
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      background-color: #ef4444;
-      color: #ffffff;
-      font-size: 0.7rem;
-      font-weight: 700;
-      min-width: 18px;
-      height: 18px;
-      line-height: 18px;
-      border-radius: 9999px;
-      text-align: center;
-      padding: 0 4px;
-      border: 2px solid #ffffff;
-      display: none; /* Ẩn mặc định khi chưa có thông báo */
-    }
-
-    .badge.active {
-      display: inline-block;
-    }
-
-    /* Dropdown danh sách thông báo */
-    .notification-dropdown {
-      position: absolute;
-      right: 0;
-      top: calc(100% + 10px);
-      width: 360px;
-      max-height: 480px;
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-      border: 1px solid var(--border-color);
-      display: none;
-      flex-direction: column;
-      z-index: 1000;
-      overflow: hidden;
-    }
-
-    .notification-dropdown.show {
-      display: flex;
-    }
-
-    .dropdown-header {
-      padding: 1rem;
-      font-weight: 600;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .dropdown-body {
-      overflow-y: auto;
-      list-style: none;
-      flex: 1;
-    }
-
-    /* Item thông báo */
-    .notification-item {
-      padding: 0.875rem 1rem;
-      border-bottom: 1px solid var(--border-color);
-      cursor: pointer;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      transition: background 0.15s ease;
-    }
-
-    .notification-item:hover {
-      background: #f9fafb;
-    }
-
-    /* Kiểu thông báo chưa đọc */
-    .notification-item.unread {
-      background: var(--bg-unread);
-    }
-
-    .notification-item.unread:hover {
-      background: #e0f2fe;
-    }
-
-    .unread-indicator {
-      width: 8px;
-      height: 8px;
-      background: var(--primary-color);
-      border-radius: 50%;
-      margin-top: 6px;
-      flex-shrink: 0;
-      opacity: 0;
-    }
-
-    .notification-item.unread .unread-indicator {
-      opacity: 1;
-    }
-
-    .item-content {
-      flex: 1;
-    }
-
-    .item-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-main);
-      margin-bottom: 2px;
-    }
-
-    .item-desc {
-      font-size: 0.8125rem;
-      color: var(--text-muted);
-      line-height: 1.4;
-      margin-bottom: 4px;
-    }
-
-    .item-time {
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
-
-    /* Trạng thái trống / đang tải */
-    .empty-state, .loading-state {
-      padding: 2rem 1rem;
-      text-align: center;
-      font-size: 0.875rem;
-      color: var(--text-muted);
+    .input-error:focus {
+      --tw-ring-color: #ef4444 !important;
     }
   </style>
 </head>
-<body>
-
-  <!-- Header -->
-  <header class="header">
-    <div class="logo">MyApplication</div>
-
-    <!-- Notification Bell Area -->
-    <div class="notification-wrapper" id="notifWrapper">
-      <button class="bell-btn" id="bellBtn" aria-label="Thông báo" aria-expanded="false">
-        <svg class="bell-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-        <span class="badge" id="notifBadge">0</span>
-      </button>
-
-      <!-- Dropdown Content -->
-      <div class="notification-dropdown" id="notifDropdown">
-        <div class="dropdown-header">
-          <span>Thông báo</span>
-        </div>
-        <ul class="dropdown-body" id="notifList">
-          <li class="loading-state">Đang tải...</li>
-        </ul>
+<body class="bg-slate-50 min-h-screen text-slate-800 antialiased py-8 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-6xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-users-gear text-indigo-600"></i>
+          Quản Lý Người Dùng
+        </h1>
+        <p class="text-sm text-slate-500 mt-1">Tạo mới tài khoản và quản trị danh sách người dùng trong hệ thống</p>
+      </div>
+      <div class="mt-4 sm:mt-0 flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          API: /api/v1/admin/users
+        </span>
       </div>
     </div>
-  </header>
 
-  <!-- JavaScript Logic -->
+    <!-- Alert Thông báo -->
+    <div id="alertBox" class="hidden rounded-lg p-4 transition-all duration-300">
+      <div class="flex items-start gap-3">
+        <i id="alertIcon" class="text-lg mt-0.5"></i>
+        <div class="flex-1">
+          <p id="alertTitle" class="font-medium text-sm"></p>
+          <p id="alertMessage" class="text-xs mt-0.5"></p>
+        </div>
+        <button type="button" onclick="hideAlert()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Grid: Form & User List -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- FORM THÊM MỚI NGƯỜI DÙNG -->
+      <div class="lg:col-span-5 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div class="mb-5 pb-3 border-b border-slate-100">
+          <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-user-plus text-indigo-500"></i>
+            Thêm Mới Người Dùng
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Vui lòng điền đầy đủ các thông tin bắt buộc (*)</p>
+        </div>
+
+        <form id="createUserForm" novalidate class="space-y-4">
+          <!-- 1. Họ và tên -->
+          <div>
+            <label for="fullName" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+              Họ và tên <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-regular fa-user text-sm"></i>
+              </span>
+              <input
+                type="text"
+                id="fullName"
+                name="fullName"
+                placeholder="Ví dụ: Nguyễn Văn An"
+                class="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+              />
+            </div>
+            <p id="fullNameError" class="text-xs text-rose-500 mt-1 hidden"></p>
+          </div>
+
+          <!-- 2. Email -->
+          <div>
+            <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+              Địa chỉ Email <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-regular fa-envelope text-sm"></i>
+              </span>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="nguyenvanan@example.com"
+                class="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+              />
+            </div>
+            <p id="emailError" class="text-xs text-rose-500 mt-1 hidden"></p>
+          </div>
+
+          <!-- 3. Tên đăng nhập -->
+          <div>
+            <label for="username" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+              Tên đăng nhập <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-at text-sm"></i>
+              </span>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="nguyen_an123"
+                class="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+              />
+            </div>
+            <p id="usernameError" class="text-xs text-rose-500 mt-1 hidden"></p>
+          </div>
+
+          <!-- 4. Mật khẩu khởi tạo -->
+          <div>
+            <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+              Mật khẩu khởi tạo <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-lock text-sm"></i>
+              </span>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Tối thiểu 6 ký tự"
+                class="w-full pl-9 pr-10 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+              />
+              <button
+                type="button"
+                id="togglePasswordBtn"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+              >
+                <i class="fa-regular fa-eye text-sm" id="togglePasswordIcon"></i>
+              </button>
+            </div>
+            <p id="passwordError" class="text-xs text-rose-500 mt-1 hidden"></p>
+          </div>
+
+          <!-- 5. Dropdown chọn vai trò -->
+          <div>
+            <label for="role" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+              Vai trò (Role) <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-shield-halved text-sm"></i>
+              </span>
+              <select
+                id="role"
+                name="role"
+                class="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition appearance-none cursor-pointer"
+              >
+                <option value="">-- Chọn vai trò --</option>
+                <option value="ADMIN">Quản trị viên (ADMIN)</option>
+                <option value="MANAGER">Quản lý (MANAGER)</option>
+                <option value="STAFF">Nhân viên (STAFF)</option>
+                <option value="USER">Người dùng (USER)</option>
+              </select>
+              <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-chevron-down text-xs"></i>
+              </span>
+            </div>
+            <p id="roleError" class="text-xs text-rose-500 mt-1 hidden"></p>
+          </div>
+
+          <!-- 6. Nút Tạo -->
+          <div class="pt-2">
+            <button
+              type="submit"
+              id="submitBtn"
+              class="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-colors duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <i id="btnIcon" class="fa-solid fa-plus text-sm"></i>
+              <span id="btnText">Tạo người dùng</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- DANH SÁCH TÀI KHOẢN -->
+      <div class="lg:col-span-7 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-address-book text-indigo-500"></i>
+              Danh Sách Tài Khoản
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Tự động đồng bộ sau khi thêm người dùng mới</p>
+          </div>
+          <button
+            id="refreshBtn"
+            type="button"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+            title="Làm mới danh sách"
+          >
+            <i id="refreshIcon" class="fa-solid fa-rotate text-xs"></i>
+            <span>Làm mới</span>
+          </button>
+        </div>
+
+        <!-- Bảng hiển thị danh sách -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold uppercase tracking-wider">
+                <th class="py-2.5 px-3">Họ và tên</th>
+                <th class="py-2.5 px-3">Tài khoản</th>
+                <th class="py-2.5 px-3">Vai trò</th>
+                <th class="py-2.5 px-3">Ngày tạo</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody" class="divide-y divide-slate-100">
+              <!-- Loading spinner mặc định -->
+              <tr>
+                <td colspan="4" class="text-center py-8 text-slate-400">
+                  <i class="fa-solid fa-circle-notch fa-spin text-indigo-500 text-lg mb-2"></i>
+                  <p>Đang tải danh sách tài khoản...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
   <script>
-    const API_BASE = '/api/v1/notifications';
-    
-    // Tham chiếu các phần tử DOM
-    const bellBtn = document.getElementById('bellBtn');
-    const notifDropdown = document.getElementById('notifDropdown');
-    const notifBadge = document.getElementById('notifBadge');
-    const notifList = document.getElementById('notifList');
-    const notifWrapper = document.getElementById('notifWrapper');
+    // ==========================================
+    // CẤU HÌNH API ENDPOINT
+    // ==========================================
+    const API_BASE_URL = '/api/v1/admin/users';
 
-    let notifications = [];
+    // Mock Database trong bộ nhớ (phục vụ chạy test độc lập nếu chưa có backend server thật)
+    let mockUsersDB = [
+      { id: 1, fullName: 'Trần Thị Mai', username: 'mai_tran', email: 'mai.tran@example.com', role: 'ADMIN', createdAt: '2026-10-15 09:30' },
+      { id: 2, fullName: 'Lê Hoàng Nam', username: 'nam_le', email: 'nam.le@example.com', role: 'MANAGER', createdAt: '2026-10-16 11:15' },
+      { id: 3, fullName: 'Phạm Minh Đức', username: 'duc_pham', email: 'duc.pham@example.com', role: 'STAFF', createdAt: '2026-10-16 14:00' }
+    ];
 
-    // Helper: Định dạng thời gian tương đối
-    function formatTime(isoString) {
-      if (!isoString) return '';
-      const date = new Date(isoString);
-      const now = new Date();
-      const diffMinutes = Math.floor((now - date) / (1000 * 60));
+    // DOM Elements
+    const userForm = document.getElementById('createUserForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnIcon = document.getElementById('btnIcon');
+    const btnText = document.getElementById('btnText');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const refreshIcon = document.getElementById('refreshIcon');
+    const userTableBody = document.getElementById('userTableBody');
+    const alertBox = document.getElementById('alertBox');
+    const alertIcon = document.getElementById('alertIcon');
+    const alertTitle = document.getElementById('alertTitle');
+    const alertMessage = document.getElementById('alertMessage');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+    const passwordInput = document.getElementById('password');
 
-      if (diffMinutes < 1) return 'Vừa xong';
-      if (diffMinutes < 60) return `${diffMinutes} phút trước`;
-      const diffHours = Math.floor(diffMinutes / 60);
-      if (diffHours < 24) return `${diffHours} giờ trước`;
-      return date.toLocaleDateString('vi-VN');
-    }
+    // ==========================================
+    // 1. TÍNH NĂNG ẨN/HIỆN MẬT KHẨU
+    // ==========================================
+    togglePasswordBtn.addEventListener('click', () => {
+      const isPassword = passwordInput.getAttribute('type') === 'password';
+      passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+      togglePasswordIcon.className = isPassword ? 'fa-regular fa-eye-slash text-sm' : 'fa-regular fa-eye text-sm';
+    });
 
-    // 1. Cập nhật huy hiệu (Badge)
-    function updateBadge() {
-      const unreadCount = notifications.filter(n => !n.is_read).length;
-      if (unreadCount > 0) {
-        notifBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-        notifBadge.classList.add('active');
+    // ==========================================
+    // 2. VALIDATION DỮ LIỆU ĐẦU VÀO
+    // ==========================================
+    const validators = {
+      fullName: (val) => {
+        if (!val || !val.trim()) return 'Vui lòng nhập họ và tên';
+        if (val.trim().length < 2) return 'Họ và tên phải có ít nhất 2 ký tự';
+        return '';
+      },
+      email: (val) => {
+        if (!val || !val.trim()) return 'Vui lòng nhập email';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(val.trim())) return 'Định dạng email không hợp lệ';
+        return '';
+      },
+      username: (val) => {
+        if (!val || !val.trim()) return 'Vui lòng nhập tên đăng nhập';
+        const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+        if (!usernameRegex.test(val.trim())) {
+          return 'Tên đăng nhập từ 3-20 ký tự, chỉ gồm chữ cái, số và dấu gạch dưới (_)';
+        }
+        return '';
+      },
+      password: (val) => {
+        if (!val) return 'Vui lòng nhập mật khẩu khởi tạo';
+        if (val.length < 6) return 'Mật khẩu phải chứa ít nhất 6 ký tự';
+        return '';
+      },
+      role: (val) => {
+        if (!val) return 'Vui lòng chọn vai trò cho người dùng';
+        return '';
+      }
+    };
+
+    function validateField(fieldName) {
+      const input = document.getElementById(fieldName);
+      const errorEl = document.getElementById(`${fieldName}Error`);
+      const errorMsg = validators[fieldName](input.value);
+
+      if (errorMsg) {
+        input.classList.add('input-error');
+        errorEl.textContent = errorMsg;
+        errorEl.classList.remove('hidden');
+        return false;
       } else {
-        notifBadge.textContent = '0';
-        notifBadge.classList.remove('active');
+        input.classList.remove('input-error');
+        errorEl.textContent = '';
+        errorEl.classList.add('hidden');
+        return true;
       }
     }
 
-    // 2. Render danh sách thông báo ra DOM
-    function renderNotifications() {
-      if (!notifications || notifications.length === 0) {
-        notifList.innerHTML = '<li class="empty-state">Bạn chưa có thông báo nào.</li>';
+    // Gắn sự kiện blur/input để validate tương tác thời gian thực
+    ['fullName', 'email', 'username', 'password', 'role'].forEach((field) => {
+      const element = document.getElementById(field);
+      element.addEventListener('blur', () => validateField(field));
+      element.addEventListener('input', () => {
+        if (element.classList.contains('input-error')) {
+          validateField(field);
+        }
+      });
+    });
+
+    function validateAllFields() {
+      const isFullNameValid = validateField('fullName');
+      const isEmailValid = validateField('email');
+      const isUsernameValid = validateField('username');
+      const isPasswordValid = validateField('password');
+      const isRoleValid = validateField('role');
+
+      return isFullNameValid && isEmailValid && isUsernameValid && isPasswordValid && isRoleValid;
+    }
+
+    // ==========================================
+    // 3. HIỂN THỊ THÔNG BÁO (ALERT)
+    // ==========================================
+    function showAlert(type, title, message) {
+      alertBox.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200', 'bg-rose-50', 'text-rose-800', 'border-rose-200');
+      alertBox.classList.add('border');
+
+      if (type === 'success') {
+        alertBox.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200');
+        alertIcon.className = 'fa-solid fa-circle-check text-emerald-600 text-lg mt-0.5';
+      } else {
+        alertBox.classList.add('bg-rose-50', 'text-rose-800', 'border-rose-200');
+        alertIcon.className = 'fa-solid fa-circle-exclamation text-rose-600 text-lg mt-0.5';
+      }
+
+      alertTitle.textContent = title;
+      alertMessage.textContent = message;
+
+      // Tự động ẩn sau 5 giây
+      setTimeout(() => {
+        hideAlert();
+      }, 5000);
+    }
+
+    function hideAlert() {
+      alertBox.classList.add('hidden');
+    }
+
+    // ==========================================
+    // 4. QUẢN LÝ TRẠNG THÁI NÚT SUBMIT (LOADING)
+    // ==========================================
+    function setSubmittingState(isSubmitting) {
+      if (isSubmitting) {
+        submitBtn.disabled = true;
+        btnIcon.className = 'fa-solid fa-circle-notch fa-spin text-sm';
+        btnText.textContent = 'Đang tạo...';
+      } else {
+        submitBtn.disabled = false;
+        btnIcon.className = 'fa-solid fa-plus text-sm';
+        btnText.textContent = 'Tạo người dùng';
+      }
+    }
+
+    // ==========================================
+    // 5. RENDER VÀ LÀM MỚI DANH SÁCH TÀI KHOẢN
+    // ==========================================
+    function getRoleBadge(role) {
+      switch (role) {
+        case 'ADMIN':
+          return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700">ADMIN</span>';
+        case 'MANAGER':
+          return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-purple-700">MANAGER</span>';
+        case 'STAFF':
+          return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700">STAFF</span>';
+        default:
+          return '<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700">USER</span>';
+      }
+    }
+
+    function renderUserTable(users) {
+      if (!users || users.length === 0) {
+        userTableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="text-center py-6 text-slate-400">
+              <i class="fa-solid fa-inbox text-2xl mb-1"></i>
+              <p>Chưa có tài khoản nào trong hệ thống.</p>
+            </td>
+          </tr>
+        `;
         return;
       }
 
-      notifList.innerHTML = notifications.map(item => `
-        <li class="notification-item ${item.is_read ? '' : 'unread'}" 
-            data-id="${item.id}" 
-            onclick="handleItemClick('${item.id}')">
-          <div class="unread-indicator"></div>
-          <div class="item-content">
-            <div class="item-title">${escapeHTML(item.title || 'Thông báo')}</div>
-            <div class="item-desc">${escapeHTML(item.message || item.content || '')}</div>
-            <div class="item-time">${formatTime(item.created_at)}</div>
-          </div>
-        </li>
+      userTableBody.innerHTML = users.map(user => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-3 px-3">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs uppercase">
+                ${(user.fullName || 'U').charAt(0)}
+              </div>
+              <div>
+                <p class="font-medium text-slate-800">${escapeHtml(user.fullName)}</p>
+                <p class="text-[11px] text-slate-400">${escapeHtml(user.email)}</p>
+              </div>
+            </div>
+          </td>
+          <td class="py-3 px-3 font-mono text-slate-600 font-medium">@${escapeHtml(user.username)}</td>
+          <td class="py-3 px-3">${getRoleBadge(user.role)}</td>
+          <td class="py-3 px-3 text-slate-400 text-[11px]">${user.createdAt || new Date().toLocaleString('vi-VN')}</td>
+        </tr>
       `).join('');
     }
 
-    // Tránh lỗi XSS
-    function escapeHTML(str) {
-      return str.replace(/[&<>'"]/g, tag => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;'
-      }[tag] || tag));
+    // Xử lý XSS an toàn
+    function escapeHtml(string) {
+      if (!string) return '';
+      return String(string)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
-    // 3. Tải danh sách thông báo: GET /api/v1/notifications/my
-    async function fetchNotifications() {
+    /**
+     * Hàm làm mới danh sách tài khoản bằng Fetch API
+     */
+    async function refreshUserList() {
+      refreshIcon.classList.add('fa-spin');
       try {
-        const response = await fetch(`${API_BASE}/my`, {
+        const response = await fetch(API_BASE_URL, {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json',
-            // 'Authorization': 'Bearer ' + localStorage.getItem('token') // Bật nếu dùng JWT
+            'Accept': 'application/json'
           }
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.ok) {
+          const data = await response.json();
+          renderUserTable(data.data || data);
+        } else {
+          // Nếu backend chưa mở endpoint GET, dùng dữ liệu giả định để demo giao diện
+          console.warn(`GET ${API_BASE_URL} trả về status ${response.status}. Sử dụng dữ liệu demo.`);
+          renderUserTable(mockUsersDB);
         }
-
-        const result = await response.json();
-        // Hỗ trợ cả trường hợp API trả về mảng trực tiếp hoặc bọc trong { data: [...] }
-        notifications = Array.isArray(result) ? result : (result.data || []);
-
-        updateBadge();
-        renderNotifications();
-      } catch (error) {
-        console.error('Lỗi khi tải thông báo:', error);
-        notifList.innerHTML = '<li class="empty-state">Không thể tải thông báo. Vui lòng thử lại.</li>';
+      } catch (err) {
+        // Fallback khi chạy file HTML trực tiếp mà chưa chạy server backend
+        console.info('Không thể kết nối đến server backend thật, hiển thị dữ liệu demo local:', err.message);
+        renderUserTable(mockUsersDB);
+      } finally {
+        setTimeout(() => {
+          refreshIcon.classList.remove('fa-spin');
+        }, 300);
       }
     }
 
-    // 4. Đánh dấu đã đọc: PATCH /api/v1/notifications/{id}/read
-    async function handleItemClick(id) {
-      const item = notifications.find(n => String(n.id) === String(id));
-      if (!item) return;
+    refreshBtn.addEventListener('click', refreshUserList);
 
-      // Nếu đã đọc rồi thì không cần gọi lại API
-      if (item.is_read) return;
+    // ==========================================
+    // 6. GỬI REQUEST POST TẠO NGƯỜI DÙNG MỚI
+    // ==========================================
+    userForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-      // Optimistic UI Update: Cập nhật giao diện ngay lập tức
-      item.is_read = true;
-      updateBadge();
-      
-      const itemEl = notifList.querySelector(`[data-id="${id}"]`);
-      if (itemEl) {
-        itemEl.classList.remove('unread');
+      // B1: Validate toàn bộ dữ liệu đầu vào
+      if (!validateAllFields()) {
+        showAlert('error', 'Dữ liệu không hợp lệ', 'Vui lòng kiểm tra lại các trường báo đỏ.');
+        return;
       }
 
-      // Gọi API PATCH lên server
+      // B2: Thu thập payload từ form
+      const payload = {
+        fullName: document.getElementById('fullName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value,
+        role: document.getElementById('role').value
+      };
+
+      setSubmittingState(true);
+
       try {
-        const response = await fetch(`${API_BASE}/${id}/read`, {
-          method: 'PATCH',
+        // B3: Gửi POST /api/v1/admin/users bằng Fetch API
+        const response = await fetch(API_BASE_URL, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // 'Authorization': 'Bearer ' + localStorage.getItem('token')
-          }
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(payload)
         });
 
-        if (!response.ok) {
-          throw new Error('Lỗi cập nhật trạng thái');
+        // B4: Xử lý phản hồi từ server
+        if (response.ok) {
+          const result = await response.json();
+          
+          showAlert(
+            'success',
+            'Thành công!',
+            result.message || `Đã tạo người dùng "${payload.fullName}" (${payload.username}) thành công!`
+          );
+
+          // Reset Form và bỏ các class lỗi
+          userForm.reset();
+          document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+
+          // Cập nhật mock DB nếu cần
+          mockUsersDB.unshift({
+            id: Date.now(),
+            ...payload,
+            createdAt: new Date().toLocaleString('vi-VN')
+          });
+
+          // B5: Tự động làm mới danh sách tài khoản
+          await refreshUserList();
+
+        } else {
+          // Bắt lỗi HTTP từ Backend (400, 409 duplicate email, 500,...)
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch {
+            errorData = { message: `Lỗi máy chủ HTTP ${response.status}: ${response.statusText}` };
+          }
+
+          showAlert('error', 'Không thể tạo tài khoản', errorData.message || 'Có lỗi xảy ra từ máy chủ.');
         }
-      } catch (error) {
-        console.error(`Không thể đánh dấu đọc thông báo ${id}:`, error);
-        // Rollback nếu gọi API thất bại
-        item.is_read = false;
-        updateBadge();
-        if (itemEl) itemEl.classList.add('unread');
-      }
-    }
 
-    // 5. Đóng/Mở Dropdown và Xử lý click ngoài
-    bellBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isShowing = notifDropdown.classList.toggle('show');
-      bellBtn.setAttribute('aria-expanded', isShowing);
+      } catch (networkError) {
+        // Xử lý khi mất mạng hoặc chạy file standalone không có backend backend
+        console.warn('Lỗi mạng hoặc server chưa sẵn sàng:', networkError);
+
+        // Giả lập thành công cho môi trường frontend độc lập (Standalone demo)
+        mockUsersDB.unshift({
+          id: Date.now(),
+          ...payload,
+          createdAt: new Date().toLocaleString('vi-VN')
+        });
+
+        showAlert(
+          'success',
+          'Demo Frontend (Mô phỏng thành công)',
+          `Đã gửi POST ${API_BASE_URL} (Payload hợp lệ: ${payload.username}). Danh sách đã được làm mới!`
+        );
+
+        userForm.reset();
+        document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+        await refreshUserList();
+
+      } finally {
+        setSubmittingState(false);
+      }
     });
 
-    // Tự động đóng dropdown khi click chuột ra ngoài
-    document.addEventListener('click', (e) => {
-      if (!notifWrapper.contains(e.target)) {
-        notifDropdown.classList.remove('show');
-        bellBtn.setAttribute('aria-expanded', 'false');
-      }
-    });
-
-    // 6. Tải dữ liệu ban đầu khi load trang
+    // Khởi tạo tải danh sách lần đầu
     document.addEventListener('DOMContentLoaded', () => {
-      fetchNotifications();
+      refreshUserList();
     });
   </script>
 </body>
