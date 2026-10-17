@@ -20,7 +20,7 @@ class NhatKyHoatDong(Base):
     __tablename__ = "nhat_ky_hoat_dong"
 
     ma_nhat_ky = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    ma_nguoi_dung = Column(Integer, ForeignKey("nguoi_dung.ma_nguoi_dung", ondelete="SET NULL"), nullable=True, index=True)
+    ma_nguoi_dung = Column(String(50), ForeignKey("nguoi_dung.ma_nguoi_dung", ondelete="SET NULL"), nullable=True, index=True)
     hanh_dong = Column(String(100), nullable=False, index=True)
     endpoint = Column(String(255), nullable=False, index=True)
     phuong_thuc = Column(String(10), nullable=False, index=True)

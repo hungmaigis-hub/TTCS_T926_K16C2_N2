@@ -19,7 +19,7 @@ class ThongBao(Base):
     __tablename__ = "thong_bao"
 
     ma_thong_bao = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    ma_nguoi_nhan = Column(Integer, ForeignKey("nguoi_dung.ma_nguoi_dung", ondelete="CASCADE"), nullable=False, index=True)
+    ma_nguoi_nhan = Column(String(50), ForeignKey("nguoi_dung.ma_nguoi_dung", ondelete="CASCADE"), nullable=False, index=True)
     tieu_de = Column(String(255), nullable=False)
     noi_dung = Column(Text, nullable=False)
     loai_thong_bao = Column(String(50), nullable=False, default="CHUNG", index=True)

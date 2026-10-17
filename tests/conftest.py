@@ -1,10 +1,7 @@
-
-=======
 """
 Pytest Fixtures: Thiết lập môi trường kiểm thử độc lập cho FastAPI và Database.
-Phụ trách: Nguyễn Văn Hiếu (Backend) - Hỗ trợ Tester (Lê Quang Huy)
+Phụ trách: Nguyễn Văn Hiếu (Backend) - Hỗ trợ Tester (Lê Quang Hưng)
 """
-
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,23 +9,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-
 from app.main import app
 from app.core.database import Base, get_db
-from app.core.security import create_access_token, get_password_hash
+from app.core.security import create_access_token, hash_password, get_password_hash
 from app.models.nguoi_dung import NguoiDung
 from app.models.thong_bao import ThongBao
-
-# Sử dụng SQLite In-Memory Database riêng biệt cho test
-=======
-from app.core.database import Base, get_db
-from app.core.security import create_access_token, hash_password
-from app.models.nguoi_dung import NguoiDung
+from app.models.nhat_ky_hoat_dong import NhatKyHoatDong
 from app.schemas.user import UserRole
-from app.main import app
 
 # Sử dụng in-memory SQLite database độc lập cho test
-
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
@@ -41,24 +30,14 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture(scope="function")
 def db_session():
-
-    """Tạo mới toàn bộ bảng trước mỗi test case và xóa sau khi hoàn thành"""
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        Base.metadata.drop_all(bind=engine)
-=======
     """
-    Tạo cấu trúc bảng mới cho mỗi test case và rollback/drop sau khi test xong.
+    Tạo cấu trúc bảng mới cho mỗi test case và khởi tạo các tài khoản mẫu.
     """
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
 
     # Tạo sẵn các tài khoản mẫu với các vai trò để kiểm thử phân quyền RBAC
-    admin_user = NguoiDung(
+    admin = NguoiDung(
         ten_dang_nhap="admin_test",
         email="admin_test@ttcs.edu.vn",
         mat_khau_hash=hash_password("Admin@123456"),
@@ -66,7 +45,7 @@ def db_session():
         vai_tro=UserRole.ADMIN.value,
         trang_thai=True
     )
-    hr_user = NguoiDung(
+    hr = NguoiDung(
         ten_dang_nhap="hr_test",
         email="hr_test@ttcs.edu.vn",
         mat_khau_hash=hash_password("Hr@123456"),
@@ -74,7 +53,7 @@ def db_session():
         vai_tro=UserRole.HR.value,
         trang_thai=True
     )
-    mentor_user = NguoiDung(
+    mentor = NguoiDung(
         ten_dang_nhap="mentor_test",
         email="mentor_test@ttcs.edu.vn",
         mat_khau_hash=hash_password("Mentor@123456"),
@@ -82,7 +61,7 @@ def db_session():
         vai_tro=UserRole.MENTOR.value,
         trang_thai=True
     )
-    intern_user = NguoiDung(
+    intern = NguoiDung(
         ten_dang_nhap="intern_test",
         email="intern_test@ttcs.edu.vn",
         mat_khau_hash=hash_password("Intern@123456"),
@@ -91,7 +70,7 @@ def db_session():
         trang_thai=True
     )
 
-    session.add_all([admin_user, hr_user, mentor_user, intern_user])
+    session.add_all([admin, hr, mentor, intern])
     session.commit()
 
     yield session
@@ -102,12 +81,11 @@ def db_session():
 
 @pytest.fixture(scope="function")
 def client(db_session):
-
-    """TestClient với override get_db dependency"""
-=======
     """
     FastAPI TestClient với dependency get_db được override về database test in-memory.
     """
+    from app.main import app as fastapi_app
+    import app.middleware.audit_log as audit_mod
 
     def override_get_db():
         try:
@@ -115,22 +93,30 @@ def client(db_session):
         finally:
             pass
 
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as test_client:
+    orig_session_local = audit_mod.SessionLocal
+    audit_mod.SessionLocal = TestingSessionLocal
+
+    fastapi_app.dependency_overrides[get_db] = override_get_db
+    with TestClient(fastapi_app) as test_client:
         yield test_client
-    app.dependency_overrides.clear()
+    fastapi_app.dependency_overrides.clear()
+    audit_mod.SessionLocal = orig_session_local
 
 
+# ==========================================
+# Fixtures cho Thông báo (Notifications)
+# ==========================================
 
 @pytest.fixture(scope="function")
 def user1(db_session):
     """Tạo người dùng 1 (Thực tập sinh A)"""
     user = NguoiDung(
+        ten_dang_nhap="thuctapsinh_a",
         email="thuctapsinh.a@example.com",
         mat_khau_hash=get_password_hash("password123"),
         ho_ten="Nguyễn Văn A",
         vai_tro="ThucTapSinh",
-        kich_hoat=True
+        trang_thai=True
     )
     db_session.add(user)
     db_session.commit()
@@ -142,11 +128,12 @@ def user1(db_session):
 def user2(db_session):
     """Tạo người dùng 2 (Thực tập sinh B)"""
     user = NguoiDung(
+        ten_dang_nhap="thuctapsinh_b",
         email="thuctapsinh.b@example.com",
         mat_khau_hash=get_password_hash("password123"),
         ho_ten="Trần Thị B",
         vai_tro="ThucTapSinh",
-        kich_hoat=True
+        trang_thai=True
     )
     db_session.add(user)
     db_session.commit()
@@ -164,7 +151,22 @@ def token_user1(user1):
 def token_user2(user2):
     """Tạo JWT token cho User 2"""
     return create_access_token(user2.ma_nguoi_dung)
-=======
+
+
+# ==========================================
+# Fixtures cho Phân quyền & Admin Users
+# ==========================================
+
+@pytest.fixture
+def admin_user(db_session):
+    return db_session.query(NguoiDung).filter(NguoiDung.ten_dang_nhap == "admin_test").first()
+
+
+@pytest.fixture
+def normal_user(db_session):
+    return db_session.query(NguoiDung).filter(NguoiDung.ten_dang_nhap == "intern_test").first()
+
+
 @pytest.fixture
 def admin_headers():
     """Header Authorization mang JWT Token của Quản trị viên (Admin)"""
@@ -192,3 +194,8 @@ def intern_headers():
     token = create_access_token(subject="intern_test", role=UserRole.THUCTAPSINH.value)
     return {"Authorization": f"Bearer {token}"}
 
+
+@pytest.fixture
+def normal_headers(intern_headers):
+    """Alias cho intern_headers để tương thích test audit log"""
+    return intern_headers

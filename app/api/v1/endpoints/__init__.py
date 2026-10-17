@@ -1,9 +1,3 @@
+from app.api.v1.endpoints import notifications, auth, admin, audit_logs
 
-from app.api.v1.endpoints import notifications, auth
-
-__all__ = ["notifications", "auth"]
-=======
-from app.api.v1.endpoints.admin import router as admin_router
-from app.api.v1.endpoints.auth import router as auth_router
-
-__all__ = ["admin_router", "auth_router"]
+__all__ = ["notifications", "auth", "admin", "audit_logs"]
