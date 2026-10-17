@@ -1,4 +1,4 @@
-"""API V1 Endpoints package."""
-from app.api.v1.endpoints import reports, support_requests
+from app.api.v1.endpoints.admin import router as admin_router
+from app.api.v1.endpoints.auth import router as auth_router
 
-__all__ = ["reports", "support_requests"]
+__all__ = ["admin_router", "auth_router"]

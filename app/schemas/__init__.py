@@ -1,14 +1,15 @@
-# app/schemas/__init__.py
-from app.schemas.intern import (
-    AssignMentorRequest,
-    AssignMentorResponse,
-    MentorInfo,
-    InternBriefInfo,
+from app.schemas.user import (
+    UserRole,
+    UserCreate,
+    UserResponse,
+    UserLoginRequest,
+    TokenResponse,
 )
 
 __all__ = [
-    "AssignMentorRequest",
-    "AssignMentorResponse",
-    "MentorInfo",
-    "InternBriefInfo",
+    "UserRole",
+    "UserCreate",
+    "UserResponse",
+    "UserLoginRequest",
+    "TokenResponse",
 ]

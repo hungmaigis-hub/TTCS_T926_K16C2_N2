@@ -1,98 +1,45 @@
 """
-ORM Model cho bảng nguoi_dung (người dùng hệ thống).
-
-Vai trò (vai_tro) hợp lệ:
-    - "HR"
-    - "Mentor"
-    - "ThucTapSinh" (intern)
-    - "Admin"
+SQLAlchemy Model cho bảng `nguoi_dung`
+Phân hệ: Quản trị hệ thống - Quản lý tài khoản & phân quyền
+Phụ trách: Nguyễn Văn Hiếu (Backend FastAPI)
 """
-from sqlalchemy import Column, String, Enum, DateTime, Boolean
-from sqlalchemy.orm import relationship
+
 from datetime import datetime
-from app.database import Base
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum
+from sqlalchemy.orm import declarative_base
+
+from app.core.database import Base
 
 
 class NguoiDung(Base):
     __tablename__ = "nguoi_dung"
 
-    # -------------------------------------------------------
-    # Primary key
-    # -------------------------------------------------------
-    ma_nguoi_dung = Column(
-        String(20),
-        primary_key=True,
-        index=True,
-        comment="Mã người dùng (VD: ND001, MENTOR01, HR01)",
-    )
+    ma_nguoi_dung = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    ten_dang_nhap = Column(String(50), unique=True, index=True, nullable=False, comment="Tên đăng nhập (username)")
+    email = Column(String(100), unique=True, index=True, nullable=False, comment="Email định danh người dùng")
+    mat_khau_hash = Column(String(255), nullable=False, comment="Mật khẩu đã băm bằng bcrypt")
+    ho_ten = Column(String(100), nullable=False, comment="Họ và tên người dùng")
+    vai_tro = Column(String(20), nullable=False, comment="Vai trò: Admin, HR, Mentor, ThucTapSinh")
+    trang_thai = Column(Boolean, default=True, nullable=False, comment="Trạng thái tài khoản (True: Hoạt động, False: Khóa)")
+    ngay_tao = Column(DateTime, default=datetime.utcnow, nullable=False, comment="Thời điểm tạo tài khoản")
+    ngay_cap_nhat = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True, comment="Thời điểm cập nhật")
 
-    # -------------------------------------------------------
-    # Thông tin cơ bản
-    # -------------------------------------------------------
-    ho_ten = Column(String(100), nullable=False, comment="Họ và tên đầy đủ")
+    # Các thuộc tính ánh xạ (aliases/properties) thuận tiện tương thích cho cả tiếng Anh & tiếng Việt
+    @property
+    def id(self):
+        return self.ma_nguoi_dung
 
-    email = Column(
-        String(150),
-        unique=True,
-        nullable=False,
-        index=True,
-        comment="Địa chỉ email đăng nhập",
-    )
+    @property
+    def username(self):
+        return self.ten_dang_nhap
 
-    mat_khau_hash = Column(
-        String(255),
-        nullable=False,
-        comment="Mật khẩu đã băm (bcrypt)",
-    )
+    @property
+    def full_name(self):
+        return self.ho_ten
 
-    so_dien_thoai = Column(String(15), nullable=True, comment="Số điện thoại")
+    @property
+    def role(self):
+        return self.vai_tro
 
-    # -------------------------------------------------------
-    # Vai trò
-    # -------------------------------------------------------
-    vai_tro = Column(
-        Enum("HR", "Mentor", "ThucTapSinh", "Admin", name="vai_tro_enum"),
-        nullable=False,
-        comment="Vai trò người dùng trong hệ thống",
-    )
-
-    # -------------------------------------------------------
-    # Trạng thái & thời gian
-    # -------------------------------------------------------
-    kich_hoat = Column(
-        Boolean,
-        default=True,
-        nullable=False,
-        comment="True = tài khoản đang hoạt động",
-    )
-
-    ngay_tao = Column(
-        DateTime,
-        default=datetime.utcnow,
-        nullable=False,
-        comment="Ngày tạo tài khoản",
-    )
-
-    ngay_cap_nhat = Column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        nullable=True,
-        comment="Lần cập nhật cuối",
-    )
-
-    # -------------------------------------------------------
-    # Relationships
-    # -------------------------------------------------------
-    # Một Mentor có thể hướng dẫn nhiều hồ sơ thực tập
-    ho_so_thuc_tap = relationship(
-        "HoSoThucTap",
-        back_populates="mentor",
-        foreign_keys="HoSoThucTap.ma_mentor",
-    )
-
-    def __repr__(self) -> str:
-        return (
-            f"<NguoiDung ma={self.ma_nguoi_dung!r} "
-            f"ten={self.ho_ten!r} vai_tro={self.vai_tro!r}>"
-        )
+    def __repr__(self):
+        return f"<NguoiDung(ma_nguoi_dung={self.ma_nguoi_dung}, ten_dang_nhap='{self.ten_dang_nhap}', vai_tro='{self.vai_tro}')>"
