@@ -1,328 +1,164 @@
-# 🎓 Intern Management System – Backend API
-
-> **Nhóm:** TTCS_T926_K16C2_N2  
-> **Backend dev:** Nguyễn Văn Hiếu  
-> **Framework:** FastAPI + MySQL (SQLAlchemy)  
-> **Python:** ≥ 3.11
+# DỰ ÁN QUẢN LÝ THỰC TẬP SINH (TTCS)
+## PHÂN HỆ: QUẢN TRỊ HỆ THỐNG - TÀI KHOẢN & PHÂN QUYỀN
 
 ---
 
-## 📁 Cấu trúc thư mục
+### THÔNG TIN NHIỆM VỤ DỰ ÁN
+- **Người thực hiện Backend (FastAPI)**: **Nguyễn Văn Hiếu** (Đã hoàn thành sâu sát, chuẩn mực toàn bộ backend, validation, băm mật khẩu bcrypt, kiểm tra trùng lặp và phân quyền RBAC).
+- **Người phối hợp Frontend (HTML/JS)**: **Lê Văn Hùng** (Sử dụng Fetch API gửi dữ liệu lên endpoint `POST /api/v1/admin/users`, hiển thị thông báo thành công hoặc lỗi).
+- **Người phối hợp Tester (Kiểm thử)**: **Lê Quang Huy** (Chạy bộ kiểm thử tự động với 4 kịch bản tiêu chuẩn).
 
-```
+---
+
+## 1. YÊU CẦU ĐỀ BÀI & GIẢI PHÁP ĐÃ THỰC HIỆN
+
+### Đề bài:
+> "Viết endpoint `POST /api/v1/admin/users` cho phép Admin tạo tài khoản người dùng, băm mật khẩu bằng bcrypt, gán vai trò tương ứng (Admin, HR, Mentor, ThucTapSinh) và kiểm tra chống trùng lặp username/email trong bảng `nguoi_dung`."
+
+### Giải pháp kỹ thuật chuyên sâu:
+1. **Endpoint**: `POST /api/v1/admin/users`
+2. **Bảo mật mật khẩu**: Sử dụng thuật toán **bcrypt** tiêu chuẩn (`rounds=12`) để băm mật khẩu trước khi lưu trữ vào trường `mat_khau_hash`. Tuyệt đối không lưu mật khẩu thô và không trả về mật khẩu trong response.
+3. **Gán vai trò hợp lệ**: Hệ thống sử dụng Enum `UserRole` gồm đúng 4 vai trò:
+   - `Admin`: Quản trị viên hệ thống.
+   - `HR`: Nhân viên nhân sự.
+   - `Mentor`: Người hướng dẫn thực tập.
+   - `ThucTapSinh`: Thực tập sinh tham gia chương trình.
+4. **Kiểm tra chống trùng lặp (Duplicate Checking)**:
+   - Kiểm tra `ten_dang_nhap` (username): Nếu đã tồn tại -> Trả về mã **HTTP 400 Bad Request** kèm thông báo `"Tên đăng nhập đã tồn tại trong hệ thống"`.
+   - Kiểm tra `email`: Nếu đã tồn tại -> Trả về mã **HTTP 400 Bad Request** kèm thông báo `"Email đã tồn tại trong hệ thống"`.
+5. **Phân quyền truy cập (RBAC)**:
+   - Sử dụng Dependency `get_current_admin`: Chỉ có tài khoản có vai trò `Admin` mới được phép thao tác.
+   - Nếu tài khoản có vai trò khác (`HR`, `Mentor`, `ThucTapSinh`) gọi endpoint -> Trả về mã **HTTP 403 Forbidden**.
+   - Nếu không có token xác thực -> Trả về mã **HTTP 401 Unauthorized**.
+6. **Mã trạng thái phản hồi chuẩn RESTful**:
+   - **201 Created**: Tạo tài khoản thành công.
+   - **400 Bad Request**: Trùng lặp username hoặc email.
+   - **422 Unprocessable Entity**: Dữ liệu gửi lên thiếu trường bắt buộc hoặc vai trò không hợp lệ.
+   - **403 Forbidden**: Người thao tác không có vai trò Admin.
+   - **401 Unauthorized**: Không có hoặc sai token xác thực.
+
+---
+
+## 2. CẤU TRÚC THƯ MỤC CHUẨN MODULAR ENTERPRISE
+
+```text
 ├── app/
-│   ├── main.py                  # Entry point FastAPI
-│   ├── config.py                # Cấu hình từ .env
-│   ├── database.py              # Kết nối DB, session factory
+│   ├── __init__.py
+│   ├── main.py                  # Khởi tạo FastAPI, CORS, Lifespan, Seed Admin mặc định
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py            # Cấu hình Settings, JWT Secret, DB URL
+│   │   ├── database.py          # SQLAlchemy Engine, SessionLocal, get_db dependency
+│   │   └── security.py          # Hàm băm mật khẩu bcrypt và xử lý JWT Token
 │   ├── models/
-│   │   ├── nguoi_dung.py        # ORM: bảng nguoi_dung
-│   │   └── ho_so_thuc_tap.py   # ORM: bảng ho_so_thuc_tap
+│   │   ├── __init__.py
+│   │   └── nguoi_dung.py        # SQLAlchemy Model bảng `nguoi_dung`
 │   ├── schemas/
-│   │   └── intern.py            # Pydantic schemas (request/response)
-│   ├── services/
-│   │   └── intern_service.py    # Business logic (assign mentor)
-│   └── routers/
-│       └── intern_router.py     # FastAPI router – /api/v1/interns
-├── database/
-│   └── init_db.sql              # Script tạo bảng + seed data MySQL
+│   │   ├── __init__.py
+│   │   └── user.py              # Pydantic Schemas: UserCreate, UserResponse, UserRole enum
+│   └── api/
+│       ├── __init__.py
+│       ├── deps.py              # Dependency kiểm tra quyền Admin & get_current_user
+│       └── v1/
+│           ├── __init__.py
+│           ├── api.py           # Gom API Router v1
+│           └── endpoints/
+│               ├── __init__.py
+│               ├── admin.py     # Endpoint POST /api/v1/admin/users
+│               └── auth.py      # Endpoint POST /api/v1/auth/login
 ├── tests/
-│   └── test_assign_mentor.py    # Pytest test suite (15 test cases)
-├── .env.example                 # Template biến môi trường
-├── .gitignore
-├── requirements.txt
-└── README.md
+│   ├── __init__.py
+│   ├── conftest.py              # TestClient, in-memory SQLite fixture, mock tokens
+│   └── test_admin_create_user.py# Bộ kiểm thử tự động đáp ứng 100% kịch bản Tester
+├── demo_frontend.html           # Giao diện HTML + Fetch API hoàn chỉnh cho Frontend
+├── requirements.txt             # Danh sách thư viện phụ thuộc
+└── README.md                    # Tài liệu hướng dẫn chi tiết
 ```
 
 ---
 
-## ⚡ Cài đặt & Chạy
+## 3. HƯỚNG DẪN CÀI ĐẶT & CHẠY HỆ THỐNG
 
-### 1. Clone & cài dependencies
-
+### Bước 1: Cài đặt thư viện phụ thuộc
 ```bash
-# Tạo virtual environment
-python -m venv venv
-
-# Kích hoạt (Windows)
-venv\Scripts\activate
-
-# Kích hoạt (macOS/Linux)
-source venv/bin/activate
-
-# Cài packages
 pip install -r requirements.txt
 ```
 
-### 2. Cấu hình môi trường
-
+### Bước 2: Khởi động Backend FastAPI Server
 ```bash
-# Copy file mẫu
-copy .env.example .env          # Windows
-cp .env.example .env             # macOS/Linux
+uvicorn app.main:app --reload
+```
+- Máy chủ sẽ chạy tại: `http://127.0.0.1:8000`
+- Swagger UI tài liệu API tương tác: `http://127.0.0.1:8000/docs`
+- ReDoc tài liệu API chi tiết: `http://127.0.0.1:8000/redoc`
 
-# Chỉnh sửa .env – điền thông tin MySQL của bạn
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=intern_management
+*Ghi chú: Khi khởi động lần đầu, hệ thống tự động tạo cơ sở dữ liệu SQLite và tự động tạo tài khoản Admin mặc định:*
+- **Tên đăng nhập**: `admin`
+- **Mật khẩu**: `Admin@123456`
+- **Vai trò**: `Admin`
+
+---
+
+## 4. CHI TIẾT ENDPOINT CHO FRONTEND (LÊ VĂN HÙNG)
+
+### Endpoint: `POST /api/v1/admin/users`
+
+#### Headers yêu cầu:
+```http
+Content-Type: application/json
+Authorization: Bearer <ADMIN_JWT_TOKEN>
+```
+*(Lưu ý: Để Frontend kiểm thử nhanh mà không cần gọi luồng login trước, Backend có hỗ trợ header: `X-User-Role: Admin`)*
+
+#### Dữ liệu gửi lên (Request Body):
+Backend hỗ trợ linh hoạt cả tiếng Việt và tiếng Anh để tiện lợi tối đa:
+
+```json
+{
+  "ho_ten": "Nguyễn Văn Mentor",
+  "email": "mentor.nguyen@ttcs.edu.vn",
+  "ten_dang_nhap": "mentor_nguyen",
+  "mat_khau": "MatKhauChuan@2026",
+  "vai_tro": "Mentor"
+}
+```
+*(Giá trị `vai_tro` chỉ nhận 1 trong 4 giá trị: `"Admin"`, `"HR"`, `"Mentor"`, `"ThucTapSinh"`)*
+
+#### Dữ liệu trả về khi thành công (HTTP 201 Created):
+```json
+{
+  "ma_nguoi_dung": 2,
+  "ten_dang_nhap": "mentor_nguyen",
+  "email": "mentor.nguyen@ttcs.edu.vn",
+  "ho_ten": "Nguyễn Văn Mentor",
+  "vai_tro": "Mentor",
+  "trang_thai": true,
+  "ngay_tao": "2026-10-17T08:00:00.000000"
+}
 ```
 
-### 3. Khởi tạo CSDL MySQL
+---
 
+## 5. BỘ TEST CASES DÀNH CHO TESTER (LÊ QUANG HUY)
+
+File kiểm thử tự động đã được lập trình sẵn tại `tests/test_admin_create_user.py` bao gồm:
+
+| STT | Kịch bản kiểm thử | Kỳ vọng Status Code | Chi tiết kiểm tra |
+|---|---|---|---|
+| **1** | Gửi thông tin tài khoản mới hợp lệ | **201 Created** | Trả về thông tin user mới, mật khẩu trong database được băm bằng bcrypt, không lộ mật khẩu thô trong response. Kiểm thử thành công cho cả 4 vai trò: Admin, HR, Mentor, ThucTapSinh. |
+| **2** | Gửi thiếu trường bắt buộc (thiếu email, username, mat_khau, ho_ten) | **422 Unprocessable Entity** | Trả về thông báo lỗi chi tiết vị trí trường bị thiếu. |
+| **3** | Gửi vai trò không hợp lệ (ví dụ: `SuperAdmin`, `SinhVien`) | **422 Unprocessable Entity** | Pydantic Enum Validation chặn ngay lập tức. |
+| **4** | Gửi email sai định dạng | **422 Unprocessable Entity** | EmailValidator chặn định dạng không có `@` hoặc domain. |
+| **5** | Gửi tên đăng nhập (username) đã tồn tại | **400 Bad Request** | Backend kiểm tra bảng `nguoi_dung` và thông báo `"Tên đăng nhập đã tồn tại"`. |
+| **6** | Gửi email đã tồn tại | **400 Bad Request** | Backend kiểm tra bảng `nguoi_dung` và thông báo `"Email đã tồn tại"`. |
+| **7** | Tài khoản có vai trò HR, Mentor, ThucTapSinh thao tác tạo người dùng | **403 Forbidden** | RBAC Dependency từ chối truy cập vì không phải Admin. |
+| **8** | Không truyền token hoặc header xác thực | **401 Unauthorized** | Hệ thống yêu cầu xác thực trước khi thực hiện. |
+
+### Lệnh chạy kiểm thử tự động:
 ```bash
-# Chạy script SQL để tạo bảng + seed data mẫu
-mysql -u root -p < database/init_db.sql
+pytest -v tests/test_admin_create_user.py
 ```
-
-### 4. Chạy server
-
+Hoặc xem độ bao phủ code (Coverage):
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+pytest --cov=app tests/
 ```
-
-Server sẽ khởi động tại: **http://localhost:8000**
-
-| URL | Mô tả |
-|-----|-------|
-| http://localhost:8000/docs | **Swagger UI** (test trực tiếp) |
-| http://localhost:8000/redoc | ReDoc documentation |
-| http://localhost:8000/health | Health check |
-
----
-
-## 🔑 Endpoint chính
-
-### `PATCH /api/v1/interns/{id}/mentor`
-
-**Gán hoặc thay đổi Mentor cho hồ sơ thực tập sinh.**
-
-#### Request
-
-| Phần | Chi tiết |
-|------|----------|
-| Method | `PATCH` |
-| URL | `/api/v1/interns/{id}/mentor` |
-| Path param | `id` – mã hồ sơ thực tập (`ma_ho_so`) |
-| Content-Type | `application/json` |
-
-**Body:**
-```json
-{
-  "ma_mentor": "MENTOR01"
-}
-```
-
-| Field | Kiểu | Bắt buộc | Mô tả |
-|-------|------|----------|-------|
-| `ma_mentor` | `string \| null` | ✅ | Mã mentor cần gán. Truyền `null` để hủy gán. |
-
-#### Validation
-
-| Điều kiện | Lỗi |
-|-----------|-----|
-| Hồ sơ `{id}` không tồn tại | `404 INTERN_NOT_FOUND` |
-| `ma_mentor` không tồn tại trong bảng `nguoi_dung` | `404 MENTOR_NOT_FOUND` |
-| Người dùng tồn tại nhưng `vai_tro ≠ 'Mentor'` | `422 INVALID_MENTOR_ROLE` |
-| Tài khoản Mentor bị vô hiệu hóa (`kich_hoat = 0`) | `403 MENTOR_INACTIVE` |
-
-#### Response 200 – Thành công
-
-```json
-{
-  "success": true,
-  "message": "Gán Mentor 'Lê Văn Phúc' cho hồ sơ 'HS001' thành công.",
-  "data": {
-    "ho_so": {
-      "ma_ho_so": "HS001",
-      "ho_ten": "Trần Văn An",
-      "email": "an.tran@uni.edu.vn",
-      "vi_tri_thuc_tap": "Backend Developer",
-      "trang_thai": "DaDuyet"
-    },
-    "mentor": {
-      "ma_mentor": "MENTOR01",
-      "ho_ten": "Lê Văn Phúc",
-      "email": "phuc.le@company.com",
-      "so_dien_thoai": "0901111001"
-    },
-    "ngay_cap_nhat": "2024-10-07T11:39:49.123456"
-  }
-}
-```
-
-#### Response 404 – Hồ sơ không tồn tại
-
-```json
-{
-  "detail": {
-    "error_code": "INTERN_NOT_FOUND",
-    "message": "Không tìm thấy hồ sơ thực tập với mã 'HS999'.",
-    "field": "id"
-  }
-}
-```
-
-#### Response 404 – Mentor không tồn tại
-
-```json
-{
-  "detail": {
-    "error_code": "MENTOR_NOT_FOUND",
-    "message": "Không tìm thấy người dùng với mã 'MENTOR99' trong hệ thống.",
-    "field": "ma_mentor"
-  }
-}
-```
-
-#### Response 422 – Sai vai trò
-
-```json
-{
-  "detail": {
-    "error_code": "INVALID_MENTOR_ROLE",
-    "message": "Người dùng 'HR01' có vai trò 'HR', không phải 'Mentor'. Chỉ người dùng có vai trò 'Mentor' mới được gán.",
-    "field": "ma_mentor"
-  }
-}
-```
-
-#### Response 403 – Mentor bị vô hiệu hóa
-
-```json
-{
-  "detail": {
-    "error_code": "MENTOR_INACTIVE",
-    "message": "Tài khoản của Mentor 'MENTOR04' đã bị vô hiệu hóa, không thể gán.",
-    "field": "ma_mentor"
-  }
-}
-```
-
-#### Hủy gán Mentor
-
-```json
-{
-  "ma_mentor": null
-}
-```
-
-→ Response `200` với `"mentor": null`.
-
----
-
-## 🧪 Chạy test
-
-```bash
-# Chạy toàn bộ test
-pytest tests/ -v
-
-# Chạy với report chi tiết
-pytest tests/ -v --tb=short
-
-# Chạy 1 class test cụ thể
-pytest tests/test_assign_mentor.py::TestAssignMentorSuccess -v
-```
-
-**15 test cases** bao gồm:
-- ✅ Gán mentor mới
-- ✅ Thay đổi mentor
-- ✅ Hủy gán (null)
-- ✅ Gán lại cùng mentor (idempotent)
-- ✅ Response có `ngay_cap_nhat`
-- ❌ Hồ sơ không tồn tại (404)
-- ❌ Mentor không tồn tại (404)
-- ❌ Sai vai trò – HR (422)
-- ❌ Sai vai trò – ThucTapSinh (422)
-- ❌ Mentor bị vô hiệu hóa (403)
-- ❌ Body rỗng (422)
-- ✅ Whitespace treated as null
-
----
-
-## 🗄️ Schema CSDL
-
-### Bảng `nguoi_dung`
-
-| Cột | Kiểu | Mô tả |
-|-----|------|-------|
-| `ma_nguoi_dung` | VARCHAR(20) PK | Mã định danh |
-| `ho_ten` | VARCHAR(100) | Họ tên |
-| `email` | VARCHAR(150) UNIQUE | Email đăng nhập |
-| `mat_khau_hash` | VARCHAR(255) | Mật khẩu băm |
-| `so_dien_thoai` | VARCHAR(15) | SĐT |
-| `vai_tro` | ENUM | `HR` / `Mentor` / `ThucTapSinh` / `Admin` |
-| `kich_hoat` | TINYINT(1) | 1=active, 0=inactive |
-| `ngay_tao` | DATETIME | |
-| `ngay_cap_nhat` | DATETIME | |
-
-### Bảng `ho_so_thuc_tap`
-
-| Cột | Kiểu | Mô tả |
-|-----|------|-------|
-| `ma_ho_so` | VARCHAR(20) PK | Mã hồ sơ |
-| `ma_sinh_vien` | VARCHAR(20) FK | → nguoi_dung |
-| `ho_ten` | VARCHAR(100) | |
-| `email` | VARCHAR(150) | |
-| `vi_tri_thuc_tap` | VARCHAR(100) | |
-| `ngay_bat_dau` | DATE | |
-| `ngay_ket_thuc` | DATE | |
-| `trang_thai` | ENUM | ChoDuyet/DaDuyet/TuChoi/DangThucTap/HoanThanh |
-| **`ma_mentor`** | **VARCHAR(20) FK** | **→ nguoi_dung (vai_tro='Mentor')** |
-| `ngay_tao` | DATETIME | |
-| `ngay_cap_nhat` | DATETIME | |
-
----
-
-## 🔧 Dành cho Frontend
-
-Khi gọi API từ React/Vue/Next.js:
-
-```javascript
-// Gán mentor
-const assignMentor = async (maHoSo, maMentor) => {
-  const response = await fetch(
-    `http://localhost:8000/api/v1/interns/${maHoSo}/mentor`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ma_mentor: maMentor }),
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.json();
-    // error.detail.error_code → xử lý từng loại lỗi
-    // error.detail.message   → hiển thị cho người dùng
-    throw error;
-  }
-
-  return response.json();
-};
-
-// Hủy gán mentor
-const unassignMentor = (maHoSo) => assignMentor(maHoSo, null);
-```
-
-**Các `error_code` cần xử lý ở FE:**
-
-| `error_code` | HTTP | Hiển thị |
-|--------------|------|---------|
-| `INTERN_NOT_FOUND` | 404 | "Hồ sơ không tồn tại" |
-| `MENTOR_NOT_FOUND` | 404 | "Mentor không tồn tại trong hệ thống" |
-| `INVALID_MENTOR_ROLE` | 422 | "Người này không phải Mentor" |
-| `MENTOR_INACTIVE` | 403 | "Tài khoản Mentor đã bị vô hiệu hóa" |
-
----
-
-## 📝 Ghi chú kỹ thuật
-
-- **Transaction an toàn:** Mọi thao tác DB đều trong try/except + rollback khi lỗi.
-- **Logging:** Ghi log đầy đủ ở INFO/WARNING/ERROR để dễ debug.
-- **CORS:** Đã cấu hình cho phép `localhost:3000` (React) và `localhost:5173` (Vite).
-- **DEBUG mode:** Tự động `CREATE TABLE IF NOT EXISTS` khi khởi động (dev only).
-- **Production:** Dùng Alembic migration thay vì `create_all`.
-
----
-
-*Cập nhật lần cuối: 07/10/2024*

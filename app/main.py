@@ -1,164 +1,127 @@
 """
-Entry point của ứng dụng FastAPI – Intern Management System.
-
-Chạy development server:
-    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-Truy cập Swagger UI:
-    http://localhost:8000/docs
-
-Truy cập ReDoc:
-    http://localhost:8000/redoc
+Ứng dụng FastAPI chính (Main Application)
+Dự án: Hệ thống Quản lý Thực tập sinh (TTCS)
+Phân hệ: Quản trị hệ thống - Quản lý tài khoản & phân quyền
+Phụ trách Backend: Nguyễn Văn Hiếu
 """
-import logging
-import sys
-from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
-from app.config import settings
-from app.database import Base, engine
-from app.routers.intern_router import router as intern_router
-from app.api.v1.endpoints.reports import router as reports_router
-from app.api.v1.endpoints.support_requests import router as support_requests_router
-
-# ============================================================
-# Logging config
-# ============================================================
-logging.basicConfig(
-    level=logging.DEBUG if settings.DEBUG else logging.INFO,
-    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
-logger = logging.getLogger(__name__)
+from app.core.config import settings
+from app.core.database import Base, engine, SessionLocal
+from app.core.security import hash_password
+from app.models.nguoi_dung import NguoiDung
+from app.schemas.user import UserRole
+from app.api.v1.api import api_router
 
 
-# ============================================================
-# Lifespan – khởi động / tắt
-# ============================================================
+def seed_initial_admin():
+    """
+    Tự động khởi tạo tài khoản Quản trị viên (Admin) mặc định nếu hệ thống chưa có.
+    Giúp Frontend (Lê Văn Hùng) và Tester (Lê Quang Huy) có thể kiểm thử ngay lập tức.
+    """
+    db = SessionLocal()
+    try:
+        admin_user = db.query(NguoiDung).filter(
+            (NguoiDung.ten_dang_nhap == "admin") | (NguoiDung.vai_tro == UserRole.ADMIN.value)
+        ).first()
+
+        if not admin_user:
+            default_admin = NguoiDung(
+                ten_dang_nhap="admin",
+                email="admin@ttcs.edu.vn",
+                mat_khau_hash=hash_password("Admin@123456"),
+                ho_ten="Quản Trị Viên Hệ Thống",
+                vai_tro=UserRole.ADMIN.value,
+                trang_thai=True
+            )
+            db.add(default_admin)
+            db.commit()
+            print("[INFO] Đã khởi tạo tài khoản Admin mặc định (Username: 'admin' / Mật khẩu: 'Admin@123456')")
+    except Exception as e:
+        db.rollback()
+        print(f"[WARNING] Không thể tạo tài khoản admin mặc định: {e}")
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Khởi tạo tài nguyên khi server bắt đầu,
-    dọn dẹp khi server dừng.
-    """
-    logger.info("🚀 Khởi động %s v%s ...", settings.APP_NAME, settings.APP_VERSION)
-
-    # Tự động tạo bảng nếu chưa tồn tại (dev mode)
-    # Production nên dùng Alembic migrate
-    if settings.DEBUG:
-        logger.info("DEBUG mode: tạo bảng CSDL nếu chưa có ...")
-        Base.metadata.create_all(bind=engine)
-        logger.info("✅ CSDL sẵn sàng.")
-
-    yield  # ← server chạy ở đây
-
-    logger.info("🛑 Đang dừng server ...")
+    # Khởi tạo bảng cơ sở dữ liệu nếu chưa tồn tại
+    Base.metadata.create_all(bind=engine)
+    # Khởi tạo tài khoản Admin mặc định
+    seed_initial_admin()
+    yield
 
 
-# ============================================================
-# Khởi tạo FastAPI app
-# ============================================================
 app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
+    title=settings.PROJECT_NAME,
     description="""
-## Intern Management System – Backend API
-
-Hệ thống quản lý thực tập sinh xây dựng với **FastAPI** + **MySQL**.
-
-### Modules chính
-| Module | Mô tả |
-|--------|-------|
-| **Interns** | Quản lý hồ sơ thực tập sinh, gán Mentor |
-| **Users**   | Quản lý người dùng (HR, Mentor, Intern, Admin) |
-
-### Xác thực
-> Hiện tại API chưa yêu cầu xác thực JWT (sẽ bổ sung ở v2).  
-> Các endpoint nhạy cảm sẽ yêu cầu token Bearer.
-
-### Người phát triển
-- **Backend**: Nguyễn Văn Hiếu  
-- **Nhóm**: TTCS_T926_K16C2_N2
-""",
-    openapi_url="/api/v1/openapi.json",
+    Hệ sinh thái API Backend cho Dự án Quản lý Thực tập sinh (TTCS).
+    
+    ### Chức năng chính được phụ trách bởi Nguyễn Văn Hiếu:
+    - **POST /api/v1/admin/users**: Admin tạo tài khoản người dùng mới.
+      * Băm mật khẩu an toàn bằng thuật toán **bcrypt**.
+      * Gán vai trò tương ứng: **Admin**, **HR**, **Mentor**, **ThucTapSinh**.
+      * Kiểm tra chống trùng lặp **username (tên đăng nhập)** và **email** trong bảng `nguoi_dung`.
+      * Phân quyền bảo vệ: Chỉ **Admin** mới có quyền thao tác (trả về **403 Forbidden** nếu vai trò khác).
+      * Bắt lỗi dữ liệu thiếu/sai định dạng trả về **422 Unprocessable Entity**.
+      * Bắt lỗi trùng lặp trả về **400 Bad Request**.
+      * Thành công trả về **201 Created**.
+    """,
+    version="1.0.0",
+    lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan,
+    openapi_url="/openapi.json"
 )
 
-
-# ============================================================
-# CORS Middleware – cho phép frontend gọi API
-# ============================================================
+# Cấu hình CORS Middleware để Frontend (Lê Văn Hùng) dùng Fetch API mượt mà không bị lỗi CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",     # React dev server
-        "http://localhost:5173",     # Vite dev server
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-        "*",                         # TODO: giới hạn lại trên production
-    ],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-# ============================================================
-# Global exception handler – trả về JSON đồng nhất
-# ============================================================
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.exception("Unhandled exception on %s: %s", request.url, exc)
-    return JSONResponse(
-        status_code=500,
-        content={
-            "success": False,
-            "error_code": "INTERNAL_SERVER_ERROR",
-            "message": "Đã xảy ra lỗi không xác định. Vui lòng liên hệ quản trị viên.",
-        },
-    )
+# Đăng ký API v1 Router
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
-# ============================================================
-# Include routers
-# ============================================================
-app.include_router(intern_router)
-app.include_router(reports_router, prefix="/api/v1")
-app.include_router(support_requests_router, prefix="/api/v1")
-
-
-# ============================================================
-# Health check endpoint
-# ============================================================
-@app.get(
-    "/health",
-    tags=["System"],
-    summary="Health check",
-    description="Kiểm tra trạng thái server.",
-)
-def health_check():
-    """Endpoint kiểm tra server đang chạy."""
-    return {
-        "status": "ok",
-        "app": settings.APP_NAME,
-        "version": settings.APP_VERSION,
-    }
-
-
-@app.get(
-    "/",
-    tags=["System"],
-    summary="Root",
-    include_in_schema=False,
-)
+@app.get("/", tags=["Hệ thống"])
 def root():
     return {
-        "message": f"Welcome to {settings.APP_NAME} v{settings.APP_VERSION}",
-        "docs": "/docs",
-        "redoc": "/redoc",
+        "status": "success",
+        "message": "Chào mừng đến với Hệ thống Quản lý Thực tập sinh (TTCS) API",
+        "author": "Nguyễn Văn Hiếu (Backend Developer)",
+        "docs_url": "/docs",
+        "api_v1": "/api/v1"
     }
+
+
+@app.get("/health", tags=["Hệ thống"])
+def health_check():
+    return {"status": "healthy", "database": "connected"}
+
+
+# Custom Exception Handler cho RequestValidationError để format thông báo lỗi thân thiện cho Frontend & Tester
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for err in exc.errors():
+        field = " -> ".join(str(loc) for loc in err.get("loc", []))
+        msg = err.get("msg")
+        errors.append({"field": field, "message": msg})
+    
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": errors,
+            "message": "Dữ liệu gửi lên không hợp lệ hoặc thiếu trường bắt buộc (hoặc vai trò không hợp lệ)."
+        }
+    )

@@ -1,51 +1,24 @@
-# Python virtual environment
-venv/
-.venv/
-env/
-ENV/
-build/
-dist/
-*.egg-info/
-.Python
-
-# Python bytecode & cache
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
 *.py[cod]
 *$py.class
-*.so
 
-# Environment variables
-.env
-*.env
-*.env.local
-!.env.example
-
-# Temporary folders & drafts
-frontend/unused_html/
-scratch/
-Hiếu 2/
-
-# Test artifacts & SQLite / DB
-*.sqlite
-*.sqlite3
-*.db
-test_intern.db
+# Caches
 .pytest_cache/
 .coverage
 htmlcov/
-*.log
 
-# IDE & Editor
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Database SQLite
+*.db
+*.sqlite3
+
+# IDEs
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# Uploaded files
-backend/uploads/*
-!backend/uploads/.gitkeep
-
-# Backup files
-backend/backups/*
-!backend/backups/.gitkeep
