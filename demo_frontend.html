@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Tạo Tài Khoản Người Dùng | Quản Lý Thực Tập Sinh</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-dark: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 850px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 36px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color);
+    }
+
+    .header {
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 18px;
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      margin-top: 6px;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 6px;
+      background: rgba(37, 99, 235, 0.2);
+      color: #60a5fa;
+      border: 1px solid #3b82f6;
+    }
+
+    .auth-banner {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 24px;
+      font-size: 0.88rem;
+    }
+
+    .auth-banner label {
+      display: block;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .auth-banner input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 0.88rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #cbd5e1;
+    }
+
+    .form-group label .required {
+      color: var(--danger);
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #0f172a;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-submit {
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-submit:disabled {
+      background: #475569;
+      cursor: not-allowed;
+    }
+
+    /* Alert Boxes */
+    .alert {
+      margin-top: 24px;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .alert.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--success);
+      color: #6ee7b7;
+    }
+
+    .alert.danger {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid var(--danger);
+      color: #fca5a5;
+    }
+
+    .result-card {
+      margin-top: 14px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      padding: 14px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .footer-notes {
+      margin-top: 32px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>
+        <span>Tạo Tài Khoản Người Dùng Mới</span>
+        <span class="role-badge">Dành cho Admin</span>
+      </h1>
+      <p>API Endpoint: <code>POST /api/v1/admin/users</code> | Hệ thống Quản trị Thực tập sinh (TTCS)</p>
+    </div>
+
+    <!-- Thông tin xác thực Admin -->
+    <div class="auth-banner">
+      <label for="adminAuthHeader">Cơ chế xác thực Admin (JWT Token hoặc Header X-User-Role):</label>
+      <input type="text" id="adminAuthHeader" value="X-User-Role: Admin" placeholder="Bearer eyJhbGci... hoặc X-User-Role: Admin">
+      <small style="color: #64748b; margin-top: 4px; display: block;">
+        * Mặc định đang gửi <code>X-User-Role: Admin</code> để test nhanh. Bạn cũng có thể dán Bearer Token sau khi login.
+      </small>
+    </div>
+
+    <!-- Form tạo tài khoản (Theo phân công của Frontend - Lê Văn Hùng) -->
+    <form id="createUserForm">
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="ho_ten">Họ và tên <span class="required">*</span></label>
+          <input type="text" id="ho_ten" name="ho_ten" placeholder="Ví dụ: Nguyễn Văn An" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email <span class="required">*</span></label>
+          <input type="email" id="email" name="email" placeholder="Ví dụ: an.nguyen@company.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="ten_dang_nhap">Tên đăng nhập (Username) <span class="required">*</span></label>
+          <input type="text" id="ten_dang_nhap" name="ten_dang_nhap" placeholder="Ví dụ: an_nguyen" required>
+        </div>
+
+        <div class="form-group">
+          <label for="mat_khau">Mật khẩu khởi tạo <span class="required">*</span></label>
+          <input type="password" id="mat_khau" name="mat_khau" placeholder="Mật khẩu tối thiểu 6 ký tự" minlength="6" required>
+        </div>
+
+        <div class="form-group">
+          <label for="vai_tro">Phân quyền (Vai trò) <span class="required">*</span></label>
+          <select id="vai_tro" name="vai_tro" required>
+            <option value="" disabled selected>-- Chọn vai trò --</option>
+            <option value="Admin">Admin (Quản trị viên)</option>
+            <option value="HR">HR (Nhân sự)</option>
+            <option value="Mentor">Mentor (Người hướng dẫn)</option>
+            <option value="ThucTapSinh">ThucTapSinh (Thực tập sinh)</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" id="btnSubmit" class="btn-submit">
+        <span>+ Tạo tài khoản người dùng</span>
+      </button>
+    </form>
+
+    <!-- Hộp thông báo phản hồi từ Backend -->
+    <div id="alertBox" class="alert">
+      <strong id="alertTitle"></strong>
+      <div id="alertMessage"></div>
+      <div id="alertResult" class="result-card" style="display: none;"></div>
+    </div>
+
+    <div class="footer-notes">
+      <span>Backend phụ trách: <strong>Nguyễn Văn Hiếu</strong></span>
+      <span>Frontend phụ trách: <strong>Lê Văn Hùng</strong></span>
+      <span>Tester phụ trách: <strong>Lê Quang Huy</strong></span>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('createUserForm');
+    const alertBox = document.getElementById('alertBox');
+    const alertTitle = document.getElementById('alertTitle');
+    const alertMessage = document.getElementById('alertMessage');
+    const alertResult = document.getElementById('alertResult');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    // Cấu hình URL Backend
+    const API_BASE_URL = 'http://127.0.0.1:8000';
+    const ENDPOINT = `${API_BASE_URL}/api/v1/admin/users`;
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      // Reset thông báo
+      alertBox.className = 'alert';
+      alertBox.style.display = 'none';
+      alertResult.style.display = 'none';
+
+      // Lấy dữ liệu từ form
+      const payload = {
+        ho_ten: document.getElementById('ho_ten').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        ten_dang_nhap: document.getElementById('ten_dang_nhap').value.trim(),
+        mat_khau: document.getElementById('mat_khau').value,
+        vai_tro: document.getElementById('vai_tro').value
+      };
+
+      // Chuẩn bị Headers xác thực
+      const authInput = document.getElementById('adminAuthHeader').value.trim();
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      if (authInput.toLowerCase().startsWith('bearer ')) {
+        headers['Authorization'] = authInput;
+      } else if (authInput.includes(':')) {
+        const [key, val] = authInput.split(':').map(s => s.trim());
+        headers[key] = val;
+      } else if (authInput) {
+        headers['Authorization'] = `Bearer ${authInput}`;
+      }
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = '<span>Đang xử lý tạo tài khoản...</span>';
+
+      try {
+        const response = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.status === 201) {
+          // HTTP 201 Created: Thành công
+          alertBox.className = 'alert success';
+          alertTitle.textContent = `Thành công (Mã HTTP ${response.status} Created)`;
+          alertMessage.textContent = `Đã tạo tài khoản người dùng "${data.ten_dang_nhap}" với vai trò "${data.vai_tro}" thành công! Mật khẩu đã được băm an toàn bằng bcrypt.`;
+          alertResult.style.display = 'block';
+          alertResult.textContent = JSON.stringify(data, null, 2);
+          form.reset();
+        } else if (response.status === 400 || response.status === 409) {
+          // HTTP 400 / 409: Lỗi trùng lặp username hoặc email
+          alertBox.className = 'alert danger';
+          alertTitle.textContent = `Lỗi trùng lặp dữ liệu (Mã HTTP ${response.status})`;
+          alertMessage.textContent = data.detail || 'Tên đăng nhập hoặc email đã tồn tại trong hệ thống.';
+        } else if (response.status === 403) {
+          // HTTP 403 Forbidden: Không có quyền Admin
+          alertBox.className = 'alert danger';
+          alertTitle.textContent = `Từ chối truy cập (Mã HTTP ${response.status} Forbidden)`;
+          alertMessage.textContent = data.detail || 'Chỉ có Quản trị viên (Admin) mới có quyền tạo tài khoản người dùng.';
+        } else if (response.status === 422) {
+          // HTTP 422: Dữ liệu thiếu hoặc vai trò không hợp lệ
+          alertBox.className = 'alert danger';
+          alertTitle.textContent = `Dữ liệu không hợp lệ (Mã HTTP ${response.status} Unprocessable Entity)`;
+          let detailsText = '';
+          if (Array.isArray(data.detail)) {
+            detailsText = data.detail.map(d => `${d.loc ? d.loc.join('.') : (d.field || '')}: ${d.msg || d.message}`).join(' | ');
+          } else {
+            detailsText = JSON.stringify(data.detail);
+          }
+          alertMessage.textContent = detailsText || data.message;
+        } else {
+          // Các mã lỗi khác
+          alertBox.className = 'alert danger';
+          alertTitle.textContent = `Lỗi hệ thống (Mã HTTP ${response.status})`;
+          alertMessage.textContent = data.detail || 'Đã xảy ra lỗi không xác định.';
+        }
+      } catch (err) {
+        alertBox.className = 'alert danger';
+        alertTitle.textContent = 'Lỗi kết nối Backend';
+        alertMessage.textContent = `Không thể kết nối đến máy chủ Backend tại ${ENDPOINT}. Vui lòng đảm bảo uvicorn đang chạy (lệnh: uvicorn app.main:app --reload).`;
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<span>+ Tạo tài khoản người dùng</span>';
+      }
+    });
+  </script>
+</body>
+</html>
