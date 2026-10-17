@@ -1,14 +1,27 @@
-# app/schemas/__init__.py
-from app.schemas.intern import (
-    AssignMentorRequest,
-    AssignMentorResponse,
-    MentorInfo,
-    InternBriefInfo,
+from app.schemas.thong_bao import (
+    ThongBaoBase,
+    ThongBaoCreate,
+    ThongBaoUpdate,
+    ThongBaoResponse,
+    ThongBaoListResponse
+)
+from app.schemas.nguoi_dung import (
+    NguoiDungBase,
+    NguoiDungCreate,
+    NguoiDungResponse,
+    Token,
+    TokenData
 )
 
 __all__ = [
-    "AssignMentorRequest",
-    "AssignMentorResponse",
-    "MentorInfo",
-    "InternBriefInfo",
+    "ThongBaoBase",
+    "ThongBaoCreate",
+    "ThongBaoUpdate",
+    "ThongBaoResponse",
+    "ThongBaoListResponse",
+    "NguoiDungBase",
+    "NguoiDungCreate",
+    "NguoiDungResponse",
+    "Token",
+    "TokenData",
 ]

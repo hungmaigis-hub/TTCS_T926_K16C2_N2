@@ -1,8 +1,18 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import interns, mentors, reports, support_requests
+from app.api.v1.endpoints import notifications, auth
 
 api_router = APIRouter()
-api_router.include_router(interns.router)
-api_router.include_router(mentors.router)
-api_router.include_router(reports.router)
-api_router.include_router(support_requests.router)
+
+# Đăng ký router notifications
+api_router.include_router(
+    notifications.router,
+    prefix="/notifications",
+    tags=["Notifications (Thông báo)"]
+)
+
+# Đăng ký router auth
+api_router.include_router(
+    auth.router,
+    prefix="/auth",
+    tags=["Authentication (Xác thực)"]
+)
