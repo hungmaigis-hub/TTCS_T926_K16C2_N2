@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Thực tập sinh - Demo Header Chuông Thông Báo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-main: #f8fafc;
+            --surface: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #10b981;
+            --badge-bg: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* Top Navbar Header */
+        .navbar {
+            background-color: var(--surface);
+            border-bottom: 1px solid var(--border);
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-tag {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            background: #f1f5f9;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .user-tag strong {
+            color: var(--primary);
+        }
+
+        /* Notification Bell Container */
+        .notification-container {
+            position: relative;
+        }
+
+        .bell-button {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            color: var(--text-dark);
+        }
+
+        .bell-button:hover {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .bell-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background-color: var(--badge-bg);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            box-shadow: 0 0 0 2px var(--surface);
+            transition: transform 0.2s;
+        }
+
+        .bell-badge.hidden {
+            display: none;
+        }
+
+        /* Dropdown Box */
+        .notification-dropdown {
+            position: absolute;
+            top: 52px;
+            right: 0;
+            width: 380px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeIn 0.15s ease-out;
+            z-index: 200;
+        }
+
+        .notification-dropdown.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafafa;
+        }
+
+        .dropdown-header h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .btn-mark-all {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-mark-all:hover {
+            text-decoration: underline;
+        }
+
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+            list-style: none;
+        }
+
+        .notification-item {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background 0.15s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .notification-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .notification-item.unread {
+            background-color: #eff6ff;
+        }
+        .notification-item.unread:hover {
+            background-color: #e0f2fe;
+        }
+
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 14px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: var(--primary);
+        }
+
+        .notif-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .notif-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            line-height: 1.3;
+        }
+
+        .notif-type {
+            font-size: 0.68rem;
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            font-weight: 600;
+            background: #e2e8f0;
+            color: #475569;
+            white-space: nowrap;
+        }
+        .notif-type.LICH_TRINH { background: #e0e7ff; color: #4338ca; }
+        .notif-type.CONG_VIEC { background: #fef3c7; color: #b45309; }
+        .notif-type.HE_THONG { background: #dcfce7; color: #15803d; }
+
+        .notif-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .notif-time {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            margin-top: 0.2rem;
+        }
+
+        .dropdown-footer {
+            padding: 0.75rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            background: #fafafa;
+        }
+
+        .dropdown-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Container Main Content */
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge-dev {
+            background: #dbeafe;
+            color: #1e40af;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .test-btn {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .test-btn:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        .test-btn small {
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .log-box {
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header mô phỏng đúng đặc tả Task Frontend (Đỗ Hoàng) -->
+    <header class="navbar">
+        <div class="navbar-brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            Quản lý Thực tập sinh
+        </div>
+
+        <div class="navbar-actions">
+            <div class="user-tag">
+                Đang đăng nhập: <strong id="userName">Nguyễn Văn Hiếu (ID: 1)</strong>
+            </div>
+
+            <!-- Icon chuông thông báo kèm badge -->
+            <div class="notification-container">
+                <button class="bell-button" id="bellBtn" title="Xem thông báo" onclick="toggleDropdown()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <!-- Badge đếm số lượng chưa đọc -->
+                    <span class="bell-badge" id="unreadBadge">0</span>
+                </button>
+
+                <!-- Dropdown danh sách thông báo -->
+                <div class="notification-dropdown" id="notifDropdown">
+                    <div class="dropdown-header">
+                        <h3>Thông báo của tôi</h3>
+                        <button class="btn-mark-all" onclick="markAllAsRead()">Đánh dấu đọc tất cả</button>
+                    </div>
+                    <ul class="notification-list" id="notifList">
+                        <li style="padding: 1.5rem; text-align: center; color: var(--text-muted);">Đang tải thông báo...</li>
+                    </ul>
+                    <div class="dropdown-footer">
+                        <a href="javascript:void(0)" onclick="fetchMyNotifications()">Làm mới danh sách (GET /my)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Nội dung chính & Bảng kiểm thử cho Tester & Backend -->
+    <main class="container">
+        <div class="card">
+            <h2>
+                <span>Module Thông Báo: Backend - Frontend - Tester</span>
+                <span class="badge-dev">FastAPI + SQLAlchemy</span>
+            </h2>
+            <p style="color: var(--text-muted); line-height: 1.6;">
+                Trang này tích hợp giao diện Header với các endpoint FastAPI do <strong>Nguyễn Văn Hiếu</strong> xây dựng:
+                <br>• <code>GET /api/v1/notifications/my</code>: Lấy danh sách thông báo và số lượng chưa đọc.
+                <br>• <code>PATCH /api/v1/notifications/{id}/read</code>: Đánh dấu đã đọc khi người dùng click vào thông báo.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>Khu vực Kiểm thử Nhanh (Dành cho Tester & Dev)</h2>
+            <div class="test-grid">
+                <button class="test-btn" onclick="fetchMyNotifications()">
+                    1. Gọi GET /api/v1/notifications/my
+                    <small>Kiểm tra danh sách và đếm số lượng chưa đọc (200 OK)</small>
+                </button>
+
+                <button class="test-btn" onclick="switchUser(1, 'Nguyễn Văn Hiếu')">
+                    2. Chuyển sang User 1 (Nguyễn Văn Hiếu)
+                    <small>Kiểm tra thông báo cá nhân của User 1</small>
+                </button>
+
+                <button class="test-btn" onclick="switchUser(2, 'Dương Đình Hoàng')">
+                    3. Chuyển sang User 2 (Dương Đình Hoàng)
+                    <small>Kiểm tra phân lập dữ liệu người dùng (Isolation)</small>
+                </button>
+
+                <button class="test-btn" onclick="testReadNonExistent()">
+                    4. Test 404: PATCH ID không tồn tại
+                    <small>Gửi PATCH /api/v1/notifications/999999/read</small>
+                </button>
+
+                <button class="test-btn" onclick="testReadForbidden()">
+                    5. Test 403: Cố đọc thông báo người khác
+                    <small>User 1 cố đọc thông báo thuộc User 2</small>
+                </button>
+
+                <button class="test-btn" onclick="markAllAsRead()">
+                    6. Đánh dấu tất cả đã đọc
+                    <small>PATCH /api/v1/notifications/read-all</small>
+                </button>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <strong>Nhật ký Response API (Live Console Log):</strong>
+                <div class="log-box" id="logBox">// Sẵn sàng gọi API...</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "http://127.0.0.1:8000/api/v1";
+        let currentUserId = 1;
+        let currentUserName = "Nguyễn Văn Hiếu (ID: 1)";
+
+        function log(msg) {
+            const box = document.getElementById("logBox");
+            const time = new Date().toLocaleTimeString();
+            box.innerText = `[${time}] ${msg}\n` + box.innerText;
+        }
+
+        function switchUser(userId, name) {
+            currentUserId = userId;
+            currentUserName = `${name} (ID: ${userId})`;
+            document.getElementById("userName").innerText = currentUserName;
+            log(`Đã chuyển sang: ${currentUserName}`);
+            fetchMyNotifications();
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById("notifDropdown");
+            dropdown.classList.toggle("active");
+            if (dropdown.classList.contains("active")) {
+                fetchMyNotifications();
+            }
+        }
+
+        // Đóng dropdown khi click ngoài
+        document.addEventListener("click", function(event) {
+            const container = document.querySelector(".notification-container");
+            const dropdown = document.getElementById("notifDropdown");
+            if (!container.contains(event.target)) {
+                dropdown.classList.remove("active");
+            }
+        });
+
+        // 1. GET /api/v1/notifications/my
+        async function fetchMyNotifications() {
+            try {
+                log(`Đang gọi GET ${API_BASE}/notifications/my với X-User-Id: ${currentUserId}...`);
+                const res = await fetch(`${API_BASE}/notifications/my`, {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-User-Id": currentUserId.toString()
+                    }
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    log(`Lỗi [${res.status}]: ${JSON.stringify(err)}`);
+                    return;
+                }
+
+                const data = await res.json();
+                log(`Thành công 200 OK: Tìm thấy ${data.total} thông báo, ${data.unread_count} chưa đọc.`);
+                renderNotifications(data);
+            } catch (err) {
+                log(`Lỗi kết nối tới Backend: ${err.message}. Hãy chắc chắn server FastAPI đang chạy tại port 8000.`);
+            }
+        }
+
+        function renderNotifications(data) {
+            const badge = document.getElementById("unreadBadge");
+            const list = document.getElementById("notifList");
+
+            // Cập nhật Badge
+            if (data.unread_count > 0) {
+                badge.innerText = data.unread_count > 99 ? '99+' : data.unread_count;
+                badge.classList.remove("hidden");
+            } else {
+                badge.innerText = '0';
+                badge.classList.add("hidden");
+            }
+
+            // Render danh sách
+            if (!data.items || data.items.length === 0) {
+                list.innerHTML = `<li style="padding: 2rem; text-align: center; color: var(--text-muted);">Không có thông báo nào.</li>`;
+                return;
+            }
+
+            list.innerHTML = data.items.map(item => {
+                const isUnread = !item.da_doc;
+                const formattedTime = new Date(item.ngay_tao).toLocaleString("vi-VN");
+                return `
+                    <li class="notification-item ${isUnread ? 'unread' : ''}" onclick="markNotificationAsRead(${item.ma_thong_bao})">
+                        <div class="notif-top">
+                            <span class="notif-title">${escapeHtml(item.tieu_de)}</span>
+                            <span class="notif-type ${item.loai_thong_bao}">${escapeHtml(item.loai_thong_bao)}</span>
+                        </div>
+                        <div class="notif-desc">${escapeHtml(item.noi_dung)}</div>
+                        <div class="notif-time">${formattedTime} • ${isUnread ? '<strong>Chưa đọc (Click để đọc)</strong>' : 'Đã đọc'}</div>
+                    </li>
+                `;
+            }).join("");
+        }
+
+        // 2. PATCH /api/v1/notifications/{id}/read
+        async function markNotificationAsRead(id) {
+            try {
+                log(`Đang gọi PATCH ${API_BASE}/notifications/${id}/read...`);
+                const res = await fetch(`${API_BASE}/notifications/${id}/read`, {
+                    method: "PATCH",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-User-Id": currentUserId.toString()
+                    }
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    log(`Đã đọc thông báo #${id} thành công! [200 OK]`);
+                    fetchMyNotifications(); // Cập nhật lại UI và badge
+                } else {
+                    log(`Lỗi [${res.status}]: ${JSON.stringify(data)}`);
+                    alert(`[HTTP ${res.status}] ${data.detail}`);
+                }
+            } catch (err) {
+                log(`Lỗi mạng khi cập nhật: ${err.message}`);
+            }
+        }
+
+        // 3. PATCH /api/v1/notifications/read-all
+        async function markAllAsRead() {
+            try {
+                log(`Đang gọi PATCH ${API_BASE}/notifications/read-all...`);
+                const res = await fetch(`${API_BASE}/notifications/read-all`, {
+                    method: "PATCH",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-User-Id": currentUserId.toString()
+                    }
+                });
+                const data = await res.json();
+                log(`Đã đọc tất cả: ${JSON.stringify(data)}`);
+                fetchMyNotifications();
+            } catch (err) {
+                log(`Lỗi: ${err.message}`);
+            }
+        }
+
+        // 4. Test 404
+        async function testReadNonExistent() {
+            markNotificationAsRead(999999);
+        }
+
+        // 5. Test 403 (User 1 cố đọc thông báo thuộc User 2)
+        async function testReadForbidden() {
+            // Giả sử thông báo 6 thuộc về User 2
+            log(`Kiểm thử 403: User hiện tại (ID: ${currentUserId}) cố đọc thông báo ID 6 của User 2...`);
+            markNotificationAsRead(6);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // Tự động tải lần đầu
+        window.addEventListener("DOMContentLoaded", () => {
+            fetchMyNotifications();
+        });
+    </script>
+</body>
+</html>
