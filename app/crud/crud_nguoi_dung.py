@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 from sqlalchemy.orm import Session
 from app.models.nguoi_dung import NguoiDung
 from app.schemas.nguoi_dung import NguoiDungCreate
@@ -6,8 +6,10 @@ from app.core.security import get_password_hash, verify_password
 
 
 class CRUDNguoiDung:
-    def get_by_id(self, db: Session, ma_nguoi_dung: int) -> Optional[NguoiDung]:
-        return db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == ma_nguoi_dung).first()
+    def get_by_id(self, db: Session, ma_nguoi_dung: Any) -> Optional[NguoiDung]:
+        return db.query(NguoiDung).filter(
+            (NguoiDung.ma_nguoi_dung == str(ma_nguoi_dung)) | (NguoiDung.ma_nguoi_dung == ma_nguoi_dung)
+        ).first()
 
     def get_by_email(self, db: Session, email: str) -> Optional[NguoiDung]:
         return db.query(NguoiDung).filter(NguoiDung.email == email).first()

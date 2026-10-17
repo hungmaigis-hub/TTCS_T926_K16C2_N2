@@ -53,7 +53,10 @@ audit-logs/
 GET /api/v1/admin/audit-logs?user=nguyen&action=UPDATE&from_date=2026-10-01&to_date=2026-10-16&page=1&limit=10
 Accept: application/json
 Authorization: Bearer <your_jwt_token>
-=======
+```
+
+---
+
 
 # Module Quản Lý Thông Báo (Notification Service) - FastAPI & SQLAlchemy
 
@@ -227,7 +230,10 @@ Base URL: `http://localhost:8000/api/v1`
 ### Bước 1: Cài đặt thư viện
 ```bash
 pip install -r requirements.txt
-=======
+```
+
+---
+
 # DỰ ÁN QUẢN LÝ THỰC TẬP SINH (TTCS)
 ## PHÂN HỆ: QUẢN TRỊ HỆ THỐNG - TÀI KHOẢN & PHÂN QUYỀN
 
@@ -390,7 +396,14 @@ Backend hỗ trợ linh hoạt cả tiếng Việt và tiếng Anh để tiện 
       "limit": 10,
       "total_records": 45,
       "total_pages": 5
-=======
+    }
+  }
+}
+```
+
+---
+
+#### Payload Mẫu Tạo Tài Khoản:
 ```json
 {
   "ho_ten": "Nguyễn Văn Mentor",
@@ -399,15 +412,9 @@ Backend hỗ trợ linh hoạt cả tiếng Việt và tiếng Anh để tiện 
   "mat_khau": "MatKhauChuan@2026",
   "vai_tro": "Mentor"
 }
-
 ```
 *(Giá trị `vai_tro` chỉ nhận 1 trong 4 giá trị: `"Admin"`, `"HR"`, `"Mentor"`, `"ThucTapSinh"`)*
 
-
-### Bước 2: Nạp dữ liệu mẫu (Seed Data)
-```bash
-python seed_data.py
-=======
 #### Dữ liệu trả về khi thành công (HTTP 201 Created):
 ```json
 {
@@ -495,12 +502,14 @@ async function onNotificationClick(maThongBao) {
 ```
 
 Có thể mở file `frontend_demo.html` trực tiếp trên trình duyệt (hoặc qua Live Server) để trải nghiệm và kiểm chứng hoạt động của toàn bộ luồng.
-=======
+
 ---
 
 ## 💻 Cách sử dụng
 Mở file `index.html` trực tiếp trên trình duyệt web (Google Chrome, Microsoft Edge, Firefox, Brave) hoặc chạy qua bất kỳ static web server nào (Live Server, VSCode, Nginx, Apache).
-=======
+
+---
+
 ## 5. BỘ TEST CASES DÀNH CHO TESTER (LÊ QUANG HUY)
 
 File kiểm thử tự động đã được lập trình sẵn tại `tests/test_admin_create_user.py` bao gồm:

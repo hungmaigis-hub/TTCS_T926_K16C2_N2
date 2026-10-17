@@ -1,61 +1,6 @@
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import settings
-from app.core.database import engine, Base
-from app.api.v1.api import api_router
-import app.models  # Đảm bảo các models được load để SQLAlchemy tạo bảng
-
-# Tự động tạo các bảng trong cơ sở dữ liệu nếu chưa tồn tại
-Base.metadata.create_all(bind=engine)
-
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description="Backend API cho Module Quản lý Thông báo thực tập sinh (Thực hiện bởi: Nguyễn Văn Hiếu)",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
-)
-
-# Cấu hình CORS Middleware để Frontend có thể gọi API mà không bị chặn
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-# Đăng ký API router v1
-app.include_router(api_router, prefix=settings.API_V1_STR)
-
-
-@app.get("/", tags=["Health Check"])
-def root():
-    return {
-        "service": settings.PROJECT_NAME,
-        "author": "Nguyễn Văn Hiếu",
-        "role": "Backend Developer",
-        "status": "online",
-        "docs": "/docs"
-    }
-
-
-@app.get("/health", tags=["Health Check"])
-def health_check():
-    return {"status": "ok", "message": "Service is healthy"}
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
-=======
 """
 Ứng dụng FastAPI chính (Main Application)
 Dự án: Hệ thống Quản lý Thực tập sinh (TTCS)
-Phân hệ: Quản trị hệ thống - Quản lý tài khoản & phân quyền
 Phụ trách Backend: Nguyễn Văn Hiếu
 """
 
@@ -69,14 +14,17 @@ from app.core.config import settings
 from app.core.database import Base, engine, SessionLocal
 from app.core.security import hash_password
 from app.models.nguoi_dung import NguoiDung
+from app.models.thong_bao import ThongBao
+from app.models.nhat_ky_hoat_dong import NhatKyHoatDong
 from app.schemas.user import UserRole
 from app.api.v1.api import api_router
+from app.routers.intern_router import router as intern_router
+from app.middleware.audit_log import AuditLogMiddleware
 
 
 def seed_initial_admin():
     """
     Tự động khởi tạo tài khoản Quản trị viên (Admin) mặc định nếu hệ thống chưa có.
-    Giúp Frontend (Lê Văn Hùng) và Tester (Lê Quang Huy) có thể kiểm thử ngay lập tức.
     """
     db = SessionLocal()
     try:
@@ -117,24 +65,19 @@ app = FastAPI(
     description="""
     Hệ sinh thái API Backend cho Dự án Quản lý Thực tập sinh (TTCS).
     
-    ### Chức năng chính được phụ trách bởi Nguyễn Văn Hiếu:
-    - **POST /api/v1/admin/users**: Admin tạo tài khoản người dùng mới.
-      * Băm mật khẩu an toàn bằng thuật toán **bcrypt**.
-      * Gán vai trò tương ứng: **Admin**, **HR**, **Mentor**, **ThucTapSinh**.
-      * Kiểm tra chống trùng lặp **username (tên đăng nhập)** và **email** trong bảng `nguoi_dung`.
-      * Phân quyền bảo vệ: Chỉ **Admin** mới có quyền thao tác (trả về **403 Forbidden** nếu vai trò khác).
-      * Bắt lỗi dữ liệu thiếu/sai định dạng trả về **422 Unprocessable Entity**.
-      * Bắt lỗi trùng lặp trả về **400 Bad Request**.
-      * Thành công trả về **201 Created**.
+    ### Chức năng Sprint 4:
+    - **Notifications**: Thông báo cá nhân, đánh dấu đã đọc.
+    - **Admin Users**: Quản trị tạo tài khoản người dùng và phân vai trò.
+    - **Audit Logs**: Ghi log tự động và truy vấn nhật ký hoạt động hệ thống.
     """,
     version="1.0.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# Cấu hình CORS Middleware để Frontend (Lê Văn Hùng) dùng Fetch API mượt mà không bị lỗi CORS
+# 1. CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -143,8 +86,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Đăng ký API v1 Router
+# 2. Audit Log Middleware (Tự động ghi lại các thao tác nghiệp vụ)
+app.add_middleware(AuditLogMiddleware)
+
+# 3. Đăng ký API v1 Router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(intern_router)
 
 
 @app.get("/", tags=["Hệ thống"])
@@ -154,13 +101,18 @@ def root():
         "message": "Chào mừng đến với Hệ thống Quản lý Thực tập sinh (TTCS) API",
         "author": "Nguyễn Văn Hiếu (Backend Developer)",
         "docs_url": "/docs",
-        "api_v1": "/api/v1"
+        "api_v1": settings.API_V1_STR
     }
 
 
 @app.get("/health", tags=["Hệ thống"])
 def health_check():
-    return {"status": "healthy", "database": "connected"}
+    return {"status": "ok", "message": "Service is healthy"}
+
+
+@app.get("/ping", tags=["Hệ thống"])
+def ping():
+    return {"ping": "pong"}
 
 
 # Custom Exception Handler cho RequestValidationError để format thông báo lỗi thân thiện cho Frontend & Tester
@@ -179,3 +131,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "message": "Dữ liệu gửi lên không hợp lệ hoặc thiếu trường bắt buộc (hoặc vai trò không hợp lệ)."
         }
     )
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

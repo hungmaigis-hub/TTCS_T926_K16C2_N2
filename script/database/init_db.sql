@@ -250,11 +250,22 @@ INSERT INTO phong_ban (ma_phong_ban, ten_phong_ban, mo_ta)
 VALUES (1, 'Trung tâm Phần mềm', 'Phòng kỹ thuật & phát triển hệ thống')
 ON DUPLICATE KEY UPDATE ten_phong_ban = VALUES(ten_phong_ban);
 
-INSERT INTO truong_dai_hoc (ma_truong, ten_truong, dia_chi, nguoi_lien_he, email_lien_he)
+INSERT INTO truong_dai_hoc (ma_truong, ten_truong, dia_chi, nguoi_lien_he, email_lien_he, danh_sach_nganh)
 VALUES 
-(1, 'Đại học Thái Nguyên', 'Thái Nguyên', 'Thầy Nguyễn Văn X', 'lienhe@tnu.edu.vn'),
-(2, 'Đại học Bách Khoa Hà Nội', 'Hà Nội', 'Cô Trần Thị Y', 'lienhe@hust.edu.vn')
-ON DUPLICATE KEY UPDATE ten_truong = VALUES(ten_truong);
+(1, 'Đại học Thái Nguyên (TNU)', 'Phường Tân Thịnh, TP. Thái Nguyên, Thái Nguyên', 'Ban Đào tạo TNU', 'daotao@tnu.edu.vn', '["Công nghệ thông tin", "Kỹ thuật phần mềm", "Khoa học máy tính", "An toàn thông tin", "Khoa học dữ liệu & Trí tuệ nhân tạo", "Hệ thống thông tin quản lý"]'),
+(2, 'Đại học Bách Khoa Hà Nội (HUST)', 'Số 1 Đại Cồ Việt, Q. Hai Bà Trưng, Hà Nội', 'Phòng Đào tạo HUST', 'daotao@hust.edu.vn', '["Khoa học máy tính", "Kỹ thuật phần mềm", "Khoa học Dữ liệu và Trí tuệ nhân tạo", "An toàn không gian số", "Kỹ thuật Cơ điện tử", "Kỹ thuật Điều khiển & Tự động hóa", "Kỹ thuật Điện tử - Viễn thông", "Kỹ thuật máy tính"]'),
+(3, 'Trường ĐH Công nghệ Thông tin và Truyền thông - ĐH Thái Nguyên (ICTU)', 'Đường Z115, Xã Quyết Thắng, TP. Thái Nguyên, Thái Nguyên', 'Phòng Đào tạo ICTU', 'tuyensinh@ictu.edu.vn', '["Công nghệ phần mềm", "Kỹ thuật phần mềm", "Công nghệ thông tin", "Khoa học máy tính", "Trí tuệ nhân tạo & Dữ liệu lớn", "An toàn thông tin", "Mạng máy tính & Truyền thông dữ liệu", "Hệ thống thông tin quản lý", "Thiết kế đồ họa kỹ thuật số", "Công nghệ truyền thông đa phương tiện", "Thương mại điện tử & Kinh tế số", "Công nghệ kỹ thuật máy tính", "Kỹ thuật điều khiển & Tự động hóa", "Kỹ thuật điện tử, viễn thông"]'),
+(4, 'Trường ĐH Kỹ thuật Công nghiệp - ĐH Thái Nguyên (TNUT)', 'Số 666 Đường 3/2, P. Tích Lương, TP. Thái Nguyên, Thái Nguyên', 'Phòng Đào tạo TNUT', 'daotao@tnut.edu.vn', '["Kỹ thuật Cơ điện tử", "Kỹ thuật Điều khiển & Tự động hóa", "Kỹ thuật Cơ khí chế tạo máy", "Kỹ thuật Ô tô", "Kỹ thuật Điện tử - Viễn thông", "Kỹ thuật Điện tử & Tin học công nghiệp", "Kỹ thuật Xây dựng", "Kỹ thuật Quản lý công nghiệp"]'),
+(5, 'Trường ĐH Kinh tế và Quản trị Kinh doanh - ĐH Thái Nguyên (TUEBA)', 'Phường Thịnh Đán, TP. Thái Nguyên, Thái Nguyên', 'Phòng Đào tạo TUEBA', 'daotao@tueba.edu.vn', '["Thương mại điện tử", "Quản trị kinh doanh", "Marketing số & Truyền thông", "Kế toán doanh nghiệp", "Kiểm toán", "Tài chính - Ngân hàng", "Kinh doanh quốc tế & Logistics", "Kinh tế đầu tư", "Quản trị nhân lực", "Luật kinh tế"]'),
+(6, 'Trường ĐH Khoa học - ĐH Thái Nguyên (TNUS)', 'Phường Tân Thịnh, TP. Thái Nguyên, Thái Nguyên', 'Phòng Đào tạo TNUS', 'daotao@tnus.edu.vn', '["Công nghệ thông tin ứng dụng", "Khoa học Dữ liệu & Thống kê", "Toán tin ứng dụng", "Công nghệ Sinh học", "Quản lý Tài nguyên & Môi trường", "Báo chí & Truyền thông đa phương tiện", "Ngôn ngữ Anh", "Quản trị Dịch vụ Du lịch & Lữ hành"]'),
+(7, 'Trường ĐH Sư phạm - ĐH Thái Nguyên (TNUE)', 'Số 20 Lương Ngọc Quyến, P. Quang Trung, TP. Thái Nguyên, Thái Nguyên', 'Phòng Đào tạo TNUE', 'daotao@tnue.edu.vn', '["Sư phạm Tin học", "Sư phạm Toán học", "Sư phạm Vật lý", "Sư phạm Hóa học", "Sư phạm Tiếng Anh", "Sư phạm Ngữ văn", "Tâm lý học giáo dục", "Giáo dục Tiểu học", "Giáo dục Mầm non"]'),
+(8, 'Trường ĐH Y - Dược - ĐH Thái Nguyên (TUMP)', 'Số 284 Lương Ngọc Quyến, TP. Thái Nguyên, Thái Nguyên', 'Phòng Đào tạo TUMP', 'daotao@tump.edu.vn', '["Y khoa", "Dược học", "Răng - Hàm - Mặt", "Điều dưỡng", "Y học dự phòng", "Kỹ thuật Xét nghiệm y học", "Kỹ thuật Hình ảnh y học"]'),
+(9, 'Trường ĐH Nông Lâm - ĐH Thái Nguyên (TUAF)', 'Xã Quyết Thắng, TP. Thái Nguyên, Thái Nguyên', 'Phòng Đào tạo TUAF', 'daotao@tuaf.edu.vn', '["Công nghệ Thực phẩm", "Quản lý Đất đai", "Bất động sản & Địa chính", "Thú y", "Chăn nuôi công nghệ cao", "Khoa học Cây trồng", "Khoa học Môi trường", "Lâm nghiệp đô thị", "Kinh tế Nông nghiệp"]'),
+(10, 'Trường Cao đẳng Kinh tế - Kỹ thuật Thái Nguyên (VETC)', 'Phường Thịnh Đán, TP. Thái Nguyên, Thái Nguyên', 'Phòng Tuyển sinh VETC', 'daotao@vetc.edu.vn', '["Tin học ứng dụng", "Công nghệ Kỹ thuật Điện - Điện tử", "Công nghệ Ô tô", "Cơ khí chế tạo máy", "Kế toán doanh nghiệp", "Quản trị mạng máy tính", "Thú y ứng dụng"]'),
+(11, 'Trường Cao đẳng Công nghiệp Thái Nguyên (TNIC)', 'Số 293 Đường Gia Sàng, P. Gia Sàng, TP. Thái Nguyên, Thái Nguyên', 'Phòng Tuyển sinh TNIC', 'tuyensinh@tnic.edu.vn', '["Công nghệ Thông tin (Lập trình ứng dụng & Web)", "Điện công nghiệp", "Cắt gọt kim loại (CNC)", "Hàn công nghệ cao", "Công nghệ Ô tô", "Tự động hóa công nghiệp", "Kế toán doanh nghiệp"]'),
+(12, 'Trường Cao đẳng Y tế Thái Nguyên', 'Số 478 Đường Thống Nhất, P. Tân Thịnh, TP. Thái Nguyên, Thái Nguyên', 'Phòng Tuyển sinh & Đào tạo', 'cdytthainguyen@gmail.com', '["Dược", "Điều dưỡng", "Hộ sinh", "Kỹ thuật Xét nghiệm y học", "Kỹ thuật Phục hồi chức năng"]'),
+(13, 'Trường Cao đẳng Văn hóa Nghệ thuật Việt Bắc', 'Phường Đồng Quang, TP. Thái Nguyên, Thái Nguyên', 'Phòng Đào tạo', 'vhntvietbac@gmail.com', '["Thiết kế đồ họa", "Mỹ thuật ứng dụng", "Quản lý văn hóa", "Hướng dẫn du lịch", "Nghệ thuật biểu diễn múa & âm nhạc"]')
+ON DUPLICATE KEY UPDATE ten_truong = VALUES(ten_truong), dia_chi = VALUES(dia_chi), danh_sach_nganh = VALUES(danh_sach_nganh);
 
 INSERT INTO chuong_trinh_thuc_tap (ma_chuong_trinh, ma_phong_ban, ten_chuong_trinh, ngay_bat_dau, ngay_ket_thuc, mo_ta)
 VALUES (1, 1, 'Thực tập sinh Khóa Mùa Thu 2026', '2026-09-01', '2026-12-30', 'Chương trình đào tạo kỹ sư phần mềm thực chiến')
@@ -380,6 +391,36 @@ VALUES
 -- NhaTruong
 ('NhaTruong', 1), ('NhaTruong', 8)
 ON DUPLICATE KEY UPDATE vai_tro = VALUES(vai_tro);
+
+-- 22. BẢNG THÔNG BÁO (Sprint 4 - Nguyễn Văn Hiếu)
+CREATE TABLE IF NOT EXISTS thong_bao (
+    ma_thong_bao INT AUTO_INCREMENT PRIMARY KEY,
+    ma_nguoi_nhan VARCHAR(50) NOT NULL,
+    tieu_de VARCHAR(255) NOT NULL,
+    noi_dung TEXT NOT NULL,
+    loai_thong_bao VARCHAR(50) NOT NULL DEFAULT 'CHUNG',
+    da_doc BOOLEAN NOT NULL DEFAULT FALSE,
+    ngay_tao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_thong_bao_nguoi_nhan (ma_nguoi_nhan),
+    INDEX idx_thong_bao_da_doc (da_doc),
+    INDEX idx_thong_bao_ngay_tao (ngay_tao)
+);
+
+-- 23. BẢNG NHẬT KÝ HOẠT ĐỘNG (Sprint 4 - Nguyễn Văn Hiếu)
+CREATE TABLE IF NOT EXISTS nhat_ky_hoat_dong (
+    ma_nhat_ky INT AUTO_INCREMENT PRIMARY KEY,
+    ma_nguoi_dung VARCHAR(50) NULL,
+    hanh_dong VARCHAR(100) NOT NULL,
+    endpoint VARCHAR(255) NOT NULL,
+    phuong_thuc VARCHAR(10) NOT NULL,
+    dia_chi_ip VARCHAR(50) NULL,
+    mo_ta TEXT NULL,
+    thoi_gian DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_nhat_ky_nguoi_dung (ma_nguoi_dung),
+    INDEX idx_nhat_ky_thoi_gian (thoi_gian),
+    INDEX idx_nhat_ky_hanh_dong (hanh_dong),
+    INDEX idx_nhat_ky_endpoint (endpoint)
+);
 
 
 

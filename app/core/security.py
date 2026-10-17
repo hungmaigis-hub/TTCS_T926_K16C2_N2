@@ -1,39 +1,3 @@
-
-from datetime import datetime, timedelta
-from typing import Any, Union, Optional
-from jose import jwt
-from passlib.context import CryptContext
-from app.core.config import settings
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Xác thực mật khẩu người dùng"""
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password: str) -> str:
-    """Băm mật khẩu người dùng"""
-    return pwd_context.hash(password)
-
-
-def create_access_token(
-    subject: Union[str, Any], expires_delta: Optional[timedelta] = None
-) -> str:
-    """Tạo JWT access token chứa subject (user ID hoặc username)"""
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
-    to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-    )
-    return encoded_jwt
-=======
 """
 Module Bảo mật: Băm mật khẩu bằng bcrypt và xử lý JWT Token.
 Phụ trách: Nguyễn Văn Hiếu (Backend FastAPI)
@@ -50,18 +14,21 @@ from app.core.config import settings
 def hash_password(password: str) -> str:
     """
     Băm mật khẩu người dùng sử dụng thuật toán bcrypt tiêu chuẩn.
-    Tuân thủ đúng yêu cầu đề bài: băm mật khẩu bằng bcrypt.
     """
-    # bcrypt yêu cầu bytes
     pwd_bytes = password.encode("utf-8")
     salt = bcrypt.gensalt(rounds=12)
     hashed = bcrypt.hashpw(pwd_bytes, salt)
     return hashed.decode("utf-8")
 
 
+def get_password_hash(password: str) -> str:
+    """Alias cho hash_password tương thích các test case cũ"""
+    return hash_password(password)
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Xác minh mật khẩu dạng thô (plain text) với mật khẩu đã băm trong database.
+    Xác minh mật khẩu plain text với mật khẩu đã băm.
     """
     try:
         return bcrypt.checkpw(
@@ -74,12 +41,17 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(
     subject: Union[str, Any],
-    role: str,
+    role: Optional[str] = None,
     expires_delta: Optional[timedelta] = None
 ) -> str:
     """
-    Tạo JWT Access Token chứa subject (username / user_id) và role (Admin, HR, Mentor, ThucTapSinh).
+    Tạo JWT Access Token chứa subject (username / user_id) và role.
+    Hỗ trợ linh hoạt cho cả endpoints và các test cases.
     """
+    if isinstance(role, timedelta):
+        expires_delta = role
+        role = None
+
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
@@ -87,10 +59,12 @@ def create_access_token(
     
     to_encode = {
         "sub": str(subject),
-        "role": role,
         "exp": expire,
         "iat": datetime.utcnow()
     }
+    if role:
+        to_encode["role"] = role
+
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
 

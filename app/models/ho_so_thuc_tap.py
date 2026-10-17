@@ -113,7 +113,7 @@ class HoSoThucTap(Base):
 
     mentor = relationship(
         "NguoiDung",
-        back_populates="ho_so_thuc_tap",
+        back_populates=None,
         foreign_keys=[ma_mentor],
     )
 

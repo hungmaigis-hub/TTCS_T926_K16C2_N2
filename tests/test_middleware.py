@@ -57,13 +57,13 @@ def test_middleware_records_failed_operation(client, admin_headers, db_session):
     """
     initial_log_count = db_session.query(NhatKyHoatDong).count()
 
-    # Gửi dữ liệu không hợp lệ (vai trò không tồn tại)
+    # Gửi dữ liệu trùng lặp username để trigger HTTP 400 Bad Request
     bad_payload = {
-        "ten_dang_nhap": "bad_user",
-        "email": "bad_user@gmail.com",
-        "mat_khau": "123456",
+        "ten_dang_nhap": "admin_test",
+        "email": "unique_bad_user@gmail.com",
+        "mat_khau": "MatKhau@123",
         "ho_ten": "Bad User",
-        "vai_tro": "SuperAdminFake"
+        "vai_tro": "ThucTapSinh"
     }
 
     response = client.post("/api/v1/admin/users", json=bad_payload, headers=admin_headers)
