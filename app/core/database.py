@@ -4,6 +4,7 @@ Phụ trách: Nguyễn Văn Hiếu (Backend FastAPI)
 """
 
 from typing import Generator
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -17,7 +18,7 @@ if settings.DATABASE_URL.startswith("sqlite"):
 engine = create_engine(
     settings.DATABASE_URL,
     connect_args=connect_args,
-    pool_pre_ping=True
+    pool_pre_ping=True,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
