@@ -116,3 +116,64 @@ def test_update_support_request_missing_status():
     }
     response = client.patch("/api/v1/support-requests/1", json=payload)
     assert response.status_code == 422
+
+
+def test_create_support_request_success():
+    """Kiểm tra tạo mới yêu cầu hỗ trợ thành công (HTTP 201)"""
+    payload = {
+        "ma_ho_so": 1,
+        "loai_yeu_cau": "XinChungNhan",
+        "noi_dung": "Em xin cấp giấy xác nhận hoàn thành đợt thực tập để nộp về khoa."
+    }
+    response = client.post("/api/v1/support-requests", json=payload)
+    assert response.status_code == 201
+    res = response.json()
+    assert res["status_code"] == 201
+    assert "Gửi yêu cầu hỗ trợ thành công" in res["message"]
+    data = res["data"]
+    assert data["ma_ho_so"] == 1
+    assert data["loai_yeu_cau"] == "XinChungNhan"
+    assert data["trang_thai"] == "ChoXuLy"
+
+
+def test_create_support_request_not_found():
+    """Kiểm tra báo lỗi HTTP 404 khi mã hồ sơ không tồn tại"""
+    payload = {
+        "ma_ho_so": 99999,
+        "loai_yeu_cau": "GiayXacNhan",
+        "noi_dung": "Nội dung yêu cầu hợp lệ"
+    }
+    response = client.post("/api/v1/support-requests", json=payload)
+    assert response.status_code == 404
+    assert "Không tìm thấy hồ sơ" in response.json()["detail"]
+
+
+def test_create_support_request_empty_content():
+    """Kiểm tra báo lỗi HTTP 422 khi nội dung yêu cầu bị để trống"""
+    payload = {
+        "ma_ho_so": 1,
+        "loai_yeu_cau": "GiayXacNhan",
+        "noi_dung": "   "
+    }
+    response = client.post("/api/v1/support-requests", json=payload)
+    assert response.status_code == 422
+
+
+def test_get_support_requests_list():
+    """Kiểm tra lấy danh sách tất cả yêu cầu hỗ trợ (HTTP 200)"""
+    response = client.get("/api/v1/support-requests")
+    assert response.status_code == 200
+    res = response.json()
+    assert res["status_code"] == 200
+    assert "data" in res
+    assert isinstance(res["data"], list)
+    assert len(res["data"]) > 0
+
+
+def test_get_support_requests_filtered():
+    """Kiểm tra lấy danh sách yêu cầu hỗ trợ lọc theo mã hồ sơ (HTTP 200)"""
+    response = client.get("/api/v1/support-requests?ma_ho_so=1")
+    assert response.status_code == 200
+    res = response.json()
+    assert all(item["ma_ho_so"] == 1 for item in res["data"])
+

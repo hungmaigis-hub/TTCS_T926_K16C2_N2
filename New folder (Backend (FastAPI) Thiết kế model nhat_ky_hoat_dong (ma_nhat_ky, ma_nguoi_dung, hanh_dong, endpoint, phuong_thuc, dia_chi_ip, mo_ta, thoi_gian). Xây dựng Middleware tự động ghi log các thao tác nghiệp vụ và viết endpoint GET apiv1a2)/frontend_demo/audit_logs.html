@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nhật Ký Hoạt Động Hệ Thống - Admin Audit Logs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #090d16;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-title h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-title p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .badge-dev {
+      background: rgba(79, 70, 229, 0.2);
+      color: #818cf8;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+
+    .auth-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .auth-bar input {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: #334155;
+      color: #fff;
+    }
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    /* Filter Card */
+    .filter-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      align-items: end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+    }
+
+    /* Table Container */
+    .table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background: #172033;
+      color: var(--text-muted);
+      padding: 14px 16px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .ip-tag, .time-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+
+    .method-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .method-POST { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .method-GET { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .method-PUT { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .method-PATCH { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+    .method-DELETE { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+    .action-badge {
+      background: #334155;
+      color: #e2e8f0;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .user-name {
+      font-weight: 600;
+      color: #fff;
+    }
+    .user-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Pagination */
+    .pagination-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      background: #172033;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .pagination-info {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .page-btn {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .page-btn:hover:not(:disabled) {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .page-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      font-weight: 700;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: var(--text-muted);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.8s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-title">
+        <h1>
+          <span>🛡️ Nhật Ký Hoạt Động Hệ Thống</span>
+          <span class="badge-dev">Audit Log Module</span>
+        </h1>
+        <p>Giao diện tra cứu và kiểm thử API <code>GET /api/v1/admin/audit-logs</code> (Tác giả Backend: Nguyễn Văn Hiếu)</p>
+      </div>
+      <div>
+        <button class="btn btn-secondary" onclick="seedSampleAction()">+ Thao tác mẫu (Test Auto Log)</button>
+      </div>
+    </header>
+
+    <!-- Auth Bar -->
+    <div class="auth-bar">
+      <label style="font-size: 13px; font-weight: 600;">API Base URL:</label>
+      <input type="text" id="apiBaseUrl" value="http://127.0.0.1:8000" style="max-width: 220px;">
+      
+      <label style="font-size: 13px; font-weight: 600;">JWT Token (Admin):</label>
+      <input type="text" id="jwtToken" placeholder="Nhập Bearer Token hoặc nhấn 'Đăng nhập Admin'">
+      
+      <button class="btn btn-primary" onclick="quickLoginAdmin()">🔑 Đăng nhập Admin</button>
+      <button class="btn btn-secondary" onclick="useTestHeader()">⚡ Dùng Test Header</button>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="filter-card">
+      <div class="filter-grid">
+        <div class="form-group" style="grid-column: span 2;">
+          <label>Từ khóa tìm kiếm</label>
+          <input type="text" id="filterSearch" class="form-control" placeholder="Tìm theo mô tả, hành động, endpoint, IP, họ tên...">
+        </div>
+        <div class="form-group">
+          <label>Từ ngày</label>
+          <input type="date" id="filterFromDate" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Đến ngày</label>
+          <input type="date" id="filterToDate" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>Phương thức HTTP</label>
+          <select id="filterMethod" class="form-control">
+            <option value="">-- Tất cả --</option>
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="PATCH">PATCH</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tên hành động</label>
+          <input type="text" id="filterAction" class="form-control" placeholder="Ví dụ: TAO_NGUOI_DUNG">
+        </div>
+        <div class="form-group">
+          <label>Số bản ghi / trang</label>
+          <select id="filterPageSize" class="form-control">
+            <option value="10">10 bản ghi</option>
+            <option value="20" selected>20 bản ghi</option>
+            <option value="50">50 bản ghi</option>
+          </select>
+        </div>
+        <div class="form-group" style="display: flex; flex-direction: row; gap: 8px;">
+          <button class="btn btn-primary" style="flex: 1;" onclick="applyFilter()">🔍 Lọc dữ liệu</button>
+          <button class="btn btn-secondary" onclick="resetFilter()">↺ Đặt lại</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 70px;">Mã #</th>
+            <th style="width: 170px;">Thời gian</th>
+            <th style="width: 200px;">Người dùng</th>
+            <th style="width: 160px;">Hành động</th>
+            <th style="width: 100px;">Method</th>
+            <th>Endpoint</th>
+            <th style="width: 130px;">Địa chỉ IP</th>
+            <th>Mô tả kết quả</th>
+          </tr>
+        </thead>
+        <tbody id="logsTableBody">
+          <tr>
+            <td colspan="8" class="empty-state">
+              <div class="loading-spinner"></div>
+              <p style="margin-top: 10px;">Đang tải dữ liệu nhật ký hoạt động...</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination-bar">
+        <div class="pagination-info" id="paginationInfo">Hiển thị 0 trên tổng 0 bản ghi</div>
+        <div class="pagination-controls" id="paginationControls"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    let authHeaderType = "none"; // "token" | "header"
+
+    // Hàm gọi đăng nhập Admin tự động lấy token
+    async function quickLoginAdmin() {
+      const baseUrl = document.getElementById("apiBaseUrl").value.trim();
+      const formData = new URLSearchParams();
+      formData.append("username", "admin");
+      formData.append("password", "admin123");
+
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: formData
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert(`Đăng nhập thất bại: ${err.detail || res.statusText}`);
+          return;
+        }
+
+        const data = await res.json();
+        document.getElementById("jwtToken").value = data.access_token;
+        authHeaderType = "token";
+        alert(`Đăng nhập thành công với tài khoản: ${data.user.ho_ten} (${data.user.vai_tro})!`);
+        fetchAuditLogs(1);
+      } catch (e) {
+        alert(`Lỗi kết nối tới Backend: ${e.message}. Hãy chắc chắn server FastAPI đang chạy tại ${baseUrl}`);
+      }
+    }
+
+    function useTestHeader() {
+      authHeaderType = "header";
+      alert("Đã kích hoạt chế độ X-Test-User-Id: 1 (Admin) cho việc kiểm thử nhanh!");
+      fetchAuditLogs(1);
+    }
+
+    function getAuthHeaders() {
+      const headers = { "Content-Type": "application/json" };
+      const token = document.getElementById("jwtToken").value.trim();
+
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      } else if (authHeaderType === "header") {
+        headers["X-Test-User-Id"] = "1";
+      }
+      return headers;
+    }
+
+    // Hàm chính gọi GET /api/v1/admin/audit-logs
+    async function fetchAuditLogs(page = 1) {
+      currentPage = page;
+      const baseUrl = document.getElementById("apiBaseUrl").value.trim();
+      const search = document.getElementById("filterSearch").value.trim();
+      const fromDate = document.getElementById("filterFromDate").value;
+      const toDate = document.getElementById("filterToDate").value;
+      const method = document.getElementById("filterMethod").value;
+      const action = document.getElementById("filterAction").value.trim();
+      const pageSize = document.getElementById("filterPageSize").value;
+
+      const params = new URLSearchParams({
+        page: page,
+        page_size: pageSize
+      });
+
+      if (search) params.append("search", search);
+      if (fromDate) params.append("tu_ngay", `${fromDate}T00:00:00`);
+      if (toDate) params.append("den_ngay", `${toDate}T23:59:59`);
+      if (method) params.append("phuong_thuc", method);
+      if (action) params.append("hanh_dong", action);
+
+      const tbody = document.getElementById("logsTableBody");
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="empty-state">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 10px;">Đang tải danh sách nhật ký...</p>
+          </td>
+        </tr>
+      `;
+
+      try {
+        const response = await fetch(`${baseUrl}/api/v1/admin/audit-logs?${params.toString()}`, {
+          method: "GET",
+          headers: getAuthHeaders()
+        });
+
+        if (response.status === 401) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8" class="empty-state" style="color: #ef4444;">
+                ⚠️ Chưa xác thực (HTTP 401). Vui lòng nhấn nút <b>"Đăng nhập Admin"</b> hoặc <b>"Dùng Test Header"</b> ở thanh phía trên.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        if (response.status === 403) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8" class="empty-state" style="color: #f59e0b;">
+                🚫 Quyền truy cập bị từ chối (HTTP 403): Chỉ tài khoản Admin mới có quyền xem nhật ký hoạt động.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.detail || `Lỗi HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        renderAuditLogs(data);
+      } catch (err) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="empty-state" style="color: #ef4444;">
+              ❌ Lỗi tải dữ liệu: ${err.message}<br>
+              <small style="color: var(--text-muted); margin-top: 6px; display: block;">Hãy đảm bảo Backend FastAPI đang chạy và cho phép CORS.</small>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function renderAuditLogs(data) {
+      const tbody = document.getElementById("logsTableBody");
+      const { items, total, page, page_size, total_pages } = data;
+
+      if (!items || items.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="empty-state">
+              Không tìm thấy bản ghi nhật ký hoạt động nào phù hợp với bộ lọc.
+            </td>
+          </tr>
+        `;
+        document.getElementById("paginationInfo").innerText = "Hiển thị 0 bản ghi";
+        document.getElementById("paginationControls").innerHTML = "";
+        return;
+      }
+
+      // Render danh sách bản ghi
+      tbody.innerHTML = items.map(log => {
+        const dt = new Date(log.thoi_gian);
+        const timeFormatted = dt.toLocaleString("vi-VN", {
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+
+        const userInfo = log.ten_dang_nhap 
+          ? `<div class="user-info">
+               <span class="user-name">${escapeHtml(log.ho_ten || log.ten_dang_nhap)}</span>
+               <span class="user-sub">@${escapeHtml(log.ten_dang_nhap)} (${log.vai_tro || 'N/A'})</span>
+             </div>`
+          : `<span style="color: #64748b; font-style: italic;">Hệ thống / Vô danh</span>`;
+
+        const methodClass = `method-${log.phuong_thuc.toUpperCase()}`;
+
+        return `
+          <tr>
+            <td class="ip-tag">#${log.ma_nhat_ky}</td>
+            <td class="time-tag">${timeFormatted}</td>
+            <td>${userInfo}</td>
+            <td><span class="action-badge">${escapeHtml(log.hanh_dong)}</span></td>
+            <td><span class="method-badge ${methodClass}">${escapeHtml(log.phuong_thuc)}</span></td>
+            <td><code style="color: #93c5fd; font-size: 12px;">${escapeHtml(log.endpoint)}</code></td>
+            <td class="ip-tag">${escapeHtml(log.dia_chi_ip || '-')}</td>
+            <td style="color: #cbd5e1; max-width: 320px; word-break: break-word;">${escapeHtml(log.mo_ta || '-')}</td>
+          </tr>
+        `;
+      }).join("");
+
+      // Render Pagination
+      const startItem = (page - 1) * page_size + 1;
+      const endItem = Math.min(page * page_size, total);
+      document.getElementById("paginationInfo").innerText = 
+        `Hiển thị ${startItem} - ${endItem} trên tổng số ${total} bản ghi (Trang ${page}/${total_pages})`;
+
+      renderPaginationControls(page, total_pages);
+    }
+
+    function renderPaginationControls(page, totalPages) {
+      const controls = document.getElementById("paginationControls");
+      if (totalPages <= 1) {
+        controls.innerHTML = "";
+        return;
+      }
+
+      let html = `
+        <button class="page-btn" ${page <= 1 ? "disabled" : ""} onclick="fetchAuditLogs(${page - 1})">« Trước</button>
+      `;
+
+      // Hiển thị các nút số trang
+      for (let p = 1; p <= totalPages; p++) {
+        if (p === 1 || p === totalPages || (p >= page - 2 && p <= page + 2)) {
+          html += `
+            <button class="page-btn ${p === page ? "active" : ""}" onclick="fetchAuditLogs(${p})">${p}</button>
+          `;
+        } else if (p === page - 3 || p === page + 3) {
+          html += `<span style="color: var(--text-muted); padding: 0 4px;">...</span>`;
+        }
+      }
+
+      html += `
+        <button class="page-btn" ${page >= totalPages ? "disabled" : ""} onclick="fetchAuditLogs(${page + 1})">Tiếp »</button>
+      `;
+      controls.innerHTML = html;
+    }
+
+    function applyFilter() {
+      fetchAuditLogs(1);
+    }
+
+    function resetFilter() {
+      document.getElementById("filterSearch").value = "";
+      document.getElementById("filterFromDate").value = "";
+      document.getElementById("filterToDate").value = "";
+      document.getElementById("filterMethod").value = "";
+      document.getElementById("filterAction").value = "";
+      document.getElementById("filterPageSize").value = "20";
+      fetchAuditLogs(1);
+    }
+
+    async function seedSampleAction() {
+      const baseUrl = document.getElementById("apiBaseUrl").value.trim();
+      const randomId = Math.floor(Math.random() * 9000) + 1000;
+      const payload = {
+        ten_dang_nhap: `intern_auto_${randomId}`,
+        email: `intern${randomId}@example.com`,
+        mat_khau: "Password@123",
+        ho_ten: `Thực Tập Sinh Test ${randomId}`,
+        vai_tro: "ThucTapSinh"
+      };
+
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/admin/users`, {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert(`Không thể tạo thao tác mẫu: ${err.detail || res.statusText}`);
+          return;
+        }
+
+        alert(`Đã gửi yêu cầu tạo tài khoản thành công! Middleware đã tự động ghi lại thao tác này vào nhật ký.`);
+        fetchAuditLogs(1);
+      } catch (e) {
+        alert(`Lỗi: ${e.message}`);
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Tự động tải dữ liệu ban đầu
+    window.addEventListener("DOMContentLoaded", () => {
+      fetchAuditLogs(1);
+    });
+  </script>
+</body>
+</html>

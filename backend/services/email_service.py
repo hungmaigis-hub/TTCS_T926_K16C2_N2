@@ -3,6 +3,7 @@ import sys
 import smtplib
 import logging
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from email.header import Header
 from email.utils import formataddr
 from typing import Optional, List, Dict, Any
@@ -49,10 +50,12 @@ def get_email_settings() -> Dict[str, Any]:
 def send_email_smtp(
     to_email: str,
     subject: str,
-    content: str
+    content: str,
+    html_content: Optional[str] = None
 ) -> bool:
     """
-    Gửi email văn bản thuần túy (plain text) qua giao thức SMTP chuẩn.
+    Gửi email qua giao thức SMTP chuẩn.
+    Hỗ trợ cả văn bản thuần túy (plain text) và định dạng HTML đa phương tiện.
     Nếu MAIL_ENABLED=false hoặc chưa cấu hình tài khoản, sẽ ghi log và lưu vào sent_emails_history.
     """
     settings = get_email_settings()
@@ -61,6 +64,7 @@ def send_email_smtp(
         "to_email": to_email,
         "subject": subject,
         "content": content,
+        "html_content": html_content,
         "status": "pending"
     }
 
@@ -72,10 +76,21 @@ def send_email_smtp(
         return True
 
     try:
-        msg = MIMEText(content, "plain", "utf-8")
-        msg["Subject"] = Header(subject, "utf-8")
-        msg["From"] = formataddr((str(Header(settings["smtp_from_name"], "utf-8")), settings["smtp_from_email"]))
-        msg["To"] = to_email
+        if html_content:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = Header(subject, "utf-8")
+            msg["From"] = formataddr((str(Header(settings["smtp_from_name"], "utf-8")), settings["smtp_from_email"]))
+            msg["To"] = to_email
+            
+            part_plain = MIMEText(content, "plain", "utf-8")
+            part_html = MIMEText(html_content, "html", "utf-8")
+            msg.attach(part_plain)
+            msg.attach(part_html)
+        else:
+            msg = MIMEText(content, "plain", "utf-8")
+            msg["Subject"] = Header(subject, "utf-8")
+            msg["From"] = formataddr((str(Header(settings["smtp_from_name"], "utf-8")), settings["smtp_from_email"]))
+            msg["To"] = to_email
 
         # Envelope sender phải là tài khoản đăng nhập SMTP để Gmail không từ chối kết nối
         sender_email = settings["smtp_user"] if settings["smtp_user"] else settings["smtp_from_email"]
@@ -291,4 +306,141 @@ def send_support_request_email(
 
     content = "\n".join(body_lines)
     return send_email_smtp(to_email=to_email, subject=subject, content=content)
+
+
+def send_meeting_invitation_email(
+    to_email: str,
+    intern_name: str,
+    meeting_title: str,
+    start_time: str,
+    end_time: str,
+    location: str,
+    host_name: str,
+    note: Optional[str] = None
+) -> bool:
+    """
+    Gửi email HTML tự động mời thực tập sinh tham gia cuộc họp (chạy qua BackgroundTasks).
+    """
+    subject = f"[Thư mời họp] {meeting_title}"
+
+    # Phiên bản văn bản thuần túy (Plain text)
+    plain_lines = [
+        f"Xin chào {intern_name},",
+        "",
+        f"Bạn được mời tham gia cuộc họp: '{meeting_title}'",
+        f"- Người chủ trì: {host_name}",
+        f"- Thời gian bắt đầu: {start_time}",
+        f"- Thời gian kết thúc: {end_time}",
+        f"- Địa điểm / Link họp: {location}",
+    ]
+    if note and note.strip():
+        plain_lines.append(f"- Ghi chú / Nội dung: {note.strip()}")
+    plain_lines.extend([
+        "",
+        "Vui lòng sắp xếp thời gian tham gia đúng giờ.",
+        "",
+        "Trân trọng,",
+        "Ban Quản lý Chương trình Thực tập"
+    ])
+    plain_content = "\n".join(plain_lines)
+
+    # Ghi chú HTML nếu có
+    note_html = ""
+    if note and note.strip():
+        note_html = f"""
+        <tr>
+            <td style="padding: 10px 14px; font-weight: 600; color: #475569; width: 35%; border-bottom: 1px solid #f1f5f9;">📝 Ghi chú / Nội dung:</td>
+            <td style="padding: 10px 14px; color: #1e293b; border-bottom: 1px solid #f1f5f9;">{note.strip()}</td>
+        </tr>
+        """
+
+    # Template HTML chất lượng cao, responsive và tương thích email client
+    html_content = f"""<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{subject}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 30px 10px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 32px 24px; text-align: center; color: #ffffff;">
+                            <div style="font-size: 32px; margin-bottom: 8px;">📅</div>
+                            <h1 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">THƯ MỜI THAM GIA CUỘC HỌP</h1>
+                            <p style="margin: 6px 0 0 0; font-size: 14px; opacity: 0.9;">Hệ thống Quản lý Thực tập sinh</p>
+                        </td>
+                    </tr>
+                    <!-- Body Content -->
+                    <tr>
+                        <td style="padding: 32px 28px;">
+                            <p style="margin-top: 0; font-size: 16px; line-height: 1.6; color: #334155;">
+                                Xin chào <strong>{intern_name}</strong>,
+                            </p>
+                            <p style="font-size: 15px; line-height: 1.6; color: #334155;">
+                                Bạn vừa nhận được lời mời tham dự cuộc họp từ cán bộ hướng dẫn <strong>{host_name}</strong>. Dưới đây là thông tin chi tiết về buổi họp:
+                            </p>
+                            
+                            <!-- Card chi tiết lịch họp -->
+                            <table role="presentation" width="100%" style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin: 24px 0; border-collapse: separate; border-spacing: 0;">
+                                <tr>
+                                    <td colspan="2" style="background-color: #f1f5f9; padding: 12px 14px; font-weight: 700; color: #1e3a8a; border-radius: 8px 8px 0 0; font-size: 15px;">
+                                        📌 {meeting_title}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px 14px; font-weight: 600; color: #475569; width: 35%; border-bottom: 1px solid #f1f5f9;">👤 Người chủ trì:</td>
+                                    <td style="padding: 10px 14px; color: #1e293b; border-bottom: 1px solid #f1f5f9;"><strong>{host_name}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px 14px; font-weight: 600; color: #475569; border-bottom: 1px solid #f1f5f9;">⏰ Bắt đầu:</td>
+                                    <td style="padding: 10px 14px; color: #0284c7; font-weight: 600; border-bottom: 1px solid #f1f5f9;">{start_time}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px 14px; font-weight: 600; color: #475569; border-bottom: 1px solid #f1f5f9;">🏁 Kết thúc:</td>
+                                    <td style="padding: 10px 14px; color: #0284c7; font-weight: 600; border-bottom: 1px solid #f1f5f9;">{end_time}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px 14px; font-weight: 600; color: #475569; border-bottom: 1px solid #f1f5f9;">📍 Địa điểm / Link:</td>
+                                    <td style="padding: 10px 14px; color: #1e293b; border-bottom: 1px solid #f1f5f9;"><strong>{location}</strong></td>
+                                </tr>
+                                {note_html}
+                            </table>
+
+                            <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 4px; margin-bottom: 24px;">
+                                <p style="margin: 0; font-size: 14px; color: #1e40af; line-height: 1.5;">
+                                    💡 <em>Vui lòng chuẩn bị tài liệu liên quan và tham gia đúng giờ quy định. Nếu có lịch trùng bất khả kháng, hãy báo lại cho người chủ trì sớm nhất có thể.</em>
+                                </p>
+                            </div>
+
+                            <p style="font-size: 14px; line-height: 1.6; color: #64748b; margin-bottom: 0;">
+                                Trân trọng,<br>
+                                <strong style="color: #334155;">Ban Quản lý Chương trình Thực tập</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f1f5f9; padding: 18px 24px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">
+                            <p style="margin: 0;">Đây là email tự động gửi từ Hệ thống Quản lý Thực tập sinh. Vui lòng không trả lời trực tiếp email này.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+"""
+
+    return send_email_smtp(
+        to_email=to_email,
+        subject=subject,
+        content=plain_content,
+        html_content=html_content
+    )
 

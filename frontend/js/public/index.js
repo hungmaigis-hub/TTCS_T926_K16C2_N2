@@ -13,11 +13,11 @@ function selectRole(vaiTro, nutChon) {
     nhanNhapLieu.textContent = "Email hoặc Mã sinh viên *";
     oNhapLieu.placeholder = "sv.nguyenvana@ictu.edu.vn";
   } else if (vaiTro === "mentor") {
-    nhanNhapLieu.textContent = "Email Doanh nghiệp / Mã Mentor *";
+    nhanNhapLieu.textContent = "Email Mentor / Người hướng dẫn *";
     oNhapLieu.placeholder = "mentor.career@ictu.edu.vn";
-  } else if (vaiTro === "faculty") {
-    nhanNhapLieu.textContent = "Email Giảng viên / Quản lý khoa *";
-    oNhapLieu.placeholder = "gv.truongkhoa@ictu.edu.vn";
+  } else if (vaiTro === "hr" || vaiTro === "admin" || vaiTro === "faculty") {
+    nhanNhapLieu.textContent = "Email Cán bộ HR / Quản lý *";
+    oNhapLieu.placeholder = "admin.daotao@ictu.edu.vn";
   }
 }
 

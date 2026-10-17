@@ -14,6 +14,8 @@ from database.models.don_xin_nghi import DonXinNghi
 from database.models.ca_lam_viec import CaLamViec
 from database.models.phu_cap import PhuCap
 from database.models.yeu_cau_ho_tro import YeuCauHoTro
+from database.models.lich_hop import LichHop
+from database.models.quyen_han import QuyenHan, VaiTroQuyenHan
 
 __all__ = [
     "PhongBan",
@@ -32,6 +34,10 @@ __all__ = [
     "CaLamViec",
     "PhuCap",
     "YeuCauHoTro",
+    "LichHop",
+    "QuyenHan",
+    "VaiTroQuyenHan",
 ]
+
 
 

@@ -500,18 +500,19 @@ erDiagram
 
 | Thực thể (Entity) | Vai trò hệ thống & Ánh xạ tới User Stories | User Stories liên quan |
 | :--- | :--- | :--- |
-| **`NGUOI_DUNG`** | Quản lý thông tin tài khoản chung, phân quyền tài khoản (Admin, HR, Mentor, Thực tập sinh) và thống kê phân bổ tải hướng dẫn (Mentor Workload). | US 39, US 40, US 43 |
-| **`TRUONG_DAI_HOC`** | Quản lý danh mục trường đại học để lọc, thống kê nguồn ứng viên và gửi báo cáo liên kết. | US 3, US 20, US 32, US 34 |
-| **`PHONG_BAN`** | Quản lý cơ cấu phòng ban công ty để phân bổ thực tập sinh và mentor. | US 11, US 29, US 31 |
+| **`NGUOI_DUNG`** | Quản lý thông tin tài khoản chung, phân quyền tài khoản (Admin, HR, Mentor, Thực tập sinh) và thống kê phân bổ tải hướng dẫn (Mentor Workload). Hỗ trợ đồng bộ và đối soát tự động từ hệ thống HRM bên ngoài qua `POST /api/v1/integrations/hrm/sync`. | US 39, US 40, US 43, US HRM-Sync |
+| **`TRUONG_DAI_HOC`** | Quản lý danh mục trường đại học để lọc, thống kê nguồn ứng viên và gửi báo cáo liên kết. Tự động liên kết khi đồng bộ sinh viên từ HRM. | US 3, US 20, US 32, US 34 |
+| **`PHONG_BAN`** | Quản lý cơ cấu phòng ban công ty để phân bổ thực tập sinh và mentor. Tự động nhận diện và gán phòng ban khi đồng bộ nhân sự từ HRM. | US 11, US 29, US 31 |
 | **`CHUONG_TRINH_THUC_TAP`** | Quản lý đợt/chương trình thực tập, thời gian bắt đầu & kết thúc. | US 11, US 13 |
-| **`HO_SO_THUC_TAP`** | **Thực thể trung tâm**: Lưu trữ chi tiết thông tin thực tập sinh, tiến độ, trạng thái xét duyệt, liên kết với Mentor và Trường đại học. | US 1, US 2, US 6, US 7, US 12, US 30, US 33 |
+| **`HO_SO_THUC_TAP`** | **Thực thể trung tâm**: Lưu trữ chi tiết thông tin thực tập sinh, tiến độ, trạng thái xét duyệt, liên kết với Mentor và Trường đại học. Hỗ trợ tạo mới/cập nhật tự động (Upsert) từ HRM Integration Service. | US 1, US 2, US 6, US 7, US 12, US 30, US 33, US HRM-Sync |
 | **`TAI_LIEU_HO_SO`** | Lưu trữ CV, đơn thực tập và trạng thái duyệt tài liệu. | US 4, US 5 |
 | **`HOP_DONG`** | Lưu trữ hợp đồng thực tập và trạng thái xác nhận trực tuyến. | US 9, US 10 |
 | **`NHIEM_VU`** | Giao việc cho thực tập sinh, theo dõi tiến độ công việc. | US 15, US 16 |
 | **`BAO_CAO_TUAN`** | Thực tập sinh nộp báo cáo tuần và Mentor xem/phản hồi. | US 17, US 18 |
-| **`DANH_GIA`** | Ghi nhận điểm kỹ năng, thái độ, nhận xét cuối kỳ và tỷ lệ đề xuất tuyển chính thức. | US 19, US 20, US 33 |
-| **`CHAM_CONG`** | Ghi nhận Check-in/Check-out qua Web/QR/Thẻ. | US 21, US 22, US 38 |
-| **`CA_LAM_VIEC`** | Cấu hình ca làm việc, thời gian bắt đầu, kết thúc và các ngày áp dụng. | US 21, US 22 |
+| **`DANH_GIA`** | Ghi nhận điểm kỹ năng, thái độ, nhận xét cuối kỳ và tỷ lệ đề xuất tuyển chính thức. Hỗ trợ xuất báo cáo đa định dạng bằng ReportLab (PDF khổ A4 ngang hỗ trợ tiếng Việt có dấu) và openpyxl (Excel định dạng bảng chuyên nghiệp) qua endpoint `GET /api/v1/reports/export`. | US 19, US 20, US 33, US 34 |
+| **`CHAM_CONG`** | Ghi nhận Check-in/Check-out qua Web/QR/Thẻ. Tiếp nhận quét mã định danh qua endpoint `POST /api/v1/attendance/scan`. | US 21, US 22, US 38 |
+| **`LICH_HOP`** | Quản lý lịch họp giữa Mentor/HR và thực tập sinh, gửi thư mời họp HTML tự động qua endpoint `POST /api/v1/meetings`. | US 14, US 35 |
+| **`CA_LAM_VIEc`** | Cấu hình ca làm việc, thời gian bắt đầu, kết thúc và các ngày áp dụng. | US 21, US 22 |
 | **`DON_NGHI_PHEP`** | Tạo và quản lý yêu cầu xin nghỉ phép đơn lẻ. | US 22, US 24 |
 | **`DON_XIN_NGHI`** | Tạo và quản lý yêu cầu xin nghỉ phép theo khoảng thời gian (từ ngày đến ngày). | US 22, US 24 |
 | **`PHU_CAP`** | Quản lý mức phụ cấp và lịch sử nhận tiền hàng tháng. | US 25, US 26 |
@@ -526,3 +527,97 @@ erDiagram
 > [!NOTE]
 > **Trạng thái:** ĐÃ HOÀN THÀNH (COMPLETED) trong Sprint 2.  
 > Toàn bộ hệ thống Backend, CSDL và các API (`GET`, `PUT`, `POST`) đã chuyển đổi thành công sang mô hình quan hệ 16 thực thể chuẩn hóa (`HoSoThucTap`, `NguoiDung`, `TruongDaiHoc`,...), thay thế hoàn toàn bảng đơn lẻ `interns` ban đầu. Mọi chức năng hiện tại đều hoạt động đồng bộ với 100% test cases tự động (269/269 unit tests PASS).
+
+---
+
+## 6. KIẾN TRÚC TÍCH HỢP HRM & ĐỐI SOÁT DỮ LIỆU (HRM INTEGRATION & RECONCILIATION)
+
+### 6.1. Mục tiêu & Nguyên lý Idempotent Upsert
+Hệ thống cung cấp dịch vụ tích hợp tiếp nhận nguồn dữ liệu nhân sự tự động từ các giải pháp HRM doanh nghiệp bên ngoài (SAP, Base.vn, Workday,...) thông qua Webhook hoặc REST API tại endpoint:
+- **`POST /api/v1/integrations/hrm/sync`**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant HRM as Hệ thống HRM bên ngoài
+    participant API as FastAPI Backend (/api/v1/integrations/hrm/sync)
+    participant SEC as Security (X-HRM-Secret-Key)
+    participant SVC as HRM Integration Service
+    participant DB as MySQL Database
+
+    HRM->>API: POST /api/v1/integrations/hrm/sync (Payload JSON)
+    API->>SEC: Kiểm tra Header X-HRM-Secret-Key (nếu cấu hình)
+    alt Khóa bí mật không hợp lệ
+        SEC-->>HRM: 401 Unauthorized
+    else Hợp lệ
+        SEC->>SVC: Chuyển giao HRMSyncRequest
+        SVC->>DB: Bắt đầu Transaction CSDL
+        loop Đối soát danh sách Nhân viên (Mentor/HR)
+            SVC->>DB: Tìm theo Email. Cập nhật nếu có, tạo mới nếu chưa có
+        end
+        loop Đối soát danh sách Sinh viên thực tập
+            SVC->>DB: Tìm theo Email, tạo/cập nhật NguoiDung
+            SVC->>DB: Phân giải Mentor & Trường đại học
+            SVC->>DB: Cập nhật hoặc tạo mới HoSoThucTap
+        end
+        SVC->>DB: Commit Transaction
+        SVC-->>API: Trả về HRMSyncResponse
+        API-->>HRM: 200 OK (Thống kê summary & details)
+    end
+```
+
+### 6.2. Quy tắc đối soát chi tiết
+1. **Nhân viên nội bộ (Mentor/HR/Cán bộ)**:
+   - Khóa đối soát duy nhất: `email` (lowercase, strip).
+   - Tự động phân giải phòng ban qua `ma_phong_ban` hoặc `ten_phong_ban` (tự động tạo mới phòng ban nếu chưa có).
+   - Tạo mới: Tạo `NguoiDung` kèm mật khẩu băm mặc định `123456`.
+   - Cập nhật: Cập nhật họ tên, vai trò, số điện thoại, trạng thái mà **không ghi đè** mất mật khẩu đã đổi của người dùng.
+2. **Sinh viên thực tập (Interns)**:
+   - Khóa đối soát duy nhất: `email`.
+   - Phân giải trường đại học qua `ma_truong` hoặc `ten_truong`.
+   - Phân giải Mentor phụ trách qua `mentor_email`: tra cứu ID người dùng tương ứng gán vào trường `ma_mentor`.
+   - Tự động cập nhật `chuyen_nganh`, `lop`, `trang_thai_thuc_tap`, `trang_thai_xet_duyet` của hồ sơ thực tập liên kết.
+
+---
+
+## 7. HỆ THỐNG PHÂN QUYỀN VAI TRÒ (RBAC - ROLE-BASED ACCESS CONTROL)
+
+### 7.1. Cấu trúc Bảng CSDL RBAC
+
+#### 18. Bảng `quyen_han` (Danh mục quyền hạn)
+Lưu trữ danh sách các quyền hạn thao tác trên tài nguyên của hệ thống:
+| Tên cột | Kiểu dữ liệu | Ràng buộc | Ý nghĩa / Ghi chú |
+| :--- | :--- | :--- | :--- |
+| `ma_quyen_han` | `INT` | PK, AUTO_INCREMENT | Mã định danh quyền hạn |
+| `ma_quyen` | `VARCHAR(100)` | NOT NULL, UNIQUE, INDEX | Mã quyền dạng resource:action (VD: `intern:read`, `role:manage`) |
+| `ten_quyen` | `VARCHAR(150)` | NOT NULL | Tên hiển thị quyền hạn |
+| `mo_ta` | `VARCHAR(255)` | NULL | Mô tả chi tiết quyền hạn |
+| `nhom_quyen` | `VARCHAR(50)` | NOT NULL, DEFAULT 'HeThong' | Phân nhóm quyền (ThucTapSinh, NhiemVu, BaoCao, ChamCong, LichHop, HeThong) |
+
+#### 19. Bảng `vai_tro_quyen_han` (Liên kết vai trò - quyền hạn)
+Ánh xạ quyền hạn gán cho từng vai trò trong hệ thống:
+| Tên cột | Kiểu dữ liệu | Ràng buộc | Ý nghĩa / Ghi chú |
+| :--- | :--- | :--- | :--- |
+| `id` | `INT` | PK, AUTO_INCREMENT | Mã liên kết |
+| `vai_tro` | `VARCHAR(50)` | NOT NULL, INDEX | Vai trò người dùng (Admin, HR, Mentor, ThucTapSinh, NhaTruong) |
+| `ma_quyen_han` | `INT` | FK -> `quyen_han(ma_quyen_han)`, ON DELETE CASCADE | Mã quyền hạn được gán |
+| **Constraint** | UNIQUE(`vai_tro`, `ma_quyen_han`) | Đảm bảo một vai trò không bị gán trùng lặp cùng một quyền |
+
+### 7.2. Cơ chế Dependency `require_permissions` trong FastAPI
+1. **Xác thực Header**:
+   - Trích xuất định danh qua `X-User-Email` hoặc `X-User-Id` (hỗ trợ fallback qua `Authorization: Bearer <token>`).
+   - Nếu không có thông tin xác thực -> HTTP `401 Unauthorized`.
+2. **Kiểm tra trạng thái tài khoản**:
+   - Nếu tài khoản có `trang_thai == "Khoa"` -> HTTP `403 Forbidden` ("Tài khoản đã bị khóa").
+3. **Superadmin Bypass**:
+   - Tài khoản có vai trò `Admin` tự động bypass kiểm tra quyền và có toàn quyền thao tác.
+4. **Kiểm tra quyền hạn thực thi**:
+   - Truy vấn danh sách quyền của `user.vai_tro` qua liên kết `vai_tro_quyen_han` JOIN `quyen_han`.
+   - Nếu thiếu bất kỳ quyền nào trong danh sách quyền yêu cầu -> HTTP `403 Forbidden` kèm thông báo chi tiết các quyền bị thiếu.
+
+### 7.3. Danh sách Endpoints Quản trị RBAC
+- **`PUT /api/v1/admin/roles/{role}/permissions`**: Cập nhật danh sách quyền hạn cho từng vai trò (chấp nhận mảng mã quyền string hoặc mảng ID integer).
+- **`GET /api/v1/admin/roles/{role}/permissions`**: Lấy danh sách các quyền hạn đang được gán cho một vai trò.
+- **`GET /api/v1/admin/permissions`**: Lấy danh mục toàn bộ quyền hạn có trong hệ thống.
+
+

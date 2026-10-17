@@ -11,6 +11,7 @@ class HoSoThucTap(Base):
     ma_chuong_trinh = Column(Integer, ForeignKey("chuong_trinh_thuc_tap.ma_chuong_trinh"), nullable=True)
     ma_mentor = Column(Integer, ForeignKey("nguoi_dung.ma_nguoi_dung"), nullable=True)
     chuyen_nganh = Column(String(100), nullable=True)
+    lop = Column(String(50), nullable=True)
     trang_thai_xet_duyet = Column(String(50), default="ChoDuyet")   # ChoDuyet, DaDuyet, TuChoi
     trang_thai_thuc_tap = Column(String(50), default="DangThucTap") # DangThucTap, HoanThanh, ThoiHoc
 
@@ -39,6 +40,7 @@ class HoSoThucTap(Base):
             "email": self.thuc_tap_sinh.email if self.thuc_tap_sinh else None,
             "so_dien_thoai": self.thuc_tap_sinh.so_dien_thoai if self.thuc_tap_sinh else None,
             "chuyen_nganh": self.chuyen_nganh,
+            "lop": self.lop or "KTPM-K19A",
             "ma_truong": self.ma_truong,
             "ten_truong": self.truong.ten_truong if self.truong else None,
             "ma_chuong_trinh": self.ma_chuong_trinh,

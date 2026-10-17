@@ -1,11 +1,12 @@
 import json
 import math
 import os
+import re
 import uuid
 from datetime import date, timedelta, datetime, time
 from pathlib import Path
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query, Path as FastApiPath, status
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File, Form, Query, Path as FastApiPath, Header, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -61,6 +62,9 @@ from schemas import (
     CheckOutRequest,
     CheckInResponse,
     CheckOutResponse,
+    AttendanceScanRequest,
+    AttendanceScanResponse,
+    AttendanceScanResponseData,
     RollCallRequest,
     RollCallResponse,
     ShiftCreateRequest,
@@ -81,20 +85,61 @@ from schemas import (
     AllowanceCreateResponse,
     MentorCreate,
     MentorResponse,
-
     SupportRequestStatusUpdate,
     SupportRequestItemData,
+    SupportRequestCreate,
     SupportRequestResponse,
+    SupportRequestListResponse,
+    SupportRequestCreateResponse,
+    AssignMentorRequest,
+    AssignMentorResponse,
+    CompletionRateReportResponse,
     MentorWorkloadItem,
     MentorWorkloadSummary,
     MentorWorkloadData,
     MentorWorkloadResponse,
- 
+    CompletionRateResponse,
+    UserStatusUpdate,
+    UserResetPasswordRequest,
+    UserCreateRequest,
+    MeetingCreateRequest,
+    MeetingCreateResponse,
+    MeetingResponseData,
+    HRMSyncRequest,
+    HRMSyncResponse,
+    RolePermissionsUpdateRequest,
+    RolePermissionsResponse,
+    PermissionListResponse,
+    PermissionItemResponse,
+    BackupItemResponse,
+    BackupListResponse,
+    BackupSchedulerStatus,
+    BackupCreateRequest,
+    BackupCreateResponse,
 )
 from security import get_password_hash, verify_password
+from services.hrm_service import sync_hrm_data
+from services.rbac_service import (
+    require_permissions,
+    get_all_permissions,
+    get_role_permissions,
+    update_role_permissions,
+    seed_default_permissions_and_roles,
+)
+from services.backup_service import (
+    create_backup,
+    list_backups,
+    get_backup_file_stream,
+    delete_backup,
+    backup_scheduler,
+    BackupInProgressError,
+    BackupExecutionError,
+    BackupSecurityError,
+    BackupNotFoundError,
+)
 
 # Thư mục database & models
-from database.session import get_db, Base, engine
+from database.session import get_db, Base, engine, SessionLocal
 from database.models import (
     HoSoThucTap,
     NguoiDung,
@@ -112,6 +157,9 @@ from database.models import (
     CaLamViec,
     PhuCap,
     YeuCauHoTro,
+    LichHop,
+    QuyenHan,
+    VaiTroQuyenHan,
 )
 
 from services.export_service import export_evaluations_to_excel, export_evaluations_to_pdf
@@ -128,6 +176,7 @@ from services.email_service import (
     send_profile_approval_email,
     send_contract_confirmed_email,
     send_support_request_email,
+    send_meeting_invitation_email,
 )
 
 # Khởi tạo ứng dụng FastAPI
@@ -149,6 +198,25 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 # Danh mục định dạng file cho phép và kích thước tối đa (10MB)
 ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".png", ".jpg", ".jpeg"}
 MAX_FILE_SIZE = 10 * 1024 * 1024
+
+# Giới hạn chỉ tiêu phân công sinh viên cho mỗi Mentor
+MAX_INTERNS_PER_MENTOR = 100
+
+# Quản lý vòng đời khởi động/dừng dịch vụ sao lưu định kỳ
+@app.on_event("startup")
+def startup_backup_scheduler():
+    try:
+        backup_scheduler.initialize(SessionLocal)
+        backup_scheduler.start()
+    except Exception:
+        pass
+
+@app.on_event("shutdown")
+def shutdown_backup_scheduler():
+    try:
+        backup_scheduler.stop()
+    except Exception:
+        pass
 
 # api post create intern
 @app.post("/api/v1/interns", status_code=201)
@@ -191,8 +259,8 @@ def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
         if not mentor:
             raise HTTPException(status_code=400, detail="Mã người hướng dẫn (mentor) không tồn tại trong hệ thống")
         count_mentor = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == intern_data.ma_mentor).count()
-        if count_mentor >= 5:
-            raise HTTPException(status_code=400, detail="Mentor đã đủ chỉ tiêu hướng dẫn (tối đa 5 sinh viên)")
+        if count_mentor >= MAX_INTERNS_PER_MENTOR:
+            raise HTTPException(status_code=400, detail=f"Mentor đã đủ chỉ tiêu hướng dẫn (tối đa {MAX_INTERNS_PER_MENTOR} sinh viên)")
 
     try:
         # 6. Khởi tạo tài khoản người dùng hoặc tái sử dụng tài khoản sinh viên đã đăng ký
@@ -276,6 +344,7 @@ def get_my_schedule(
         "data": {
             "ma_ho_so": ho_so.ma_ho_so,
             "ho_ten": ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None,
+            "mentor": ho_so.mentor.ho_ten if ho_so.mentor else None,
             "ten_chuong_trinh": ten_chuong_trinh,
             "ngay_bat_dau": ngay_bat_dau_str,
             "ngay_ket_thuc": ngay_ket_thuc_str,
@@ -311,6 +380,7 @@ def get_students_for_assignment(db: Session = Depends(get_db)):
             "ma_sinh_vien": email_prefix,
             "ma_ho_so": hs.ma_ho_so if hs else None,
             "chuyen_nganh": (hs.chuyen_nganh if hs else None) or "Kỹ thuật phần mềm",
+            "lop": (hs.lop if hs else None) or "KTPM-K19A",
             "ma_truong": hs.ma_truong if hs else 1,
             "ten_truong": truong.ten_truong if truong else "Đại học Công nghệ Thông tin & Truyền thông (ICTU)",
             "ma_chuong_trinh": hs.ma_chuong_trinh if hs else None,
@@ -331,7 +401,7 @@ def get_students_for_assignment(db: Session = Depends(get_db)):
 
 @app.get("/api/v1/mentors", status_code=200)
 def get_mentor_list(db: Session = Depends(get_db)):
-    mentors = db.query(NguoiDung).filter(NguoiDung.vai_tro.in_(["Mentor", "GiangVien"])).order_by(NguoiDung.ma_nguoi_dung.asc()).all()
+    mentors = db.query(NguoiDung).filter(NguoiDung.vai_tro.in_(["Mentor", "mentor"])).order_by(NguoiDung.ma_nguoi_dung.asc()).all()
     result = []
     for m in mentors:
         count = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == m.ma_nguoi_dung).count()
@@ -340,7 +410,7 @@ def get_mentor_list(db: Session = Depends(get_db)):
             "ho_ten": m.ho_ten,
             "email": m.email,
             "so_dien_thoai": m.so_dien_thoai or "",
-            "chuc_vu": "Mentor Doanh nghiệp" if m.vai_tro == "Mentor" else "Giảng viên hướng dẫn",
+            "chuc_vu": "Mentor hướng dẫn",
             "so_sinh_vien_huong_dan": count,
             "chi_tieu_huong_dan": 5,
             "da_du_chi_tieu": count >= 5
@@ -352,6 +422,193 @@ def get_mentor_list(db: Session = Depends(get_db)):
     }
 
 
+# ==============================================================
+# API QUẢN LÝ NGƯỜI DÙNG & TÀI KHOẢN HỆ THỐNG (USER MANAGEMENT)
+# ==============================================================
+
+@app.get("/api/v1/users", status_code=200)
+def get_users_list(
+    vai_tro: Optional[str] = Query(None, description="Lọc theo vai trò: ThucTapSinh, Mentor, HR, Admin, NhaTruong"),
+    trang_thai: Optional[str] = Query(None, description="Lọc theo trạng thái: HoatDong, Khoa"),
+    search: Optional[str] = Query(None, description="Tìm kiếm theo tên, email, SĐT"),
+    db: Session = Depends(get_db)
+):
+    query = db.query(NguoiDung)
+
+    if vai_tro and vai_tro.strip():
+        vt = vai_tro.strip()
+        if vt.lower() == "mentor":
+            query = query.filter(NguoiDung.vai_tro.in_(["Mentor", "mentor"]))
+        elif vt.lower() == "hr" or vt.lower() == "admin":
+            query = query.filter(NguoiDung.vai_tro.in_(["HR", "Admin", "admin", "hr"]))
+        elif vt.lower() == "thuctapsinh" or vt.lower() == "student":
+            query = query.filter(NguoiDung.vai_tro.in_(["ThucTapSinh", "thuctapsinh", "SinhVien"]))
+        else:
+            query = query.filter(NguoiDung.vai_tro == vt)
+
+    if trang_thai and trang_thai.strip():
+        query = query.filter(NguoiDung.trang_thai == trang_thai.strip())
+
+    if search and search.strip():
+        kw = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                NguoiDung.ho_ten.ilike(kw),
+                NguoiDung.email.ilike(kw),
+                NguoiDung.so_dien_thoai.ilike(kw)
+            )
+        )
+
+    users = query.order_by(NguoiDung.ma_nguoi_dung.desc()).all()
+
+    all_users = db.query(NguoiDung).all()
+    tong_so = len(all_users)
+    tong_sv = sum(1 for u in all_users if (u.vai_tro or "").lower() in ["thuctapsinh", "sinhvien"])
+    tong_mentor = sum(1 for u in all_users if (u.vai_tro or "").lower() == "mentor")
+    tong_hr = sum(1 for u in all_users if (u.vai_tro or "").lower() in ["hr", "admin"])
+    tong_khoa = sum(1 for u in all_users if u.trang_thai == "Khoa")
+
+    data = []
+    for u in users:
+        hs = u.ho_so_thuc_tap
+        phong_ban_ten = u.phong_ban.ten_phong_ban if u.phong_ban else None
+        
+        info_sv = None
+        if hs:
+            prog = hs.chuong_trinh
+            truong = hs.truong
+            mentor_u = hs.mentor
+            info_sv = {
+                "ma_ho_so": hs.ma_ho_so,
+                "chuyen_nganh": hs.chuyen_nganh,
+                "lop": hs.lop,
+                "ten_truong": truong.ten_truong if truong else None,
+                "ten_mentor": mentor_u.ho_ten if mentor_u else None,
+                "ten_chuong_trinh": prog.ten_chuong_trinh if prog else None,
+                "trang_thai_xet_duyet": hs.trang_thai_xet_duyet,
+                "trang_thai_thuc_tap": hs.trang_thai_thuc_tap,
+            }
+
+        so_sv_huong_dan = 0
+        if (u.vai_tro or "").lower() == "mentor":
+            so_sv_huong_dan = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == u.ma_nguoi_dung).count()
+
+        data.append({
+            "ma_nguoi_dung": u.ma_nguoi_dung,
+            "ho_ten": u.ho_ten,
+            "email": u.email,
+            "so_dien_thoai": u.so_dien_thoai or "",
+            "vai_tro": u.vai_tro,
+            "trang_thai": u.trang_thai or "HoatDong",
+            "ma_phong_ban": u.ma_phong_ban,
+            "ten_phong_ban": phong_ban_ten,
+            "so_sinh_vien_huong_dan": so_sv_huong_dan,
+            "thong_tin_sinh_vien": info_sv,
+        })
+
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách người dùng thành công",
+        "total": len(data),
+        "summary": {
+            "tong_so": tong_so,
+            "sinh_vien": tong_sv,
+            "mentor": tong_mentor,
+            "hr_admin": tong_hr,
+            "bi_khoa": tong_khoa,
+        },
+        "data": data,
+    }
+
+
+@app.post("/api/v1/users", status_code=201)
+def create_user_admin(payload: UserCreateRequest, db: Session = Depends(get_db)):
+    email_clean = payload.email.strip().lower()
+    existing = db.query(NguoiDung).filter(NguoiDung.email == email_clean).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email này đã tồn tại trong hệ thống")
+
+    if payload.so_dien_thoai and payload.so_dien_thoai.strip():
+        existing_phone = db.query(NguoiDung).filter(NguoiDung.so_dien_thoai == payload.so_dien_thoai.strip()).first()
+        if existing_phone:
+            raise HTTPException(status_code=400, detail="Số điện thoại này đã được sử dụng")
+
+    pwd = payload.mat_khau or "123456"
+    new_user = NguoiDung(
+        ho_ten=payload.ho_ten.strip(),
+        email=email_clean,
+        so_dien_thoai=payload.so_dien_thoai.strip() if payload.so_dien_thoai else None,
+        vai_tro=payload.vai_tro,
+        trang_thai="HoatDong",
+        mat_khau_hash=get_password_hash(pwd),
+        ma_phong_ban=payload.ma_phong_ban
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "status_code": 201,
+        "message": "Tạo tài khoản người dùng thành công",
+        "data": {
+            "ma_nguoi_dung": new_user.ma_nguoi_dung,
+            "ho_ten": new_user.ho_ten,
+            "email": new_user.email,
+            "vai_tro": new_user.vai_tro,
+            "trang_thai": new_user.trang_thai
+        }
+    }
+
+
+@app.patch("/api/v1/users/{id}/status", status_code=200)
+def update_user_status(id: int, payload: UserStatusUpdate, db: Session = Depends(get_db)):
+    user = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy người dùng với ID: {id}")
+
+    tt = payload.trang_thai.strip()
+    if tt not in ["HoatDong", "Khoa"]:
+        raise HTTPException(status_code=400, detail="Trạng thái chỉ có thể là 'HoatDong' hoặc 'Khoa'")
+
+    user.trang_thai = tt
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "status_code": 200,
+        "message": f"Cập nhật trạng thái người dùng thành '{tt}' thành công",
+        "data": {
+            "ma_nguoi_dung": user.ma_nguoi_dung,
+            "ho_ten": user.ho_ten,
+            "trang_thai": user.trang_thai
+        }
+    }
+
+
+@app.patch("/api/v1/users/{id}/reset-password", status_code=200)
+def reset_user_password(id: int, payload: UserResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy người dùng với ID: {id}")
+
+    mat_khau = payload.mat_khau_moi or "123456"
+    if len(mat_khau) < 6:
+        raise HTTPException(status_code=400, detail="Mật khẩu mới phải có tối thiểu 6 ký tự")
+
+    user.mat_khau_hash = get_password_hash(mat_khau)
+    db.commit()
+
+    return {
+        "status_code": 200,
+        "message": f"Đặt lại mật khẩu cho tài khoản {user.email} thành công!",
+        "data": {
+            "ma_nguoi_dung": user.ma_nguoi_dung,
+            "email": user.email,
+            "mat_khau_moi": mat_khau
+        }
+    }
+
+
 # api get intern list
 @app.get("/api/v1/interns", status_code=200)
 def get_interns_list(
@@ -360,13 +617,14 @@ def get_interns_list(
     ma_chuong_trinh: Optional[int] = None,
     chuyen_nganh: Optional[str] = None,
     ma_mentor: Optional[int] = None,
+    ma_nguoi_dung: Optional[int] = None,
     limit: int = 100,
     offset: int = 0,
     db: Session = Depends(get_db)
 ):
     """
     Lấy danh sách hồ sơ thực tập sinh từ cơ sở dữ liệu.
-    Hỗ trợ lọc theo trạng thái xét duyệt, trạng thái thực tập, khóa thực tập, chuyên ngành/lớp, mentor.
+    Hỗ trợ lọc theo trạng thái xét duyệt, trạng thái thực tập, khóa thực tập, chuyên ngành/lớp, mentor, người dùng.
     Sắp xếp theo mã hồ sơ mới nhất (desc).
     """
     query = db.query(HoSoThucTap)
@@ -380,6 +638,8 @@ def get_interns_list(
         query = query.filter(HoSoThucTap.chuyen_nganh == chuyen_nganh)
     if ma_mentor:
         query = query.filter(HoSoThucTap.ma_mentor == ma_mentor)
+    if ma_nguoi_dung:
+        query = query.filter(HoSoThucTap.ma_nguoi_dung == ma_nguoi_dung)
 
     total = query.count()
     items = query.order_by(HoSoThucTap.ma_ho_so.desc()).offset(offset).limit(limit).all()
@@ -466,9 +726,16 @@ def update_intern(id: int, intern_data: InternUpdate, db: Session = Depends(get_
         ho_so.ma_chuong_trinh = intern_data.ma_chuong_trinh
     if intern_data.ma_mentor is not None:
         if intern_data.ma_mentor != ho_so.ma_mentor:
+            new_duyet = intern_data.trang_thai_xet_duyet or ho_so.trang_thai_xet_duyet
+            new_thuc_tap = intern_data.trang_thai_thuc_tap or ho_so.trang_thai_thuc_tap
+            if new_duyet != "DaDuyet" or new_thuc_tap != "DangThucTap":
+                raise HTTPException(
+                    status_code=400,
+                    detail="Chỉ có thể phân công Mentor cho sinh viên đã được duyệt hồ sơ và đã ký hợp đồng thực tập."
+                )
             count_mentor = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == intern_data.ma_mentor).count()
-            if count_mentor >= 5:
-                raise HTTPException(status_code=400, detail="Mentor đã đủ chỉ tiêu hướng dẫn (tối đa 5 sinh viên)")
+            if count_mentor >= MAX_INTERNS_PER_MENTOR:
+                raise HTTPException(status_code=400, detail=f"Mentor đã đủ chỉ tiêu hướng dẫn (tối đa {MAX_INTERNS_PER_MENTOR} sinh viên)")
         ho_so.ma_mentor = intern_data.ma_mentor
     if intern_data.trang_thai_xet_duyet:
         ho_so.trang_thai_xet_duyet = intern_data.trang_thai_xet_duyet
@@ -523,6 +790,17 @@ def update_intern_approval_status(
         ).all()
         for doc in pending_docs:
             doc.trang_thai_duyet = "DaDuyet"
+
+        existing_hd = db.query(HopDong).filter(HopDong.ma_ho_so == id).first()
+        if not existing_hd:
+            new_hd = HopDong(
+                ma_ho_so=id,
+                duong_dan_file=f"uploads/hop_dong_{id}.pdf",
+                ngay_tai_len=date.today(),
+                ngay_ky=None,
+                trang_thai="ChuaXacNhan"
+            )
+            db.add(new_hd)
     elif new_status == "TuChoi":
         pending_docs = db.query(TaiLieuHoSo).filter(
             TaiLieuHoSo.ma_ho_so == id,
@@ -596,6 +874,8 @@ def get_intern_allowances(id: int, db: Session = Depends(get_db)):
             thang_nam=item.thang_nam,
             so_tien=so_tien_val,
             trang_thai_chi_tra=item.trang_thai_chi_tra,
+            ngay_chi_tra=item.ngay_chi_tra.isoformat() if getattr(item, "ngay_chi_tra", None) else None,
+            ghi_chu=getattr(item, "ghi_chu", None),
         )
         danh_sach_phu_cap.append(item_schema)
 
@@ -623,6 +903,9 @@ def get_intern_allowances(id: int, db: Session = Depends(get_db)):
             "ma_ho_so": ho_so.ma_ho_so,
             "ho_ten": ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None,
             "email": ho_so.thuc_tap_sinh.email if ho_so.thuc_tap_sinh else None,
+            "lop": ho_so.lop or "KTPM-K19A",
+            "chuyen_nganh": ho_so.chuyen_nganh,
+            "ten_chuong_trinh": ho_so.chuong_trinh.ten_chuong_trinh if ho_so.chuong_trinh else None,
             "summary": summary,
             "danh_sach_phu_cap": danh_sach_phu_cap,
             "cac_khoan_da_nhan": cac_khoan_da_nhan,
@@ -711,6 +994,107 @@ def create_allowance(payload: AllowanceCreate, db: Session = Depends(get_db)):
             "so_tien": float(new_allowance.so_tien),
             "ngay_chi_tra": new_allowance.ngay_chi_tra.isoformat() if new_allowance.ngay_chi_tra else None,
             "trang_thai": new_allowance.trang_thai,
+        }
+    }
+
+
+@app.get("/api/v1/support-requests", response_model=SupportRequestListResponse, status_code=200)
+def get_support_requests(
+    ma_ho_so: Optional[int] = Query(None, description="Lọc theo mã hồ sơ"),
+    trang_thai: Optional[str] = Query(None, description="Lọc theo trạng thái (ChoXuLy, DaXuLy, TuChoi)"),
+    db: Session = Depends(get_db)
+):
+    """
+    Truy vấn danh sách yêu cầu hỗ trợ sinh viên:
+    - Hỗ trợ lọc theo mã hồ sơ hoặc trạng thái xử lý
+    - Trả về danh sách kèm họ tên và email sinh viên
+    """
+    query = db.query(YeuCauHoTro).order_by(YeuCauHoTro.ma_yeu_cau.desc())
+    if ma_ho_so is not None:
+        query = query.filter(YeuCauHoTro.ma_ho_so == ma_ho_so)
+    if trang_thai and trang_thai.strip():
+        query = query.filter(YeuCauHoTro.trang_thai == trang_thai.strip())
+
+    items = query.all()
+    res_items = []
+    for yc in items:
+        ho_ten = None
+        email = None
+        if yc.ho_so and yc.ho_so.thuc_tap_sinh:
+            ho_ten = yc.ho_so.thuc_tap_sinh.ho_ten
+            email = yc.ho_so.thuc_tap_sinh.email
+        res_items.append(
+            SupportRequestItemData(
+                ma_yeu_cau=yc.ma_yeu_cau,
+                ma_ho_so=yc.ma_ho_so,
+                loai_yeu_cau=yc.loai_yeu_cau,
+                noi_dung=yc.noi_dung,
+                phan_hoi_hr=yc.phan_hoi_hr,
+                trang_thai=yc.trang_thai,
+                ho_ten_sinh_vien=ho_ten,
+                email_sinh_vien=email,
+            )
+        )
+
+    return {
+        "status_code": 200,
+        "message": "Lấy danh sách yêu cầu hỗ trợ thành công",
+        "total": len(res_items),
+        "data": res_items,
+    }
+
+
+@app.post("/api/v1/support-requests", response_model=SupportRequestResponse, status_code=status.HTTP_201_CREATED)
+def create_support_request(
+    payload: SupportRequestCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Tiếp nhận và lưu mới yêu cầu hỗ trợ của sinh viên (POST /api/v1/support-requests):
+    - Kiểm tra mã hồ sơ sinh viên tồn tại (HTTP 404 nếu không tìm thấy)
+    - Validate nội dung và loại yêu cầu không được rỗng
+    - Khởi tạo trạng thái mặc định 'ChoXuLy'
+    - Trả về mã HTTP 201 Created
+    """
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == payload.ma_ho_so).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với ID: {payload.ma_ho_so}"
+        )
+
+    new_yc = YeuCauHoTro(
+        ma_ho_so=payload.ma_ho_so,
+        loai_yeu_cau=payload.loai_yeu_cau.strip(),
+        noi_dung=payload.noi_dung.strip(),
+        phan_hoi_hr=None,
+        trang_thai="ChoXuLy",
+    )
+    db.add(new_yc)
+    db.commit()
+    db.refresh(new_yc)
+
+    ho_ten = None
+    email = None
+    if ho_so.thuc_tap_sinh:
+        ho_ten = ho_so.thuc_tap_sinh.ho_ten
+        email = ho_so.thuc_tap_sinh.email
+
+    return {
+        "status_code": 201,
+        "message": "Gửi yêu cầu hỗ trợ thành công",
+        "data": {
+            "ma_yeu_cau": new_yc.ma_yeu_cau,
+            "ma_ho_so": new_yc.ma_ho_so,
+            "loai_yeu_cau": new_yc.loai_yeu_cau,
+            "noi_dung": new_yc.noi_dung,
+            "phan_hoi_hr": new_yc.phan_hoi_hr,
+            "trang_thai": new_yc.trang_thai,
+            "ho_ten_sinh_vien": ho_ten,
+            "email_sinh_vien": email,
+        }
+    }
+
 
 @app.patch("/api/v1/support-requests/{id}", response_model=SupportRequestResponse, status_code=200)
 def update_support_request_status(
@@ -779,11 +1163,190 @@ def update_support_request_status(
             "trang_thai": yeu_cau.trang_thai,
             "ho_ten_sinh_vien": ho_ten_sinh_vien,
             "email_sinh_vien": email_sinh_vien,
-
         }
     }
 
 
+# api get contract by id
+@app.get("/api/v1/contracts/{id}", status_code=200)
+def get_contract_by_id(id: int, db: Session = Depends(get_db)):
+    """
+    Lấy thông tin chi tiết hợp đồng thực tập theo mã hợp đồng (ID).
+    """
+    hop_dong = db.query(HopDong).filter(HopDong.ma_hop_dong == id).first()
+    if not hop_dong:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy hợp đồng ID: {id}")
+
+    return {
+        "status_code": 200,
+        "message": "Chi tiết hợp đồng thực tập",
+        "data": hop_dong.to_dict()
+    }
+
+
+# api get contract by ho_so_id
+@app.get("/api/v1/contracts/by-profile/{ho_so_id}", status_code=200)
+def get_contract_by_profile_id(ho_so_id: int, db: Session = Depends(get_db)):
+    """
+    Lấy thông tin hợp đồng thực tập theo mã hồ sơ (ho_so_id).
+    """
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == ho_so_id).first()
+    if not ho_so:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ ID: {ho_so_id}")
+
+    hop_dong = db.query(HopDong).filter(HopDong.ma_ho_so == ho_so_id).first()
+    if not hop_dong:
+        if ho_so.trang_thai_xet_duyet == "DaDuyet":
+            hop_dong = HopDong(
+                ma_ho_so=ho_so_id,
+                duong_dan_file=f"uploads/hop_dong_{ho_so_id}.pdf",
+                ngay_tai_len=date.today(),
+                ngay_ky=None,
+                trang_thai="ChuaXacNhan"
+            )
+            db.add(hop_dong)
+            db.commit()
+            db.refresh(hop_dong)
+        else:
+            raise HTTPException(status_code=404, detail=f"Hồ sơ ID {ho_so_id} chưa được phê duyệt tiếp nhận để tạo hợp đồng.")
+
+    return {
+        "status_code": 200,
+        "message": "Chi tiết hợp đồng thực tập theo hồ sơ",
+        "data": hop_dong.to_dict()
+    }
+
+
+@app.patch("/api/v1/interns/{id}/mentor", response_model=AssignMentorResponse, status_code=200)
+@app.patch("/api/v1/interns/{id}/assign-mentor", response_model=AssignMentorResponse, status_code=200)
+def assign_mentor_to_intern(id: int, payload: AssignMentorRequest, db: Session = Depends(get_db)):
+    """
+    Phân công hoặc thay đổi Mentor cho thực tập sinh (NV15):
+    - Kiểm tra hồ sơ tồn tại (404 INTERN_NOT_FOUND).
+    - Nếu ma_mentor != None:
+        + Kiểm tra mentor tồn tại (404 MENTOR_NOT_FOUND).
+        + Kiểm tra vai trò == 'Mentor' (422 INVALID_MENTOR_ROLE).
+        + Kiểm tra trạng thái hoạt động (403 MENTOR_INACTIVE nếu Khoa).
+    - Cập nhật ho_so.ma_mentor.
+    """
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == id).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập với mã '{id}'."
+        )
+
+    mentor_data = None
+    if payload.ma_mentor is not None:
+        mentor = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == payload.ma_mentor).first()
+        if not mentor:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Không tìm thấy người dùng với mã '{payload.ma_mentor}' trong hệ thống."
+            )
+        if mentor.vai_tro != "Mentor":
+            raise HTTPException(
+                status_code=422,
+                detail=f"Người dùng '{mentor.ho_ten}' có vai trò '{mentor.vai_tro}', không phải 'Mentor'."
+            )
+        if mentor.trang_thai in ["Khoa", "Inactive"]:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Tài khoản của Mentor '{mentor.ho_ten}' đã bị vô hiệu hóa, không thể gán."
+            )
+        current_count = db.query(HoSoThucTap).filter(
+            HoSoThucTap.ma_mentor == mentor.ma_nguoi_dung,
+            HoSoThucTap.ma_ho_so != id
+        ).count()
+        if current_count >= MAX_INTERNS_PER_MENTOR:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Mentor '{mentor.ho_ten}' đã đủ chỉ tiêu hướng dẫn tối đa ({current_count}/{MAX_INTERNS_PER_MENTOR} sinh viên), không thể tiếp nhận thêm."
+            )
+        ho_so.ma_mentor = mentor.ma_nguoi_dung
+        mentor_data = {
+            "ma_mentor": mentor.ma_nguoi_dung,
+            "ho_ten": mentor.ho_ten,
+            "email": mentor.email,
+            "so_dien_thoai": mentor.so_dien_thoai,
+        }
+    else:
+        ho_so.ma_mentor = None
+
+    db.commit()
+    db.refresh(ho_so)
+
+    ho_ten_sv = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else f"Hồ sơ {ho_so.ma_ho_so}"
+    email_sv = ho_so.thuc_tap_sinh.email if ho_so.thuc_tap_sinh else None
+
+    return {
+        "status_code": 200,
+        "message": f"Gán Mentor cho hồ sơ '{id}' thành công." if payload.ma_mentor else f"Hủy gán Mentor cho hồ sơ '{id}' thành công.",
+        "data": {
+            "ho_so": {
+                "ma_ho_so": ho_so.ma_ho_so,
+                "ho_ten": ho_ten_sv,
+                "email": email_sv,
+                "vi_tri_thuc_tap": ho_so.chuyen_nganh or "Thực tập sinh",
+                "trang_thai": ho_so.trang_thai_thuc_tap or "DangThucTap",
+            },
+            "mentor": mentor_data,
+            "ngay_cap_nhat": datetime.utcnow().isoformat(),
+        }
+    }
+
+
+@app.get("/api/v1/reports/completion-rate-by-unit", response_model=CompletionRateReportResponse, status_code=200)
+def get_internship_completion_rate(
+    university: Optional[str] = Query(None, description="Lọc theo tên trường đại học"),
+    department: Optional[str] = Query(None, description="Lọc theo phòng ban"),
+    db: Session = Depends(get_db)
+):
+    """
+    Báo cáo tỷ lệ hoàn thành chương trình thực tập theo đơn vị:
+    - Đếm số lượng theo các trạng thái thực tập (DangThucTap, HoanThanh, ThoiHoc).
+    - Tính toán tỷ lệ hoàn thành = round((so_luong_hoan_thanh / tong_so_sinh_vien) * 100, 2).
+    """
+    query = db.query(HoSoThucTap)
+    if university:
+        query = query.join(TruongDaiHoc, HoSoThucTap.ma_truong == TruongDaiHoc.ma_truong).filter(
+            TruongDaiHoc.ten_truong.ilike(f"%{university.strip()}%")
+        )
+    if department:
+        query = query.join(ChuongTrinhThucTap, HoSoThucTap.ma_chuong_trinh == ChuongTrinhThucTap.ma_chuong_trinh)\
+                     .join(PhongBan, ChuongTrinhThucTap.ma_phong_ban == PhongBan.ma_phong_ban).filter(
+            PhongBan.ten_phong_ban.ilike(f"%{department.strip()}%")
+        )
+
+    all_records = query.all()
+    tong_so = len(all_records)
+
+    counts = {"DangThucTap": 0, "HoanThanh": 0, "ThoiHoc": 0}
+    for r in all_records:
+        st = r.trang_thai_thuc_tap or "DangThucTap"
+        if st in counts:
+            counts[st] += 1
+        else:
+            counts[st] = 1
+
+    dang_thuc_tap = counts.get("DangThucTap", 0)
+    hoan_thanh = counts.get("HoanThanh", 0)
+    thoi_hoc = counts.get("ThoiHoc", 0)
+
+    ty_le = round((hoan_thanh / tong_so) * 100.0, 2) if tong_so > 0 else 0.0
+
+    return {
+        "status_code": 200,
+        "message": "Lấy báo cáo tỷ lệ hoàn thành thực tập thành công",
+        "data": {
+            "tong_so_sinh_vien": tong_so,
+            "so_luong_dang_thuc_tap": dang_thuc_tap,
+            "so_luong_hoan_thanh": hoan_thanh,
+            "so_luong_thoi_hoc": thoi_hoc,
+            "ty_le_hoan_thanh": ty_le,
+            "chi_tiet_theo_trang_thai": counts,
+        }
+    }
 
 # api patch confirm contract
 @app.patch("/api/v1/contracts/{id}/confirm", status_code=200)
@@ -811,6 +1374,12 @@ def confirm_contract(
     ho_so = hop_dong.ho_so or db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == hop_dong.ma_ho_so).first()
     if not ho_so:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ thực tập liên kết với hợp đồng ID: {id}")
+
+    if ho_so.trang_thai_xet_duyet != "DaDuyet":
+        raise HTTPException(
+            status_code=400,
+            detail="Hồ sơ thực tập chưa được phê duyệt tiếp nhận (hoặc đã bị từ chối), không thể ký hợp đồng."
+        )
 
     # 3. Cập nhật thông tin hợp đồng
     target_status = confirm_data.trang_thai or "DaXacNhan"
@@ -870,6 +1439,14 @@ async def upload_document(
     if not ho_so:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ thực tập ID: {ma_ho_so}")
 
+    # Chống spam: Giới hạn tối đa 5 tài liệu cho mỗi hồ sơ thực tập
+    current_doc_count = db.query(TaiLieuHoSo).filter(TaiLieuHoSo.ma_ho_so == ma_ho_so).count()
+    if current_doc_count >= 5:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Hồ sơ thực tập #{ma_ho_so} đã đạt giới hạn tối đa 5 tài liệu. Không thể tải lên thêm để tránh spam dữ liệu."
+        )
+
     # 3. Validate tệp tải lên
     if not file.filename:
         raise HTTPException(status_code=422, detail="Tên tệp không hợp lệ")
@@ -906,6 +1483,11 @@ async def upload_document(
         trang_thai_duyet="ChoDuyet"
     )
     db.add(tai_lieu)
+
+    # Nếu hồ sơ đang ở trạng thái từ chối, tự động chuyển về ChoDuyet khi nộp lại tài liệu bổ sung
+    if ho_so.trang_thai_xet_duyet in ["TuChoi", "BiTuChoi"]:
+        ho_so.trang_thai_xet_duyet = "ChoDuyet"
+
     db.commit()
     db.refresh(tai_lieu)
 
@@ -987,6 +1569,9 @@ def approve_all_documents_of_profile(ho_so_id: int, db: Session = Depends(get_db
     ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == ho_so_id).first()
     if not ho_so:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy hồ sơ ID: {ho_so_id}")
+
+    if ho_so.trang_thai_xet_duyet in ["TuChoi", "BiTuChoi"]:
+        raise HTTPException(status_code=400, detail="Hồ sơ đã bị từ chối, không thể phê duyệt tài liệu")
 
     docs = db.query(TaiLieuHoSo).filter(TaiLieuHoSo.ma_ho_so == ho_so_id).all()
     count = 0
@@ -1101,6 +1686,59 @@ def get_universities(db: Session = Depends(get_db)):
         "message": "Lấy danh sách trường đại học thành công",
         "data": data
     }
+
+
+# api get majors list
+@app.get("/api/v1/majors", status_code=200)
+def get_majors(
+    ma_truong: Optional[int] = Query(None, description="Lọc theo mã trường đại học"),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh sách các chuyên ngành đào tạo từ CSDL (bảng truong_dai_hoc).
+    Nếu truyền ma_truong, trả về danh sách chuyên ngành của trường đó.
+    Nếu không truyền, trả về danh sách tổng hợp tất cả chuyên ngành trong hệ thống.
+    """
+    if ma_truong is not None:
+        truong = db.query(TruongDaiHoc).filter(TruongDaiHoc.ma_truong == ma_truong).first()
+        if not truong:
+            raise HTTPException(status_code=404, detail=f"Không tìm thấy trường đại học với ID: {ma_truong}")
+        majors = []
+        if getattr(truong, "danh_sach_nganh", None):
+            try:
+                majors = json.loads(truong.danh_sach_nganh)
+            except Exception:
+                majors = [n.strip() for n in truong.danh_sach_nganh.split(",") if n.strip()]
+        return {
+            "status_code": 200,
+            "message": f"Danh sách chuyên ngành của trường {truong.ten_truong}",
+            "data": majors
+        }
+
+    all_majors = set()
+    universities = db.query(TruongDaiHoc).all()
+    for t in universities:
+        if getattr(t, "danh_sach_nganh", None):
+            try:
+                for m in json.loads(t.danh_sach_nganh):
+                    if m and m.strip():
+                        all_majors.add(m.strip())
+            except Exception:
+                for m in t.danh_sach_nganh.split(","):
+                    if m and m.strip():
+                        all_majors.add(m.strip())
+
+    profiles = db.query(HoSoThucTap.chuyen_nganh).filter(HoSoThucTap.chuyen_nganh.isnot(None)).distinct().all()
+    for p in profiles:
+        if p[0] and p[0].strip():
+            all_majors.add(p[0].strip())
+
+    return {
+        "status_code": 200,
+        "message": "Danh sách tất cả chuyên ngành trong hệ thống",
+        "data": sorted(list(all_majors))
+    }
+
 
 
 
@@ -1257,12 +1895,13 @@ def login_user(data: LoginRequest, db: Session = Depends(get_db)):
         portal = data.vai_tro.strip().lower()
         if portal == "student" and user.vai_tro != "ThucTapSinh":
             raise HTTPException(status_code=403, detail="Tài khoản này không thuộc vai trò Sinh viên")
-        elif portal == "mentor" and user.vai_tro == "ThucTapSinh":
-            raise HTTPException(status_code=403, detail="Tài khoản sinh viên không có quyền đăng nhập vào cổng Doanh nghiệp / Mentor")
-        elif portal == "faculty" and user.vai_tro == "ThucTapSinh":
-            raise HTTPException(status_code=403, detail="Tài khoản sinh viên không có quyền đăng nhập vào cổng Nhà trường / Quản lý")
+        elif portal == "mentor" and user.vai_tro not in ("Mentor", "mentor"):
+            raise HTTPException(status_code=403, detail="Tài khoản này không có quyền đăng nhập vào cổng Doanh nghiệp / Mentor")
+        elif portal in ("hr", "admin", "nhatruong", "faculty") and user.vai_tro not in ("HR", "Admin", "NhaTruong"):
+            raise HTTPException(status_code=403, detail="Tài khoản này không thuộc vai trò Quản lý / HR")
 
     profile = db.query(HoSoThucTap).filter(HoSoThucTap.ma_nguoi_dung == user.ma_nguoi_dung).first()
+    contract = db.query(HopDong).filter(HopDong.ma_ho_so == profile.ma_ho_so).first() if profile else None
 
     return {
         "status_code": 200,
@@ -1273,7 +1912,9 @@ def login_user(data: LoginRequest, db: Session = Depends(get_db)):
             "email": user.email,
             "vai_tro": user.vai_tro,
             "so_dien_thoai": user.so_dien_thoai,
-            "ma_ho_so": profile.ma_ho_so if profile else None
+            "ma_ho_so": profile.ma_ho_so if profile else None,
+            "ma_hop_dong": contract.ma_hop_dong if contract else None,
+            "trang_thai_hop_dong": contract.trang_thai if contract else None
         }
     }
 
@@ -1596,6 +2237,7 @@ def get_attendance_reports(
     thang: Optional[int] = Query(None, ge=1, le=12, description="Tháng báo cáo (1 - 12)"),
     nam: Optional[int] = Query(None, ge=2000, description="Năm báo cáo (mặc định năm hiện tại)"),
     ma_phong_ban: Optional[int] = Query(None, description="Lọc theo mã phòng ban"),
+    ma_mentor: Optional[int] = Query(None, description="Lọc theo mã mentor"),
     gio_chuan: str = Query("08:30:00", description="Giờ chuẩn bắt đầu làm việc (HH:MM:SS) để tính đi muộn"),
     page: int = Query(1, ge=1, description="Trang hiện tại (>= 1)"),
     page_size: int = Query(20, ge=1, le=100, description="Số lượng bản ghi trên một trang (1 - 100)"),
@@ -1645,6 +2287,8 @@ def get_attendance_reports(
                 NguoiDung.ma_phong_ban == ma_phong_ban
             )
         )
+    if ma_mentor is not None:
+        query_hs = query_hs.filter(HoSoThucTap.ma_mentor == ma_mentor)
 
     ho_so_list = query_hs.order_by(HoSoThucTap.ma_ho_so.asc()).all()
 
@@ -1697,6 +2341,10 @@ def get_attendance_reports(
         tong_so_lan_di_muon += so_lan_di_muon
         tong_so_ngay_nghi += so_ngay_nghi
 
+        hs_ma_mentor = hs.ma_mentor
+        hs_ten_mentor = hs.mentor.ho_ten if hs.mentor else None
+        hs_lop = hs.lop
+
         all_items.append(
             AttendanceReportItem(
                 ma_ho_so=hs.ma_ho_so,
@@ -1706,6 +2354,9 @@ def get_attendance_reports(
                 ma_phong_ban=hs_phong_ban_id,
                 ten_phong_ban=hs_ten_phong_ban,
                 chuyen_nganh=hs.chuyen_nganh,
+                lop=hs_lop,
+                ma_mentor=hs_ma_mentor,
+                ten_mentor=hs_ten_mentor,
                 so_ngay_di_lam=so_ngay_di_lam,
                 so_lan_di_muon=so_lan_di_muon,
                 so_ngay_nghi=so_ngay_nghi,
@@ -1903,6 +2554,187 @@ def attendance_check_out(req: CheckOutRequest, db: Session = Depends(get_db)):
     }
 
 
+@app.post("/api/v1/attendance/scan", status_code=200, response_model=AttendanceScanResponse)
+def scan_attendance_identifier(req: AttendanceScanRequest, db: Session = Depends(get_db)):
+    """
+    Endpoint tiếp nhận yêu cầu quét mã định danh (QR Code hoặc Card RFID) để chấm công:
+    - Nhận payload quét mã định danh và phương thức ('QR', 'Card', 'QR/Card').
+    - Xác thực định danh thực tập sinh và tính hợp lệ của hồ sơ (phải ở trạng thái 'DaDuyet', không 'ThoiHoc').
+    - Tự động ghi nhận lượt Check-in (nếu chưa có trong ngày/ca) hoặc Check-out (nếu đã check-in nhưng chưa check-out).
+    - Chặn quét trùng lặp trong cùng ca làm việc (chặn quét liên tiếp ngay sau check-in và chặn quét khi đã hoàn thành cả check-in & check-out).
+    """
+    dinh_danh = req.ma_dinh_danh.strip()
+    if not dinh_danh:
+        raise HTTPException(
+            status_code=400,
+            detail="Mã định danh không được để trống hoặc chỉ chứa khoảng trắng"
+        )
+
+    # 1. Phân giải mã định danh sang hồ sơ thực tập sinh
+    ho_so = None
+    num_match = re.search(r'\d+', dinh_danh)
+    if num_match:
+        try:
+            parsed_id = int(num_match.group(0))
+            ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == parsed_id).first()
+        except Exception:
+            ho_so = None
+
+    if not ho_so:
+        user = db.query(NguoiDung).filter(
+            or_(
+                NguoiDung.email == dinh_danh,
+                NguoiDung.so_dien_thoai == dinh_danh
+            )
+        ).first()
+        if user:
+            ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_nguoi_dung == user.ma_nguoi_dung).first()
+
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh tương ứng với mã định danh '{dinh_danh}'"
+        )
+
+    # 2. Kiểm tra điều kiện nghiệp vụ của hồ sơ
+    if ho_so.trang_thai_xet_duyet != "DaDuyet":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Hồ sơ thực tập sinh ID {ho_so.ma_ho_so} chưa được phê duyệt (trạng thái: {ho_so.trang_thai_xet_duyet}), không thể chấm công"
+        )
+
+    if ho_so.trang_thai_thuc_tap == "ThoiHoc":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Thực tập sinh ID {ho_so.ma_ho_so} đã thôi học, không thể chấm công"
+        )
+
+    # 3. Xác định thời điểm quét mã
+    now_dt = req.thoi_gian_quet if req.thoi_gian_quet is not None else datetime.now()
+    target_date = now_dt.date()
+    target_time = now_dt.time()
+
+    # 4. Tìm bản ghi chấm công trong ngày của thực tập sinh
+    attendance = db.query(ChamCong).filter(
+        ChamCong.ma_ho_so == ho_so.ma_ho_so,
+        ChamCong.ngay_cham_cong == target_date
+    ).first()
+
+    phuong_thuc_val = req.phuong_thuc or "QR/Card"
+
+    # TH1: Chưa có bản ghi chấm công trong ngày -> Thực hiện CHECK-IN
+    if not attendance:
+        gio_chuan = time(8, 30, 0)
+        trang_thai = "DiMuon" if target_time > gio_chuan else "DungGio"
+
+        new_record = ChamCong(
+            ma_ho_so=ho_so.ma_ho_so,
+            ngay_cham_cong=target_date,
+            gio_checkin=target_time,
+            gio_checkout=None,
+            thoi_gian_checkin=now_dt,
+            thoi_gian_checkout=None,
+            trang_thai=trang_thai,
+            phuong_thuc=phuong_thuc_val,
+            ghi_chu=req.ghi_chu
+        )
+        db.add(new_record)
+        db.commit()
+        db.refresh(new_record)
+
+        sinh_vien_name = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None
+        return {
+            "status_code": 200,
+            "message": "Quét mã check-in thành công",
+            "data": {
+                "ma_cham_cong": new_record.ma_cham_cong,
+                "ma_ho_so": new_record.ma_ho_so,
+                "ho_ten": sinh_vien_name,
+                "ngay_cham_cong": new_record.ngay_cham_cong.isoformat(),
+                "gio_checkin": new_record.gio_checkin.isoformat() if new_record.gio_checkin else None,
+                "gio_checkout": None,
+                "gio_check_in": new_record.gio_check_in.isoformat() if new_record.gio_check_in else None,
+                "gio_check_out": None,
+                "hanh_dong": "CHECK_IN",
+                "trang_thai": new_record.trang_thai,
+                "phuong_thuc": new_record.phuong_thuc,
+                "ghi_chu": new_record.ghi_chu,
+            }
+        }
+
+    # TH2: Đã có bản ghi chấm công trong ngày
+    # Kiểm tra xem đã check-out chưa -> Nếu đã có check-out thì chặn quét trùng lặp
+    has_checked_out = (
+        attendance.gio_checkout is not None
+        or attendance.gio_check_out is not None
+        or attendance.thoi_gian_checkout is not None
+    )
+    if has_checked_out:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Thực tập sinh ID {ho_so.ma_ho_so} đã hoàn thành check-in và check-out trong ca làm việc ngày {target_date}. Không thể quét trùng lặp"
+        )
+
+    # Kiểm tra tính hợp lệ thời gian check-out so với check-in
+    if attendance.thoi_gian_checkin and now_dt < attendance.thoi_gian_checkin:
+        raise HTTPException(
+            status_code=400,
+            detail="Thời gian check-out không thể trước thời gian check-in"
+        )
+    elif attendance.gio_checkin and target_time < attendance.gio_checkin:
+        raise HTTPException(
+            status_code=400,
+            detail="Giờ check-out không thể trước giờ check-in"
+        )
+
+    # Chặn quét trùng lặp liên tiếp ngay sau khi vừa check-in trong vòng 60 giây
+    if attendance.thoi_gian_checkin:
+        delta_seconds = abs((now_dt - attendance.thoi_gian_checkin).total_seconds())
+        if delta_seconds < 60:
+            raise HTTPException(
+                status_code=400,
+                detail="Bạn vừa thực hiện quét check-in cho ca này. Vui lòng không quét trùng lặp"
+            )
+
+    # Cập nhật thông tin CHECK-OUT
+    attendance.gio_checkout = target_time
+    attendance.thoi_gian_checkout = now_dt
+    attendance.phuong_thuc = phuong_thuc_val
+
+    if req.ghi_chu:
+        if attendance.ghi_chu:
+            attendance.ghi_chu = f"{attendance.ghi_chu}; {req.ghi_chu}"
+        else:
+            attendance.ghi_chu = req.ghi_chu
+
+    gio_tan_ca = time(17, 0, 0)
+    if target_time < gio_tan_ca and attendance.trang_thai == "DungGio":
+        attendance.trang_thai = "VeSom"
+
+    db.commit()
+    db.refresh(attendance)
+
+    sinh_vien_name = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None
+    return {
+        "status_code": 200,
+        "message": "Quét mã check-out thành công",
+        "data": {
+            "ma_cham_cong": attendance.ma_cham_cong,
+            "ma_ho_so": attendance.ma_ho_so,
+            "ho_ten": sinh_vien_name,
+            "ngay_cham_cong": attendance.ngay_cham_cong.isoformat(),
+            "gio_checkin": attendance.gio_checkin.isoformat() if attendance.gio_checkin else None,
+            "gio_checkout": attendance.gio_checkout.isoformat() if attendance.gio_checkout else None,
+            "gio_check_in": attendance.gio_check_in.isoformat() if attendance.gio_check_in else None,
+            "gio_check_out": attendance.gio_check_out.isoformat() if attendance.gio_check_out else None,
+            "hanh_dong": "CHECK_OUT",
+            "trang_thai": attendance.trang_thai,
+            "phuong_thuc": attendance.phuong_thuc,
+            "ghi_chu": attendance.ghi_chu,
+        }
+    }
+
+
 @app.get("/api/v1/attendance/records")
 def get_attendance_records(
     ma_ho_so: Optional[int] = Query(None, description="Lọc theo mã hồ sơ"),
@@ -1955,6 +2787,7 @@ def get_attendance_records(
     dung_gio_count = 0
     di_muon_count = 0
     ve_som_count = 0
+    vang_count = 0
 
     for cc in records:
         hs = cc.ho_so
@@ -1976,6 +2809,8 @@ def get_attendance_records(
             di_muon_count += 1
         elif st == "VeSom":
             ve_som_count += 1
+        elif st == "VangMat":
+            vang_count += 1
 
         pb_name = "Trung tâm Phát triển Phần mềm ICTU"
         if hs and hs.chuong_trinh and hs.chuong_trinh.phong_ban:
@@ -2003,7 +2838,6 @@ def get_attendance_records(
             "ghi_chu": cc.ghi_chu or ("Đúng giờ ca làm việc" if st == "DungGio" else ("Đi muộn" if st == "DiMuon" else "Về sớm")),
         })
 
-    vang_count = 0
     if not trang_thai or trang_thai in ["tat-ca", "VangMat"]:
         dnp_query = (
             db.query(DonNghiPhep)
@@ -2033,9 +2867,12 @@ def get_attendance_records(
             end_d = date(target_year + 1, 1, 1)
             dnp_query = dnp_query.filter(DonNghiPhep.ngay_nghi >= start_d, DonNghiPhep.ngay_nghi < end_d)
 
+        recorded_days_by_profile = {(cc.ma_ho_so, cc.ngay_cham_cong) for cc in records}
         leaves = dnp_query.order_by(DonNghiPhep.ngay_nghi.desc()).all()
-        vang_count = len(leaves)
         for lv in leaves:
+            if (lv.ma_ho_so, lv.ngay_nghi) in recorded_days_by_profile:
+                continue
+            vang_count += 1
             hs = lv.ho_so
             user = hs.thuc_tap_sinh if hs else None
             pb_name = "Trung tâm Phát triển Phần mềm ICTU"
@@ -2102,10 +2939,7 @@ def get_attendance_shifts(ngay: Optional[str] = None, db: Session = Depends(get_
     if ngay:
         try:
             d_filter = datetime.strptime(ngay, "%Y-%m-%d").date()
-            # Lấy ca có ngày diễn ra đúng bằng d_filter HOẶC ca lặp lại không gán ngày cố định
-            query = query.filter(
-                (CaLamViec.ngay_dien_ra == d_filter) | (CaLamViec.ngay_dien_ra.is_(None))
-            )
+            query = query.filter(CaLamViec.ngay_dien_ra == d_filter)
         except Exception:
             pass
 
@@ -2157,6 +2991,7 @@ def create_attendance_shift(req: ShiftCreateRequest, db: Session = Depends(get_d
         cac_ngay_trong_tuan=req.cac_ngay_trong_tuan or "Tất cả các ngày",
         ngay_dien_ra=d_dien_ra,
         chuyen_nganh=req.chuyen_nganh or None,
+        lop=req.lop or None,
         ma_chuong_trinh=req.ma_chuong_trinh or None,
         ghi_chu=req.ghi_chu or "",
         trang_thai="HoatDong"
@@ -2230,7 +3065,37 @@ def mentor_roll_call(req: RollCallRequest, db: Session = Depends(get_db)):
             except Exception:
                 pass
 
-        if item.trang_thai == "VangMat":
+        don_nghi_da_duyet = db.query(DonNghiPhep).filter(
+            DonNghiPhep.ma_ho_so == item.ma_ho_so,
+            DonNghiPhep.ngay_nghi == req.ngay_cham_cong,
+            DonNghiPhep.trang_thai == "DaDuyet"
+        ).first()
+
+        phuong_thuc_luu = "Mentor"
+        if don_nghi_da_duyet:
+            if item.trang_thai in ["DungGio", "DiMuon", "VeSom"]:
+                don_nghi_da_duyet.trang_thai = "DaHuy"
+                don_goc = db.query(DonXinNghi).filter(
+                    DonXinNghi.ma_ho_so == item.ma_ho_so,
+                    DonXinNghi.tu_ngay <= req.ngay_cham_cong,
+                    DonXinNghi.den_ngay >= req.ngay_cham_cong,
+                    DonXinNghi.trang_thai.in_(["Đã duyệt", "DaDuyet"])
+                ).first()
+                if don_goc:
+                    don_goc.trang_thai = "Đã hủy (Đi học thực tế)"
+                    don_goc.ly_do = f"{don_goc.ly_do} [Hệ thống tự động hoàn trả 1 ngày phép do sinh viên tham gia thực tế ngày {req.ngay_cham_cong.strftime('%d/%m/%Y')}]"
+
+                phuong_thuc_luu = "Mentor"
+                note_prefix = f"[{req.ca_lam_viec}] " if req.ca_lam_viec else ""
+                item.ghi_chu = f"{note_prefix}Tham gia thực tế (Tự động hoàn trả ngày phép)".strip()
+            else:
+                item.trang_thai = "VangMat"
+                t_in = None
+                t_out = None
+                phuong_thuc_luu = "NghiPhep"
+                note_prefix = f"[{req.ca_lam_viec}] " if req.ca_lam_viec else ""
+                item.ghi_chu = f"{note_prefix}Vắng mặt (Nghỉ phép có lý do: {don_nghi_da_duyet.ly_do})".strip()
+        elif item.trang_thai == "VangMat":
             t_in = None
             t_out = None
 
@@ -2251,7 +3116,7 @@ def mentor_roll_call(req: RollCallRequest, db: Session = Depends(get_db)):
             existing.gio_check_out = t_out
             existing.thoi_gian_checkin = dt_in
             existing.thoi_gian_checkout = dt_out
-            existing.phuong_thuc = "Mentor"
+            existing.phuong_thuc = phuong_thuc_luu
             if full_note:
                 existing.ghi_chu = full_note
             saved_items.append(existing.to_dict())
@@ -2264,7 +3129,7 @@ def mentor_roll_call(req: RollCallRequest, db: Session = Depends(get_db)):
                 gio_check_in=t_in,
                 gio_check_out=t_out,
                 trang_thai=item.trang_thai,
-                phuong_thuc="Mentor",
+                phuong_thuc=phuong_thuc_luu,
                 ghi_chu=full_note
             )
             db.add(new_record)
@@ -2470,6 +3335,21 @@ def update_leave_request_status(
                 ))
             else:
                 dnp.trang_thai = "DaDuyet"
+
+            # Tự động đồng bộ bản ghi điểm danh nếu ngày này đã có điểm danh trước đó
+            cc = db.query(ChamCong).filter(
+                ChamCong.ma_ho_so == don.ma_ho_so,
+                ChamCong.ngay_cham_cong == curr
+            ).first()
+            if cc:
+                cc.trang_thai = "VangMat"
+                cc.gio_check_in = None
+                cc.gio_check_out = None
+                cc.thoi_gian_checkin = None
+                cc.thoi_gian_checkout = None
+                cc.phuong_thuc = "NghiPhep"
+                cc.ghi_chu = f"Vắng mặt (Nghỉ phép có lý do: {don.ly_do})"
+
             curr += timedelta(days=1)
 
         # Tự động cập nhật các đơn chờ duyệt khác của sinh viên nếu không còn đủ quỹ phép
@@ -2515,6 +3395,43 @@ def update_leave_request_status(
     }
 
 
+@app.patch("/api/v1/leave-requests/{id}/cancel", status_code=200)
+def cancel_leave_request(id: int, db: Session = Depends(get_db)):
+    don = db.query(DonXinNghi).filter(DonXinNghi.ma_don == id).first()
+    if not don:
+        raise HTTPException(status_code=404, detail=f"Không tìm thấy đơn xin nghỉ phép với ID: {id}")
+
+    if don.trang_thai in ["Từ chối", "Đã hủy"]:
+        raise HTTPException(status_code=400, detail=f"Đơn này đã ở trạng thái {don.trang_thai}, không thể hủy.")
+
+    don.trang_thai = "Đã hủy"
+    don.ly_do = f"{don.ly_do} [Sinh viên chủ động hủy đơn để tham gia học/làm việc thực tế]"
+
+    curr = don.tu_ngay
+    while curr <= don.den_ngay:
+        dnp = db.query(DonNghiPhep).filter(
+            DonNghiPhep.ma_ho_so == don.ma_ho_so,
+            DonNghiPhep.ngay_nghi == curr
+        ).first()
+        if dnp:
+            dnp.trang_thai = "DaHuy"
+
+        cc = db.query(ChamCong).filter(
+            ChamCong.ma_ho_so == don.ma_ho_so,
+            ChamCong.ngay_cham_cong == curr
+        ).first()
+        if cc and cc.phuong_thuc == "NghiPhep":
+            db.delete(cc)
+
+        curr += timedelta(days=1)
+
+    db.commit()
+    db.refresh(don)
+    return {
+        "status_code": 200,
+        "message": "Hủy đơn xin nghỉ phép thành công, hệ thống đã hoàn trả lại ngày phép cho sinh viên",
+        "data": don.to_dict()
+    }
 
 
 # ==============================================================
@@ -2585,6 +3502,88 @@ def create_evaluation(eval_data: EvaluationCreate, db: Session = Depends(get_db)
         "status_code": 201,
         "message": "Tạo đánh giá thực tập sinh thành công",
         "data": result_dict
+    }
+
+
+# api get evaluations by profile id
+@app.get("/api/v1/evaluations/by-profile/{ho_so_id}", status_code=200)
+def get_evaluations_by_profile_id(ho_so_id: int, db: Session = Depends(get_db)):
+    """
+    Lấy danh sách các kỳ đánh giá kết quả thực tập (Giữa kỳ, Cuối kỳ) của thực tập sinh theo mã hồ sơ.
+    """
+    ho_so = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == ho_so_id).first()
+    if not ho_so:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy hồ sơ thực tập sinh với mã ID: {ho_so_id}"
+        )
+
+    evals = db.query(DanhGia).filter(DanhGia.ma_ho_so == ho_so_id).order_by(DanhGia.ma_danh_gia.asc()).all()
+    items = []
+    total_score = 0.0
+
+    for e in evals:
+        item = e.to_dict()
+        if not item.get("ten_nguoi_danh_gia") and e.nguoi_danh_gia:
+            item["ten_nguoi_danh_gia"] = e.nguoi_danh_gia.ho_ten
+        items.append(item)
+        total_score += e.diem_trung_binh
+
+    avg_score = round(total_score / len(items), 2) if items else 0.0
+    xep_loai_chung = "ChuaDanhGia"
+    if items:
+        if avg_score >= 9.0:
+            xep_loai_chung = "XuatSac"
+        elif avg_score >= 8.0:
+            xep_loai_chung = "Gioi"
+        elif avg_score >= 6.5:
+            xep_loai_chung = "Kha"
+        elif avg_score >= 5.0:
+            xep_loai_chung = "TrungBinh"
+        else:
+            xep_loai_chung = "Yeu"
+
+    return {
+        "status_code": 200,
+        "message": "Chi tiết kết quả đánh giá thực tập sinh",
+        "data": {
+            "ho_so_id": ho_so.ma_ho_so,
+            "ho_ten": ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None,
+            "email": ho_so.thuc_tap_sinh.email if ho_so.thuc_tap_sinh else None,
+            "chuyen_nganh": ho_so.chuyen_nganh,
+            "ten_truong": ho_so.truong.ten_truong if ho_so.truong else None,
+            "trang_thai_thuc_tap": ho_so.trang_thai_thuc_tap,
+            "mentor": ho_so.mentor.ho_ten if ho_so.mentor else None,
+            "diem_trung_binh_chung": avg_score,
+            "xep_loai_chung": xep_loai_chung,
+            "danh_sach_danh_gia": items
+        }
+    }
+
+
+# api get evaluations list
+@app.get("/api/v1/evaluations", status_code=200)
+def get_evaluations_list(
+    ma_ho_so: Optional[int] = Query(None, description="Lọc theo mã hồ sơ thực tập sinh"),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh sách các kỳ đánh giá. Nếu truyền ma_ho_so thì trả về chi tiết đánh giá của sinh viên đó.
+    """
+    if ma_ho_so is not None:
+        return get_evaluations_by_profile_id(ma_ho_so, db)
+
+    query = db.query(DanhGia).order_by(DanhGia.ma_danh_gia.desc()).all()
+    items = []
+    for e in query:
+        item = e.to_dict()
+        if not item.get("ten_nguoi_danh_gia") and e.nguoi_danh_gia:
+            item["ten_nguoi_danh_gia"] = e.nguoi_danh_gia.ho_ten
+        items.append(item)
+    return {
+        "status_code": 200,
+        "message": "Danh sách đánh giá thực tập",
+        "data": items
     }
 
 
@@ -3084,16 +4083,27 @@ def get_mentors_workload(
             max_tts = cnt
             mentor_max_name = r.ho_ten
 
+        is_overloaded = cnt > 5
         workload_list.append(
             MentorWorkloadItem(
                 ma_mentor=r.ma_mentor,
+                ma_nguoi_dung=r.ma_mentor,
                 ho_ten=r.ho_ten,
                 email=r.email,
-                so_dien_thoai=r.so_dien_thoai,
+                so_dien_thoai=r.so_dien_thoai or "",
+                vai_tro="Mentor",
                 ma_phong_ban=r.ma_phong_ban,
-                ten_phong_ban=r.ten_phong_ban,
-                trang_thai=r.trang_thai,
-                so_luong_thuc_tap_sinh=cnt
+                ten_phong_ban=r.ten_phong_ban or "Chưa phân bổ",
+                trang_thai=r.trang_thai or "HoatDong",
+                chuc_vu="Mentor Doanh nghiệp",
+                so_luong_thuc_tap_sinh=cnt,
+                so_sinh_vien_huong_dan=cnt,
+                chi_tieu_huong_dan=5,
+                ty_le_phan_tram=round((cnt / 5.0) * 100, 1),
+                trang_thai_tai="QuaTai" if is_overloaded else ("DaDu" if cnt == 5 else "BinhThuong"),
+                canh_bao_qua_tai=is_overloaded,
+                da_du_chi_tieu=cnt >= 5,
+                so_cho_trong=max(0, 5 - cnt)
             )
         )
 
@@ -3338,4 +4348,575 @@ def get_interns_by_faculty_report(
         message="Lấy báo cáo thống kê sinh viên theo trường và chuyên ngành thành công",
         data=data
     )
+
+
+# ==============================================================
+# API BÁO CÁO TỶ LỆ HOÀN THÀNH CHƯƠNG TRÌNH THỰC TẬP
+# (REPORTS COMPLETION RATE)
+# ==============================================================
+@app.get(
+    "/api/v1/reports/completion-rate",
+    response_model=CompletionRateResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Báo cáo tỷ lệ hoàn thành chương trình thực tập",
+)
+def get_completion_rate(db: Session = Depends(get_db)):
+    """
+    Endpoint truy vấn tổng số lượng sinh viên, đếm số lượng theo từng trạng thái
+    (DangThucTap, HoanThanh, ThoiHoc) và tự động tính toán tỷ lệ phần trăm (%) hoàn thành chương trình thực tập.
+    """
+    tong_so_sinh_vien = db.query(func.count(HoSoThucTap.ma_ho_so)).scalar() or 0
+
+    status_counts = (
+        db.query(HoSoThucTap.trang_thai_thuc_tap, func.count(HoSoThucTap.ma_ho_so))
+        .group_by(HoSoThucTap.trang_thai_thuc_tap)
+        .all()
+    )
+
+    status_map = {st: count for st, count in status_counts if st is not None}
+
+    so_luong_dang_thuc_tap = status_map.get("DangThucTap", 0)
+    so_luong_hoan_thanh = status_map.get("HoanThanh", 0)
+    so_luong_thoi_hoc = status_map.get("ThoiHoc", 0)
+
+    if tong_so_sinh_vien > 0:
+        ty_le_hoan_thanh = round((so_luong_hoan_thanh / tong_so_sinh_vien) * 100.0, 2)
+    else:
+        ty_le_hoan_thanh = 0.0
+
+    ty_le_hoan_thanh = max(0.0, min(100.0, ty_le_hoan_thanh))
+
+    return CompletionRateResponse(
+        tong_so_sinh_vien=tong_so_sinh_vien,
+        so_luong_dang_thuc_tap=so_luong_dang_thuc_tap,
+        so_luong_hoan_thanh=so_luong_hoan_thanh,
+        so_luong_thoi_hoc=so_luong_thoi_hoc,
+        ty_le_hoan_thanh=ty_le_hoan_thanh,
+        chi_tiet_theo_trang_thai=status_map,
+    )
+
+
+# ==============================================================
+# API XUẤT BÁO CÁO EXCEL / PDF (REPORTS EXPORT)
+# ==============================================================
+@app.get("/api/v1/reports/export")
+def export_reports(
+    format: str = Query("excel", description="Định dạng xuất file: excel hoặc pdf"),
+    ma_truong: Optional[int] = Query(None, description="Lọc theo mã trường đại học"),
+    loai_danh_gia: Optional[str] = Query(None, description="Lọc theo đợt đánh giá"),
+    trang_thai_thuc_tap: Optional[str] = Query(None, description="Lọc theo trạng thái thực tập"),
+    de_xuat_tuyen_chinh_thuc: Optional[bool] = Query(None, description="Lọc theo đề xuất tuyển dụng"),
+    tu_khoa: Optional[str] = Query(None, description="Từ khóa tìm kiếm"),
+    db: Session = Depends(get_db),
+):
+    """
+    Endpoint kết xuất và tải về báo cáo tổng hợp đa định dạng:
+    - format=excel (hoặc xlsx): Xuất bảng tính Excel chuyên nghiệp (.xlsx) bằng openpyxl
+    - format=pdf: Xuất tài liệu PDF khổ A4 ngang (.pdf) hỗ trợ tiếng Việt có dấu bằng ReportLab
+    - Trả về StreamingResponse với Content-Disposition header tải file
+    """
+    fmt = format.strip().lower() if format else "excel"
+    if fmt not in ["excel", "xlsx", "pdf"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Định dạng xuất file không được hỗ trợ. Chỉ chấp nhận: excel hoặc pdf"
+        )
+    return get_evaluations_summary(
+        ma_truong=ma_truong,
+        loai_danh_gia=loai_danh_gia,
+        trang_thai_thuc_tap=trang_thai_thuc_tap,
+        de_xuat_tuyen_chinh_thuc=de_xuat_tuyen_chinh_thuc,
+        tu_khoa=tu_khoa,
+        format=fmt,
+        page=1,
+        page_size=100,
+        db=db,
+    )
+
+
+# ==============================================================================
+# ENDPOINT LÊN LỊCH HỌP VÀ GỬI EMAIL HTML TỰ ĐỘNG ĐẾN THỰC TẬP SINH
+# ==============================================================================
+@app.post("/api/v1/meetings", status_code=201, response_model=MeetingCreateResponse)
+def create_meeting(
+    meeting_data: MeetingCreateRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """
+    Tạo mới lịch họp trong hệ thống và tự động gửi email thư mời HTML đến danh sách thực tập sinh được mời
+    thông qua fastapi.BackgroundTasks.
+    
+    Quy tắc nghiệp vụ & Bắt trọn vẹn ngoại lệ:
+    1. Kiểm tra trường bắt buộc và chuỗi rỗng: tieu_de, dia_diem, ma_nguoi_chu_tri.
+    2. Kiểm tra tính hợp lệ thời gian:
+       - thoi_gian_ket_thuc phải lớn hơn thoi_gian_bat_dau.
+       - thoi_gian_bat_dau không được nằm trong quá khứ so với thời điểm tạo.
+    3. Kiểm tra người chủ trì:
+       - ma_nguoi_chu_tri phải tồn tại trong bảng NguoiDung (HTTP 404).
+       - Tài khoản người chủ trì phải đang ở trạng thái hoạt động (HTTP 400).
+    4. Kiểm tra danh sách thực tập sinh được mời:
+       - Không được để trống (HTTP 400).
+       - Từng mã sinh viên/thực tập sinh phải tồn tại và có email hợp lệ trong hệ thống (HTTP 404 nếu không tìm thấy).
+    5. Lưu bản ghi LichHop vào CSDL.
+    6. Đăng ký gửi email HTML với BackgroundTasks để phản hồi nhanh chóng mà không chặn luồng chính.
+    """
+    # 1. Kiểm tra chuỗi rỗng tiêu đề và địa điểm
+    tieu_de_clean = meeting_data.tieu_de.strip() if meeting_data.tieu_de else ""
+    dia_diem_clean = meeting_data.dia_diem.strip() if meeting_data.dia_diem else ""
+
+    if not tieu_de_clean:
+        raise HTTPException(
+            status_code=400,
+            detail="Tiêu đề cuộc họp không được để trống hoặc chỉ chứa khoảng trắng"
+        )
+
+    if not dia_diem_clean:
+        raise HTTPException(
+            status_code=400,
+            detail="Địa điểm cuộc họp không được để trống hoặc chỉ chứa khoảng trắng"
+        )
+
+    # 2. Kiểm tra tính hợp lệ của thời gian
+    if meeting_data.thoi_gian_ket_thuc <= meeting_data.thoi_gian_bat_dau:
+        raise HTTPException(
+            status_code=400,
+            detail="Thời gian kết thúc cuộc họp phải lớn hơn thời gian bắt đầu"
+        )
+
+    # Cho phép dung sai 60 giây để tránh lỗi trễ mạng hoặc clock lệch nhẹ
+    now = datetime.now()
+    if meeting_data.thoi_gian_bat_dau < (now - timedelta(seconds=60)):
+        raise HTTPException(
+            status_code=400,
+            detail="Thời gian bắt đầu cuộc họp không được nằm trong quá khứ"
+        )
+
+    # 3. Kiểm tra người chủ trì cuộc họp
+    host = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == meeting_data.ma_nguoi_chu_tri).first()
+    if not host:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Không tìm thấy người chủ trì với mã {meeting_data.ma_nguoi_chu_tri}"
+        )
+
+    if host.trang_thai == "Khoa":
+        raise HTTPException(
+            status_code=400,
+            detail="Tài khoản người chủ trì hiện đang bị khóa, không thể lên lịch họp"
+        )
+
+    # 4. Kiểm tra danh sách thực tập sinh được mời
+    if not meeting_data.danh_sach_thuc_tap_sinh or len(meeting_data.danh_sach_thuc_tap_sinh) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Danh sách thực tập sinh được mời không được để trống"
+        )
+
+    # Thu thập và kiểm tra từng thực tập sinh (chống trùng lặp ID)
+    unique_intern_ids = list(dict.fromkeys(meeting_data.danh_sach_thuc_tap_sinh))
+    invited_interns = []
+    invited_emails = []
+
+    for intern_id in unique_intern_ids:
+        # Tìm theo ma_nguoi_dung
+        user_intern = db.query(NguoiDung).filter(NguoiDung.ma_nguoi_dung == intern_id).first()
+        if not user_intern:
+            # Dự phòng tìm theo ma_ho_so nếu client truyền ma_ho_so
+            hs = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so == intern_id).first()
+            if hs and hs.thuc_tap_sinh:
+                user_intern = hs.thuc_tap_sinh
+
+        if not user_intern:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Không tìm thấy thực tập sinh với mã {intern_id} trong hệ thống"
+            )
+
+        if not user_intern.email or not user_intern.email.strip():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Thực tập sinh '{user_intern.ho_ten}' (mã {intern_id}) chưa được cập nhật email"
+            )
+
+        invited_interns.append(user_intern)
+        invited_emails.append(user_intern.email.strip())
+
+    # 5. Lưu thông tin lịch họp vào CSDL
+    new_meeting = LichHop(
+        tieu_de=tieu_de_clean,
+        thoi_gian_bat_dau=meeting_data.thoi_gian_bat_dau,
+        thoi_gian_ket_thuc=meeting_data.thoi_gian_ket_thuc,
+        dia_diem=dia_diem_clean,
+        ma_nguoi_chu_tri=meeting_data.ma_nguoi_chu_tri,
+    )
+    db.add(new_meeting)
+    db.commit()
+    db.refresh(new_meeting)
+
+    # 6. Chuẩn bị định dạng thời gian và gửi email HTML tự động qua fastapi.BackgroundTasks
+    start_str = meeting_data.thoi_gian_bat_dau.strftime("%H:%M ngày %d/%m/%Y")
+    end_str = meeting_data.thoi_gian_ket_thuc.strftime("%H:%M ngày %d/%m/%Y")
+
+    for intern in invited_interns:
+        background_tasks.add_task(
+            send_meeting_invitation_email,
+            to_email=intern.email.strip(),
+            intern_name=intern.ho_ten,
+            meeting_title=new_meeting.tieu_de,
+            start_time=start_str,
+            end_time=end_str,
+            location=new_meeting.dia_diem,
+            host_name=host.ho_ten,
+            note=meeting_data.noi_dung,
+        )
+
+    # 7. Trả về kết quả HTTP 201 Created
+    response_data = MeetingResponseData(
+        ma_lich_hop=new_meeting.ma_lich_hop,
+        tieu_de=new_meeting.tieu_de,
+        thoi_gian_bat_dau=new_meeting.thoi_gian_bat_dau,
+        thoi_gian_ket_thuc=new_meeting.thoi_gian_ket_thuc,
+        dia_diem=new_meeting.dia_diem,
+        ma_nguoi_chu_tri=new_meeting.ma_nguoi_chu_tri,
+        ten_nguoi_chu_tri=host.ho_ten,
+        so_luong_nguoi_moi=len(invited_interns),
+        danh_sach_email_duoc_moi=invited_emails,
+        danh_sach_thuc_tap_sinh_moi=unique_intern_ids,
+    )
+
+    return MeetingCreateResponse(
+        code=201,
+        message=f"Tạo lịch họp thành công và đã lên lịch gửi email HTML tự động tới {len(invited_interns)} thực tập sinh",
+        data=response_data,
+    )
+
+
+# ==============================================================
+# HRM INTEGRATION & DATA RECONCILIATION API
+# ==============================================================
+@app.post(
+    "/api/v1/integrations/hrm/sync",
+    response_model=HRMSyncResponse,
+    status_code=200,
+    tags=["Integrations - HRM"]
+)
+def sync_hrm_integration_endpoint(
+    payload: HRMSyncRequest,
+    x_hrm_secret_key: Optional[str] = Header(None, alias="X-HRM-Secret-Key"),
+    db: Session = Depends(get_db)
+):
+    """
+    Endpoint tiếp nhận Webhook / REST API đối soát và đồng bộ dữ liệu từ hệ thống HRM bên ngoài:
+    - Đối soát và đồng bộ danh sách nhân viên (Mentor / HR).
+    - Đối soát và đồng bộ danh sách sinh viên thực tập (NguoiDung + HoSoThucTap).
+    - Tự động cập nhật bản ghi cũ hoặc thêm mới bản ghi chưa tồn tại (Idempotent Upsert).
+    - Hỗ trợ xác thực khóa bí mật qua header X-HRM-Secret-Key.
+    """
+    # 1. Xác thực bảo mật header nếu có cấu hình biến môi trường HRM_WEBHOOK_SECRET
+    configured_secret = os.getenv("HRM_WEBHOOK_SECRET")
+    if configured_secret:
+        if not x_hrm_secret_key or x_hrm_secret_key.strip() != configured_secret.strip():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Khóa bí mật xác thực HRM (X-HRM-Secret-Key) không hợp lệ hoặc bị thiếu"
+            )
+
+    # 2. Xử lý nghiệp vụ đối soát và đồng bộ trong service
+    result = sync_hrm_data(payload=payload, db=db)
+    return result
+
+
+# ==============================================================
+# RBAC - PHÂN QUYỀN VAI TRÒ & QUẢN TRỊ QUYỀN HẠN
+# ==============================================================
+@app.put(
+    "/api/v1/admin/roles/{role}/permissions",
+    response_model=RolePermissionsResponse,
+    status_code=200,
+    tags=["Admin - RBAC"]
+)
+def update_role_permissions_endpoint(
+    role: str = FastApiPath(..., description="Tên vai trò cần cập nhật quyền hạn (Admin, HR, Mentor, ThucTapSinh, ...)"),
+    payload: RolePermissionsUpdateRequest = ...,
+    current_user: NguoiDung = Depends(require_permissions("role:manage")),
+    db: Session = Depends(get_db)
+):
+    """
+    Cập nhật danh sách quyền hạn cho một vai trò cụ thể trong hệ thống.
+    Yêu cầu quyền: role:manage (hoặc tài khoản vai trò Admin/Superadmin).
+    """
+    updated_perms = update_role_permissions(role=role, permissions_input=payload.permissions, db=db)
+    perms_response = [
+        PermissionItemResponse(
+            ma_quyen_han=p.ma_quyen_han,
+            ma_quyen=p.ma_quyen,
+            ten_quyen=p.ten_quyen,
+            mo_ta=p.mo_ta,
+            nhom_quyen=p.nhom_quyen
+        )
+        for p in updated_perms
+    ]
+    return RolePermissionsResponse(
+        status_code=200,
+        message=f"Cập nhật danh sách quyền hạn cho vai trò '{role}' thành công",
+        role=role,
+        total_permissions=len(perms_response),
+        permissions=perms_response
+    )
+
+
+@app.get(
+    "/api/v1/admin/roles/{role}/permissions",
+    response_model=RolePermissionsResponse,
+    status_code=200,
+    tags=["Admin - RBAC"]
+)
+def get_role_permissions_endpoint(
+    role: str = FastApiPath(..., description="Tên vai trò cần tra cứu quyền hạn"),
+    current_user: NguoiDung = Depends(require_permissions("role:manage")),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh sách các quyền hạn đang được gán cho một vai trò.
+    Yêu cầu quyền: role:manage (hoặc tài khoản vai trò Admin/Superadmin).
+    """
+    perms = get_role_permissions(role=role, db=db)
+    perms_response = [
+        PermissionItemResponse(
+            ma_quyen_han=p.ma_quyen_han,
+            ma_quyen=p.ma_quyen,
+            ten_quyen=p.ten_quyen,
+            mo_ta=p.mo_ta,
+            nhom_quyen=p.nhom_quyen
+        )
+        for p in perms
+    ]
+    return RolePermissionsResponse(
+        status_code=200,
+        message=f"Lấy danh sách quyền hạn của vai trò '{role}' thành công",
+        role=role,
+        total_permissions=len(perms_response),
+        permissions=perms_response
+    )
+
+
+@app.get(
+    "/api/v1/admin/permissions",
+    response_model=PermissionListResponse,
+    status_code=200,
+    tags=["Admin - RBAC"]
+)
+def get_all_permissions_endpoint(
+    current_user: NguoiDung = Depends(require_permissions("role:manage")),
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy danh mục toàn bộ quyền hạn có trong hệ thống.
+    Yêu cầu quyền: role:manage (hoặc tài khoản vai trò Admin/Superadmin).
+    """
+    all_perms = get_all_permissions(db=db)
+    data = [
+        PermissionItemResponse(
+            ma_quyen_han=p.ma_quyen_han,
+            ma_quyen=p.ma_quyen,
+            ten_quyen=p.ten_quyen,
+            mo_ta=p.mo_ta,
+            nhom_quyen=p.nhom_quyen
+        )
+        for p in all_perms
+    ]
+    return PermissionListResponse(
+        status_code=200,
+        message="Lấy danh mục quyền hạn thành công",
+        total=len(data),
+        data=data
+    )
+
+
+# ==============================================================
+# API QUẢN TRỊ SAO LƯU DỮ LIỆU HỆ THỐNG (SYSTEM BACKUP & RECOVERY)
+# ==============================================================
+@app.post(
+    "/api/v1/system/backup",
+    response_model=BackupCreateResponse,
+    status_code=201,
+    tags=["Hệ thống - Sao lưu dữ liệu"]
+)
+def trigger_manual_backup(
+    payload: Optional[BackupCreateRequest] = None,
+    current_user: NguoiDung = Depends(require_permissions("system:backup")),
+    db: Session = Depends(get_db)
+):
+    """
+    Kích hoạt tiến trình sao lưu cơ sở dữ liệu thủ công bằng mysqldump.
+    Dữ liệu được nén an toàn thành tệp .sql.gz và tính checksum SHA-256.
+    Chống xung đột sao lưu đồng thời (Concurrency Lock).
+    Yêu cầu quyền: system:backup (hoặc tài khoản Admin).
+    """
+    note = payload.note if payload else None
+    prefix = payload.prefix if payload else None
+
+    try:
+        result = create_backup(db=db, note=note, filename_prefix=prefix)
+        return BackupCreateResponse(
+            status_code=201,
+            message="Tạo bản sao lưu cơ sở dữ liệu thành công",
+            backup=BackupItemResponse(
+                filename=result["filename"],
+                size_bytes=result["size_bytes"],
+                size_human=result["size_human"],
+                created_at=result["created_at"],
+                checksum_sha256=result["checksum_sha256"],
+                download_url=result["download_url"],
+                note=result["note"]
+            )
+        )
+    except BackupInProgressError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+    except BackupExecutionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi thực thi sao lưu dữ liệu: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi máy chủ không mong muốn trong quá trình sao lưu: {str(e)}"
+        )
+
+
+@app.get(
+    "/api/v1/system/backups",
+    response_model=BackupListResponse,
+    status_code=200,
+    tags=["Hệ thống - Sao lưu dữ liệu"]
+)
+def get_backup_list(
+    current_user: NguoiDung = Depends(require_permissions("system:backup"))
+):
+    """
+    Lấy danh sách toàn bộ các file backup đã tạo trong hệ thống.
+    Kèm theo dung lượng tổng và trạng thái bộ lập lịch sao lưu tự động định kỳ.
+    Yêu cầu quyền: system:backup (hoặc tài khoản Admin).
+    """
+    backups_data = list_backups()
+    scheduler_status = backup_scheduler.get_status()
+
+    backup_items = [
+        BackupItemResponse(
+            filename=item["filename"],
+            size_bytes=item["size_bytes"],
+            size_human=item["size_human"],
+            created_at=item["created_at"],
+            checksum_sha256=item.get("checksum_sha256"),
+            download_url=item["download_url"],
+            note=item.get("note")
+        )
+        for item in backups_data["backups"]
+    ]
+
+    return BackupListResponse(
+        status_code=200,
+        message="Lấy danh sách tệp sao lưu thành công",
+        total_files=backups_data["total_files"],
+        total_size_bytes=backups_data["total_size_bytes"],
+        total_size_human=backups_data["total_size_human"],
+        scheduler=BackupSchedulerStatus(
+            enabled=scheduler_status["enabled"],
+            running=scheduler_status["running"],
+            interval_hours=scheduler_status["interval_hours"],
+            last_run=scheduler_status["last_run"],
+            status=scheduler_status["status"],
+            backup_dir=scheduler_status["backup_dir"]
+        ),
+        backups=backup_items
+    )
+
+
+@app.get(
+    "/api/v1/system/backups/{filename}/download",
+    status_code=200,
+    tags=["Hệ thống - Sao lưu dữ liệu"]
+)
+def download_backup_file(
+    filename: str = FastApiPath(..., description="Tên tệp sao lưu cần tải về"),
+    current_user: NguoiDung = Depends(require_permissions("system:backup"))
+):
+    """
+    Stream tải tệp sao lưu nén định dạng .sql.gz về client.
+    Áp dụng streaming chunks để tối ưu bộ nhớ RAM máy chủ khi file lớn.
+    Chống tấn công Path Traversal.
+    Yêu cầu quyền: system:backup (hoặc tài khoản Admin).
+    """
+    try:
+        stream_gen, file_size, file_path = get_backup_file_stream(filename)
+    except BackupSecurityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except BackupNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi đọc tệp sao lưu: {str(e)}"
+        )
+
+    headers = {
+        "Content-Disposition": f'attachment; filename="{file_path.name}"',
+        "Content-Length": str(file_size),
+        "Content-Type": "application/gzip",
+    }
+    return StreamingResponse(
+        content=stream_gen,
+        media_type="application/gzip",
+        headers=headers
+    )
+
+
+@app.delete(
+    "/api/v1/system/backups/{filename}",
+    status_code=200,
+    tags=["Hệ thống - Sao lưu dữ liệu"]
+)
+def delete_backup_file(
+    filename: str = FastApiPath(..., description="Tên tệp sao lưu cần xóa"),
+    current_user: NguoiDung = Depends(require_permissions("system:backup"))
+):
+    """
+    Xóa an toàn một tệp sao lưu khỏi hệ thống.
+    Yêu cầu quyền: system:backup (hoặc tài khoản Admin).
+    """
+    try:
+        delete_backup(filename)
+        return {
+            "status_code": 200,
+            "message": f"Đã xóa bản sao lưu '{filename}' thành công"
+        }
+    except BackupSecurityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except BackupNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi xóa tệp sao lưu: {str(e)}"
+        )
+
+
+
 

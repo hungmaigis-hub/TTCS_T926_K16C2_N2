@@ -1,8 +1,9 @@
-const duongDanApiInterns = "http://127.0.0.1:8000/api/v1/interns";
-const duongDanApiStudents = "http://127.0.0.1:8000/api/v1/students";
-const duongDanApiPrograms = "http://127.0.0.1:8000/api/v1/programs";
-const duongDanApiMentors = "http://127.0.0.1:8000/api/v1/mentors";
-const duongDanApiUniversities = "http://127.0.0.1:8000/api/v1/universities";
+const duongDanApiGoc = typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1";
+const duongDanApiInterns = `${duongDanApiGoc}/interns`;
+const duongDanApiStudents = `${duongDanApiGoc}/students`;
+const duongDanApiPrograms = `${duongDanApiGoc}/programs`;
+const duongDanApiMentors = `${duongDanApiGoc}/mentors`;
+const duongDanApiUniversities = `${duongDanApiGoc}/universities`;
 
 let danhSachSinhVien = [];
 let danhSachChuongTrinh = [];

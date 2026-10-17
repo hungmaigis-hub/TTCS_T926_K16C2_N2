@@ -18,3 +18,4 @@ class NguoiDung(Base):
     phong_ban = relationship("PhongBan", back_populates="nguoi_dung")
     ho_so_thuc_tap = relationship("HoSoThucTap", foreign_keys="[HoSoThucTap.ma_nguoi_dung]", back_populates="thuc_tap_sinh", uselist=False)
     danh_sach_huong_dan = relationship("HoSoThucTap", foreign_keys="[HoSoThucTap.ma_mentor]", back_populates="mentor")
+    danh_sach_lich_hop_chu_tri = relationship("LichHop", foreign_keys="[LichHop.ma_nguoi_chu_tri]", back_populates="nguoi_chu_tri")

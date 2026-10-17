@@ -1,5 +1,6 @@
-const duongDanApiUpload = "http://127.0.0.1:8000/api/v1/documents/upload";
-const duongDanApiDocuments = "http://127.0.0.1:8000/api/v1/documents";
+const duongDanApiUpload = `${typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1"}/documents/upload`;
+const duongDanApiDocuments = `${typeof layDuongDanApi === "function" ? layDuongDanApi() : "http://127.0.0.1:8000/api/v1"}/documents`;
+let danhSachTaiLieuHienTai = [];
 
 const tepInput = document.getElementById("tepDinhKem");
 const vungKeoTha = document.getElementById("vungKeoTha");
@@ -132,12 +133,13 @@ async function taiDanhSachTaiLieu() {
 
     const json = await res.json();
     const docs = json.data || [];
+    danhSachTaiLieuHienTai = docs;
     if (!docs.length) return;
 
     tbody.innerHTML = "";
     docs.forEach((doc) => {
       const fileName = doc.duong_dan_file ? doc.duong_dan_file.split("/").pop() : "TaiLieu.pdf";
-      const fileUrl = `http://127.0.0.1:8000/${doc.duong_dan_file}`;
+      const fileUrl = `${typeof layDuongDanGocBackend === "function" ? layDuongDanGocBackend() : "http://127.0.0.1:8000"}/${(doc.duong_dan_file || "").replace(/^\/+/, "")}`;
 
       let loaiLabel = doc.loai_tai_lieu || "Tài liệu";
       if (loaiLabel === "CV") loaiLabel = "CV / Hồ sơ năng lực";
@@ -155,10 +157,13 @@ async function taiDanhSachTaiLieu() {
         `;
       } else if (doc.trang_thai_duyet === "TuChoi") {
         statusBadge = `
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-800 font-label-sm text-label-sm font-semibold border border-red-200">
-            <span class="material-symbols-outlined text-[14px]">cancel</span>
-            <span>Từ chối</span>
-          </span>
+          <div class="flex flex-col gap-1">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-800 font-label-sm text-label-sm font-semibold border border-red-200 w-fit">
+              <span class="material-symbols-outlined text-[14px]">cancel</span>
+              <span>Từ chối</span>
+            </span>
+            ${doc.ghi_chu ? `<span class="text-[11px] text-red-700 font-medium bg-red-50/70 p-1.5 rounded border border-red-100 max-w-xs block leading-snug"><strong class="font-bold">Lý do:</strong> ${doc.ghi_chu}</span>` : ""}
+          </div>
         `;
       } else {
         statusBadge = `
@@ -212,6 +217,24 @@ async function xuLyTaiLen() {
   else if (loaiTaiLieu.includes("Đơn xin") || loaiTaiLieu.includes("DonXin")) loaiTaiLieu = "DonXinThucTap";
   else if (loaiTaiLieu.includes("Giới thiệu") || loaiTaiLieu.includes("GiayGioiThieu")) loaiTaiLieu = "GiayGioiThieu";
   else if (loaiTaiLieu.includes("Hợp đồng") || loaiTaiLieu.includes("HopDong")) loaiTaiLieu = "HopDong";
+
+  const daCoCungLoai = danhSachTaiLieuHienTai.find(d => d.loai_tai_lieu === loaiTaiLieu && d.trang_thai_duyet !== "TuChoi");
+  if (daCoCungLoai) {
+    hienThiThongBaoLoi(
+      "Tài liệu đã tồn tại",
+      `Bạn đã nộp tệp "${loaiTaiLieu}" và tệp đang ở trạng thái ${daCoCungLoai.trang_thai_duyet === "DaDuyet" ? "Đã duyệt" : "Chờ xét duyệt"}. Bạn không thể nộp thêm trừ khi tài liệu này bị từ chối yêu cầu làm lại.`
+    );
+    return;
+  }
+
+  const docsHopLe = danhSachTaiLieuHienTai.filter(d => d.trang_thai_duyet !== "TuChoi");
+  if (docsHopLe.length >= 3 && !danhSachTaiLieuHienTai.some(d => d.loai_tai_lieu === loaiTaiLieu && d.trang_thai_duyet === "TuChoi")) {
+    hienThiThongBaoLoi(
+      "Đã nộp đủ số lượng tài liệu",
+      "Hồ sơ của bạn đã có đủ 3 tài liệu hợp lệ đang xét duyệt hoặc đã được phê duyệt. Không thể nộp thêm tài liệu mới trừ khi có tài liệu bị từ chối."
+    );
+    return;
+  }
 
   const nutGuiTep = document.getElementById("nutGuiTep");
   const file = tepInput?.files?.[0];

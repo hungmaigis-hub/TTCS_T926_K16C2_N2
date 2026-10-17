@@ -21,6 +21,47 @@ import pytest
 import requests
 import io
 import uuid
+import sys
+import socket
+from pathlib import Path
+
+backend_dir = Path(__file__).resolve().parent.parent / "backend"
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+
+def _is_server_running(port=8000):
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+            return True
+    except Exception:
+        return False
+
+if not _is_server_running(8000):
+    from fastapi.testclient import TestClient
+    from main import app as fastapi_app
+    _client = TestClient(fastapi_app)
+
+    class _RequestsTestClientAdapter:
+        @staticmethod
+        def _get_path(url):
+            return url.replace("http://localhost:8000", "")
+
+        def get(self, url, *args, **kwargs):
+            return _client.get(self._get_path(url), *args, **kwargs)
+
+        def post(self, url, *args, **kwargs):
+            return _client.post(self._get_path(url), *args, **kwargs)
+
+        def put(self, url, *args, **kwargs):
+            return _client.put(self._get_path(url), *args, **kwargs)
+
+        def patch(self, url, *args, **kwargs):
+            return _client.patch(self._get_path(url), *args, **kwargs)
+
+        def delete(self, url, *args, **kwargs):
+            return _client.delete(self._get_path(url), *args, **kwargs)
+
+    requests = _RequestsTestClientAdapter()
 
 BASE_URL = "http://localhost:8000"
 EXISTING_HO_SO_ID = 1

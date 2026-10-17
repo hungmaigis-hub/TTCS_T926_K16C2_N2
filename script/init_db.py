@@ -40,6 +40,26 @@ try:
             if stmt:
                 cursor.execute(stmt)
 
+        # Đảm bảo các cột mới nhất luôn tồn tại (auto-migration nếu DB đã được tạo từ trước)
+        migrations = [
+            "ALTER TABLE intern_management.truong_dai_hoc ADD COLUMN IF NOT EXISTS danh_sach_nganh TEXT NULL",
+            "ALTER TABLE intern_management.ho_so_thuc_tap ADD COLUMN IF NOT EXISTS lop VARCHAR(50) NULL",
+            "ALTER TABLE intern_management.ca_lam_viec ADD COLUMN IF NOT EXISTS ngay_dien_ra DATE NULL",
+            "ALTER TABLE intern_management.ca_lam_viec ADD COLUMN IF NOT EXISTS chuyen_nganh VARCHAR(100) NULL",
+            "ALTER TABLE intern_management.ca_lam_viec ADD COLUMN IF NOT EXISTS lop VARCHAR(50) NULL",
+            "ALTER TABLE intern_management.ca_lam_viec ADD COLUMN IF NOT EXISTS ma_chuong_trinh INT NULL",
+            "ALTER TABLE intern_management.phu_cap ADD COLUMN IF NOT EXISTS thang INT NULL",
+            "ALTER TABLE intern_management.phu_cap ADD COLUMN IF NOT EXISTS nam INT NULL",
+            "ALTER TABLE intern_management.phu_cap ADD COLUMN IF NOT EXISTS ngay_chi_tra DATE NULL",
+            "ALTER TABLE intern_management.phu_cap ADD COLUMN IF NOT EXISTS trang_thai VARCHAR(50) DEFAULT 'ChuaChiTra'",
+            "ALTER TABLE intern_management.phu_cap ADD COLUMN IF NOT EXISTS ghi_chu VARCHAR(255) NULL"
+        ]
+        for m in migrations:
+            try:
+                cursor.execute(m)
+            except Exception:
+                pass
+
     print("khởi tạo thành công")
     connection.close()
 

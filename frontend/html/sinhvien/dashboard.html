@@ -15,6 +15,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/env.js"></script>
     <script src="../../js/common.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="../../js/tailwind.config.js"></script>
@@ -155,43 +156,53 @@
         </a>
 
         <a
-          href="javascript:void(0)"
-          data-coming-soon="Báo cáo tuần &amp; Nhật ký thực tập"
-          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+          href="phu_cap.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
         >
           <div class="flex items-center gap-3">
             <span
-              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
-              >edit_note</span
+              class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+              >payments</span
             >
-            <span>Báo cáo tuần</span>
+            <span>Phụ cấp &amp; Thu nhập</span>
           </div>
           <span
-            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+            class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-full"
+            >Mới</span
           >
-            <span class="material-symbols-outlined text-[12px]">lock</span>
-            Sắp có
-          </span>
         </a>
 
         <a
-          href="javascript:void(0)"
-          data-coming-soon="Kết quả đánh giá &amp; Điểm số thực tập"
-          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors group"
+          href="bao_cao.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
         >
-          <div class="flex items-center gap-3">
-            <span
-              class="material-symbols-outlined text-[20px] text-slate-300 group-hover:text-slate-500"
-              >rate_review</span
-            >
-            <span>Đánh giá &amp; Điểm</span>
-          </div>
           <span
-            class="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1"
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >edit_note</span
           >
-            <span class="material-symbols-outlined text-[12px]">lock</span>
-            Sắp có
-          </span>
+          <span>Báo cáo tuần</span>
+        </a>
+
+        <a
+          href="danh_gia.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >rate_review</span
+          >
+          <span>Đánh giá &amp; Điểm</span>
+        </a>
+
+        <a
+          href="yeu_cau_ho_tro.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span
+            class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-emerald-600"
+            >support_agent</span
+          >
+          <span>Yêu cầu hỗ trợ</span>
         </a>
 
         <a
@@ -276,14 +287,15 @@
 
         <div class="flex items-center gap-3 self-end md:self-auto">
           <div
+            id="badgeDonViThucTapTop"
             class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-xs text-emerald-800 font-semibold"
           >
             <span
               class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
             ></span>
-            <span>FPT Software Hà Nội</span>
+            <span id="tenDonViThucTapTop">Đơn vị thực tập</span>
             <span class="text-emerald-400">•</span>
-            <span>GDU1 - Backend Intern</span>
+            <span id="chuyenNganhTop">Chuyên ngành đào tạo</span>
           </div>
 
           <button
@@ -334,17 +346,16 @@
                 <span id="theHocKySinhVienBanner">Kỳ thực tập doanh nghiệp</span>
               </div>
               <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                Xin chào, <span id="welcomeTenSinhVien">Nguyễn Văn An</span>! 👋
+                Xin chào, <span id="welcomeTenSinhVien">Sinh viên</span>! 👋
               </h1>
-              <p class="text-slate-200 text-sm leading-relaxed">
+              <p class="text-slate-200 text-sm leading-relaxed" id="welcomeMoTaTrangThai">
                 Bạn đang trong
-                <strong class="text-white font-semibold"
-                  >Tuần thứ 6 / 12</strong
+                <strong id="moTaTuanThucTap" class="text-white font-semibold"
+                  >tiến độ thực tập</strong
                 >
-                của kỳ thực tập tại
-                <strong class="text-white font-semibold">FPT Software</strong>.
-                Tình trạng hồ sơ &amp; hợp đồng đã hoàn tất 100%, hãy duy trì
-                báo cáo định kỳ và hoàn thành các nhiệm vụ được giao!
+                tại
+                <strong id="moTaDoanhNghiep" class="text-white font-semibold">Đơn vị tiếp nhận</strong>.
+                Hệ thống đang đồng bộ thông tin hồ sơ và nhiệm vụ thực tập từ cơ sở dữ liệu.
               </p>
             </div>
 
@@ -356,18 +367,17 @@
                 <span class="material-symbols-outlined text-[18px]"
                   >add_task</span
                 >
-                <span>Nhiệm vụ tuần 6</span>
+                <span>Nhiệm vụ tuần</span>
               </a>
-              <button
-                type="button"
-                onclick="thongBaoDangCapNhat('Nộp báo cáo thực tập tuần 6')"
+              <a
+                href="bao_cao.html"
                 class="px-4 py-2.5 rounded-xl bg-emerald-700/60 hover:bg-emerald-700 text-white border border-emerald-500/40 text-xs font-bold transition-all flex items-center gap-2 backdrop-blur-sm"
               >
                 <span class="material-symbols-outlined text-[18px]"
                   >upload</span
                 >
                 <span>Nộp báo cáo tuần</span>
-              </button>
+              </a>
               <a
                 href="hop_dong.html"
                 class="px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 text-xs font-semibold border border-slate-700 transition-all flex items-center gap-2"
@@ -398,23 +408,24 @@
                 >
               </div>
             </div>
-            <div class="text-2xl font-bold text-slate-900 mb-1">
-              Tuần 6
-              <span class="text-sm font-normal text-slate-500">/ 12 tuần</span>
+            <div id="chuSoTienDoTuan" class="text-2xl font-bold text-slate-900 mb-1">
+              --
+              <span id="tongSoTuanTxt" class="text-sm font-normal text-slate-500">/ -- tuần</span>
             </div>
             <div
               class="w-full bg-slate-100 rounded-full h-2 mb-2 overflow-hidden"
             >
               <div
+                id="thanhTienDoTuan"
                 class="bg-emerald-500 h-2 rounded-full"
-                style="width: 50%"
+                style="width: 0%"
               ></div>
             </div>
             <div
               class="flex items-center justify-between text-[11px] text-slate-500"
             >
-              <span>Đạt 50% thời gian</span>
-              <span class="text-emerald-600 font-semibold">Còn 6 tuần</span>
+              <span id="phanTramThoiGianTxt">Đang tải tiến độ...</span>
+              <span id="soTuanConLaiTxt" class="text-emerald-600 font-semibold">Đang đồng bộ</span>
             </div>
           </div>
 
@@ -434,19 +445,20 @@
                 >
               </div>
             </div>
-            <div class="text-2xl font-bold text-slate-900 mb-1">
-              Đã Hoàn Tất
+            <div id="trangThaiHopDongTxt" class="text-2xl font-bold text-slate-900 mb-1">
+              Đang tải...
             </div>
             <div
               class="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold mb-2"
+              id="hopDongBadgeWrap"
             >
-              <span class="material-symbols-outlined text-[16px]"
-                >check_circle</span
+              <span class="material-symbols-outlined text-[16px]" id="hopDongIcon"
+                >verified_user</span
               >
-              <span>Hợp đồng số 104/HĐ-ICTU-FPT</span>
+              <span id="soHopDongTxt">Hồ sơ thực tập</span>
             </div>
-            <p class="text-[11px] text-slate-400 truncate">
-              Đã ký số bởi Sinh viên, Khoa &amp; Doanh nghiệp
+            <p id="moTaKyKetTxt" class="text-[11px] text-slate-400 truncate">
+              Đang đồng bộ dữ liệu từ CSDL
             </p>
           </div>
 
@@ -466,25 +478,26 @@
                 >
               </div>
             </div>
-            <div class="text-2xl font-bold text-slate-900 mb-1">
-              5
-              <span class="text-sm font-normal text-slate-500"
-                >/ 8 hoàn thành</span
+            <div id="chuSoNhiemVuSprint" class="text-2xl font-bold text-slate-900 mb-1">
+              0
+              <span id="tongSoNhiemVuSprint" class="text-sm font-normal text-slate-500"
+                >/ 0 hoàn thành</span
               >
             </div>
             <div
               class="w-full bg-slate-100 rounded-full h-2 mb-2 overflow-hidden"
             >
               <div
+                id="thanhTienDoNhiemVu"
                 class="bg-blue-600 h-2 rounded-full"
-                style="width: 62.5%"
+                style="width: 0%"
               ></div>
             </div>
             <div
               class="flex items-center justify-between text-[11px] text-slate-500"
             >
-              <span>2 đang làm</span>
-              <span class="text-blue-600 font-semibold">1 sắp tới</span>
+              <span id="nhiemVuDangLamTxt">0 đang làm</span>
+              <span id="nhiemVuSapToiTxt" class="text-blue-600 font-semibold">0 sắp tới</span>
             </div>
           </div>
 
@@ -502,19 +515,20 @@
                 <span class="material-symbols-outlined text-[20px]">stars</span>
               </div>
             </div>
-            <div class="text-2xl font-bold text-slate-900 mb-1">
-              9.2 <span class="text-sm font-normal text-slate-500">/ 10</span>
+            <div id="chuSoDiemRenLuyen" class="text-2xl font-bold text-slate-900 mb-1">
+              -- <span class="text-sm font-normal text-slate-500">/ 10</span>
             </div>
             <div
-              class="flex items-center gap-1.5 text-xs text-amber-600 font-semibold mb-2"
+              class="flex items-center gap-1.5 text-xs text-slate-500 font-semibold mb-2"
+              id="xepLoaiBadgeWrap"
             >
-              <span class="material-symbols-outlined text-[16px] fill"
-                >thumb_up</span
+              <span class="material-symbols-outlined text-[16px]" id="xepLoaiIcon"
+                >rate_review</span
               >
-              <span>Xếp loại: Xuất sắc</span>
+              <span id="xepLoaiTxt">Chưa đánh giá</span>
             </div>
-            <p class="text-[11px] text-slate-400 truncate">
-              Đánh giá chuyên cần &amp; thái độ tích cực
+            <p id="nhanXetDiemTxt" class="text-[11px] text-slate-400 truncate">
+              Chưa có kết quả đánh giá từ Mentor
             </p>
           </div>
         </section>
@@ -541,159 +555,17 @@
               </p>
             </div>
             <span
+              id="badgeChangHienTai"
               class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 self-start sm:self-auto"
             >
-              Chặng hiện tại: Giai đoạn 4
+              Đang tải lộ trình...
             </span>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
-            <div
-              class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 relative"
-            >
-              <div class="flex items-center justify-between mb-2">
-                <span
-                  class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold"
-                  >1</span
-                >
-                <span
-                  class="material-symbols-outlined text-emerald-600 text-[18px]"
-                  >check_circle</span
-                >
-              </div>
-              <h3 class="text-xs font-bold text-slate-900 mb-1">
-                Nộp hồ sơ &amp; CV
-              </h3>
-              <p class="text-[11px] text-slate-500 mb-2">
-                Hoàn tất giai đoạn đầu
-              </p>
-              <a
-                href="tai_tai_lieu.html"
-                class="text-[11px] font-semibold text-emerald-700 hover:underline inline-flex items-center gap-0.5"
-              >
-                Xem lại hồ sơ
-                <span class="material-symbols-outlined text-[12px]"
-                  >chevron_right</span
-                >
-              </a>
-            </div>
-
-            <div
-              class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 relative"
-            >
-              <div class="flex items-center justify-between mb-2">
-                <span
-                  class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold"
-                  >2</span
-                >
-                <span
-                  class="material-symbols-outlined text-emerald-600 text-[18px]"
-                  >check_circle</span
-                >
-              </div>
-              <h3 class="text-xs font-bold text-slate-900 mb-1">
-                Phân bổ Doanh nghiệp
-              </h3>
-              <p class="text-[11px] text-slate-500 mb-2">
-                FPT Software tiếp nhận
-              </p>
-              <span class="text-[11px] font-semibold text-emerald-700"
-                >Đã phê duyệt</span
-              >
-            </div>
-
-            <div
-              class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 relative"
-            >
-              <div class="flex items-center justify-between mb-2">
-                <span
-                  class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold"
-                  >3</span
-                >
-                <span
-                  class="material-symbols-outlined text-emerald-600 text-[18px]"
-                  >check_circle</span
-                >
-              </div>
-              <h3 class="text-xs font-bold text-slate-900 mb-1">
-                Ký kết hợp đồng
-              </h3>
-              <p class="text-[11px] text-slate-500 mb-2">
-                Đã ký số 3 bên ngày 18/08
-              </p>
-              <a
-                href="hop_dong.html"
-                class="text-[11px] font-semibold text-emerald-700 hover:underline inline-flex items-center gap-0.5"
-              >
-                Xem hợp đồng
-                <span class="material-symbols-outlined text-[12px]"
-                  >chevron_right</span
-                >
-              </a>
-            </div>
-
-            <div
-              class="p-4 rounded-2xl bg-gradient-to-b from-emerald-100 to-teal-50 border-2 border-emerald-500 shadow-sm relative ring-2 ring-emerald-200"
-            >
-              <div class="flex items-center justify-between mb-2">
-                <span
-                  class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold"
-                  >4</span
-                >
-                <span class="flex h-2.5 w-2.5 relative">
-                  <span
-                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
-                  ></span>
-                  <span
-                    class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"
-                  ></span>
-                </span>
-              </div>
-              <h3 class="text-xs font-bold text-emerald-950 mb-1">
-                Thực tập &amp; Báo cáo
-              </h3>
-              <p class="text-[11px] text-emerald-800 font-medium mb-2">
-                Đang diễn ra (Tuần 6/12)
-              </p>
-              <a
-                href="nhiem_vu.html"
-                class="text-[11px] font-bold text-emerald-700 hover:underline inline-flex items-center gap-0.5"
-              >
-                Cập nhật nhiệm vụ
-                <span class="material-symbols-outlined text-[12px]"
-                  >chevron_right</span
-                >
-              </a>
-            </div>
-
-            <div
-              class="p-4 rounded-2xl bg-slate-50 border border-slate-200 opacity-80 relative"
-            >
-              <div class="flex items-center justify-between mb-2">
-                <span
-                  class="w-7 h-7 rounded-full bg-slate-300 text-slate-600 flex items-center justify-center text-xs font-bold"
-                  >5</span
-                >
-                <span
-                  class="material-symbols-outlined text-slate-400 text-[18px]"
-                  >lock</span
-                >
-              </div>
-              <h3 class="text-xs font-bold text-slate-700 mb-1">
-                Báo cáo &amp; Đánh giá
-              </h3>
-              <p class="text-[11px] text-slate-400 mb-2">Đánh giá giữa kỳ</p>
-              <button
-                type="button"
-                onclick="
-                  thongBaoDangCapNhat(
-                    'Giai đoạn 5: Báo cáo tổng kết &amp; Bảo vệ thực tập',
-                  )
-                "
-                class="text-[11px] font-medium text-slate-500 hover:text-slate-800 text-left"
-              >
-                Chưa mở khóa
-              </button>
+          <div id="loTrinh5GiaiDoanContainer" class="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
+            <div class="col-span-full p-8 text-center text-xs text-slate-400">
+              <span class="inline-block w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mb-2"></span>
+              <p>Đang tải tiến trình thực tập từ CSDL...</p>
             </div>
           </div>
         </section>
@@ -712,10 +584,10 @@
                       class="material-symbols-outlined text-emerald-600 text-[20px]"
                       >assignment</span
                     >
-                    Nhiệm Vụ Đang Thực Hiện (Sprint 2)
+                    Nhiệm Vụ Đang Thực Hiện
                   </h2>
-                  <p class="text-xs text-slate-500 mt-0.5">
-                    Các đầu việc chính được Mentor FPT Software phân công
+                  <p class="text-xs text-slate-500 mt-0.5" id="moTaNhiemVuPhanCong">
+                    Các đầu việc chính được người hướng dẫn phân công
                   </p>
                 </div>
                 <a
@@ -729,143 +601,10 @@
                 </a>
               </div>
 
-              <div class="space-y-3">
-                <div
-                  class="p-4 rounded-2xl border border-slate-200/90 hover:border-emerald-300 hover:bg-slate-50/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div class="space-y-1.5 flex-1">
-                    <div class="flex items-center gap-2">
-                      <span
-                        class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 uppercase"
-                        >Ưu tiên cao</span
-                      >
-                      <span class="text-xs font-bold text-slate-900"
-                        >Module Quản Lý Khách Hàng (API Backend)</span
-                      >
-                    </div>
-                    <p class="text-xs text-slate-500">
-                      Thiết kế và triển khai RESTful endpoints CRUD, kiểm thử
-                      với Postman và viết unit test JUnit5.
-                    </p>
-                    <div
-                      class="flex items-center gap-4 text-[11px] text-slate-400"
-                    >
-                      <span class="flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]"
-                          >calendar_today</span
-                        >
-                        Hạn nộp định kỳ
-                      </span>
-                      <span
-                        class="flex items-center gap-1 text-emerald-600 font-medium"
-                      >
-                        <span class="material-symbols-outlined text-[14px]"
-                          >person</span
-                        >
-                        Mentor: Tuấn TQ
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    class="sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between gap-2"
-                  >
-                    <span
-                      class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200"
-                    >
-                      Đang làm 70%
-                    </span>
-                    <a
-                      href="nhiem_vu.html"
-                      class="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline"
-                    >
-                      Báo cáo tiến độ
-                    </a>
-                  </div>
-                </div>
-
-                <div
-                  class="p-4 rounded-2xl border border-slate-200/90 hover:border-emerald-300 hover:bg-slate-50/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div class="space-y-1.5 flex-1">
-                    <div class="flex items-center gap-2">
-                      <span
-                        class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 uppercase"
-                        >Trung bình</span
-                      >
-                      <span class="text-xs font-bold text-slate-900"
-                        >Báo Cáo Tiến Độ Thực Tập Tuần 6</span
-                      >
-                    </div>
-                    <p class="text-xs text-slate-500">
-                      Tổng hợp công việc đã làm trong tuần, các vướng mắc kỹ
-                      thuật và kế hoạch tuần tiếp theo.
-                    </p>
-                    <div
-                      class="flex items-center gap-4 text-[11px] text-slate-400"
-                    >
-                      <span class="flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]"
-                          >schedule</span
-                        >
-                        Hạn: 23:59 Chủ Nhật (29/09)
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    class="sm:text-right shrink-0 flex sm:flex-col items-center sm:items-end justify-between gap-2"
-                  >
-                    <span
-                      class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200"
-                    >
-                      Cần nộp sớm
-                    </span>
-                    <button
-                      type="button"
-                      onclick="thongBaoDangCapNhat('Nộp báo cáo tuần 6')"
-                      class="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline"
-                    >
-                      Nộp ngay
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  class="p-4 rounded-2xl border border-emerald-100 bg-emerald-50/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                >
-                  <div class="space-y-1.5 flex-1">
-                    <div class="flex items-center gap-2">
-                      <span
-                        class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase"
-                        >Hoàn tất</span
-                      >
-                      <span
-                        class="text-xs font-bold text-slate-900 line-through text-slate-500"
-                        >Nghiên cứu kiến trúc Microservices &amp; Docker hóa ứng
-                        dụng</span
-                      >
-                    </div>
-                    <p class="text-xs text-slate-500">
-                      Đã hoàn thành cấu hình Docker Compose và pass buổi review
-                      với Tech Lead.
-                    </p>
-                    <div
-                      class="flex items-center gap-4 text-[11px] text-slate-400"
-                    >
-                      <span class="flex items-center gap-1 text-emerald-600">
-                        <span class="material-symbols-outlined text-[14px]"
-                          >done_all</span
-                        >
-                        Đã nghiệm thu ngày 24/09
-                      </span>
-                    </div>
-                  </div>
-                  <div class="sm:text-right shrink-0">
-                    <span
-                      class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200"
-                    >
-                      100% Xong
-                    </span>
-                  </div>
+              <div id="danhSachNhiemVuSprintContainer" class="space-y-3">
+                <div class="p-6 text-center text-xs text-slate-400">
+                  <span class="inline-block w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mb-2"></span>
+                  <p>Đang tải danh sách nhiệm vụ từ CSDL...</p>
                 </div>
               </div>
             </section>
@@ -1034,22 +773,24 @@
                 </h2>
               </div>
 
-              <div class="space-y-4">
+              <div class="space-y-4" id="khungNguoiHuongDan">
                 <div
+                  id="cardGiangVienHuongDan"
                   class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100"
                 >
                   <div class="flex items-center gap-3 mb-2">
                     <div
+                      id="avatarGvhd"
                       class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center"
                     >
-                      HC
+                      GV
                     </div>
                     <div>
-                      <h3 class="text-xs font-bold text-slate-900">
-                        ThS. Hoàng Văn Cường
+                      <h3 id="gvhdTen" class="text-xs font-bold text-slate-900">
+                        Giảng viên hướng dẫn
                       </h3>
-                      <p class="text-[10px] text-slate-500">
-                        GVHD Khoa CNTT - ĐH CNTT&amp;TT
+                      <p id="gvhdDonVi" class="text-[10px] text-slate-500">
+                        Khoa đào tạo - Nhà trường
                       </p>
                     </div>
                   </div>
@@ -1059,33 +800,35 @@
                         class="material-symbols-outlined text-[14px] text-slate-400"
                         >mail</span
                       >
-                      cuonghv@ictu.edu.vn
+                      <span id="gvhdEmail">lienhe@ictu.edu.vn</span>
                     </p>
                     <p class="flex items-center gap-1.5">
                       <span
                         class="material-symbols-outlined text-[14px] text-slate-400"
                         >call</span
                       >
-                      0912.834.xxx
+                      <span id="gvhdSdt">Liên hệ qua Văn phòng Khoa</span>
                     </p>
                   </div>
                 </div>
 
                 <div
+                  id="cardMentorDoanhNghiep"
                   class="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80"
                 >
                   <div class="flex items-center gap-3 mb-2">
                     <div
+                      id="avatarInitialsDN"
                       class="w-9 h-9 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center"
                     >
-                      TT
+                      MT
                     </div>
                     <div>
-                      <h3 class="text-xs font-bold text-slate-900">
-                        Anh Trần Quốc Tuấn
+                      <h3 id="mentorTenDN" class="text-xs font-bold text-slate-900">
+                        Mentor hướng dẫn
                       </h3>
-                      <p class="text-[10px] text-emerald-800 font-semibold">
-                        Senior Tech Lead - FPT Software
+                      <p id="mentorChucVuDN" class="text-[10px] text-emerald-800 font-semibold">
+                        Người hướng dẫn thực tập
                       </p>
                     </div>
                   </div>
@@ -1095,20 +838,21 @@
                         class="material-symbols-outlined text-[14px] text-slate-400"
                         >mail</span
                       >
-                      tuantq@fsoft.com.vn
+                      <span id="mentorEmailDN">mentor@doanhnghiep.vn</span>
                     </p>
                     <p class="flex items-center gap-1.5">
                       <span
                         class="material-symbols-outlined text-[14px] text-slate-400"
                         >location_on</span
                       >
-                      Tòa nhà FPT, Phố Duy Tân, Cầu Giấy
+                      <span id="mentorDonViDN">Đơn vị tiếp nhận thực tập</span>
                     </p>
                   </div>
                   <div
                     class="mt-3 pt-2.5 border-t border-emerald-200/60 flex gap-2"
                   >
                     <button
+                      id="btnNhanTinMentor"
                       type="button"
                       onclick="
                         thongBaoDangCapNhat('Gửi tin nhắn trực tiếp cho Mentor')
@@ -1143,42 +887,10 @@
                 >
               </div>
 
-              <div class="space-y-3">
-                <div
-                  class="p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100/60 transition-colors"
-                >
-                  <div
-                    class="flex items-center justify-between text-[10px] text-slate-400 mb-1"
-                  >
-                    <span class="font-bold text-emerald-700">FPT Software</span>
-                    <span>Hôm qua</span>
-                  </div>
-                  <h4 class="text-xs font-bold text-slate-800 mb-1">
-                    Buổi Review Sprint 2 &amp; Demo sản phẩm
-                  </h4>
-                  <p class="text-[11px] text-slate-500 leading-relaxed">
-                    Tất cả thực tập sinh nhóm GDU1 chuẩn bị slide thuyết trình
-                    demo tiến độ vào 14h00 Thứ Ba tuần tới.
-                  </p>
-                </div>
-
-                <div
-                  class="p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100/60 transition-colors"
-                >
-                  <div
-                    class="flex items-center justify-between text-[10px] text-slate-400 mb-1"
-                  >
-                    <span class="font-bold text-blue-700"
-                      >Khoa CNTT - ICTU</span
-                    >
-                    <span>Báo cáo tuần</span>
-                  </div>
-                  <h4 class="text-xs font-bold text-slate-800 mb-1">
-                    Nhắc nhở nộp báo cáo giữa kỳ
-                  </h4>
-                  <p class="text-[11px] text-slate-500 leading-relaxed">
-                    Hạn chót hoàn tất báo cáo tuần theo kế hoạch đào tạo thực tập của Nhà trường và Doanh nghiệp.
-                  </p>
+              <div class="space-y-3" id="danhSachThongBaoContainer">
+                <div class="p-4 text-center text-xs text-slate-400">
+                  <span class="inline-block w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mb-1"></span>
+                  <p>Đang tải thông báo từ hệ thống...</p>
                 </div>
               </div>
             </section>
@@ -1186,5 +898,6 @@
         </div>
       </div>
     </main>
+    <script src="../../js/sinhvien/dashboard.js"></script>
   </body>
 </html>

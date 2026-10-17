@@ -240,39 +240,47 @@ def export_evaluations_to_excel(summary_data: Dict[str, Any], items: List[Dict[s
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = thin_border
 
-    for idx, item in enumerate(items, 2):
-        ws_detail.row_dimensions[idx].height = 20
-        row_vals = [
-            idx - 1,
-            item.get("ma_danh_gia"),
-            item.get("ma_ho_so"),
-            item.get("ho_ten") or "",
-            item.get("email") or "",
-            item.get("so_dien_thoai") or "",
-            item.get("chuyen_nganh") or "",
-            item.get("ten_truong") or "",
-            item.get("trang_thai_thuc_tap") or "",
-            item.get("loai_danh_gia") or "",
-            f"{item.get('diem_ky_nang', 0):.1f}",
-            f"{item.get('diem_thai_do', 0):.1f}",
-            f"{item.get('diem_trung_binh', 0):.2f}",
-            item.get("xep_loai") or "",
-            "Có" if item.get("de_xuat_tuyen_chinh_thuc") else "Không",
-            item.get("nguoi_danh_gia") or "",
-            item.get("nhan_xet_chi_tiet") or ""
-        ]
+    if not items:
+        ws_detail.row_dimensions[2].height = 24
+        empty_cell = ws_detail.cell(row=2, column=1, value="Không có dữ liệu đánh giá phù hợp")
+        empty_cell.font = data_font
+        empty_cell.alignment = Alignment(horizontal="center", vertical="center")
+        empty_cell.border = thin_border
+        ws_detail.merge_cells(start_row=2, start_column=1, end_row=2, end_column=len(detail_headers))
+    else:
+        for idx, item in enumerate(items, 2):
+            ws_detail.row_dimensions[idx].height = 20
+            row_vals = [
+                idx - 1,
+                item.get("ma_danh_gia"),
+                item.get("ma_ho_so"),
+                item.get("ho_ten") or "",
+                item.get("email") or "",
+                item.get("so_dien_thoai") or "",
+                item.get("chuyen_nganh") or "",
+                item.get("ten_truong") or "",
+                item.get("trang_thai_thuc_tap") or "",
+                item.get("loai_danh_gia") or "",
+                f"{item.get('diem_ky_nang', 0):.1f}",
+                f"{item.get('diem_thai_do', 0):.1f}",
+                f"{item.get('diem_trung_binh', 0):.2f}",
+                item.get("xep_loai") or "",
+                "Có" if item.get("de_xuat_tuyen_chinh_thuc") else "Không",
+                item.get("nguoi_danh_gia") or "",
+                item.get("nhan_xet_chi_tiet") or ""
+            ]
 
-        for col_idx, val in enumerate(row_vals, 1):
-            cell = ws_detail.cell(row=idx, column=col_idx, value=val)
-            cell.font = data_font
-            cell.border = thin_border
-            # Căn lề số/mã ở giữa
-            if col_idx in [1, 2, 3, 6, 9, 10, 11, 12, 13, 14, 15]:
-                cell.alignment = Alignment(horizontal="center", vertical="center")
-            else:
-                cell.alignment = Alignment(horizontal="left", vertical="center")
-            if idx % 2 == 1:
-                cell.fill = alt_row_fill
+            for col_idx, val in enumerate(row_vals, 1):
+                cell = ws_detail.cell(row=idx, column=col_idx, value=val)
+                cell.font = data_font
+                cell.border = thin_border
+                # Căn lề số/mã ở giữa
+                if col_idx in [1, 2, 3, 6, 9, 10, 11, 12, 13, 14, 15]:
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+                else:
+                    cell.alignment = Alignment(horizontal="left", vertical="center")
+                if idx % 2 == 1:
+                    cell.fill = alt_row_fill
 
     # Tự động co giãn độ rộng cột Sheet 2
     for col in ws_detail.columns:
@@ -487,20 +495,35 @@ def export_evaluations_to_pdf(summary_data: Dict[str, Any], items: List[Dict[str
         ]
     ]
 
-    for idx, it in enumerate(items, 1):
+    if not items:
         detail_table_data.append([
-            Paragraph(str(idx), body_center_style),
-            Paragraph(it.get("ho_ten") or "", body_style),
-            Paragraph(it.get("ten_truong") or "", body_style),
-            Paragraph(it.get("chuyen_nganh") or "", body_style),
-            Paragraph(it.get("loai_danh_gia") or "", body_center_style),
-            Paragraph(f"{it.get('diem_ky_nang', 0):.1f}", body_center_style),
-            Paragraph(f"{it.get('diem_thai_do', 0):.1f}", body_center_style),
-            Paragraph(f"{it.get('diem_trung_binh', 0):.2f}", body_center_style),
-            Paragraph(it.get("xep_loai") or "", body_center_style),
-            Paragraph("Có" if it.get("de_xuat_tuyen_chinh_thuc") else "Không", body_center_style),
-            Paragraph(it.get("nhan_xet_chi_tiet") or "", body_style),
+            Paragraph("1", body_center_style),
+            Paragraph("Không có dữ liệu", body_style),
+            Paragraph("-", body_center_style),
+            Paragraph("-", body_center_style),
+            Paragraph("-", body_center_style),
+            Paragraph("-", body_center_style),
+            Paragraph("-", body_center_style),
+            Paragraph("-", body_center_style),
+            Paragraph("-", body_center_style),
+            Paragraph("-", body_center_style),
+            Paragraph("Không có dữ liệu đánh giá phù hợp", body_style),
         ])
+    else:
+        for idx, it in enumerate(items, 1):
+            detail_table_data.append([
+                Paragraph(str(idx), body_center_style),
+                Paragraph(it.get("ho_ten") or "", body_style),
+                Paragraph(it.get("ten_truong") or "", body_style),
+                Paragraph(it.get("chuyen_nganh") or "", body_style),
+                Paragraph(it.get("loai_danh_gia") or "", body_center_style),
+                Paragraph(f"{it.get('diem_ky_nang', 0):.1f}", body_center_style),
+                Paragraph(f"{it.get('diem_thai_do', 0):.1f}", body_center_style),
+                Paragraph(f"{it.get('diem_trung_binh', 0):.2f}", body_center_style),
+                Paragraph(it.get("xep_loai") or "", body_center_style),
+                Paragraph("Có" if it.get("de_xuat_tuyen_chinh_thuc") else "Không", body_center_style),
+                Paragraph(it.get("nhan_xet_chi_tiet") or "", body_style),
+            ])
 
     # Tổng chiều rộng: 30 + 100 + 110 + 90 + 45 + 45 + 45 + 50 + 55 + 60 + 140 = 770 (vừa vặn landscape A4)
     t_detail = Table(

@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, field_validator, model_validator
-from typing import Optional, List, Union
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
+from typing import Optional, List, Union, Dict
 from datetime import date, datetime, time
 import re
 
@@ -429,6 +429,8 @@ class UserAuthData(BaseModel):
     vai_tro: str
     so_dien_thoai: Optional[str] = None
     ma_ho_so: Optional[int] = None
+    ma_hop_dong: Optional[int] = None
+    trang_thai_hop_dong: Optional[str] = None
 
 
 class AuthResponse(BaseModel):
@@ -504,6 +506,7 @@ class TaskItemResponse(BaseModel):
 class MyScheduleData(BaseModel):
     ma_ho_so: int
     ho_ten: Optional[str] = None
+    mentor: Optional[str] = None
     ten_chuong_trinh: Optional[str] = None
     ngay_bat_dau: Optional[str] = None
     ngay_ket_thuc: Optional[str] = None
@@ -710,6 +713,9 @@ class AttendanceReportItem(BaseModel):
     ma_phong_ban: Optional[int] = None
     ten_phong_ban: Optional[str] = None
     chuyen_nganh: Optional[str] = None
+    lop: Optional[str] = None
+    ma_mentor: Optional[int] = None
+    ten_mentor: Optional[str] = None
     so_ngay_di_lam: int = 0
     so_lan_di_muon: int = 0
     so_ngay_nghi: int = 0
@@ -858,6 +864,44 @@ class CheckOutResponse(BaseModel):
     data: Optional[AttendanceItemData] = None
 
 
+class AttendanceScanRequest(BaseModel):
+    """Schema yêu cầu quét mã định danh chấm công (POST /api/v1/attendance/scan)"""
+    ma_dinh_danh: str = Field(..., description="Mã định danh của thực tập sinh (mã hồ sơ, mã thẻ RFID hoặc mã QR)")
+    phuong_thuc: Optional[str] = Field(default="QR/Card", description="Phương thức quét: QR, Card, QR/Card")
+    thoi_gian_quet: Optional[datetime] = Field(default=None, description="Thời điểm quét mã (ISO 8601). Mặc định thời gian hiện tại.")
+    ghi_chu: Optional[str] = Field(default=None, max_length=255, description="Ghi chú thêm")
+
+    @field_validator('ma_dinh_danh')
+    def validate_ma_dinh_danh(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Mã định danh không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+
+class AttendanceScanResponseData(BaseModel):
+    """Dữ liệu phản hồi chi tiết sau khi quét mã định danh thành công"""
+    ma_cham_cong: int
+    ma_ho_so: int
+    ho_ten: Optional[str] = None
+    ngay_cham_cong: str
+    gio_checkin: Optional[str] = None
+    gio_checkout: Optional[str] = None
+    gio_check_in: Optional[str] = None
+    gio_check_out: Optional[str] = None
+    hanh_dong: str = Field(..., description="Hành động được ghi nhận: CHECK_IN hoặc CHECK_OUT")
+    trang_thai: str = "DungGio"
+    phuong_thuc: str = "QR/Card"
+    ghi_chu: Optional[str] = None
+
+
+class AttendanceScanResponse(BaseModel):
+    """Phản hồi sau khi quét mã định danh chấm công thành công (HTTP 200 OK)"""
+    status_code: int = 200
+    message: str = "Quét mã chấm công thành công"
+    data: Optional[AttendanceScanResponseData] = None
+
+
 class RollCallRecordItem(BaseModel):
     """Chi tiết điểm danh từng sinh viên trong sổ điểm danh của Mentor"""
     ma_ho_so: int = Field(..., gt=0, description="Mã hồ sơ thực tập sinh")
@@ -873,6 +917,7 @@ class RollCallRequest(BaseModel):
     ca_lam_viec: Optional[str] = Field(default="Ca Sáng", description="Ca làm việc / buổi gặp mặt")
     ma_chuong_trinh: Optional[int] = Field(default=None, description="Mã chương trình / khóa thực tập")
     chuyen_nganh: Optional[str] = Field(default=None, description="Lớp hoặc chuyên ngành")
+    lop: Optional[str] = Field(default=None, description="Lớp sinh hoạt cụ thể (ví dụ KTPM-K19A)")
     records: List[RollCallRecordItem] = Field(..., min_items=1, description="Danh sách điểm danh sinh viên")
 
 
@@ -892,6 +937,7 @@ class ShiftCreateRequest(BaseModel):
     cac_ngay_trong_tuan: Optional[str] = Field(default="Tất cả các ngày", description="Các ngày áp dụng trong tuần")
     ngay_dien_ra: Optional[str] = Field(default=None, description="Ngày diễn ra cụ thể (định dạng YYYY-MM-DD)")
     chuyen_nganh: Optional[str] = Field(default=None, description="Lớp hoặc chuyên ngành áp dụng")
+    lop: Optional[str] = Field(default=None, description="Lớp sinh hoạt áp dụng (ví dụ KTPM-K19A)")
     ma_chuong_trinh: Optional[int] = Field(default=None, description="Mã chương trình thực tập")
     ghi_chu: Optional[str] = Field(default="", description="Ghi chú chi tiết ca làm việc")
     trang_thai: Optional[str] = Field(default="HoatDong", description="Trạng thái hoạt động")
@@ -1129,6 +1175,8 @@ class AllowanceItem(BaseModel):
     thang_nam: str
     so_tien: float
     trang_thai_chi_tra: str
+    ngay_chi_tra: Optional[str] = None
+    ghi_chu: Optional[str] = None
 
 
 class AllowanceSummary(BaseModel):
@@ -1145,6 +1193,10 @@ class AllowanceDetailData(BaseModel):
     ma_ho_so: int
     ho_ten: Optional[str] = None
     email: Optional[str] = None
+    lop: Optional[str] = None
+    chuyen_nganh: Optional[str] = None
+    ten_chuong_trinh: Optional[str] = None
+    so_dien_thoai: Optional[str] = None
     summary: AllowanceSummary
     danh_sach_phu_cap: List[AllowanceItem]
     cac_khoan_da_nhan: List[AllowanceItem]
@@ -1265,13 +1317,23 @@ class MentorResponse(BaseModel):
 class MentorWorkloadItem(BaseModel):
     """Chi tiết khối lượng công việc của một người hướng dẫn"""
     ma_mentor: int
+    ma_nguoi_dung: Optional[int] = None
     ho_ten: str
     email: str
     so_dien_thoai: Optional[str] = None
+    vai_tro: Optional[str] = "Mentor"
     ma_phong_ban: Optional[int] = None
     ten_phong_ban: Optional[str] = None
-    trang_thai: str = "HoatDong"
+    trang_thai: Optional[str] = "HoatDong"
+    chuc_vu: Optional[str] = "Mentor Doanh nghiệp"
     so_luong_thuc_tap_sinh: int = 0
+    so_sinh_vien_huong_dan: Optional[int] = 0
+    chi_tieu_huong_dan: Optional[int] = 5
+    ty_le_phan_tram: Optional[float] = 0.0
+    trang_thai_tai: Optional[str] = "BinhThuong"
+    canh_bao_qua_tai: Optional[bool] = False
+    da_du_chi_tieu: Optional[bool] = False
+    so_cho_trong: Optional[int] = 5
 
 
 class MentorWorkloadSummary(BaseModel):
@@ -1394,10 +1456,395 @@ class SupportRequestItemData(BaseModel):
     email_sinh_vien: Optional[str] = None
 
 
+class SupportRequestCreate(BaseModel):
+    """Schema tiếp nhận thông tin gửi yêu cầu hỗ trợ (POST /api/v1/support-requests)"""
+    ma_ho_so: int = Field(..., description="Mã hồ sơ thực tập sinh", ge=1)
+    loai_yeu_cau: str = Field(..., description="Loại yêu cầu hỗ trợ: XinChungNhan, GiayXacNhan, DongDauMoc, TaiLieu, Khac")
+    noi_dung: str = Field(..., min_length=1, description="Nội dung chi tiết yêu cầu hỗ trợ")
+
+    @field_validator("noi_dung")
+    def validate_noi_dung(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Nội dung yêu cầu không được để trống")
+        return cleaned
+
+    @field_validator("loai_yeu_cau")
+    def validate_loai_yeu_cau(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Loại yêu cầu không được để trống")
+        return cleaned
+
+
 class SupportRequestResponse(BaseModel):
     """Response chuẩn trả về sau khi cập nhật trạng thái yêu cầu hỗ trợ thành công (HTTP 200)"""
     status_code: int = 200
     message: str = "Cập nhật trạng thái yêu cầu hỗ trợ thành công"
     data: SupportRequestItemData
+
+
+class SupportRequestListResponse(BaseModel):
+    """Response danh sách các yêu cầu hỗ trợ (GET /api/v1/support-requests)"""
+    status_code: int = 200
+    message: str = "Lấy danh sách yêu cầu hỗ trợ thành công"
+    total: int = 0
+    data: List[SupportRequestItemData]
+
+
+class SupportRequestCreate(BaseModel):
+    """Schema tiếp nhận yêu cầu hỗ trợ từ sinh viên (POST /api/v1/support-requests)"""
+    ma_ho_so: int = Field(..., description="Mã hồ sơ thực tập sinh", gt=0)
+    loai_yeu_cau: str = Field(..., description="Loại yêu cầu: XinChungNhan, GiayXacNhan, Khac")
+    noi_dung: str = Field(..., description="Chi tiết nội dung cần hỗ trợ")
+
+    @field_validator("noi_dung")
+    def validate_noi_dung(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Nội dung yêu cầu hỗ trợ không được để trống")
+        return cleaned
+
+
+class SupportRequestCreateResponse(BaseModel):
+    """Response chuẩn trả về sau khi tạo yêu cầu hỗ trợ thành công (HTTP 201)"""
+    status_code: int = 201
+    message: str = "Gửi yêu cầu hỗ trợ thành công"
+    data: SupportRequestItemData
+
+
+class AssignMentorRequest(BaseModel):
+    """Schema gán hoặc thay đổi Mentor (PATCH /api/v1/interns/{id}/mentor)"""
+    ma_mentor: Optional[int] = Field(None, description="Mã mentor cần gán. Truyền null để hủy gán")
+
+
+class AssignMentorResponse(BaseModel):
+    """Response gán mentor thành công"""
+    status_code: int = 200
+    message: str = "Phân công mentor thành công"
+    data: dict
+
+
+class CompletionRateResponse(BaseModel):
+    """Schema báo cáo tỷ lệ hoàn thành chương trình thực tập (GET /api/v1/reports/completion-rate)"""
+    tong_so_sinh_vien: int = Field(..., description="Tổng số lượng sinh viên trong hệ thống", ge=0)
+    so_luong_dang_thuc_tap: int = Field(..., description="Số lượng sinh viên trạng thái DangThucTap", ge=0)
+    so_luong_hoan_thanh: int = Field(..., description="Số lượng sinh viên trạng thái HoanThanh", ge=0)
+    so_luong_thoi_hoc: int = Field(..., description="Số lượng sinh viên trạng thái ThoiHoc", ge=0)
+    ty_le_hoan_thanh: float = Field(..., description="Tỷ lệ phần trăm (%) hoàn thành chương trình thực tập", ge=0.0, le=100.0)
+    chi_tiet_theo_trang_thai: Dict[str, int] = Field(default_factory=dict, description="Chi tiết số lượng theo từng trạng thái")
+
+    class Config:
+        from_attributes = True
+
+
+class CompletionRateSummary(BaseModel):
+    """Khối số liệu thống kê tỷ lệ hoàn thành thực tập"""
+    tong_so_sinh_vien: int = 0
+    so_luong_dang_thuc_tap: int = 0
+    so_luong_hoan_thanh: int = 0
+    so_luong_thoi_hoc: int = 0
+    ty_le_hoan_thanh: float = 0.0
+    chi_tiet_theo_trang_thai: dict = {}
+
+
+class CompletionRateReportResponse(BaseModel):
+    """Response chuẩn trả về báo cáo tỷ lệ hoàn thành (HTTP 200)"""
+    status_code: int = 200
+    message: str = "Lấy báo cáo tỷ lệ hoàn thành thực tập thành công"
+    data: CompletionRateSummary
+
+
+class UserStatusUpdate(BaseModel):
+    trang_thai: str = Field(..., description="Trạng thái tài khoản: HoatDong hoặc Khoa")
+
+
+class UserResetPasswordRequest(BaseModel):
+    mat_khau_moi: Optional[str] = Field("123456", description="Mật khẩu mới cần đặt lại")
+
+
+class UserCreateRequest(BaseModel):
+    ho_ten: str = Field(..., min_length=2, max_length=100, description="Họ và tên người dùng")
+    email: str = Field(..., min_length=5, max_length=100, description="Email đăng nhập")
+    so_dien_thoai: Optional[str] = Field(None, max_length=20, description="Số điện thoại")
+    vai_tro: str = Field("ThucTapSinh", description="Vai trò: ThucTapSinh, Mentor, HR, Admin, NhaTruong")
+    mat_khau: Optional[str] = Field("123456", min_length=6, description="Mật khẩu ban đầu")
+    ma_phong_ban: Optional[int] = Field(None, description="Mã phòng ban nếu là Mentor hoặc Cán bộ")
+
+
+# ==============================================================
+# SCHEMA CHO LỊCH HỌP (MEETINGS)
+# ==============================================================
+class MeetingCreateRequest(BaseModel):
+    """Schema yêu cầu tạo mới lịch họp"""
+    tieu_de: str = Field(..., min_length=1, max_length=255, description="Tiêu đề cuộc họp")
+    thoi_gian_bat_dau: datetime = Field(..., description="Thời gian bắt đầu họp")
+    thoi_gian_ket_thuc: datetime = Field(..., description="Thời gian kết thúc họp")
+    dia_diem: str = Field(..., min_length=1, max_length=255, description="Địa điểm hoặc phòng họp/link họp")
+    ma_nguoi_chu_tri: int = Field(..., gt=0, description="Mã người dùng của người chủ trì cuộc họp")
+    danh_sach_thuc_tap_sinh: List[int] = Field(..., min_length=1, description="Danh sách mã thực tập sinh được mời")
+    noi_dung: Optional[str] = Field(None, description="Nội dung hoặc mô tả chi tiết cuộc họp")
+
+    @field_validator('tieu_de')
+    def validate_tieu_de(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Tiêu đề cuộc họp không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+    @field_validator('dia_diem')
+    def validate_dia_diem(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Địa điểm không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+    @model_validator(mode='after')
+    def validate_meeting_time(self):
+        if self.thoi_gian_ket_thuc <= self.thoi_gian_bat_dau:
+            raise ValueError("Thời gian kết thúc phải lớn hơn thời gian bắt đầu")
+        return self
+
+
+class MeetingResponseData(BaseModel):
+    """Dữ liệu chi tiết lịch họp trả về"""
+    ma_lich_hop: int
+    tieu_de: str
+    thoi_gian_bat_dau: datetime
+    thoi_gian_ket_thuc: datetime
+    dia_diem: str
+    ma_nguoi_chu_tri: int
+    ten_nguoi_chu_tri: Optional[str] = None
+    so_luong_nguoi_moi: int
+    danh_sach_email_duoc_moi: List[str]
+    danh_sach_thuc_tap_sinh_moi: List[int]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MeetingCreateResponse(BaseModel):
+    """Phản hồi sau khi tạo lịch họp thành công (HTTP 201)"""
+    code: int = 201
+    message: str = "Tạo lịch họp thành công và đã gửi email mời tới thực tập sinh"
+    data: MeetingResponseData
+
+
+# ==============================================================
+# SCHEMA TÍCH HỢP HRM (HRM INTEGRATION & RECONCILIATION)
+# ==============================================================
+EMAIL_REGEX_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+
+class HRMEmployeeSyncItem(BaseModel):
+    """Thông tin cán bộ/nhân viên (Mentor, HR, Quản lý) từ HRM"""
+    email: str = Field(..., min_length=5, max_length=100, description="Email định danh nhân viên")
+    ho_ten: str = Field(..., min_length=1, max_length=100, description="Họ và tên nhân viên")
+    so_dien_thoai: Optional[str] = Field(None, max_length=20, description="Số điện thoại")
+    vai_tro: Optional[str] = Field("Mentor", description="Vai trò: Mentor, HR, Admin, QuanLy")
+    ten_phong_ban: Optional[str] = Field(None, description="Tên phòng ban làm việc")
+    ma_phong_ban: Optional[int] = Field(None, description="Mã phòng ban nếu có")
+    trang_thai: Optional[str] = Field("HoatDong", description="Trạng thái tài khoản: HoatDong hoặc Khoa")
+
+    @field_validator("email")
+    def validate_email(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Email không được để trống")
+        if not re.match(EMAIL_REGEX_PATTERN, cleaned):
+            raise ValueError("Email không đúng định dạng hợp lệ")
+        return cleaned.lower()
+
+    @field_validator("ho_ten")
+    def validate_ho_ten(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Họ tên nhân viên không được để trống")
+        return cleaned
+
+
+class HRMInternSyncItem(BaseModel):
+    """Thông tin sinh viên thực tập từ HRM"""
+    email: str = Field(..., min_length=5, max_length=100, description="Email định danh sinh viên thực tập")
+    ho_ten: str = Field(..., min_length=1, max_length=100, description="Họ và tên sinh viên")
+    so_dien_thoai: Optional[str] = Field(None, max_length=20, description="Số điện thoại")
+    chuyen_nganh: Optional[str] = Field(None, max_length=100, description="Chuyên ngành đào tạo")
+    lop: Optional[str] = Field(None, max_length=50, description="Lớp sinh hoạt")
+    ten_truong: Optional[str] = Field(None, description="Tên trường đại học")
+    ma_truong: Optional[int] = Field(None, description="Mã trường đại học nếu có")
+    mentor_email: Optional[str] = Field(None, max_length=100, description="Email của Mentor trực tiếp hướng dẫn")
+    ma_chuong_trinh: Optional[int] = Field(None, description="Mã chương trình thực tập")
+    trang_thai_thuc_tap: Optional[str] = Field("DangThucTap", description="Trạng thái thực tập: DangThucTap, HoanThanh, ThoiHoc")
+    trang_thai_xet_duyet: Optional[str] = Field("DaDuyet", description="Trạng thái hồ sơ: DaDuyet, ChoDuyet, TuChoi")
+
+    @field_validator("email")
+    def validate_email(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Email không được để trống")
+        if not re.match(EMAIL_REGEX_PATTERN, cleaned):
+            raise ValueError("Email không đúng định dạng hợp lệ")
+        return cleaned.lower()
+
+    @field_validator("mentor_email")
+    def validate_mentor_email(cls, value: Optional[str]):
+        if not value or not value.strip():
+            return None
+        cleaned = value.strip()
+        if not re.match(EMAIL_REGEX_PATTERN, cleaned):
+            raise ValueError("Email mentor không đúng định dạng hợp lệ")
+        return cleaned.lower()
+
+    @field_validator("ho_ten")
+    def validate_ho_ten(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Họ tên sinh viên không được để trống")
+        return cleaned
+
+
+class HRMSyncRequest(BaseModel):
+    """Payload gửi lên từ HRM để đối soát và đồng bộ"""
+    source: Optional[str] = Field("HRM_WEBHOOK", description="Tên nguồn dữ liệu HRM: HRM_WEBHOOK, SAP, WORKDAY...")
+    sync_timestamp: Optional[datetime] = Field(default_factory=datetime.now, description="Thời điểm gửi đồng bộ")
+    employees: List[HRMEmployeeSyncItem] = Field(default_factory=list, description="Danh sách nhân sự (Mentor, HR)")
+    interns: List[HRMInternSyncItem] = Field(default_factory=list, description="Danh sách sinh viên thực tập")
+
+
+class HRMSyncDetailItem(BaseModel):
+    """Chi tiết kết quả xử lý của từng bản ghi"""
+    email: str
+    type: str                  # "EMPLOYEE" hoặc "INTERN"
+    action: str                # "CREATED", "UPDATED", "FAILED", "SKIPPED"
+    message: str
+
+
+class HRMSyncSummary(BaseModel):
+    """Thống kê tổng hợp kết quả đối soát"""
+    total_received: int = 0
+    employees_created: int = 0
+    employees_updated: int = 0
+    interns_created: int = 0
+    interns_updated: int = 0
+    failed_count: int = 0
+
+
+class HRMSyncResponse(BaseModel):
+    """Response trả về kết quả đồng bộ HRM (HTTP 200)"""
+    status_code: int = 200
+    message: str = "Đồng bộ và đối soát dữ liệu HRM thành công"
+    summary: HRMSyncSummary
+    details: List[HRMSyncDetailItem] = []
+
+
+# ==============================================================
+# SCHEMA PHÂN QUYỀN VAI TRÒ (RBAC - ROLE BASED ACCESS CONTROL)
+# ==============================================================
+class PermissionItemResponse(BaseModel):
+    """Thông tin quyền hạn trả về cho API"""
+    ma_quyen_han: int
+    ma_quyen: str
+    ten_quyen: str
+    mo_ta: Optional[str] = None
+    nhom_quyen: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RolePermissionsUpdateRequest(BaseModel):
+    """Payload cập nhật danh sách quyền hạn cho một vai trò"""
+    permissions: List[Union[str, int]] = Field(
+        ...,
+        description="Danh sách mã quyền dạng chuỗi (VD: ['intern:read', 'role:manage']) hoặc mã số nguyên ID (VD: [1, 2])"
+    )
+
+    @field_validator("permissions")
+    def validate_permissions_list(cls, value: List[Union[str, int]]):
+        if not isinstance(value, list):
+            raise ValueError("Danh sách quyền hạn phải là một mảng")
+        return value
+
+
+class RolePermissionsResponse(BaseModel):
+    """Response trả về danh sách quyền của vai trò sau cập nhật hoặc truy vấn"""
+    status_code: int = 200
+    message: str = "Thành công"
+    role: str
+    total_permissions: int = 0
+    permissions: List[PermissionItemResponse] = []
+
+
+class PermissionListResponse(BaseModel):
+    """Response danh mục toàn bộ quyền hạn trong hệ thống"""
+    status_code: int = 200
+    message: str = "Lấy danh mục quyền hạn thành công"
+    total: int = 0
+    data: List[PermissionItemResponse] = []
+
+
+# ==============================================================
+# SCHEMA SAO LƯU DỮ LIỆU HỆ THỐNG (SYSTEM BACKUP & RECOVERY)
+# ==============================================================
+class BackupItemResponse(BaseModel):
+    """Thông tin chi tiết một tệp sao lưu dữ liệu (.sql.gz)"""
+    filename: str = Field(..., description="Tên tệp sao lưu nén định dạng .sql.gz")
+    size_bytes: int = Field(..., description="Kích thước tệp tính theo bytes")
+    size_human: str = Field(..., description="Kích thước tệp định dạng dễ đọc (KB, MB, GB)")
+    created_at: str = Field(..., description="Thời gian tạo bản sao lưu")
+    checksum_sha256: Optional[str] = Field(default=None, description="Mã băm SHA-256 đối soát tính toàn vẹn")
+    download_url: str = Field(..., description="Đường dẫn API stream tải file về")
+    note: Optional[str] = Field(default=None, description="Ghi chú về bản sao lưu")
+
+
+class BackupSchedulerStatus(BaseModel):
+    """Trạng thái tiến trình chạy nền sao lưu tự động định kỳ"""
+    enabled: bool = Field(..., description="Trạng thái bật/tắt của sao lưu tự động")
+    running: bool = Field(..., description="Trạng thái luồng scheduler đang chạy")
+    interval_hours: float = Field(..., description="Chu kỳ sao lưu tự động (giờ)")
+    last_run: Optional[str] = Field(default=None, description="Thời điểm sao lưu gần nhất")
+    status: str = Field(..., description="Mô tả trạng thái hiện tại của scheduler")
+    backup_dir: str = Field(..., description="Đường dẫn thư mục lưu trữ file sao lưu")
+
+
+class BackupListResponse(BaseModel):
+    """Phản hồi danh sách các tệp sao lưu trong hệ thống (HTTP 200)"""
+    status_code: int = 200
+    message: str = "Lấy danh sách tệp sao lưu thành công"
+    total_files: int = Field(..., description="Tổng số lượng tệp sao lưu")
+    total_size_bytes: int = Field(..., description="Tổng dung lượng lưu trữ tính theo bytes")
+    total_size_human: str = Field(..., description="Tổng dung lượng định dạng dễ đọc")
+    scheduler: Optional[BackupSchedulerStatus] = Field(default=None, description="Thông tin trạng thái scheduler định kỳ")
+    backups: List[BackupItemResponse] = Field(default_factory=list, description="Danh sách chi tiết các tệp sao lưu")
+
+
+class BackupCreateRequest(BaseModel):
+    """Payload yêu cầu kích hoạt sao lưu dữ liệu thủ công (POST)"""
+    note: Optional[str] = Field(default=None, max_length=255, description="Ghi chú về mục đích bản sao lưu")
+    prefix: Optional[str] = Field(default=None, max_length=50, description="Tiền tố tên file (mặc định: backup_intern_management)")
+
+    @field_validator("note")
+    def validate_note(cls, value: Optional[str]):
+        if value is not None:
+            cleaned = value.strip()
+            if len(cleaned) > 255:
+                raise ValueError("Ghi chú không được vượt quá 255 ký tự")
+            return cleaned if cleaned else None
+        return None
+
+    @field_validator("prefix")
+    def validate_prefix(cls, value: Optional[str]):
+        if value is not None:
+            cleaned = value.strip()
+            if not re.match(r"^[a-zA-Z0-9_\-]+$", cleaned):
+                raise ValueError("Tiền tố tên tệp chỉ được chứa chữ cái, số, dấu gạch dưới hoặc gạch ngang")
+            return cleaned
+        return None
+
+
+class BackupCreateResponse(BaseModel):
+    """Phản hồi sau khi tạo thành công bản sao lưu mới (HTTP 201)"""
+    status_code: int = 201
+    message: str = "Tạo bản sao lưu cơ sở dữ liệu thành công"
+    backup: BackupItemResponse
+
+
 
 

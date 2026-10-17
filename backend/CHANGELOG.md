@@ -2,6 +2,153 @@
 
 Tất cả các thay đổi của module Backend sẽ được ghi lại trong tài liệu này.
 
+## [1.29.0] - 2026-10-15
+
+### Đã hoàn thành (Added & Enhanced)
+- **Dịch vụ sao lưu CSDL (`services/backup_service.py`)**:
+  - Hỗ trợ `mysqldump` nén trực tiếp ra file `.sql.gz` (có fallback SQLite dumper cho môi trường test/dev).
+  - Sinh mã SHA-256 để đối soát toàn vẹn file.
+  - Khóa lock chống chạy 2 tiến trình backup cùng lúc (HTTP 409 Conflict).
+  - Chặn Path Traversal với tên file (`validate_backup_filename`).
+  - Tự động dọn file cũ, giữ lại tối đa 30 bản mới nhất (`BACKUP_MAX_KEEP`).
+  - Thêm `BackupScheduler` chạy nền định kỳ theo cấu hình `BACKUP_INTERVAL_HOURS`.
+- **Phân quyền RBAC (`services/rbac_service.py`)**:
+  - Thêm quyền `system:backup` gán mặc định cho vai trò `Admin`.
+- **API Endpoints (`main.py`)**:
+  - `POST /api/v1/system/backup`: Kích hoạt sao lưu thủ công.
+  - `GET /api/v1/system/backups`: Lấy danh sách file backup và trạng thái scheduler.
+  - `GET /api/v1/system/backups/{filename}/download`: Stream tải file `.sql.gz` theo chunk 64KB.
+  - `DELETE /api/v1/system/backups/{filename}`: Xóa file backup.
+- **Schemas (`schemas.py`)**:
+  - Thêm các schema: `BackupItemResponse`, `BackupListResponse`, `BackupCreateRequest`, `BackupCreateResponse`.
+- **Cấu hình & Kiểm thử**:
+  - Thêm biến môi trường vào `.env.example`.
+  - Thêm bộ test [tests/test_system_backup.py](file:///d:/clone/ttcs/backend/tests/test_system_backup.py) (13/13 test cases PASS).
+
+---
+
+## [1.28.0] - 2026-10-15
+
+### Đã hoàn thành (Added & Enhanced)
+- **Cấu trúc Bảng CSDL RBAC (`database/models/quyen_han.py`)**:
+  - Thiết kế bảng `quyen_han` (`ma_quyen_han`, `ma_quyen`, `ten_quyen`, `mo_ta`, `nhom_quyen`) lưu trữ danh mục quyền hạn của hệ thống.
+  - Thiết kế bảng `vai_tro_quyen_han` (`id`, `vai_tro`, `ma_quyen_han`) lưu trữ liên kết giữa vai trò và quyền hạn với ràng buộc `UniqueConstraint("vai_tro", "ma_quyen_han")`.
+  - Xuất models ra `database/models/__init__.py`.
+  - Cập nhật script khởi tạo CSDL `script/database/init_db.sql` và tự động seed 16 quyền hạn mặc định cùng bảng phân quyền mẫu cho các vai trò `Admin`, `HR`, `Mentor`, `ThucTapSinh`, `NhaTruong`.
+- **RBAC Service & Dependency (`services/rbac_service.py`)**:
+  - Xây dựng Dependency Factory `require_permissions(*required_perms)` cho FastAPI:
+    + Trích xuất định danh người dùng qua Header `X-User-Email` hoặc `X-User-Id` (hỗ trợ Bearer Token).
+    + Chặn người dùng chưa xác thực (HTTP 401 Unauthorized).
+    + Chặn tài khoản bị khóa `trang_thai == "Khoa"` (HTTP 403 Forbidden).
+    + Superadmin bypass: vai trò `Admin` được bypass toàn bộ quyền hạn.
+    + Kiểm tra vai trò của người dùng có đầy đủ các quyền yêu cầu hay không, từ chối với HTTP 403 Forbidden nếu thiếu quyền.
+  - Xây dựng các hàm nghiệp vụ: `seed_default_permissions_and_roles`, `get_all_permissions`, `get_role_permissions`, `update_role_permissions`.
+- **Pydantic Schemas (`schemas.py`)**:
+  - `PermissionItemResponse`: Schema thông tin chi tiết của một quyền hạn.
+  - `RolePermissionsUpdateRequest`: Schema tiếp nhận payload cập nhật danh sách quyền hạn cho vai trò (hỗ trợ cả danh sách mã quyền chuỗi hoặc mảng ID số nguyên).
+  - `RolePermissionsResponse`: Schema phản hồi thông tin phân quyền vai trò.
+  - `PermissionListResponse`: Schema danh mục toàn bộ quyền hạn hệ thống.
+- **API Endpoints Quản trị Phân quyền (`backend/main.py`)**:
+  - `PUT /api/v1/admin/roles/{role}/permissions`: Cập nhật toàn diện danh sách quyền hạn cho từng vai trò trong hệ thống (yêu cầu quyền `role:manage`).
+  - `GET /api/v1/admin/roles/{role}/permissions`: Lấy danh sách quyền hạn đang được gán cho một vai trò.
+  - `GET /api/v1/admin/permissions`: Lấy danh mục tất cả quyền hạn có trong hệ thống.
+- **Kiểm thử tự động (Unit Test & Integration Test)**:
+  - Tạo mới bộ kiểm thử chuyên biệt [tests/test_rbac_permissions.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_rbac_permissions.py) bao phủ 10 test cases -> **10/10 PASS 100%**.
+  - Tích hợp seed dữ liệu mẫu trong `backend/tests/conftest.py`.
+- **Tài liệu kỹ thuật**:
+  - Cập nhật Mục 7 trong [database/DATABASE_DESIGN.md](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/database/DATABASE_DESIGN.md) đặc tả cấu trúc bảng, cơ chế dependency `require_permissions` và danh sách API.
+
+---
+
+## [1.27.0] - 2026-10-15
+
+### Đã hoàn thành (Added & Enhanced)
+- **HRM Integration Service (`services/hrm_service.py`)**:
+  - Xây dựng module dịch vụ xử lý đối soát và đồng bộ dữ liệu hai chiều với hệ thống Quản trị Nhân sự HRM bên ngoài (qua REST API / Webhook).
+  - Áp dụng kỹ thuật Idempotent Upsert: tự động phát hiện bản ghi đã tồn tại theo khóa định danh duy nhất `email` để cập nhật thông tin mới nhất (`action: "UPDATED"`), hoặc thêm mới bản ghi chưa có (`action: "CREATED"`).
+  - Tự động phân giải phòng ban (tạo mới phòng ban nếu chưa có trong hệ thống), tự động phân giải `mentor_email` sang `ma_mentor` chính xác và liên kết trường đại học cho sinh viên thực tập.
+  - Bảo vệ an toàn mật khẩu người dùng cũ (không ghi đè mật khẩu đã thay đổi).
+- **Pydantic Schemas (`schemas.py`)**:
+  - `HRMEmployeeSyncItem`: Schema nhân sự nội bộ (Mentor, HR, Quản lý) kèm chuẩn hóa và kiểm tra hợp lệ email, số điện thoại, vai trò.
+  - `HRMInternSyncItem`: Schema sinh viên thực tập kèm thông tin chuyên ngành, lớp, trường học và mentor phụ trách.
+  - `HRMSyncRequest`: Payload yêu cầu đồng bộ tiếp nhận nguồn dữ liệu (`source`) và danh sách nhân sự/sinh viên.
+  - `HRMSyncResponse`, `HRMSyncSummary`, `HRMSyncDetailItem`: Cấu trúc phản hồi chi tiết mã 200 OK kèm bảng thống kê đối soát (`total_received`, `created`, `updated`, `failed`).
+- **API Endpoint Đồng bộ HRM (`POST /api/v1/integrations/hrm/sync`)**:
+  - Đăng ký endpoint tại `backend/main.py`.
+  - Hỗ trợ xác thực bảo mật thông qua Header `X-HRM-Secret-Key` (kiểm tra so khớp với biến môi trường `HRM_WEBHOOK_SECRET`).
+  - Xử lý lỗi chuẩn RESTful: `401 Unauthorized` nếu sai khóa bí mật, `422 Unprocessable Entity` nếu dữ liệu payload không hợp lệ.
+- **Kiểm thử tự động (Unit Test & Integration Test)**:
+  - Tạo mới bộ kiểm thử chuyên biệt [tests/test_hrm_sync.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_hrm_sync.py) bao phủ 11 test cases -> **11/11 PASS 100%**.
+- **Tài liệu thiết kế CSDL (`database/DATABASE_DESIGN.md`)**:
+  - Cập nhật Mục 6 đặc tả Kiến trúc tích hợp HRM & Đối soát dữ liệu (HRM Integration & Reconciliation) kèm sơ đồ Mermaid Sequence Diagram.
+
+---
+
+## [1.26.0] - 2026-10-14
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model ChamCong (`database/models/cham_cong.py`)**:
+  - Tối ưu hóa và thiết kế model `ChamCong` ánh xạ bảng `cham_cong` (`ma_cham_cong`, `ma_ho_so`, `ngay_cham_cong`, `gio_checkin`, `gio_checkout`, `phuong_thuc = "QR/Card"`, `trang_thai`, `thoi_gian_checkin`, `thoi_gian_checkout`, `ghi_chu`).
+  - Hỗ trợ `synonym` ORM cho phép truy cập linh hoạt hai chiều giữa `gio_checkin` / `gio_check_in` và `gio_checkout` / `gio_check_out` mà không làm đứt gãy tương thích ngược với code cũ.
+  - Cập nhật hàm `to_dict()` xuất đầy đủ định dạng trường mới cho API client.
+- **Pydantic Schemas (`schemas.py`)**:
+  - `AttendanceScanRequest`: Schema nhận payload quét mã định danh (`ma_dinh_danh`, `phuong_thuc = "QR/Card"`, `thoi_gian_quet`, `ghi_chu`), validate không cho phép chuỗi rỗng / khoảng trắng.
+  - `AttendanceScanResponseData` & `AttendanceScanResponse`: Schema phản hồi chuẩn RESTful (HTTP 200 OK) trả về chi tiết lượt chấm công, hành động (`CHECK_IN` hoặc `CHECK_OUT`), trạng thái và thời gian.
+- **API Endpoint Quét Mã Định Danh (`POST /api/v1/attendance/scan`)**:
+  - Tiếp nhận mã định danh từ máy quét QR Code hoặc đầu đọc thẻ Card RFID.
+  - Tự động phân giải mã định danh: hỗ trợ mã hồ sơ trực tiếp, tiền tố `CARD-...`, `INTERN-...`, `HS...` hoặc tra cứu theo `email`, `so_dien_thoai`.
+  - Kiểm tra và xử lý ngoại lệ nghiệp vụ toàn diện theo quy tắc TTCS:
+    + Trả về `404 Not Found` nếu mã định danh không tồn tại.
+    + Trả về `400 Bad Request` nếu hồ sơ sinh viên chưa được phê duyệt (`ChoDuyet`/`TuChoi`).
+    + Trả về `400 Bad Request` nếu sinh viên đã thôi học (`ThoiHoc`).
+    + Tự động xác định lượt Check-in: phân loại `DungGio` (trước 08:30) hoặc `DiMuon` (sau 08:30).
+    + Tự động xác định lượt Check-out: cập nhật `VeSom` (trước 17:00), kiểm tra giờ ra không được trước giờ vào.
+    + Chặn quét trùng lặp trong cùng ca làm việc: chặn quét đúp liên tiếp sau check-in (< 60s) và chặn quét khi đã hoàn thành cả check-in & check-out trong ca.
+- **Kiểm thử tự động (Unit Test & Regression Test)**:
+  - Tạo mới bộ kiểm thử [tests/test_attendance_scan.py](file:///d:/clone/ttcs/backend/tests/test_attendance_scan.py) bao phủ 14 test cases chuyên sâu -> **14/14 PASS 100%**.
+  - Kiểm thử đồng bộ với các module liên quan (`test_attendance_checkin_checkout.py`, `test_attendance_reports.py`, `test_meetings.py`) -> **51/51 PASS 100%**.
+  - Kiểm thử hồi quy toàn bộ hệ thống backend (378 test cases) -> **378/378 PASS 100%**.
+
+---
+
+## [1.25.0] - 2026-10-13
+
+### Đã hoàn thành (Added & Enhanced)
+- **Model LichHop (`database/models/lich_hop.py`)**:
+  - Tạo model `LichHop` ánh xạ bảng `lich_hop` (`ma_lich_hop`, `tieu_de`, `thoi_gian_bat_dau`, `thoi_gian_ket_thuc`, `dia_diem`, `ma_nguoi_chu_tri`).
+  - Thiết lập quan hệ hai chiều `nguoi_chu_tri` và `danh_sach_lich_hop_chu_tri` với `nguoi_dung.py`.
+  - Bổ sung hàm `to_dict()` và export tại `database/models/__init__.py`.
+- **Pydantic Schemas (`schemas.py`)**:
+  - `MeetingCreateRequest`: Schema tạo lịch họp, validate `thoi_gian_ket_thuc > thoi_gian_bat_dau`, cấm chuỗi rỗng `tieu_de`, `dia_diem`.
+  - `MeetingResponseData` & `MeetingCreateResponse`: Schema response HTTP 201 Created.
+- **Dịch vụ Email (`services/email_service.py`)**:
+  - Cập nhật `send_email_smtp`: Hỗ trợ MIME multipart gửi nội dung HTML kèm plain text fallback.
+  - Thêm hàm `send_meeting_invitation_email`: Gửi thư mời họp định dạng HTML cho thực tập sinh.
+- **Endpoint Tạo Lịch Họp (`POST /api/v1/meetings`)**:
+  - Thêm endpoint tạo lịch họp tại `main.py`, tích hợp `fastapi.BackgroundTasks` tự động gửi email cho danh sách thực tập sinh được mời.
+  - Xử lý ngoại lệ: 400 (thời gian không hợp lệ, thời gian trong quá khứ, tiêu đề/địa điểm rỗng, host bị khóa, danh sách sinh viên rỗng), 404 (không tìm thấy host hoặc sinh viên).
+- **Kiểm thử tự động**:
+  - Tạo bộ test `tests/test_meetings.py` gồm 12 test cases bao phủ tạo lịch họp, gửi email nền và xử lý ngoại lệ -> **12/12 PASS 100%**.
+  - Kiểm thử hồi quy toàn bộ backend -> **364/364 PASS 100%**.
+
+---
+
+## [1.24.0] - 2026-10-12
+
+### Đã hoàn thành (Added & Enhanced)
+- **Dịch vụ Xuất Báo cáo Đa định dạng (`services/export_service.py`)**:
+  - Hỗ trợ xuất file Excel định dạng bảng chuyên nghiệp bằng `openpyxl`: gồm Sheet 1 (Tổng hợp chỉ số KPI, phân bổ xếp loại rèn luyện, thống kê theo trường đại học) và Sheet 2 (Danh sách chi tiết thực tập sinh với màu sắc header nhận diện `#1F4E78`, zebra striping `#F2F5F9`, border viền, căn lề và tự động co giãn độ rộng cột).
+  - Hỗ trợ xuất file PDF khổ **A4 ngang (`landscape(A4)`)** bằng `ReportLab`: đăng ký font TrueType Unicode tiếng Việt (`VN-Arial` từ Windows Fonts), layout bảng ghép ngang cân đối vừa vặn trang in và hiển thị 100% tiếng Việt có dấu chuẩn xác.
+  - Xử lý mượt mà và an toàn trong cả trường hợp dữ liệu rỗng (không có bản ghi nào phù hợp bộ lọc).
+- **Endpoint Xuất Báo Cáo Đa Định Dạng (`GET /api/v1/reports/export`)**:
+  - Nhận tham số `format=excel` (hoặc alias `xlsx`) hoặc `format=pdf` để kết xuất và trả về `StreamingResponse`.
+  - Validate tham số `format`: bắt lỗi và trả về `HTTP 400 Bad Request` nếu định dạng không được hỗ trợ.
+  - Hỗ trợ các bộ lọc linh hoạt: `ma_truong`, `loai_danh_gia`, `trang_thai_thuc_tap`, `de_xuat_tuyen_chinh_thuc`, `tu_khoa`.
+  - Đính kèm headers `Content-Disposition: attachment; filename=Bao_cao_tong_hop_{timestamp}.[xlsx|pdf]` và `Access-Control-Expose-Headers: Content-Disposition`.
+- **Kiểm thử tự động (Unit Test & Regression Test)**:
+  - Tạo mới bộ test [tests/test_reports_export.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_reports_export.py) gồm 10 test cases: xuất Excel thành công, alias `xlsx`, mặc định không truyền format, xuất PDF ReportLab thành công, xuất kết hợp bộ lọc, xuất trường hợp dữ liệu rỗng và bắt lỗi format không hợp lệ -> **10/10 PASS 100%**.
+  - Kiểm thử hồi quy `test_evaluation_summary.py` -> **25/25 PASS 100%**.
+
 ---
 
 ## [1.23.0] - 2026-10-10
@@ -62,8 +209,6 @@ Tất cả các thay đổi của module Backend sẽ được ghi lại trong t
 - **Kiểm thử tự động**:
   - Tạo mới bộ test [tests/test_mentor_workload.py](file:///d:/CodeGym/TTCS_T926_K16C2_N2/backend/tests/test_mentor_workload.py) gồm 7 test cases bao phủ gọi mặc định, mentor có sinh viên, mentor 0 sinh viên (outerjoin), lọc theo phòng ban (200 & 404), lọc từ khóa, lọc trạng thái (200 & 400) và tính toán KPI summary -> **7/7 PASS 100%**.
   - Kiểm tra hồi quy toàn bộ cụm Mentor -> **18/18 PASS 100%**.
-
-
 
 ---
 
