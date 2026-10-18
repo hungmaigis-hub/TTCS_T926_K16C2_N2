@@ -1,4 +1,3 @@
-
 from app.schemas.thong_bao import (
     ThongBaoBase,
     ThongBaoCreate,
@@ -13,6 +12,19 @@ from app.schemas.nguoi_dung import (
     Token,
     TokenData
 )
+from app.schemas.user import (
+    UserRole,
+    UserCreate,
+    UserResponse,
+    UserLoginRequest,
+    TokenResponse,
+)
+from app.schemas.nhat_ky_hoat_dong import (
+    NhatKyHoatDongBase,
+    NhatKyHoatDongCreate,
+    NhatKyHoatDongResponse,
+    PaginatedAuditLogResponse,
+)
 
 __all__ = [
     "ThongBaoBase",
@@ -25,20 +37,13 @@ __all__ = [
     "NguoiDungResponse",
     "Token",
     "TokenData",
-=======
-from app.schemas.user import (
-    UserRole,
-    UserCreate,
-    UserResponse,
-    UserLoginRequest,
-    TokenResponse,
-)
-
-__all__ = [
     "UserRole",
     "UserCreate",
     "UserResponse",
     "UserLoginRequest",
     "TokenResponse",
-
+    "NhatKyHoatDongBase",
+    "NhatKyHoatDongCreate",
+    "NhatKyHoatDongResponse",
+    "PaginatedAuditLogResponse",
 ]

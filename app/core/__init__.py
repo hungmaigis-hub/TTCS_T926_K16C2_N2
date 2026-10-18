@@ -1,10 +1,12 @@
 from app.core.config import settings
-
-
-__all__ = ["settings"]
-=======
 from app.core.database import Base, engine, SessionLocal, get_db
-from app.core.security import hash_password, verify_password, create_access_token, decode_access_token
+from app.core.security import (
+    hash_password,
+    get_password_hash,
+    verify_password,
+    create_access_token,
+    decode_access_token
+)
 
 __all__ = [
     "settings",
@@ -13,8 +15,8 @@ __all__ = [
     "SessionLocal",
     "get_db",
     "hash_password",
+    "get_password_hash",
     "verify_password",
     "create_access_token",
     "decode_access_token",
 ]
-

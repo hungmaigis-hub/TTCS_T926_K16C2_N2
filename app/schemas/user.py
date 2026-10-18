@@ -6,8 +6,8 @@ Phụ trách: Nguyễn Văn Hiếu (Backend FastAPI)
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from typing import Optional, Union, Any
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator, ConfigDict
 
 
 class UserRole(str, Enum):
@@ -87,7 +87,7 @@ class UserResponse(BaseModel):
     Schema trả về thông tin tài khoản sau khi tạo thành công (201 Created).
     BẢO MẬT: Tuyệt đối không trả về mật khẩu thô hoặc mật khẩu đã băm!
     """
-    ma_nguoi_dung: int
+    ma_nguoi_dung: Union[int, str]
     ten_dang_nhap: str
     email: str
     ho_ten: str
@@ -96,7 +96,7 @@ class UserResponse(BaseModel):
     ngay_tao: datetime
 
     # Cung cấp alias hỗ trợ Frontend / Tester
-    id: Optional[int] = None
+    id: Optional[Union[int, str]] = None
     username: Optional[str] = None
     full_name: Optional[str] = None
     role: Optional[str] = None
@@ -109,8 +109,7 @@ class UserResponse(BaseModel):
         self.role = self.vai_tro
         return self
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserLoginRequest(BaseModel):

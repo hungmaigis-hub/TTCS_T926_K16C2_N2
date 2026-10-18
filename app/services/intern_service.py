@@ -24,7 +24,7 @@ from app.schemas.intern import (
 logger = logging.getLogger(__name__)
 
 # Giới hạn chỉ tiêu phân công sinh viên cho mỗi Mentor
-MAX_INTERNS_PER_MENTOR = 100
+MAX_INTERNS_PER_MENTOR = 5
 
 
 # ============================================================

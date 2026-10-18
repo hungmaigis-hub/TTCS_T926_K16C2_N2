@@ -17,7 +17,12 @@ ENV/
 
 # Database SQLite
 *.db
+*.sqlite
 *.sqlite3
+
+# Uploads
+backend/uploads/
+uploads/
 
 # IDEs
 .vscode/

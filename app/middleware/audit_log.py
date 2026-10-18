@@ -96,13 +96,12 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
             # - Hoặc các request có gán request.state.audit_action
             # - Hoặc các truy cập nhạy cảm (vd: /api/v1/admin/audit-logs)
             is_modifying_method = method in ["POST", "PUT", "DELETE", "PATCH"]
-            is_audit_view = path.startswith("/api/v1/admin/audit-logs") and method == "GET"
-            has_explicit_action = hasattr(request.state, "audit_action")
+            is_audit_get = path.startswith("/api/v1/admin/audit-logs") and method == "GET"
+            has_explicit_action = hasattr(request.state, "audit_action") and not is_audit_get
 
             should_log = (
-                not should_skip and (
+                not should_skip and not is_audit_get and (
                     is_modifying_method
-                    or is_audit_view
                     or has_explicit_action
                     or settings.AUDIT_LOG_ALL_METHODS
                 )

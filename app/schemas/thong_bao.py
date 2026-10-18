@@ -1,16 +1,16 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union, Any
 from pydantic import BaseModel, Field, ConfigDict
 
 
 class ThongBaoBase(BaseModel):
-    tieu_de: str = Field(..., max_length=255, description="Tiêu đề thông báo", example="Lịch họp định kỳ tuần 1")
-    noi_dung: str = Field(..., description="Nội dung chi tiết thông báo", example="Cuộc họp diễn ra lúc 9:00 AM tại phòng Họp A.")
-    loai_thong_bao: Optional[str] = Field("CHUNG", max_length=50, description="Loại thông báo (LICH_TRINH, CONG_VIEC, HE_THONG, CHUNG)", example="LICH_TRINH")
+    tieu_de: str = Field(..., max_length=255, description="Tiêu đề thông báo")
+    noi_dung: str = Field(..., description="Nội dung chi tiết thông báo")
+    loai_thong_bao: Optional[str] = Field("CHUNG", max_length=50, description="Loại thông báo (LICH_TRINH, CONG_VIEC, HE_THONG, CHUNG)")
 
 
 class ThongBaoCreate(ThongBaoBase):
-    ma_nguoi_nhan: int = Field(..., description="ID người nhận thông báo", example=1)
+    ma_nguoi_nhan: Union[int, str] = Field(..., description="ID người nhận thông báo")
 
 
 class ThongBaoUpdate(BaseModel):
@@ -21,9 +21,9 @@ class ThongBaoUpdate(BaseModel):
 
 
 class ThongBaoResponse(BaseModel):
-    ma_thong_bao: int = Field(..., description="Mã định danh thông báo", example=1)
-    id: Optional[int] = Field(None, description="Alias tương thích id cho frontend", example=1)
-    ma_nguoi_nhan: int = Field(..., description="Mã người nhận", example=1)
+    ma_thong_bao: int = Field(..., description="Mã định danh thông báo")
+    id: Optional[Union[int, str]] = Field(None, description="Alias tương thích id cho frontend")
+    ma_nguoi_nhan: Union[int, str] = Field(..., description="Mã người nhận")
     tieu_de: str
     noi_dung: str
     loai_thong_bao: str

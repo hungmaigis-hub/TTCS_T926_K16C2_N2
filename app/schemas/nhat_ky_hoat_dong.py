@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union, Any
 from pydantic import BaseModel, Field, ConfigDict
 
 
 class NhatKyHoatDongBase(BaseModel):
-    ma_nguoi_dung: Optional[int] = Field(None, description="Mã người dùng thực hiện thao tác")
+    ma_nguoi_dung: Optional[Union[int, str]] = Field(None, description="Mã người dùng thực hiện thao tác")
     hanh_dong: str = Field(..., description="Tên hành động nghiệp vụ (Vd: DANG_NHAP, TAO_NGUOI_DUNG, ...)")
     endpoint: str = Field(..., description="Đường dẫn API (Vd: /api/v1/admin/users)")
     phuong_thuc: str = Field(..., description="Phương thức HTTP (GET, POST, PUT, DELETE, PATCH)")
