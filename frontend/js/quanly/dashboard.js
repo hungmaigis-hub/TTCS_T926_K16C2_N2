@@ -1054,10 +1054,10 @@ function layVaiTroNguoiDungHienTai() {
 
 async function renderGiaoDienChoMentor(myMentor, containerCard) {
   const sl = myMentor ? (myMentor.so_sinh_vien_huong_dan || 0) : 0;
-  const maxHd = myMentor ? (myMentor.chi_tieu_huong_dan || 5) : 5;
+  const maxHd = myMentor ? (myMentor.chi_tieu_huong_dan || 100) : 100;
   const percent = myMentor ? (myMentor.ty_le_phan_tram || Math.round((sl / maxHd) * 100)) : 0;
-  const isQuaTai = sl > 5;
-  const isDaDu = sl === 5;
+  const isQuaTai = sl > maxHd;
+  const isDaDu = sl === maxHd;
   const initials = layTenVietTat(myMentor.ho_ten);
 
   let mauThanh = "bg-emerald-500";
@@ -1071,14 +1071,14 @@ async function renderGiaoDienChoMentor(myMentor, containerCard) {
   } else if (isDaDu) {
     mauThanh = "bg-amber-500";
     mauChu = "text-amber-700 font-bold";
-    badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300"><span class="material-symbols-outlined text-[13px]">lock</span> Đã đủ (5/5)</span>`;
+    badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300"><span class="material-symbols-outlined text-[13px]">lock</span> Đã đủ (${sl}/${maxHd})</span>`;
   } else if (sl === 0) {
     mauThanh = "bg-slate-300";
     mauChu = "text-slate-500 font-semibold";
-    badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Còn 5 chỗ (0/5)</span>`;
+    badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Còn ${maxHd} chỗ (0/${maxHd})</span>`;
   } else {
-    mauThanh = sl >= 3 ? "bg-blue-500" : "bg-emerald-500";
-    mauChu = sl >= 3 ? "text-blue-700 font-bold" : "text-emerald-700 font-bold";
+    mauThanh = sl >= 50 ? "bg-blue-500" : "bg-emerald-500";
+    mauChu = sl >= 50 ? "text-blue-700 font-bold" : "text-emerald-700 font-bold";
     badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Còn ${maxHd - sl} chỗ (${sl}/${maxHd})</span>`;
   }
 
@@ -1092,7 +1092,7 @@ async function renderGiaoDienChoMentor(myMentor, containerCard) {
         <div class="flex-1">
           <h4 class="font-bold text-xs uppercase tracking-wide text-rose-800">Cảnh Báo Vượt Định Mức Hướng Dẫn</h4>
           <p class="text-xs text-rose-700 mt-0.5 leading-relaxed font-medium">
-            Bạn hiện đang phụ trách <strong>${sl}/5</strong> sinh viên (vượt quá <strong>${sl - 5}</strong> sinh viên so với chỉ tiêu tối đa). Vui lòng liên hệ với bộ phận Quản lý / HR để điều phối bớt sinh viên sang Mentor khác nhằm đảm bảo chất lượng hướng dẫn!
+            Bạn hiện đang phụ trách <strong>${sl}/${maxHd}</strong> sinh viên (vượt quá <strong>${sl - maxHd}</strong> sinh viên so với chỉ tiêu tối đa). Vui lòng liên hệ với bộ phận Quản lý / HR để điều phối bớt sinh viên sang Mentor khác nhằm đảm bảo chất lượng hướng dẫn!
           </p>
         </div>
       </div>
@@ -1332,7 +1332,7 @@ function capNhatKpiWorkload() {
 
   if (lbl1) lbl1.textContent = "Tổng Mentor";
   if (lbl2) lbl2.textContent = "SV Đang Kèm";
-  if (lbl3) lbl3.textContent = "Quá Tải (> 5 SV)";
+  if (lbl3) lbl3.textContent = "Quá Tải (> 100 SV)";
   if (lbl4) lbl4.textContent = "Chỗ Trống Khả Dụng";
 
   const tongMentor = danhSachWorkloadGoc.length;
@@ -1343,10 +1343,11 @@ function capNhatKpiWorkload() {
 
   danhSachWorkloadGoc.forEach((m) => {
     const sl = m.so_sinh_vien_huong_dan || 0;
+    const maxHd = m.chi_tieu_huong_dan || 100;
     tongSv += sl;
-    if (sl > 5) soQuaTai += 1;
-    else if (sl === 5) soDaDu += 1;
-    choTrong += Math.max(0, 5 - sl);
+    if (sl > maxHd) soQuaTai += 1;
+    else if (sl === maxHd) soDaDu += 1;
+    choTrong += Math.max(0, maxHd - sl);
   });
 
   if (elTongMentor) elTongMentor.textContent = tongMentor;
@@ -1372,7 +1373,7 @@ function capNhatKpiWorkload() {
   const elDemOverload = document.getElementById("demWorkloadOverload");
 
   if (elDemAll) elDemAll.textContent = tongMentor;
-  if (elDemActive) elDemActive.textContent = danhSachWorkloadGoc.filter((m) => (m.so_sinh_vien_huong_dan || 0) > 0 && (m.so_sinh_vien_huong_dan || 0) < 5).length;
+  if (elDemActive) elDemActive.textContent = danhSachWorkloadGoc.filter((m) => (m.so_sinh_vien_huong_dan || 0) > 0 && (m.so_sinh_vien_huong_dan || 0) < (m.chi_tieu_huong_dan || 100)).length;
   if (elDemFull) elDemFull.textContent = soDaDu;
   if (elDemOverload) elDemOverload.textContent = soQuaTai;
 }
@@ -1396,7 +1397,7 @@ function renderDanhSachMentorWorkload() {
 
   if (laMentor) {
     if (tieuDe) tieuDe.textContent = "Khối Lượng Hướng Dẫn Của Tôi (My Capacity & Interns)";
-    if (moTa) moTa.textContent = "Theo dõi số lượng sinh viên bạn đang trực tiếp phụ trách (Định mức tối đa: 5 sinh viên)";
+    if (moTa) moTa.textContent = "Theo dõi số lượng sinh viên bạn đang trực tiếp phụ trách (Định mức tối đa: 100 sinh viên)";
     if (cucBoLoc) cucBoLoc.style.display = "none";
     if (cucCheDo) cucCheDo.style.display = "none";
     if (btnPhanCong) btnPhanCong.style.display = "none";
@@ -1424,7 +1425,7 @@ function renderDanhSachMentorWorkload() {
   }
 
   if (tieuDe) tieuDe.textContent = "Khối Lượng Hướng Dẫn Mentor (Workload & Capacity)";
-  if (moTa) moTa.textContent = "Theo dõi tải công việc và cảnh báo phân công vượt chỉ tiêu tối đa (5 sinh viên / Mentor)";
+  if (moTa) moTa.textContent = "Theo dõi tải công việc và cảnh báo phân công vượt chỉ tiêu tối đa (100 sinh viên / Mentor)";
   if (cucBoLoc) cucBoLoc.style.display = "";
   if (cucCheDo) cucCheDo.style.display = "";
   if (btnPhanCong) btnPhanCong.style.display = "";
@@ -1432,11 +1433,11 @@ function renderDanhSachMentorWorkload() {
 
   let danhSachLoc = [...danhSachWorkloadGoc];
   if (tabWorkloadHienTai === "active") {
-    danhSachLoc = danhSachLoc.filter((m) => (m.so_sinh_vien_huong_dan || 0) > 0 && (m.so_sinh_vien_huong_dan || 0) < 5);
+    danhSachLoc = danhSachLoc.filter((m) => (m.so_sinh_vien_huong_dan || 0) > 0 && (m.so_sinh_vien_huong_dan || 0) < (m.chi_tieu_huong_dan || 100));
   } else if (tabWorkloadHienTai === "full") {
-    danhSachLoc = danhSachLoc.filter((m) => (m.so_sinh_vien_huong_dan || 0) === 5);
+    danhSachLoc = danhSachLoc.filter((m) => (m.so_sinh_vien_huong_dan || 0) === (m.chi_tieu_huong_dan || 100));
   } else if (tabWorkloadHienTai === "overload") {
-    danhSachLoc = danhSachLoc.filter((m) => (m.so_sinh_vien_huong_dan || 0) > 5);
+    danhSachLoc = danhSachLoc.filter((m) => (m.so_sinh_vien_huong_dan || 0) > (m.chi_tieu_huong_dan || 100));
   }
 
   const bangMau = [
@@ -1473,10 +1474,10 @@ function renderDanhSachMentorWorkload() {
 
   danhSachLoc.forEach((m, idx) => {
     const sl = m.so_sinh_vien_huong_dan || 0;
-    const maxHd = m.chi_tieu_huong_dan || 5;
+    const maxHd = m.chi_tieu_huong_dan || 100;
     const percent = Math.min(100, Math.round((sl / maxHd) * 100));
-    const isQuaTai = sl > 5;
-    const isDaDu = sl === 5;
+    const isQuaTai = sl > maxHd;
+    const isDaDu = sl === maxHd;
     const initials = layTenVietTat(m.ho_ten);
     const mauGradient = bangMau[idx % bangMau.length];
 
@@ -1500,14 +1501,14 @@ function renderDanhSachMentorWorkload() {
     } else if (isDaDu) {
       mauThanh = "bg-amber-500";
       mauChu = "text-amber-700 font-bold";
-      badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300"><span class="material-symbols-outlined text-[13px]">lock</span> Đã đủ (5/5)</span>`;
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300"><span class="material-symbols-outlined text-[13px]">lock</span> Đã đủ (${sl}/${maxHd})</span>`;
     } else if (sl === 0) {
       mauThanh = "bg-slate-300";
       mauChu = "text-slate-500 font-semibold";
-      badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Còn 5 chỗ (0/5)</span>`;
+      badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">Còn ${maxHd} chỗ (0/${maxHd})</span>`;
     } else {
-      mauThanh = sl >= 3 ? "bg-blue-500" : "bg-emerald-500";
-      mauChu = sl >= 3 ? "text-blue-700 font-bold" : "text-emerald-700 font-bold";
+      mauThanh = sl >= 50 ? "bg-blue-500" : "bg-emerald-500";
+      mauChu = sl >= 50 ? "text-blue-700 font-bold" : "text-emerald-700 font-bold";
       badgeHtml = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Còn ${maxHd - sl} chỗ (${sl}/${maxHd})</span>`;
     }
 
@@ -1686,13 +1687,14 @@ async function moModalChiTietSvMentor(maMentor) {
   if (!modal || !mentor) return;
 
   const sl = mentor.so_sinh_vien_huong_dan || 0;
+  const maxHd = mentor.chi_tieu_huong_dan || 100;
   if (tieuDe) tieuDe.textContent = `Sinh Viên Hướng Dẫn: ${mentor.ho_ten}`;
-  if (moTa) moTa.textContent = `${mentor.chuc_vu || "Mentor"} - ${mentor.ten_phong_ban || "Đang phụ trách"} (${sl}/5 sinh viên)`;
+  if (moTa) moTa.textContent = `${mentor.chuc_vu || "Mentor"} - ${mentor.ten_phong_ban || "Đang phụ trách"} (${sl}/${maxHd} sinh viên)`;
 
   if (canhBao && txtCanhBao) {
-    if (sl > 5) {
+    if (sl > maxHd) {
       canhBao.classList.remove("hidden");
-      txtCanhBao.textContent = `CẢNH BÁO: Mentor đang quá tải (${sl}/5 sinh viên). Vượt quá quy định tiếp nhận tối đa!`;
+      txtCanhBao.textContent = `CẢNH BÁO: Mentor đang quá tải (${sl}/${maxHd} sinh viên). Vượt quá quy định tiếp nhận tối đa!`;
     } else {
       canhBao.classList.add("hidden");
     }
