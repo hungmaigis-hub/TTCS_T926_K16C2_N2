@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Lên Lịch Họp &amp; Điểm Danh QR - ICTU Internship</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/env.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/tailwind.config.js"></script>
+  </head>
+  <body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex">
+    <aside
+      class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 h-screen sticky top-0 self-start z-20 shadow-[1px_0_12px_rgba(0,0,0,0.02)]"
+    >
+      <div class="h-20 px-6 border-b border-slate-100 flex items-center gap-3">
+        <a href="dashboard.html" class="flex items-center gap-3">
+          <img
+            src="../../image/ictu_logo.png"
+            alt="ICTU Internship Logo"
+            class="h-10 w-auto object-contain"
+          />
+          <div>
+            <span class="text-sm font-bold text-slate-900 block leading-tight">ICTU INTERN</span>
+            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Cổng Quản Trị</span>
+          </div>
+        </a>
+      </div>
+      <div
+        class="p-4 mx-3 my-3 rounded-2xl bg-gradient-to-br from-ictu-50/70 to-slate-50 border border-slate-200/80 flex items-center gap-3.5"
+      >
+        <div class="relative shrink-0">
+          <div
+            id="adminAvatarInitials"
+            class="w-11 h-11 rounded-full bg-gradient-to-tr from-ictu-600 to-sky-400 flex items-center justify-center text-white font-bold text-base shadow-sm ring-2 ring-white"
+          >
+            AD
+          </div>
+          <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h4 id="adminSidebarName" class="text-sm font-bold text-slate-900 truncate">
+              Ban Đào Tạo &amp; QLTT
+            </h4>
+            <span class="material-symbols-outlined text-[15px] text-ictu-600 fill">verified</span>
+          </div>
+          <p id="adminSidebarEmail" class="text-xs text-slate-500 truncate">admin@ictu.edu.vn</p>
+          <span
+            id="adminSidebarRole"
+            class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-ictu-100 text-ictu-700"
+          >
+            Quản trị viên
+          </span>
+        </div>
+      </div>
+
+      <div class="px-3 flex-1 overflow-y-auto space-y-1">
+        <p class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          Hệ Thống Quản Lý
+        </p>
+
+        <a
+          href="dashboard.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">dashboard</span>
+          <span>Tổng quan hệ thống</span>
+        </a>
+
+        <a
+          href="len_lich_hop.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-ictu-50 text-ictu-700 shadow-sm border border-ictu-100 transition-colors"
+        >
+          <span class="material-symbols-outlined text-[20px] text-ictu-600 fill">event</span>
+          <span>Lên lịch họp &amp; QR</span>
+        </a>
+
+        <a
+          href="quet_ma_cham_cong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">qr_code_scanner</span>
+          <span>Máy quét chấm công</span>
+        </a>
+
+        <a
+          href="them_ho_so.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">person_add</span>
+          <span>Thêm hồ sơ thực tập</span>
+        </a>
+
+        <a
+          href="xet_duyet_ho_so.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">how_to_reg</span>
+            <span>Xét duyệt hồ sơ</span>
+          </div>
+          <span id="sidebarBadgeChoDuyet" class="text-[11px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-md">5 chờ</span>
+        </a>
+
+        <a
+          href="lich_thuc_tap.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">calendar_month</span>
+          <span>Kế hoạch &amp; Đợt thực tập</span>
+        </a>
+
+        <a
+          href="danh_gia.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">rate_review</span>
+            <span>Báo cáo &amp; Đánh giá</span>
+          </div>
+          <span class="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-md">Mới</span>
+        </a>
+
+        <a
+          href="cham_cong.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">fact_check</span>
+          <span>Điểm danh &amp; Chuyên cần</span>
+        </a>
+
+        <a
+          href="quan_ly_nguoi_dung.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">manage_accounts</span>
+          <span>Quản lý tài khoản</span>
+        </a>
+
+        <a
+          href="quan_ly_sao_luu.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">cloud_sync</span>
+          <span>Quản lý sao lưu</span>
+        </a>
+
+        <a
+          href="../public/thamquan.html"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">360</span>
+          <span>Tham quan thực tế ảo</span>
+        </a>
+      </div>
+
+      <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Máy chủ: ICTU Cloud
+          </span>
+          <a
+            href="../public/index.html"
+            class="text-slate-400 hover:text-rose-600 transition-colors p-1"
+            title="Đăng xuất"
+          >
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-1 min-w-0 flex flex-col h-screen overflow-y-auto">
+      <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-8 flex items-center justify-between shrink-0 sticky top-0 z-10">
+        <div>
+          <h1 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <span>Lên Lịch Họp &amp; Chiếu QR Điểm Danh</span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-ictu-50 text-ictu-700 border border-ictu-200">
+              Sprint 4
+            </span>
+          </h1>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Lập lịch họp hướng dẫn, gửi email thông báo và chiếu mã QR điểm danh trực tiếp
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="text-right hidden sm:block">
+            <span id="ngayHienTaiHeader" class="text-xs font-semibold text-slate-600 block"></span>
+            <span class="text-[11px] text-slate-400">Học kỳ 2 &bull; 2025-2026</span>
+          </div>
+          <button
+            type="button"
+            onclick="taiDanhSachLichHop()"
+            class="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer"
+            title="Tải lại danh sách"
+          >
+            <span class="material-symbols-outlined text-[20px]">refresh</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="p-8 max-w-7xl mx-auto w-full space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-5">
+              <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-ictu-50 text-ictu-600 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">add_box</span>
+                  </div>
+                  <div>
+                    <h2 class="text-base font-bold text-slate-900 tracking-tight">Tạo Cuộc Họp Mới</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Điền thông tin và chọn thực tập sinh tham gia</p>
+                  </div>
+                </div>
+                <span class="text-xs text-amber-600 font-semibold flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                  <span class="material-symbols-outlined text-sm">mail</span>
+                  Tự động gửi email
+                </span>
+              </div>
+
+              <form id="formLenLichHop" class="space-y-4" onsubmit="event.preventDefault(); guiLichHop();">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Tiêu đề cuộc họp <span class="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="tieuDeHop"
+                    required
+                    placeholder="VD: Họp định kỳ tuần 4 - Đánh giá tiến độ Sprint 2"
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-ictu-500/20 focus:border-ictu-600 text-sm font-medium transition-all"
+                  />
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Thời gian bắt đầu <span class="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      id="thoiGianBatDau"
+                      required
+                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-ictu-500/20 focus:border-ictu-600 text-sm font-medium transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Thời gian kết thúc <span class="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="datetime-local"
+                      id="thoiGianKetThuc"
+                      required
+                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-ictu-500/20 focus:border-ictu-600 text-sm font-medium transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Hình thức họp <span class="text-rose-500">*</span>
+                    </label>
+                    <select
+                      id="hinhThucHop"
+                      class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-ictu-500/20 focus:border-ictu-600 text-sm font-medium transition-all bg-white"
+                    >
+                      <option value="TrucTiep">Trực tiếp (Tại văn phòng / Phòng học)</option>
+                      <option value="Online">Online (Google Meet / Zoom / Teams)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Địa điểm / Link họp <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                      <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-lg" id="iconDiaDiem">meeting_room</span>
+                      <input
+                        type="text"
+                        id="diaDiemHop"
+                        required
+                        placeholder="VD: Phòng A301 - Tòa nhà CNTT"
+                        class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-ictu-500/20 focus:border-ictu-600 text-sm font-medium transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Nội dung cuộc họp
+                  </label>
+                  <textarea
+                    id="noiDungHop"
+                    rows="3"
+                    placeholder="Mô tả mục tiêu cuộc họp, tài liệu cần chuẩn bị, các hạng mục báo cáo..."
+                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-ictu-500/20 focus:border-ictu-600 text-sm font-medium transition-all"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Thực tập sinh tham gia <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onclick="chonTatCaTTS()"
+                        class="text-[11px] font-semibold text-ictu-600 hover:text-ictu-700 underline cursor-pointer"
+                      >
+                        Chọn tất cả
+                      </button>
+                      <span class="text-slate-300">|</span>
+                      <button
+                        type="button"
+                        onclick="boChonTatCaTTS()"
+                        class="text-[11px] font-semibold text-slate-500 hover:text-slate-700 underline cursor-pointer"
+                      >
+                        Bỏ chọn
+                      </button>
+                    </div>
+                  </div>
+
+                  <div
+                    id="danhSachChonTTS"
+                    class="max-h-48 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2"
+                  >
+                    <div class="text-center py-4 text-xs text-slate-400">Đang tải danh sách thực tập sinh...</div>
+                  </div>
+                  <p id="loiChonTTS" class="text-xs text-rose-500 font-medium mt-1 hidden">Vui lòng chọn ít nhất 1 thực tập sinh</p>
+                </div>
+
+                <div class="flex items-center gap-3 p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80">
+                  <input
+                    type="checkbox"
+                    id="guiMailThongBao"
+                    checked
+                    class="w-4 h-4 rounded text-ictu-600 focus:ring-ictu-500 border-slate-300 cursor-pointer"
+                  />
+                  <label for="guiMailThongBao" class="flex items-center gap-2 cursor-pointer">
+                    <span class="material-symbols-outlined text-lg text-amber-600">mail</span>
+                    <span class="text-sm font-semibold text-amber-800">Gửi email thông báo kèm lịch đến thực tập sinh được chọn</span>
+                  </label>
+                </div>
+
+                <div class="pt-4 flex items-center justify-between gap-3 border-t border-slate-100">
+                  <div class="flex items-center gap-2 text-xs text-slate-500">
+                    <span class="material-symbols-outlined text-base text-emerald-600">verified_user</span>
+                    <span>Tích hợp QR Code điểm danh tự động</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <button
+                      type="reset"
+                      onclick="datLaiFormHop()"
+                      class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors cursor-pointer"
+                    >
+                      Đặt lại
+                    </button>
+                    <button
+                      type="button"
+                      id="nutTaoLichHop"
+                      onclick="guiLichHop()"
+                      class="px-5 py-2.5 rounded-xl bg-ictu-600 hover:bg-ictu-700 text-white text-sm font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                    >
+                      <span class="material-symbols-outlined text-lg">send</span>
+                      <span>Tạo lịch họp</span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+              <h3 class="text-sm font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg text-ictu-600">analytics</span>
+                Thống Kê Cuộc Họp
+              </h3>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="p-3 rounded-xl bg-ictu-50 border border-ictu-100 text-center">
+                  <p class="text-[10px] font-bold text-ictu-800 uppercase tracking-wider">Tổng cuộc họp</p>
+                  <p id="thongKeTongHop" class="text-xl font-black text-ictu-700 mt-1 font-mono">0</p>
+                </div>
+                <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-center">
+                  <p class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Hôm nay</p>
+                  <p id="thongKeHomNay" class="text-xl font-black text-emerald-700 mt-1 font-mono">0</p>
+                </div>
+                <div class="p-3 rounded-xl bg-amber-50 border border-amber-100 text-center">
+                  <p class="text-[10px] font-bold text-amber-800 uppercase tracking-wider">Sắp tới</p>
+                  <p id="thongKeSapToi" class="text-xl font-black text-amber-700 mt-1 font-mono">0</p>
+                </div>
+                <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-100 text-center">
+                  <p class="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">Online</p>
+                  <p id="thongKeOnline" class="text-xl font-black text-indigo-700 mt-1 font-mono">0</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-ictu-600 to-sky-500 rounded-2xl p-5 text-white shadow-sm">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <div class="text-[10px] font-bold uppercase tracking-wider text-ictu-200">Hướng dẫn</div>
+                  <h3 class="text-base font-bold mt-0.5">Điểm Danh Bằng Mã QR</h3>
+                </div>
+                <span class="material-symbols-outlined text-2xl text-ictu-200">qr_code_2</span>
+              </div>
+              <ul class="space-y-2 text-xs text-ictu-100 leading-relaxed">
+                <li class="flex items-start gap-2">
+                  <span class="material-symbols-outlined text-sm mt-0.5">check_circle</span>
+                  <span>Tạo lịch họp và mời đúng nhóm sinh viên hướng dẫn</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="material-symbols-outlined text-sm mt-0.5">check_circle</span>
+                  <span>Bấm nút <strong>"Chiếu QR"</strong> ở bảng danh sách để phóng to mã</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="material-symbols-outlined text-sm mt-0.5">check_circle</span>
+                  <span>Sinh viên mở app trên điện thoại quét mã để xác nhận có mặt</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="material-symbols-outlined text-sm mt-0.5">check_circle</span>
+                  <span>Hệ thống tự động chặn sinh viên lớp khác và chống quét đúp</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-2xl">list_alt</span>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 tracking-tight">Danh Sách Lịch Họp &amp; Điểm Danh</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Bấm nút "Chiếu QR" để hiển thị mã điểm danh cho sinh viên</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onclick="taiDanhSachLichHop()"
+              class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+              title="Làm mới"
+            >
+              <span class="material-symbols-outlined text-base">refresh</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                  <th class="py-3 px-3">#</th>
+                  <th class="py-3 px-3">Tiêu đề cuộc họp</th>
+                  <th class="py-3 px-3">Hình thức</th>
+                  <th class="py-3 px-3">Bắt đầu</th>
+                  <th class="py-3 px-3">Kết thúc</th>
+                  <th class="py-3 px-3">Thành viên</th>
+                  <th class="py-3 px-3 text-center">Mã QR Điểm Danh</th>
+                </tr>
+              </thead>
+              <tbody id="bangDanhSachLichHop">
+                <tr>
+                  <td colspan="7" class="py-8 text-center text-xs text-slate-400">
+                    <span class="material-symbols-outlined text-3xl text-slate-300 block mb-2">event_busy</span>
+                    Chưa có lịch họp nào. Hãy tạo cuộc họp đầu tiên!
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div
+      id="modalChieuQr"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden"
+    >
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in duration-200">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-ictu-50 text-ictu-600 flex items-center justify-center">
+              <span class="material-symbols-outlined text-2xl">qr_code_2</span>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900 tracking-tight" id="modalQrTieuDe">Mã QR Điểm Danh</h3>
+              <p class="text-xs text-slate-500" id="modalQrThoiGian">Thời gian họp</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="dongModalChieuQr()"
+            class="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+
+        <div class="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
+          <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200">
+            <img
+              id="anhQrChieu"
+              src=""
+              alt="Mã QR Điểm Danh Buổi Họp"
+              class="w-64 h-64 object-contain rounded-xl"
+            />
+          </div>
+          <p class="text-xs font-bold text-slate-700 mt-3 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-base text-emerald-600">smartphone</span>
+            Sinh viên mở app trên điện thoại quét mã này để điểm danh
+          </p>
+          <p class="text-[11px] text-slate-400 mt-0.5" id="modalQrDiaDiem">Địa điểm: ...</p>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-1">
+          <p class="font-bold flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm">info</span>
+            Quy định kiểm soát điểm danh:
+          </p>
+          <p class="text-[11px] text-amber-700 leading-relaxed">
+            Mã QR chỉ có hiệu lực trước 30 phút và sau khi kết thúc buổi họp 30 phút. Chỉ các sinh viên thuộc nhóm hướng dẫn mới được hệ thống ghi nhận.
+          </p>
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+          <span class="text-xs text-slate-400 font-mono" id="modalQrMaHop">Mã cuộc họp: #...</span>
+          <button
+            type="button"
+            onclick="dongModalChieuQr()"
+            class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+          >
+            Đóng cửa sổ
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toastContainer" class="fixed top-20 right-6 z-50 space-y-3 pointer-events-none"></div>
+
+    <script src="../../js/quanly/len_lich_hop.js"></script>
+  </body>
+</html>

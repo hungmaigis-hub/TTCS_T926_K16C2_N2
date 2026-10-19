@@ -348,3 +348,97 @@ def test_send_meeting_invitation_email_service_directly():
     assert "Lê Văn Test" in email["content"]
     assert "<!DOCTYPE html>" in email["html_content"]
     assert "Văn phòng HR Tầng 5" in email["html_content"]
+
+
+def test_get_meetings_list_and_filter():
+    """Kiểm tra API GET /api/v1/meetings lấy danh sách và lọc"""
+    response = client.get("/api/v1/meetings")
+    assert response.status_code == 200
+    data = response.json()
+    assert "data" in data
+    assert "items" in data["data"]
+    assert "total" in data["data"]
+
+
+def test_meeting_qr_checkin_all_edge_cases():
+    """Kiểm tra toàn diện các ngoại lệ của API POST /api/v1/meetings/{id}/checkin"""
+    db = get_test_db()
+    now = datetime.now()
+    meeting = LichHop(
+        tieu_de="Họp Sprint Review Tuần 2 Test",
+        thoi_gian_bat_dau=now - timedelta(minutes=5),
+        thoi_gian_ket_thuc=now + timedelta(minutes=55),
+        dia_diem="Phòng Lab 302",
+        ma_nguoi_chu_tri=3
+    )
+    db.add(meeting)
+    db.commit()
+    db.refresh(meeting)
+
+    hs1 = db.query(HoSoThucTap).filter(HoSoThucTap.ma_mentor == 3, HoSoThucTap.trang_thai_xet_duyet == "DaDuyet").first()
+    assert hs1 is not None
+
+    # 1. Điểm danh thành công
+    res = client.post(f"/api/v1/meetings/{meeting.ma_lich_hop}/checkin", json={
+        "ma_dinh_danh": str(hs1.ma_ho_so),
+        "ghi_chu": "Có mặt đầy đủ"
+    })
+    assert res.status_code == 200
+    assert res.json()["code"] == 200
+    assert "Điểm danh thành công" in res.json()["message"]
+
+    # 2. Chống double check-in (HTTP 409)
+    res_dup = client.post(f"/api/v1/meetings/{meeting.ma_lich_hop}/checkin", json={
+        "ma_dinh_danh": str(hs1.ma_ho_so)
+    })
+    assert res_dup.status_code == 409
+    assert "đã điểm danh tham gia" in res_dup.json()["detail"]
+
+    # 3. Cuộc họp không tồn tại (HTTP 404)
+    res_not_found = client.post("/api/v1/meetings/99999/checkin", json={
+        "ma_dinh_danh": str(hs1.ma_ho_so)
+    })
+    assert res_not_found.status_code == 404
+
+    # 4. Sinh viên không tồn tại (HTTP 404)
+    res_fake_user = client.post(f"/api/v1/meetings/{meeting.ma_lich_hop}/checkin", json={
+        "ma_dinh_danh": "NOT_EXISTING_ID_99999"
+    })
+    assert res_fake_user.status_code == 404
+
+    # 5. Sinh viên KHÔNG THUỘC LỚP/NHÓM CỦA MENTOR CHỦ TRÌ (HTTP 403)
+    hs_other = db.query(HoSoThucTap).filter(
+        HoSoThucTap.ma_mentor != 3,
+        HoSoThucTap.ma_mentor != None,
+        HoSoThucTap.trang_thai_xet_duyet == "DaDuyet"
+    ).first()
+    if not hs_other:
+        hs_other = db.query(HoSoThucTap).filter(HoSoThucTap.ma_ho_so != hs1.ma_ho_so).first()
+        if hs_other:
+            hs_other.ma_mentor = 999
+            db.commit()
+
+    if hs_other:
+        res_forbidden = client.post(f"/api/v1/meetings/{meeting.ma_lich_hop}/checkin", json={
+            "ma_dinh_danh": str(hs_other.ma_ho_so)
+        })
+        assert res_forbidden.status_code == 403
+        assert "không thuộc nhóm hướng dẫn" in res_forbidden.json()["detail"]
+
+    # 6. Buổi họp đã kết thúc (QR hết hạn) (HTTP 400)
+    past_meeting = LichHop(
+        tieu_de="Họp đã kết thúc tuần trước Test",
+        thoi_gian_bat_dau=now - timedelta(days=2, hours=2),
+        thoi_gian_ket_thuc=now - timedelta(days=2, hours=1),
+        dia_diem="Online Meet",
+        ma_nguoi_chu_tri=3
+    )
+    db.add(past_meeting)
+    db.commit()
+    db.refresh(past_meeting)
+
+    res_expired = client.post(f"/api/v1/meetings/{past_meeting.ma_lich_hop}/checkin", json={
+        "ma_dinh_danh": str(hs1.ma_ho_so)
+    })
+    assert res_expired.status_code == 400
+    assert "đã kết thúc" in res_expired.json()["detail"]

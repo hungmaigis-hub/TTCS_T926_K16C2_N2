@@ -23,6 +23,10 @@ let tuKhoaChuongTrinhHienTai = "";
 let tabMentorHienTai = "all";
 let tuKhoaMentorHienTai = "";
 
+let mentorImportDaChon = null;
+let tabMentorImportHienTai = "all";
+let tuKhoaMentorImportHienTai = "";
+
 let maHoSoHienTai = null;
 
 let thoiGianHenGioToast = null;
@@ -505,11 +509,23 @@ async function napTatCaDuLieu() {
 
     if (phanHoiMentors && phanHoiMentors.ok) {
       const dataJson = await phanHoiMentors.json();
-      danhSachMentor = dataJson.data || [];
+      danhSachMentor = Array.isArray(dataJson) ? dataJson : (dataJson.data || dataJson.items || []);
       dienDanhSachMentor(danhSachMentor);
     } else {
-      const elCuon = document.getElementById("danhSachMentorCuon");
-      if (elCuon) elCuon.innerHTML = `<div class="p-3 text-center text-xs text-rose-500">Không thể tải danh sách mentor từ máy chủ</div>`;
+      try {
+        const phanHoiBackup = await fetch(`${duongDanApiGoc}/users?vai_tro=Mentor`).catch(() => null);
+        if (phanHoiBackup && phanHoiBackup.ok) {
+          const dataJsonBackup = await phanHoiBackup.json();
+          danhSachMentor = Array.isArray(dataJsonBackup) ? dataJsonBackup : (dataJsonBackup.data || dataJsonBackup.items || []);
+          dienDanhSachMentor(danhSachMentor);
+        } else {
+          const elCuon = document.getElementById("danhSachMentorCuon");
+          if (elCuon) elCuon.innerHTML = `<div class="p-3 text-center text-xs text-rose-500">Không thể tải danh sách mentor từ máy chủ</div>`;
+        }
+      } catch {
+        const elCuon = document.getElementById("danhSachMentorCuon");
+        if (elCuon) elCuon.innerHTML = `<div class="p-3 text-center text-xs text-rose-500">Không thể tải danh sách mentor từ máy chủ</div>`;
+      }
     }
 
     kiemTraThamSoUrl();
@@ -899,6 +915,7 @@ function dienDanhSachChuongTrinh(danhSach) {
   danhSachChuongTrinh = danhSach || [];
   capNhatThongKeChuongTrinh();
   veDanhSachChuongTrinh();
+  capNhatSelectChuongTrinhImport();
 }
 
 function capNhatThongKeChuongTrinh() {
@@ -1161,7 +1178,7 @@ function xuLyChonChuongTrinh(maChuongTrinh, tuDongDienNgay = true) {
   if (!p) return;
 
   const sl = p.so_luong_sinh_vien || 0;
-  const chiTieu = p.chi_tieu_sinh_vien || 50;
+  const chiTieu = p.chi_tieu_sinh_vien || 1000;
   const nutLuu = document.getElementById("nutLuuHoSo");
 
   if (sl >= chiTieu) {
@@ -1192,6 +1209,7 @@ function dienDanhSachMentor(danhSach) {
   danhSachMentor = danhSach || [];
   capNhatThongKeMentor();
   veDanhSachMentor();
+  veDanhSachMentorImport();
 }
 
 function capNhatThongKeMentor() {
@@ -1205,7 +1223,7 @@ function capNhatThongKeMentor() {
 
   danhSachMentor.forEach((m) => {
     const sl = m.so_sinh_vien_huong_dan || 0;
-    const maxHd = m.chi_tieu_huong_dan || 5;
+    const maxHd = m.chi_tieu_huong_dan || 100;
     if (sl >= maxHd || m.da_du_chi_tieu) {
       full++;
     } else {
@@ -1284,7 +1302,7 @@ function veDanhSachMentor() {
 
   const danhSachLoc = danhSachMentor.filter((m) => {
     const sl = m.so_sinh_vien_huong_dan || 0;
-    const maxHd = m.chi_tieu_huong_dan || 5;
+    const maxHd = m.chi_tieu_huong_dan || 100;
     const isFull = sl >= maxHd || m.da_du_chi_tieu;
 
     if (tabMentorHienTai === "available" && isFull) return false;
@@ -1328,7 +1346,7 @@ function veDanhSachMentor() {
   let html = "";
   danhSachLoc.forEach((m, idx) => {
     const sl = m.so_sinh_vien_huong_dan || 0;
-    const maxHd = m.chi_tieu_huong_dan || 5;
+    const maxHd = m.chi_tieu_huong_dan || 100;
     const isFull = sl >= maxHd || m.da_du_chi_tieu;
     const isDangChon = mentorDaChon && String(mentorDaChon.ma_nguoi_dung) === String(m.ma_nguoi_dung);
 
@@ -1340,7 +1358,7 @@ function veDanhSachMentor() {
     if (isFull) {
       badgeQuota = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 shrink-0"><span class="material-symbols-outlined text-[13px]">lock</span> Đã kín (${sl}/${maxHd})</span>`;
     } else if (sl === 0) {
-      badgeQuota = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">Còn 5 chỗ (0/${maxHd})</span>`;
+      badgeQuota = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">Còn ${maxHd} chỗ (0/${maxHd})</span>`;
     } else {
       badgeQuota = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200 shrink-0">Còn ${maxHd - sl} chỗ (${sl}/${maxHd})</span>`;
     }
@@ -1392,7 +1410,7 @@ function chonMentor(maNguoiDung, boQuaKiemTra = false) {
   if (!m) return;
 
   const sl = m.so_sinh_vien_huong_dan || 0;
-  const maxHd = m.chi_tieu_huong_dan || 5;
+  const maxHd = m.chi_tieu_huong_dan || 100;
 
   if (!boQuaKiemTra && (sl >= maxHd || m.da_du_chi_tieu)) {
     canhBaoMentorKinChiTieu(m.ho_ten, sl, maxHd);
@@ -1543,8 +1561,8 @@ async function handleLuuHoSo() {
   }
 
   const progObj = danhSachChuongTrinh.find((x) => String(x.ma_chuong_trinh) === String(maChuongTrinh));
-  if (progObj && (progObj.so_luong_sinh_vien || 0) >= (progObj.chi_tieu_sinh_vien || 50)) {
-    hienThongBaoLoi(`Chương trình thực tập "${progObj.ten_chuong_trinh}" đã đủ chỉ tiêu sinh viên (${progObj.so_luong_sinh_vien}/${progObj.chi_tieu_sinh_vien}), không thể tiếp nhận thêm!`);
+  if (progObj && (progObj.so_luong_sinh_vien || 0) >= (progObj.chi_tieu_sinh_vien || 1000)) {
+    hienThongBaoLoi(`Chương trình thực tập "${progObj.ten_chuong_trinh}" đã đủ chỉ tiêu sinh viên (${progObj.so_luong_sinh_vien}/${progObj.chi_tieu_sinh_vien || 1000}), không thể tiếp nhận thêm!`);
     return;
   }
 
@@ -1557,8 +1575,8 @@ async function handleLuuHoSo() {
   }
 
   const mentorObj = danhSachMentor.find((x) => String(x.ma_nguoi_dung) === String(maMentor));
-  if (mentorObj && (mentorObj.so_sinh_vien_huong_dan || 0) >= (mentorObj.chi_tieu_huong_dan || 5)) {
-    hienThongBaoLoi(`Mentor ${mentorObj.ho_ten} đã đủ chỉ tiêu hướng dẫn (${mentorObj.so_sinh_vien_huong_dan}/${mentorObj.chi_tieu_huong_dan}), vui lòng chọn mentor khác!`);
+  if (mentorObj && (mentorObj.so_sinh_vien_huong_dan || 0) >= (mentorObj.chi_tieu_huong_dan || 100)) {
+    hienThongBaoLoi(`Mentor ${mentorObj.ho_ten} đã đủ chỉ tiêu hướng dẫn (${mentorObj.so_sinh_vien_huong_dan}/${mentorObj.chi_tieu_huong_dan || 100}), vui lòng chọn mentor khác!`);
     return;
   }
 
@@ -1845,7 +1863,7 @@ async function taiHoSoGanDay() {
     if (!phanHoi.ok) return;
 
     const ketQua = await phanHoi.json();
-    const danhSach = ketQua.data;
+    const danhSach = Array.isArray(ketQua.data) ? ketQua.data.slice(0, 6) : [];
     if (!danhSach || danhSach.length === 0) return;
 
     const mauAvatar = [
@@ -1878,7 +1896,7 @@ async function taiHoSoGanDay() {
           badgeTrangThai = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Chờ duyệt</span>`;
         }
 
-        const tu = hoTen.trim().split(" ");
+        const tu = hoTen.trim().split(/\s+/);
         const vietTat =
           tu.length === 1
             ? tu[0].substring(0, 2).toUpperCase()
@@ -1888,18 +1906,18 @@ async function taiHoSoGanDay() {
 
         return `
           <tr class="hover:bg-slate-50/60 transition-colors">
-            <td class="py-3 font-bold text-slate-900 flex items-center gap-2">
+            <td class="py-2.5 px-3 font-bold text-slate-900 flex items-center gap-2">
               <div class="w-6 h-6 rounded-full ${mau} flex items-center justify-center text-[10px] font-bold shrink-0">
                 ${vietTat}
               </div>
               <a href="javascript:void(0)" onclick="chonSinhVienTuBang(${item.ma_ho_so})" class="hover:text-blue-600 transition-colors font-semibold" title="Nhấp để phân công lại hồ sơ #${item.ma_ho_so}">
-                ${hoTen}
+                ${tranhXss(hoTen)}
               </a>
             </td>
-            <td class="py-3 text-slate-500">${email}</td>
-            <td class="py-3">${chuyenNganh}</td>
-            <td class="py-3 text-slate-500">${thoiGian}</td>
-            <td class="py-3 text-center">${badgeTrangThai}</td>
+            <td class="py-2.5 px-3 text-slate-500">${tranhXss(email)}</td>
+            <td class="py-2.5 px-3 text-slate-600">${tranhXss(chuyenNganh)}</td>
+            <td class="py-2.5 px-3 text-slate-500">${thoiGian}</td>
+            <td class="py-2.5 px-3 text-center">${badgeTrangThai}</td>
           </tr>
         `;
       })
@@ -1975,6 +1993,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (boxChuyenNganh && !boxChuyenNganh.contains(e.target)) {
       dongDropdownChuyenNganh();
     }
+
+    const boxMentorImport = document.getElementById("hopChonMentorImportContainer");
+    if (boxMentorImport && !boxMentorImport.contains(e.target)) {
+      dongDropdownMentorImport();
+    }
   });
 
   document.addEventListener("keydown", (e) => {
@@ -1985,6 +2008,1100 @@ document.addEventListener("DOMContentLoaded", () => {
       dongDropdownTrangThai();
       dongDropdownTruong();
       dongDropdownChuyenNganh();
+      dongDropdownMentorImport();
+      dongModalXemTruoc();
     }
   });
 });
+
+let tepImportHienTai = null;
+let danhSachLoiImportHienTai = [];
+let danhSachXemTruocTongHop = [];
+let tabXemTruocHienTai = "all";
+let tuKhoaXemTruocHienTai = "";
+let ketQuaKiemTraImportHienTai = null;
+
+function capNhatSelectChuongTrinhImport() {
+  const selectChuongTrinh = document.getElementById("importMaChuongTrinh");
+  if (!selectChuongTrinh) return;
+
+  const giaTriCu = selectChuongTrinh.value;
+  selectChuongTrinh.innerHTML = `<option value="">-- Chọn chương trình thực tập tiếp nhận (*) --</option>`;
+
+  if (Array.isArray(danhSachChuongTrinh) && danhSachChuongTrinh.length > 0) {
+    danhSachChuongTrinh.forEach((p) => {
+      const soLuongHienTai = p.so_luong_sinh_vien || 0;
+      const chiTieu = p.chi_tieu_sinh_vien || 1000;
+      const opt = document.createElement("option");
+      opt.value = p.ma_chuong_trinh;
+      opt.textContent = `${p.ten_chuong_trinh} (${soLuongHienTai}/${chiTieu} SV)`;
+      if (soLuongHienTai >= chiTieu) {
+        opt.textContent += " [ĐÃ ĐỦ CHỈ TIÊU]";
+        opt.disabled = true;
+      }
+      selectChuongTrinh.appendChild(opt);
+    });
+  }
+
+  const ctNgoai = document.getElementById("maChuongTrinh")?.value;
+  if (giaTriCu && selectChuongTrinh.querySelector(`option[value="${giaTriCu}"]`)) {
+    selectChuongTrinh.value = giaTriCu;
+  } else if (ctNgoai && selectChuongTrinh.querySelector(`option[value="${ctNgoai}"]`)) {
+    selectChuongTrinh.value = ctNgoai;
+  }
+}
+
+function toggleDropdownMentorImport(forceState) {
+  const hopDropdown = document.getElementById("hopDropdownMentorImport");
+  const iconMuiTen = document.getElementById("iconMuiTenMentorImport");
+  const hopChon = document.getElementById("hopChonMentorImportContainer");
+  if (!hopDropdown) return;
+
+  const dangMo = !hopDropdown.classList.contains("hidden");
+  const muonMo = forceState !== undefined ? forceState : !dangMo;
+
+  if (muonMo) {
+    if (hopChon) hopChon.style.zIndex = "1000";
+    hopDropdown.classList.remove("hidden");
+    if (iconMuiTen) iconMuiTen.classList.add("rotate-180");
+    const oSearch = document.getElementById("oTimKiemMentorImport");
+    if (oSearch) setTimeout(() => oSearch.focus(), 50);
+  } else {
+    if (hopChon) hopChon.style.zIndex = "30";
+    hopDropdown.classList.add("hidden");
+    if (iconMuiTen) iconMuiTen.classList.remove("rotate-180");
+  }
+}
+
+function dongDropdownMentorImport() {
+  toggleDropdownMentorImport(false);
+}
+
+function locTabMentorImport(tab) {
+  tabMentorImportHienTai = tab;
+
+  const btnAll = document.getElementById("tabMentorImportAll");
+  const btnAvailable = document.getElementById("tabMentorImportAvailable");
+  const btnFull = document.getElementById("tabMentorImportFull");
+
+  const activeClass = "px-2 py-0.5 rounded-lg bg-ictu-50 text-ictu-700 transition-colors font-bold cursor-pointer text-[11px]";
+  const inactiveClass = "px-2 py-0.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer font-medium text-[11px]";
+
+  if (btnAll) btnAll.className = tab === "all" ? activeClass : inactiveClass;
+  if (btnAvailable) btnAvailable.className = tab === "available" ? activeClass : inactiveClass;
+  if (btnFull) btnFull.className = tab === "full" ? activeClass : inactiveClass;
+
+  veDanhSachMentorImport();
+}
+
+function locDanhSachMentorImport(tuKhoa) {
+  tuKhoaMentorImportHienTai = (tuKhoa || "").toLowerCase().trim();
+  const nutXoa = document.getElementById("nutXoaTimKiemMentorImport");
+  if (nutXoa) {
+    if (tuKhoaMentorImportHienTai) nutXoa.classList.remove("hidden");
+    else nutXoa.classList.add("hidden");
+  }
+  veDanhSachMentorImport();
+}
+
+function xoaTimKiemMentorImport() {
+  const oSearch = document.getElementById("oTimKiemMentorImport");
+  if (oSearch) oSearch.value = "";
+  locDanhSachMentorImport("");
+  if (oSearch) oSearch.focus();
+}
+
+function capNhatThongKeMentorImport() {
+  const elAll = document.getElementById("demMentorImportAll");
+  const elAvailable = document.getElementById("demMentorImportAvailable");
+  const elFull = document.getElementById("demMentorImportFull");
+
+  const total = danhSachMentor.length;
+  let available = 0;
+  let full = 0;
+
+  danhSachMentor.forEach((m) => {
+    const sl = m.so_sinh_vien_huong_dan || 0;
+    const maxHd = m.chi_tieu_huong_dan || 100;
+    if (sl >= maxHd || m.da_du_chi_tieu) {
+      full++;
+    } else {
+      available++;
+    }
+  });
+
+  if (elAll) elAll.textContent = total;
+  if (elAvailable) elAvailable.textContent = available;
+  if (elFull) elFull.textContent = full;
+}
+
+function veDanhSachMentorImport() {
+  const elCuon = document.getElementById("danhSachMentorImportCuon");
+  if (!elCuon) return;
+
+  capNhatThongKeMentorImport();
+
+  const danhSachLoc = danhSachMentor.filter((m) => {
+    const sl = m.so_sinh_vien_huong_dan || 0;
+    const maxHd = m.chi_tieu_huong_dan || 100;
+    const isFull = sl >= maxHd || m.da_du_chi_tieu;
+
+    if (tabMentorImportHienTai === "available" && isFull) return false;
+    if (tabMentorImportHienTai === "full" && !isFull) return false;
+
+    if (!tuKhoaMentorImportHienTai) return true;
+
+    const ten = (m.ho_ten || "").toLowerCase();
+    const email = (m.email || "").toLowerCase();
+    const sdt = (m.so_dien_thoai || "").toLowerCase();
+    const chucVu = (m.chuc_vu || "").toLowerCase();
+    const maId = String(m.ma_nguoi_dung);
+
+    return (
+      ten.includes(tuKhoaMentorImportHienTai) ||
+      email.includes(tuKhoaMentorImportHienTai) ||
+      sdt.includes(tuKhoaMentorImportHienTai) ||
+      chucVu.includes(tuKhoaMentorImportHienTai) ||
+      maId.includes(tuKhoaMentorImportHienTai)
+    );
+  });
+
+  let html = "";
+
+  if (!tuKhoaMentorImportHienTai && tabMentorImportHienTai === "all") {
+    const isChuaChon = !mentorImportDaChon;
+    html += `
+      <div onclick="boChonMentorImport()" class="p-2 rounded-xl border transition-all flex items-center justify-between gap-2.5 text-left cursor-pointer ${isChuaChon ? "bg-slate-100 border-slate-300 ring-1 ring-slate-400/20" : "bg-white hover:bg-slate-50 border-slate-200"}">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <div class="w-7 h-7 rounded-lg bg-slate-200 text-slate-500 font-bold text-xs flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-[16px]">person_off</span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-bold text-slate-700 text-xs truncate">-- Không phân công Mentor --</div>
+            <div class="text-[10px] text-slate-400 truncate">Hoặc để phân công người hướng dẫn sau khi duyệt</div>
+          </div>
+        </div>
+        ${isChuaChon ? `<span class="material-symbols-outlined text-[16px] text-ictu-600">check</span>` : ""}
+      </div>
+    `;
+  }
+
+  if (danhSachLoc.length === 0) {
+    html += `
+      <div class="py-6 text-center text-xs text-slate-400">
+        <span class="material-symbols-outlined text-xl text-slate-300 block mb-1">person_search</span>
+        Không tìm thấy Mentor phù hợp với từ khóa "${tuKhoaMentorImportHienTai || "đang chọn"}"
+      </div>
+    `;
+    elCuon.innerHTML = html;
+    return;
+  }
+
+  const bangMau = [
+    "from-blue-600 to-indigo-600",
+    "from-sky-500 to-ictu-600",
+    "from-emerald-500 to-teal-600",
+    "from-purple-500 to-indigo-600",
+    "from-amber-500 to-orange-600"
+  ];
+
+  danhSachLoc.forEach((m, idx) => {
+    const sl = m.so_sinh_vien_huong_dan || 0;
+    const maxHd = m.chi_tieu_huong_dan || 100;
+    const isFull = sl >= maxHd || m.da_du_chi_tieu;
+    const isDangChon = mentorImportDaChon && String(mentorImportDaChon.ma_nguoi_dung) === String(m.ma_nguoi_dung);
+
+    const parts = (m.ho_ten || "M").trim().split(/\s+/);
+    const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+    const mauGradient = bangMau[idx % bangMau.length];
+
+    let badgeQuota = "";
+    if (isFull) {
+      badgeQuota = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 shrink-0"><span class="material-symbols-outlined text-[11px]">lock</span> Đã kín (${sl}/${maxHd})</span>`;
+    } else if (sl === 0) {
+      badgeQuota = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">Còn ${maxHd} chỗ (0/${maxHd})</span>`;
+    } else {
+      badgeQuota = `<span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-sky-50 text-sky-700 border border-sky-200 shrink-0">Còn ${maxHd - sl} chỗ (${sl}/${maxHd})</span>`;
+    }
+
+    let classThe = "p-2 rounded-xl border transition-all flex items-center justify-between gap-2.5 text-left ";
+    if (isDangChon) {
+      classThe += "bg-ictu-50/70 border-ictu-300 ring-1 ring-ictu-400/30 ";
+    } else if (isFull) {
+      classThe += "bg-slate-50/70 border-slate-200/70 opacity-60 cursor-not-allowed ";
+    } else {
+      classThe += "bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 cursor-pointer shadow-2xs ";
+    }
+
+    const clickAction = isFull
+      ? `canhBaoMentorKinChiTieu('${m.ho_ten}', ${sl}, ${maxHd})`
+      : `chonMentorImport(${m.ma_nguoi_dung})`;
+
+    html += `
+      <div onclick="${clickAction}" class="${classThe}">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <div class="w-7 h-7 rounded-full bg-gradient-to-tr ${mauGradient} text-white font-bold text-[11px] flex items-center justify-center shadow-2xs shrink-0">
+            ${initials}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-bold text-slate-800 text-xs truncate">${m.ho_ten}</span>
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">#${m.ma_nguoi_dung}</span>
+              <span class="text-[10px] text-slate-500 font-medium truncate">• ${m.chuc_vu || "Mentor"}</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-[10px] text-slate-500 truncate mt-0.5">
+              <span class="truncate">${m.email}</span>
+              ${m.so_dien_thoai ? `<span class="text-slate-300">|</span><span>${m.so_dien_thoai}</span>` : ""}
+            </div>
+          </div>
+        </div>
+        <div class="shrink-0 flex items-center gap-1.5">
+          ${badgeQuota}
+          ${isDangChon ? `<span class="material-symbols-outlined text-[16px] text-ictu-600">check</span>` : ""}
+        </div>
+      </div>
+    `;
+  });
+
+  elCuon.innerHTML = html;
+}
+
+function chonMentorImport(maNguoiDung, boQuaKiemTra = false) {
+  const m = danhSachMentor.find((x) => String(x.ma_nguoi_dung) === String(maNguoiDung));
+  if (!m) return;
+
+  const sl = m.so_sinh_vien_huong_dan || 0;
+  const maxHd = m.chi_tieu_huong_dan || 100;
+
+  if (!boQuaKiemTra && (sl >= maxHd || m.da_du_chi_tieu)) {
+    canhBaoMentorKinChiTieu(m.ho_ten, sl, maxHd);
+    return;
+  }
+
+  mentorImportDaChon = m;
+  const inputMaMentor = document.getElementById("importMaMentor");
+  if (inputMaMentor) inputMaMentor.value = m.ma_nguoi_dung;
+
+  const hienThiEl = document.getElementById("hienThiMentorImportDaChon");
+  const nutXoa = document.getElementById("nutXoaChonMentorImport");
+
+  const parts = (m.ho_ten || "M").trim().split(/\s+/);
+  const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+
+  if (hienThiEl) {
+    hienThiEl.innerHTML = `
+      <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-ictu-600 to-sky-500 text-white font-bold text-[10px] flex items-center justify-center shadow-xs shrink-0">
+        ${initials}
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1.5">
+          <span class="font-bold text-slate-900 text-xs truncate">${m.ho_ten}</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+            ${sl}/${maxHd} SV
+          </span>
+        </div>
+        <div class="text-[10px] text-slate-500 truncate">
+          #${m.ma_nguoi_dung} • ${m.email}
+        </div>
+      </div>
+    `;
+  }
+
+  if (nutXoa) nutXoa.classList.remove("hidden");
+  dongDropdownMentorImport();
+  veDanhSachMentorImport();
+}
+
+function boChonMentorImport() {
+  mentorImportDaChon = null;
+  const inputMaMentor = document.getElementById("importMaMentor");
+  if (inputMaMentor) inputMaMentor.value = "";
+
+  const hienThiEl = document.getElementById("hienThiMentorImportDaChon");
+  const nutXoa = document.getElementById("nutXoaChonMentorImport");
+
+  if (hienThiEl) {
+    hienThiEl.innerHTML = `
+      <span class="w-6 h-6 rounded-lg bg-slate-200/80 text-slate-400 flex items-center justify-center shrink-0 group-hover:text-ictu-600 transition-colors">
+        <span class="material-symbols-outlined text-[16px]">supervisor_account</span>
+      </span>
+      <span class="text-xs text-slate-500 font-medium truncate">
+        -- Không phân công Mentor --
+      </span>
+    `;
+  }
+
+  if (nutXoa) nutXoa.classList.add("hidden");
+  dongDropdownMentorImport();
+  veDanhSachMentorImport();
+}
+
+async function moModalImport() {
+  const modal = document.getElementById("modalImport");
+  if (!modal) return;
+
+  const selectChuongTrinh = document.getElementById("importMaChuongTrinh");
+  if (selectChuongTrinh) {
+    if (!Array.isArray(danhSachChuongTrinh) || danhSachChuongTrinh.length === 0) {
+      selectChuongTrinh.innerHTML = `<option value="">-- Đang nạp danh sách chương trình... --</option>`;
+      try {
+        const phanHoi = await fetch(`${duongDanApiPrograms}?limit=100`).catch(() => null);
+        if (phanHoi && phanHoi.ok) {
+          const dataJson = await phanHoi.json();
+          danhSachChuongTrinh = dataJson.items || dataJson.data || [];
+          dienDanhSachChuongTrinh(danhSachChuongTrinh);
+        }
+      } catch {}
+    }
+    capNhatSelectChuongTrinhImport();
+  }
+
+  if (!Array.isArray(danhSachMentor) || danhSachMentor.length === 0) {
+    try {
+      let phanHoi = await fetch(duongDanApiMentors).catch(() => null);
+      if (!phanHoi || !phanHoi.ok) {
+        phanHoi = await fetch(`${duongDanApiGoc}/users?vai_tro=Mentor`).catch(() => null);
+      }
+      if (phanHoi && phanHoi.ok) {
+        const dataJson = await phanHoi.json();
+        danhSachMentor = Array.isArray(dataJson) ? dataJson : (dataJson.data || dataJson.items || []);
+        dienDanhSachMentor(danhSachMentor);
+      }
+    } catch {}
+  }
+
+  const mentorNgoai = document.getElementById("maMentor")?.value;
+  if (mentorNgoai) {
+    chonMentorImport(mentorNgoai, true);
+  } else {
+    boChonMentorImport();
+  }
+
+  dongDropdownMentorImport();
+  veDanhSachMentorImport();
+
+  const selectTruong = document.getElementById("importMaTruong");
+  if (selectTruong) {
+    selectTruong.innerHTML = `<option value="">-- Tự động theo file --</option>`;
+    danhSachTruongChuan.forEach((t) => {
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = `${t.tenNgan} - ${t.ten}`;
+      selectTruong.appendChild(opt);
+    });
+    selectTruong.value = "1";
+  }
+
+  const nutThucHien = document.getElementById("nutThucHienImport");
+  const nhanNut = document.getElementById("nhanNutThucHienImport");
+  if (nutThucHien) {
+    nutThucHien.disabled = true;
+    nutThucHien.className = "inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 text-slate-400 text-xs font-bold shadow-xs cursor-not-allowed transition-all";
+  }
+  if (nhanNut) {
+    nhanNut.textContent = "Xác nhận nhập & Phân công";
+  }
+
+  const hopKetQua = document.getElementById("hopKetQuaImport");
+  if (hopKetQua) hopKetQua.classList.add("hidden");
+
+  thietLapKeoThaTep();
+  modal.classList.remove("hidden");
+}
+
+function dongModalImport() {
+  const modal = document.getElementById("modalImport");
+  if (modal) modal.classList.add("hidden");
+  dongDropdownMentorImport();
+}
+
+function xuLyChonTepImport(input) {
+  const files = input.files;
+  if (!files || files.length === 0) return;
+  const file = files[0];
+
+  const duoiTep = file.name.split(".").pop().toLowerCase();
+  const cacDuoiChoPhep = ["xlsx", "xls", "docx", "pdf", "csv"];
+  if (!cacDuoiChoPhep.includes(duoiTep)) {
+    hienThongBaoLoi(`Định dạng file .${duoiTep} không được hỗ trợ. Vui lòng chỉ chọn file .xlsx, .docx, .pdf hoặc .csv!`);
+    input.value = "";
+    return;
+  }
+
+  const dungLuongToiDa = 10 * 1024 * 1024;
+  if (file.size > dungLuongToiDa) {
+    hienThongBaoLoi("Dung lượng file vượt quá giới hạn 10MB cho phép!");
+    input.value = "";
+    return;
+  }
+
+  tepImportHienTai = file;
+
+  const vungTha = document.getElementById("vungThaTep");
+  const thongTin = document.getElementById("thongTinTepDaChon");
+  const tenTep = document.getElementById("tenTepDaChon");
+  const dungLuong = document.getElementById("dungLuongTepDaChon");
+  const iconLoai = document.getElementById("iconLoaiTep");
+
+  if (vungTha) vungTha.classList.add("hidden");
+  if (thongTin) thongTin.classList.remove("hidden");
+  if (tenTep) tenTep.textContent = file.name;
+
+  if (dungLuong) {
+    const dungLuongKb = (file.size / 1024).toFixed(1);
+    const dungLuongMb = (file.size / (1024 * 1024)).toFixed(2);
+    dungLuong.textContent = file.size > 1024 * 1024 ? `${dungLuongMb} MB` : `${dungLuongKb} KB`;
+  }
+
+  if (iconLoai) {
+    if (duoiTep === "xlsx" || duoiTep === "xls") {
+      iconLoai.className = "w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0";
+      iconLoai.innerHTML = `<span class="material-symbols-outlined text-[20px]">table_view</span>`;
+    } else if (duoiTep === "docx") {
+      iconLoai.className = "w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0";
+      iconLoai.innerHTML = `<span class="material-symbols-outlined text-[20px]">description</span>`;
+    } else if (duoiTep === "pdf") {
+      iconLoai.className = "w-9 h-9 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0";
+      iconLoai.innerHTML = `<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>`;
+    } else {
+      iconLoai.className = "w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0";
+      iconLoai.innerHTML = `<span class="material-symbols-outlined text-[20px]">format_list_bulleted</span>`;
+    }
+  }
+
+  const hopKetQua = document.getElementById("hopKetQuaImport");
+  if (hopKetQua) hopKetQua.classList.add("hidden");
+}
+
+function xoaTepDaChon() {
+  tepImportHienTai = null;
+  const input = document.getElementById("tepImport");
+  if (input) input.value = "";
+
+  const vungTha = document.getElementById("vungThaTep");
+  const thongTin = document.getElementById("thongTinTepDaChon");
+  if (vungTha) vungTha.classList.remove("hidden");
+  if (thongTin) thongTin.classList.add("hidden");
+
+  const hopKetQua = document.getElementById("hopKetQuaImport");
+  if (hopKetQua) hopKetQua.classList.add("hidden");
+}
+
+function thietLapKeoThaTep() {
+  const vungTha = document.getElementById("vungThaTep");
+  if (!vungTha || vungTha.dataset.daGanSuKien) return;
+  vungTha.dataset.daGanSuKien = "true";
+
+  ["dragenter", "dragover"].forEach((tenSuKien) => {
+    vungTha.addEventListener(tenSuKien, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      vungTha.classList.add("border-ictu-600", "bg-ictu-50/50");
+    });
+  });
+
+  ["dragleave", "drop"].forEach((tenSuKien) => {
+    vungTha.addEventListener(tenSuKien, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      vungTha.classList.remove("border-ictu-600", "bg-ictu-50/50");
+    });
+  });
+
+  vungTha.addEventListener("drop", (e) => {
+    const dt = e.dataTransfer;
+    if (dt && dt.files && dt.files.length > 0) {
+      const input = document.getElementById("tepImport");
+      if (input) {
+        input.files = dt.files;
+        xuLyChonTepImport(input);
+      }
+    }
+  });
+}
+
+async function taiMauExcel() {
+  try {
+    const phanHoi = await fetch(`${duongDanApiInterns}/template-excel`);
+    if (!phanHoi.ok) throw new Error("Không thể tải file mẫu Excel");
+    const blob = await phanHoi.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "mau_danh_sach_sinh_vien_thuc_tap.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    hienThongBaoThanhCong("Đã tải xuống file mẫu Excel thành công!");
+  } catch (err) {
+    hienThongBaoLoi("Lỗi khi tải file mẫu Excel: " + (err.message || "Máy chủ không phản hồi"));
+  }
+}
+
+async function taiMauWord() {
+  try {
+    const phanHoi = await fetch(`${duongDanApiInterns}/template-docx`);
+    if (!phanHoi.ok) throw new Error("Không thể tải file mẫu Word");
+    const blob = await phanHoi.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "mau_danh_sach_sinh_vien_thuc_tap.docx";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    hienThongBaoThanhCong("Đã tải xuống file mẫu Word thành công!");
+  } catch (err) {
+    hienThongBaoLoi("Lỗi khi tải file mẫu Word: " + (err.message || "Máy chủ không phản hồi"));
+  }
+}
+
+async function taiXuatDanhSachLoi() {
+  if (!danhSachLoiImportHienTai || danhSachLoiImportHienTai.length === 0) {
+    hienThongBaoLoi("Không có danh sách sinh viên lỗi để xuất file.");
+    return;
+  }
+  const nut = document.getElementById("nutXuatFileLoi");
+  const noiDungGoc = nut ? nut.innerHTML : "";
+  if (nut) {
+    nut.innerHTML = `<span class="inline-block w-3 h-3 rounded-full border-2 border-rose-600 border-t-transparent animate-spin"></span> Đang xuất...`;
+    nut.disabled = true;
+  }
+  try {
+    const phanHoi = await fetch(`${duongDanApiInterns}/export-errors-excel`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chi_tiet_loi: danhSachLoiImportHienTai })
+    });
+    if (!phanHoi.ok) throw new Error("Không thể xuất danh sách lỗi");
+    const blob = await phanHoi.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `danh_sach_sinh_vien_loi_${Date.now()}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    hienThongBaoThanhCong("Đã xuất danh sách dòng lỗi ra Excel thành công!");
+  } catch (err) {
+    hienThongBaoLoi("Lỗi khi xuất file lỗi: " + (err.message || "Lỗi kết nối máy chủ"));
+  } finally {
+    if (nut) {
+      nut.innerHTML = noiDungGoc;
+      nut.disabled = false;
+    }
+  }
+}
+
+async function thucHienImport(cheDoOverride) {
+  if (!tepImportHienTai) {
+    hienThongBaoLoi("Vui lòng chọn hoặc kéo thả tệp danh sách sinh viên (.xlsx, .docx, .pdf, .csv) trước khi thực hiện!");
+    document.getElementById("tepImport")?.focus();
+    return;
+  }
+
+  const selectChuongTrinh = document.getElementById("importMaChuongTrinh");
+  const maChuongTrinh = selectChuongTrinh ? selectChuongTrinh.value : "";
+  if (!maChuongTrinh) {
+    hienThongBaoLoi("Vui lòng chọn Chương trình thực tập tiếp nhận các sinh viên này!");
+    selectChuongTrinh?.focus();
+    return;
+  }
+
+  const selectMentor = document.getElementById("importMaMentor");
+  const maMentor = selectMentor ? selectMentor.value : "";
+
+  const selectTruong = document.getElementById("importMaTruong");
+  const maTruong = selectTruong ? selectTruong.value : "";
+
+  let cheDo = cheDoOverride;
+  if (!cheDo) {
+    const radioChon = document.querySelector('input[name="cheDoImport"]:checked');
+    cheDo = radioChon ? radioChon.value : "bo_qua_loi";
+  }
+
+  const nutThucHien = document.getElementById("nutThucHienImport");
+  const nutKiemTra = document.getElementById("nutKiemTraTruocImport");
+  const noiDungNutThucHien = nutThucHien ? nutThucHien.innerHTML : "";
+  const noiDungNutKiemTra = nutKiemTra ? nutKiemTra.innerHTML : "";
+
+  if (cheDo === "kiem_tra_truoc") {
+    if (nutKiemTra) {
+      nutKiemTra.innerHTML = `<span class="inline-block w-4 h-4 rounded-full border-2 border-slate-700 border-t-transparent animate-spin"></span> Đang kiểm tra...`;
+      nutKiemTra.disabled = true;
+    }
+    if (nutThucHien) nutThucHien.disabled = true;
+  } else {
+    if (nutThucHien) {
+      nutThucHien.innerHTML = `<span class="inline-block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span> Đang xử lý & phân công...`;
+      nutThucHien.disabled = true;
+    }
+    if (nutKiemTra) nutKiemTra.disabled = true;
+  }
+
+  const hopKetQua = document.getElementById("hopKetQuaImport");
+  const thongBao = document.getElementById("thongBaoKetQuaImport");
+  const cacBadge = document.getElementById("cacBadgeKetQua");
+  const hopLoi = document.getElementById("hopDanhSachLoi");
+  const bangLoi = document.getElementById("bangThanDanhSachLoi");
+  const hopHopLe = document.getElementById("hopXemTruocHopLe");
+  const bangHopLe = document.getElementById("bangThanXemTruocHopLe");
+
+  if (hopKetQua) hopKetQua.classList.add("hidden");
+  if (hopLoi) hopLoi.classList.add("hidden");
+  if (hopHopLe) hopHopLe.classList.add("hidden");
+
+  const formData = new FormData();
+  formData.append("file", tepImportHienTai);
+  formData.append("ma_chuong_trinh", maChuongTrinh);
+  if (maMentor) formData.append("ma_mentor", maMentor);
+  if (maTruong) formData.append("ma_truong", maTruong);
+  formData.append("che_do", cheDo);
+
+  try {
+    const phanHoi = await fetch(`${duongDanApiInterns}/import`, {
+      method: "POST",
+      body: formData
+    });
+
+    const ketQua = await phanHoi.json().catch(() => ({}));
+
+    if (hopKetQua) hopKetQua.classList.remove("hidden");
+
+    const dataRes = ketQua.data || {};
+    const tongSo = dataRes.tong_so_dong || 0;
+    const thanhCong = dataRes.thanh_cong || 0;
+    const thatBai = dataRes.that_bai || 0;
+    const danhSachLoi = dataRes.chi_tiet_loi || [];
+    const xemTruocHopLe = dataRes.xem_truoc_hop_le || [];
+    danhSachLoiImportHienTai = danhSachLoi;
+
+    if (cacBadge) {
+      cacBadge.innerHTML = `
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">Tổng: ${tongSo}</span>
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Hợp lệ: ${thanhCong}</span>
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${thatBai > 0 ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-500"}">Lỗi: ${thatBai}</span>
+      `;
+    }
+
+    if (bangLoi && danhSachLoi.length > 0) {
+      bangLoi.innerHTML = danhSachLoi.map((item) => `
+        <tr class="hover:bg-rose-50/50 transition-colors">
+          <td class="py-2 px-3 font-bold text-slate-800">#${item.dong || "--"}</td>
+          <td class="py-2 px-3 font-semibold text-slate-700">${item.ma_sinh_vien || "--"}</td>
+          <td class="py-2 px-3 font-medium text-slate-900">${item.ho_ten || "--"}</td>
+          <td class="py-2 px-3 text-slate-500">${item.email || "--"}</td>
+          <td class="py-2 px-3 font-semibold text-rose-600">${item.ly_do || "Lỗi dữ liệu"}</td>
+        </tr>
+      `).join("");
+    }
+
+    if (bangHopLe && xemTruocHopLe.length > 0) {
+      bangHopLe.innerHTML = xemTruocHopLe.map((sv) => `
+        <tr class="hover:bg-emerald-50/50 transition-colors">
+          <td class="py-1.5 px-3 font-bold text-slate-800">#${sv.dong || "--"}</td>
+          <td class="py-1.5 px-3 font-semibold text-slate-700">${sv.ma_sinh_vien || "--"}</td>
+          <td class="py-1.5 px-3 font-medium text-slate-900">${sv.ho_ten || "--"}</td>
+          <td class="py-1.5 px-3 text-slate-500">${sv.email || "--"}</td>
+          <td class="py-1.5 px-3 text-slate-600">${sv.lop || "--"}</td>
+          <td class="py-1.5 px-3 text-slate-600">${sv.chuyen_nganh || "--"}</td>
+          <td class="py-1.5 px-3 text-slate-600 font-medium">${sv.truong || "--"}</td>
+        </tr>
+      `).join("");
+    }
+
+    if (phanHoi.ok) {
+      if (cheDo === "kiem_tra_truoc") {
+        ketQuaKiemTraImportHienTai = dataRes;
+        if (thongBao) {
+          thongBao.className = thatBai > 0
+            ? "p-3.5 rounded-xl text-xs font-medium leading-relaxed bg-amber-50 text-amber-900 border border-amber-200"
+            : "p-3.5 rounded-xl text-xs font-medium leading-relaxed bg-emerald-50 text-emerald-900 border border-emerald-200";
+          thongBao.innerHTML = `<b>Kiểm tra hoàn tất:</b> Tìm thấy <b>${thanhCong}</b> sinh viên hợp lệ và <b>${thatBai}</b> dòng phát hiện lỗi. Bạn có thể bấm nút <b>"Mở bảng xem trước chi tiết"</b> hoặc xem trong cửa sổ lớn vừa mở.`;
+        }
+        const nhanNut = document.getElementById("nhanNutThucHienImport");
+        if (thanhCong > 0) {
+          if (nutThucHien) {
+            nutThucHien.disabled = false;
+            nutThucHien.className = "inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md cursor-pointer transition-all hover:scale-102";
+          }
+          if (nhanNut) {
+            nhanNut.textContent = `Xác nhận nhập & Phân công (${thanhCong} SV)`;
+          }
+        } else {
+          if (nutThucHien) {
+            nutThucHien.disabled = true;
+            nutThucHien.className = "inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 text-slate-400 text-xs font-bold shadow-xs cursor-not-allowed transition-all";
+          }
+          if (nhanNut) {
+            nhanNut.textContent = "Không có sinh viên hợp lệ để tiếp nhận";
+          }
+        }
+        hienThongBaoThanhCong(`Kiểm tra tệp hoàn tất: ${thanhCong} hợp lệ, ${thatBai} lỗi.`);
+        moModalXemTruoc(dataRes);
+      } else {
+        if (thongBao) {
+          thongBao.className = "p-3.5 rounded-xl text-xs font-medium leading-relaxed bg-emerald-50 text-emerald-900 border border-emerald-200";
+          thongBao.innerHTML = `<b>Thành công:</b> Đã tiếp nhận và phân công <b>${thanhCong}</b> sinh viên vào hệ thống.` + (thatBai > 0 ? ` Có <b>${thatBai}</b> dòng lỗi bị bỏ qua để xử lý riêng.` : "");
+        }
+        if (nutThucHien) {
+          nutThucHien.disabled = true;
+          nutThucHien.className = "inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 text-slate-400 text-xs font-bold shadow-xs cursor-not-allowed transition-all";
+        }
+        hienThongBaoThanhCong(ketQua.message || `Đã tiếp nhận thành công ${thanhCong} sinh viên!`);
+        await napTatCaDuLieu();
+        setTimeout(() => {
+          dongTatCaModalImport();
+        }, 1200);
+      }
+    } else {
+      let loiChiTiet = "Có lỗi xảy ra trong quá trình xử lý tệp dữ liệu!";
+      if (typeof ketQua.detail === "string") {
+        loiChiTiet = ketQua.detail;
+      } else if (Array.isArray(ketQua.detail) && ketQua.detail[0]?.msg) {
+        loiChiTiet = ketQua.detail[0].msg;
+      } else if (ketQua.message) {
+        loiChiTiet = ketQua.message;
+      }
+
+      if (thongBao) {
+        thongBao.className = "p-3.5 rounded-xl text-xs font-medium leading-relaxed bg-rose-50 text-rose-900 border border-rose-200";
+        thongBao.innerHTML = `<b>Thông báo lỗi:</b> ${loiChiTiet}`;
+      }
+      hienThongBaoLoi(loiChiTiet);
+    }
+  } catch (loiKetNoi) {
+    if (hopKetQua) hopKetQua.classList.remove("hidden");
+    if (thongBao) {
+      thongBao.className = "p-3.5 rounded-xl text-xs font-medium leading-relaxed bg-rose-50 text-rose-900 border border-rose-200";
+      thongBao.innerHTML = "<b>Lỗi kết nối:</b> Không thể kết nối đến máy chủ Backend. Vui lòng kiểm tra dịch vụ Backend đang hoạt động!";
+    }
+    hienThongBaoLoi("Không thể kết nối đến máy chủ Backend khi xử lý file!");
+  } finally {
+    if (nutKiemTra) {
+      nutKiemTra.innerHTML = noiDungNutKiemTra;
+      nutKiemTra.disabled = false;
+    }
+    if (nutThucHien && cheDo !== "kiem_tra_truoc") {
+      nutThucHien.innerHTML = noiDungNutThucHien;
+    }
+    const nutXacNhanPreview = document.getElementById("nutXacNhanTrongModalPreview");
+    if (nutXacNhanPreview && cheDo !== "kiem_tra_truoc") {
+      nutXacNhanPreview.disabled = false;
+    }
+  }
+}
+
+async function thucHienXacNhanImport() {
+  const radioChon = document.querySelector('input[name="cheDoImport"]:checked');
+  const cheDo = radioChon ? radioChon.value : "bo_qua_loi";
+  await thucHienImport(cheDo);
+}
+
+function tranhXss(chuoi) {
+  if (chuoi === null || chuoi === undefined) return "";
+  return String(chuoi)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function moModalXemTruoc(dataRes) {
+  const modal = document.getElementById("modalXemTruocImport");
+  if (!modal) return;
+
+  const tenTepEl = document.getElementById("previewTenTep");
+  const tenCtEl = document.getElementById("previewTenChuongTrinh");
+  const tenMentorEl = document.getElementById("previewTenMentor");
+
+  if (tenTepEl) tenTepEl.textContent = tepImportHienTai ? tepImportHienTai.name : "--";
+
+  const selectCt = document.getElementById("importMaChuongTrinh");
+  if (tenCtEl) {
+    if (dataRes && dataRes.ten_chuong_trinh) {
+      tenCtEl.textContent = dataRes.ten_chuong_trinh;
+    } else if (selectCt && selectCt.selectedIndex >= 0 && selectCt.options[selectCt.selectedIndex]) {
+      tenCtEl.textContent = selectCt.options[selectCt.selectedIndex].text;
+    } else {
+      tenCtEl.textContent = "--";
+    }
+  }
+
+  if (tenMentorEl) {
+    if (dataRes && dataRes.ten_mentor) {
+      tenMentorEl.textContent = dataRes.ten_mentor;
+    } else if (mentorImportDaChon && mentorImportDaChon.ho_ten) {
+      tenMentorEl.textContent = mentorImportDaChon.ho_ten;
+    } else {
+      tenMentorEl.textContent = "Không phân công";
+    }
+  }
+
+  const tongSo = dataRes.tong_so_dong || 0;
+  const thanhCong = dataRes.thanh_cong || 0;
+  const thatBai = dataRes.that_bai || 0;
+
+  const elTongSo = document.getElementById("previewTongSo");
+  const elThanhCong = document.getElementById("previewThanhCong");
+  const elThatBai = document.getElementById("previewThatBai");
+
+  if (elTongSo) elTongSo.textContent = tongSo;
+  if (elThanhCong) elThanhCong.textContent = thanhCong;
+  if (elThatBai) elThatBai.textContent = thatBai;
+
+  const demAll = document.getElementById("demTabXemTruocAll");
+  const demHopLe = document.getElementById("demTabXemTruocHopLe");
+  const demLoi = document.getElementById("demTabXemTruocLoi");
+
+  if (demAll) demAll.textContent = tongSo;
+  if (demHopLe) demHopLe.textContent = thanhCong;
+  if (demLoi) demLoi.textContent = thatBai;
+
+  const nutXuatLoi = document.getElementById("nutXuatFileLoiTrongPreview");
+  if (nutXuatLoi) {
+    if (thatBai > 0) nutXuatLoi.classList.remove("hidden");
+    else nutXuatLoi.classList.add("hidden");
+  }
+
+  const thongBao = document.getElementById("previewThongBaoTrangThai");
+  if (thongBao) {
+    if (thatBai > 0) {
+      thongBao.className = "p-3.5 rounded-xl text-xs font-medium leading-relaxed bg-amber-50 text-amber-900 border border-amber-200";
+      thongBao.innerHTML = `<b>Kiểm tra hoàn tất:</b> Tìm thấy <b>${thanhCong}</b> sinh viên hợp lệ và <b class="text-rose-700">${thatBai}</b> dòng phát hiện lỗi. Bạn có thể bấm vào tab <b>"Có lỗi"</b> hoặc nhập ô tìm kiếm để kiểm tra cụ thể từng trường hợp.`;
+    } else {
+      thongBao.className = "p-3.5 rounded-xl text-xs font-medium leading-relaxed bg-emerald-50 text-emerald-900 border border-emerald-200";
+      thongBao.innerHTML = `<b>Tuyệt vời!</b> Toàn bộ <b>${thanhCong}</b> sinh viên trong file đều hợp lệ và sẵn sàng tiếp nhận vào chương trình. Vui lòng bấm <b>"Xác nhận nhập &amp; Phân công"</b> để hoàn tất.`;
+    }
+  }
+
+  const nutXacNhan = document.getElementById("nutXacNhanTrongModalPreview");
+  const nhanNutXacNhan = document.getElementById("nhanNutXacNhanTrongModalPreview");
+
+  if (thanhCong > 0) {
+    if (nutXacNhan) {
+      nutXacNhan.disabled = false;
+      nutXacNhan.className = "inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer hover:scale-102";
+    }
+    if (nhanNutXacNhan) {
+      nhanNutXacNhan.textContent = `Xác nhận nhập & Phân công (${thanhCong} SV)`;
+    }
+  } else {
+    if (nutXacNhan) {
+      nutXacNhan.disabled = true;
+      nutXacNhan.className = "inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-200 text-slate-400 text-xs font-bold shadow-xs cursor-not-allowed transition-all";
+    }
+    if (nhanNutXacNhan) {
+      nhanNutXacNhan.textContent = "Không có sinh viên hợp lệ để tiếp nhận";
+    }
+  }
+
+  const danhSachHopLe = Array.isArray(dataRes.xem_truoc_hop_le) ? dataRes.xem_truoc_hop_le : [];
+  const danhSachLoi = Array.isArray(dataRes.chi_tiet_loi) ? dataRes.chi_tiet_loi : [];
+
+  const mucHopLe = danhSachHopLe.map((sv) => ({
+    dong: sv.dong || 0,
+    trang_thai: "hop_le",
+    ma_sinh_vien: sv.ma_sinh_vien || "--",
+    ho_ten: sv.ho_ten || "--",
+    email: sv.email || "--",
+    so_dien_thoai: sv.so_dien_thoai || "--",
+    lop: sv.lop || "--",
+    chuyen_nganh: sv.chuyen_nganh || "--",
+    truong: sv.truong || "--",
+    ly_do: ""
+  }));
+
+  const mucLoi = danhSachLoi.map((err) => ({
+    dong: err.dong || 0,
+    trang_thai: "loi",
+    ma_sinh_vien: err.ma_sinh_vien || "--",
+    ho_ten: err.ho_ten || "--",
+    email: err.email || "--",
+    so_dien_thoai: "--",
+    lop: "--",
+    chuyen_nganh: "--",
+    truong: "--",
+    ly_do: err.ly_do || "Lỗi dữ liệu"
+  }));
+
+  danhSachXemTruocTongHop = [...mucHopLe, ...mucLoi].sort((a, b) => a.dong - b.dong);
+
+  tabXemTruocHienTai = "all";
+  tuKhoaXemTruocHienTai = "";
+
+  const oSearch = document.getElementById("oTimKiemXemTruoc");
+  if (oSearch) oSearch.value = "";
+  const nutXoaSearch = document.getElementById("nutXoaTimKiemXemTruoc");
+  if (nutXoaSearch) nutXoaSearch.classList.add("hidden");
+
+  capNhatGiaoDienTabXemTruoc();
+  veDanhSachXemTruoc();
+
+  modal.classList.remove("hidden");
+}
+
+function hienModalXemTruocDaCo() {
+  if (ketQuaKiemTraImportHienTai) {
+    moModalXemTruoc(ketQuaKiemTraImportHienTai);
+  } else {
+    thucHienImport("kiem_tra_truoc");
+  }
+}
+
+function dongModalXemTruoc() {
+  const modal = document.getElementById("modalXemTruocImport");
+  if (modal) modal.classList.add("hidden");
+}
+
+function dongTatCaModalImport() {
+  dongModalXemTruoc();
+  dongModalImport();
+}
+
+function chuyenTabXemTruoc(tab) {
+  tabXemTruocHienTai = tab;
+  capNhatGiaoDienTabXemTruoc();
+  veDanhSachXemTruoc();
+}
+
+function capNhatGiaoDienTabXemTruoc() {
+  const tabAll = document.getElementById("tabXemTruocAll");
+  const tabHopLe = document.getElementById("tabXemTruocHopLe");
+  const tabLoi = document.getElementById("tabXemTruocLoi");
+
+  const classActive = "px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-2xs transition-all cursor-pointer";
+  const classInactive = "px-3 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all cursor-pointer";
+
+  if (tabAll) tabAll.className = tabXemTruocHienTai === "all" ? classActive : classInactive;
+  if (tabHopLe) tabHopLe.className = tabXemTruocHienTai === "hop_le" ? classActive : classInactive;
+  if (tabLoi) tabLoi.className = tabXemTruocHienTai === "loi" ? classActive : classInactive;
+}
+
+function locDanhSachXemTruoc(tuKhoa) {
+  tuKhoaXemTruocHienTai = (tuKhoa || "").toLowerCase().trim();
+  const nutXoa = document.getElementById("nutXoaTimKiemXemTruoc");
+  if (nutXoa) {
+    if (tuKhoaXemTruocHienTai) nutXoa.classList.remove("hidden");
+    else nutXoa.classList.add("hidden");
+  }
+  veDanhSachXemTruoc();
+}
+
+function xoaTimKiemXemTruoc() {
+  const oSearch = document.getElementById("oTimKiemXemTruoc");
+  if (oSearch) {
+    oSearch.value = "";
+    oSearch.focus();
+  }
+  locDanhSachXemTruoc("");
+}
+
+function veDanhSachXemTruoc() {
+  const tbody = document.getElementById("bangThanXemTruocTongHop");
+  if (!tbody) return;
+
+  const danhSachLoc = danhSachXemTruocTongHop.filter((item) => {
+    if (tabXemTruocHienTai === "hop_le" && item.trang_thai !== "hop_le") return false;
+    if (tabXemTruocHienTai === "loi" && item.trang_thai !== "loi") return false;
+
+    if (!tuKhoaXemTruocHienTai) return true;
+
+    const maSv = (item.ma_sinh_vien || "").toLowerCase();
+    const hoTen = (item.ho_ten || "").toLowerCase();
+    const email = (item.email || "").toLowerCase();
+    const lop = (item.lop || "").toLowerCase();
+    const chuyenNganh = (item.chuyen_nganh || "").toLowerCase();
+    const truong = (item.truong || "").toLowerCase();
+    const lyDo = (item.ly_do || "").toLowerCase();
+    const dongStr = String(item.dong);
+
+    return (
+      maSv.includes(tuKhoaXemTruocHienTai) ||
+      hoTen.includes(tuKhoaXemTruocHienTai) ||
+      email.includes(tuKhoaXemTruocHienTai) ||
+      lop.includes(tuKhoaXemTruocHienTai) ||
+      chuyenNganh.includes(tuKhoaXemTruocHienTai) ||
+      truong.includes(tuKhoaXemTruocHienTai) ||
+      lyDo.includes(tuKhoaXemTruocHienTai) ||
+      dongStr.includes(tuKhoaXemTruocHienTai)
+    );
+  });
+
+  if (danhSachLoc.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="py-12 text-center text-slate-400">
+          <div class="flex flex-col items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined text-3xl text-slate-300">search_off</span>
+            <span class="text-xs font-semibold text-slate-600">Không tìm thấy sinh viên nào phù hợp</span>
+            <span class="text-[11px] text-slate-400">Thử tìm kiếm với từ khóa khác hoặc chuyển tab lọc</span>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = danhSachLoc.map((item) => {
+    const isHopLe = item.trang_thai === "hop_le";
+    const parts = (item.ho_ten && item.ho_ten !== "--" ? item.ho_ten : "SV").trim().split(/\s+/);
+    const initials = parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+
+    const rowBg = isHopLe ? "hover:bg-emerald-50/40" : "hover:bg-rose-50/50 bg-rose-50/15";
+
+    const badgeTrangThai = isHopLe
+      ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0"><span class="material-symbols-outlined text-[13px]">check_circle</span> Hợp lệ</span>`
+      : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 shrink-0"><span class="material-symbols-outlined text-[13px]">error</span> Phát hiện lỗi</span>`;
+
+    const avatar = isHopLe
+      ? `<div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px] flex items-center justify-center shrink-0">${initials}</div>`
+      : `<div class="w-6 h-6 rounded-full bg-rose-100 text-rose-700 font-bold text-[10px] flex items-center justify-center shrink-0">${initials}</div>`;
+
+    const lyDoHienThi = isHopLe
+      ? `<span class="text-slate-400 italic text-[11px]">Sẵn sàng tiếp nhận</span>`
+      : `<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 font-semibold text-[11px] max-w-md whitespace-normal"><span class="material-symbols-outlined text-[14px] shrink-0 text-rose-600">warning</span><span>${tranhXss(item.ly_do)}</span></div>`;
+
+    return `
+      <tr class="${rowBg} transition-colors">
+        <td class="py-2.5 px-3.5 text-center font-bold text-slate-700">#${item.dong || "--"}</td>
+        <td class="py-2.5 px-3.5">${badgeTrangThai}</td>
+        <td class="py-2.5 px-3.5 font-bold ${isHopLe ? "text-slate-800" : "text-rose-800"}">${tranhXss(item.ma_sinh_vien)}</td>
+        <td class="py-2.5 px-3.5">
+          <div class="flex items-center gap-2">
+            ${avatar}
+            <span class="font-bold text-slate-900">${tranhXss(item.ho_ten)}</span>
+          </div>
+        </td>
+        <td class="py-2.5 px-3.5 text-slate-600 ${isHopLe ? "" : "text-rose-600 font-medium"}">${tranhXss(item.email)}</td>
+        <td class="py-2.5 px-3.5 text-slate-600">${tranhXss(item.lop)}</td>
+        <td class="py-2.5 px-3.5 text-slate-600">${tranhXss(item.chuyen_nganh)}</td>
+        <td class="py-2.5 px-3.5 text-slate-600 font-medium">${tranhXss(item.truong)}</td>
+        <td class="py-2.5 px-3.5">${lyDoHienThi}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function thucHienXacNhanImportTuPreview() {
+  const nutPreview = document.getElementById("nutXacNhanTrongModalPreview");
+  const noiDungGoc = nutPreview ? nutPreview.innerHTML : "";
+
+  if (nutPreview) {
+    nutPreview.innerHTML = `<span class="inline-block w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span> Đang nhập & phân công...`;
+    nutPreview.disabled = true;
+  }
+
+  try {
+    await thucHienXacNhanImport();
+  } finally {
+    if (nutPreview) {
+      nutPreview.innerHTML = noiDungGoc;
+      nutPreview.disabled = false;
+    }
+  }
+}

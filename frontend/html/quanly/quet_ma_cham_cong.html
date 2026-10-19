@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Quét Mã Chấm Công - ICTU Internship</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/env.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../../js/tailwind.config.js"></script>
+  </head>
+  <body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex">
+    <aside
+      class="w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 h-screen sticky top-0 self-start z-20 shadow-[1px_0_12px_rgba(0,0,0,0.02)]"
+    >
+      <div class="h-20 px-6 border-b border-slate-100 flex items-center gap-3">
+        <a href="dashboard.html" class="flex items-center gap-3">
+          <img src="../../image/ictu_logo.png" alt="ICTU Internship Logo" class="h-10 w-auto object-contain" />
+          <div>
+            <span class="text-sm font-bold text-slate-900 block leading-tight">ICTU INTERN</span>
+            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">Cổng Quản Trị</span>
+          </div>
+        </a>
+      </div>
+      <div class="p-4 mx-3 my-3 rounded-2xl bg-gradient-to-br from-ictu-50/70 to-slate-50 border border-slate-200/80 flex items-center gap-3.5">
+        <div class="relative shrink-0">
+          <div id="adminAvatarInitials" class="w-11 h-11 rounded-full bg-gradient-to-tr from-ictu-600 to-sky-400 flex items-center justify-center text-white font-bold text-base shadow-sm ring-2 ring-white">AD</div>
+          <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h4 id="adminSidebarName" class="text-sm font-bold text-slate-900 truncate">Ban Đào Tạo &amp; QLTT</h4>
+            <span class="material-symbols-outlined text-[15px] text-ictu-600 fill">verified</span>
+          </div>
+          <p id="adminSidebarEmail" class="text-xs text-slate-500 truncate">admin@ictu.edu.vn</p>
+          <span id="adminSidebarRole" class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-ictu-100 text-ictu-700">Quản trị viên</span>
+        </div>
+      </div>
+      <div class="px-3 flex-1 overflow-y-auto space-y-1">
+        <p class="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hệ Thống Quản Lý</p>
+        <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group">
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">dashboard</span>
+          <span>Tổng quan hệ thống</span>
+        </a>
+        <a href="len_lich_hop.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group">
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">event</span>
+          <span>Lên lịch họp &amp; QR</span>
+        </a>
+        <a href="quet_ma_cham_cong.html" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-ictu-50 text-ictu-700 shadow-sm border border-ictu-100 transition-colors">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px] text-ictu-600 fill">qr_code_scanner</span>
+            <span>Quét mã chấm công</span>
+          </div>
+          <span class="text-[10px] bg-ictu-600 text-white font-bold px-2 py-0.5 rounded-full">Active</span>
+        </a>
+        <a href="them_ho_so.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group">
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">person_add</span>
+          <span>Thêm hồ sơ thực tập</span>
+        </a>
+        <a href="xet_duyet_ho_so.html" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">how_to_reg</span>
+            <span>Xét duyệt hồ sơ</span>
+          </div>
+          <span class="text-[11px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-md">5 chờ</span>
+        </a>
+        <a href="lich_thuc_tap.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group">
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">calendar_month</span>
+          <span>Kế hoạch &amp; Đợt thực tập</span>
+        </a>
+        <a href="danh_gia.html" class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">rate_review</span>
+            <span>Báo cáo &amp; Đánh giá</span>
+          </div>
+          <span class="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-md">Mới</span>
+        </a>
+        <a href="cham_cong.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group">
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">fact_check</span>
+          <span>Điểm danh &amp; Chuyên cần</span>
+        </a>
+        <a href="quan_ly_nguoi_dung.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group">
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">manage_accounts</span>
+          <span>Quản lý tài khoản</span>
+        </a>
+        <a href="quan_ly_sao_luu.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group">
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">cloud_sync</span>
+          <span>Quản lý sao lưu</span>
+        </a>
+        <a href="../public/thamquan.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group">
+          <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600">360</span>
+          <span>Tham quan thực tế ảo</span>
+        </a>
+      </div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            Máy chủ: ICTU Cloud
+          </span>
+          <a href="../public/index.html" class="text-slate-400 hover:text-rose-600 transition-colors p-1" title="Đăng xuất">
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0">
+      <header class="bg-white/95 backdrop-blur-sm border-b border-slate-200 px-8 py-4 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <nav class="flex items-center gap-2 text-xs text-slate-500 font-medium mb-1">
+              <a href="dashboard.html" class="hover:text-ictu-600 transition-colors flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">home</span>
+                Trang chủ
+              </a>
+              <span>/</span>
+              <a href="cham_cong.html" class="hover:text-ictu-600 transition-colors">Chấm công</a>
+              <span>/</span>
+              <span class="text-slate-800 font-semibold">Quét mã chấm công</span>
+            </nav>
+            <h1 class="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
+              Quét Mã Chấm Công
+            </h1>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center bg-slate-100 rounded-xl px-3 py-1.5 text-xs text-slate-600 gap-2 border border-slate-200">
+              <span class="material-symbols-outlined text-[16px] text-slate-400">schedule</span>
+              <span id="dongHoHienTai" class="font-mono font-bold">--:--:--</span>
+            </div>
+            <div class="flex items-center bg-emerald-50 rounded-xl px-3 py-1.5 text-xs text-emerald-700 gap-2 border border-emerald-200">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="font-semibold">Hệ thống sẵn sàng</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="p-8 space-y-8 max-w-7xl mx-auto w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div class="lg:col-span-5 space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+              <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <span class="material-symbols-outlined text-2xl">qr_code_scanner</span>
+                </div>
+                <div>
+                  <h3 class="text-base font-bold text-slate-900 tracking-tight">Quét Mã QR</h3>
+                  <p class="text-xs text-slate-500 mt-0.5">Đưa mã QR vào khung hình camera để chấm công</p>
+                </div>
+              </div>
+
+              <div class="relative bg-slate-900 rounded-2xl overflow-hidden aspect-square flex items-center justify-center">
+                <video id="cameraPreview" class="w-full h-full object-cover hidden" autoplay playsinline></video>
+                <div id="cameraOverlay" class="absolute inset-0 flex flex-col items-center justify-center">
+                  <div class="w-48 h-48 border-2 border-dashed border-white/40 rounded-2xl relative">
+                    <div class="absolute top-0 left-0 w-6 h-6 border-t-3 border-l-3 border-white rounded-tl-lg"></div>
+                    <div class="absolute top-0 right-0 w-6 h-6 border-t-3 border-r-3 border-white rounded-tr-lg"></div>
+                    <div class="absolute bottom-0 left-0 w-6 h-6 border-b-3 border-l-3 border-white rounded-bl-lg"></div>
+                    <div class="absolute bottom-0 right-0 w-6 h-6 border-b-3 border-r-3 border-white rounded-br-lg"></div>
+                    <div id="scanLine" class="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent hidden" style="animation: scanMove 2s ease-in-out infinite;"></div>
+                  </div>
+                  <p id="trangThaiCamera" class="text-white/70 text-xs font-medium mt-4">Nhấn nút bên dưới để bật camera</p>
+                </div>
+                <canvas id="canvasQR" class="hidden"></canvas>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <button type="button" id="nutBatCamera" onclick="batCamera()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer">
+                  <span class="material-symbols-outlined text-lg">videocam</span>
+                  <span>Bật Camera</span>
+                </button>
+                <button type="button" id="nutTatCamera" onclick="tatCamera()" class="flex-1 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer hidden">
+                  <span class="material-symbols-outlined text-lg">videocam_off</span>
+                  <span>Tắt Camera</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+              <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <span class="material-symbols-outlined text-2xl">badge</span>
+                </div>
+                <div>
+                  <h3 class="text-base font-bold text-slate-900 tracking-tight">Nhập Mã Thẻ / Email</h3>
+                  <p class="text-xs text-slate-500 mt-0.5">Nhập mã thẻ hoặc email thực tập sinh để chấm công</p>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <span class="material-symbols-outlined text-lg">credit_card</span>
+                  </span>
+                  <input
+                    type="text"
+                    id="oNhapMaThe"
+                    placeholder="VD: hungmaigis@gmail.com hoặc mã thẻ..."
+                    class="w-full h-12 pl-10 pr-4 rounded-xl bg-slate-50 border-2 border-slate-200 text-sm text-slate-800 font-mono font-bold placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-ictu-500/20 focus:border-ictu-500 focus:bg-white transition-all"
+                    onkeydown="if(event.key==='Enter') guiMaChamCong()"
+                  />
+                </div>
+                <button type="button" onclick="guiMaChamCong()" id="nutGuiMaChamCong" class="w-full py-3 rounded-xl bg-ictu-600 hover:bg-ictu-700 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] cursor-pointer">
+                  <span class="material-symbols-outlined text-lg">send</span>
+                  <span>Gửi Chấm Công</span>
+                </button>
+              </div>
+
+              <div id="thongTinQuetGanNhat" class="hidden p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+                <div id="avatarQuetGanNhat" class="w-10 h-10 rounded-full bg-gradient-to-tr from-ictu-600 to-sky-400 text-white text-xs font-bold flex items-center justify-center shrink-0">--</div>
+                <div class="flex-1 min-w-0">
+                  <h4 id="tenQuetGanNhat" class="text-xs font-bold text-slate-900 truncate">--</h4>
+                  <p class="text-[10px] text-slate-500">Mã: <span id="maQuetGanNhat" class="font-mono font-semibold text-slate-700">--</span></p>
+                </div>
+                <div class="text-right">
+                  <span id="loaiQuetGanNhat" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Check-in</span>
+                  <p id="gioQuetGanNhat" class="text-[10px] font-mono font-semibold text-slate-600 mt-0.5">--:--</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 space-y-6">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                <div class="w-9 h-9 rounded-xl bg-ictu-50 text-ictu-600 flex items-center justify-center mx-auto mb-2">
+                  <span class="material-symbols-outlined text-xl">groups</span>
+                </div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Tổng quét</p>
+                <p id="kpiTongQuet" class="text-xl font-black text-slate-900 font-mono mt-0.5">0</p>
+              </div>
+              <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-2">
+                  <span class="material-symbols-outlined text-xl">login</span>
+                </div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Check-in</p>
+                <p id="kpiCheckIn" class="text-xl font-black text-emerald-600 font-mono mt-0.5">0</p>
+              </div>
+              <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-2">
+                  <span class="material-symbols-outlined text-xl">logout</span>
+                </div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Check-out</p>
+                <p id="kpiCheckOut" class="text-xl font-black text-amber-600 font-mono mt-0.5">0</p>
+              </div>
+              <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-2">
+                  <span class="material-symbols-outlined text-xl">error</span>
+                </div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Trễ giờ</p>
+                <p id="kpiTreGio" class="text-xl font-black text-rose-600 font-mono mt-0.5">0</p>
+              </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">receipt_long</span>
+                  </div>
+                  <div>
+                    <h3 class="text-base font-bold text-slate-900 tracking-tight">Nhật Ký Chấm Công Hôm Nay</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                      <span id="ngayNhatKy" class="font-semibold">--/--/----</span>
+                      &bull; <span id="thuNhatKy" class="text-ictu-600">--</span>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="taiNhatKyChamCong()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer" title="Làm mới">
+                    <span class="material-symbols-outlined text-base">refresh</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto max-h-[480px]">
+                <table class="w-full text-sm">
+                  <thead class="sticky top-0 bg-white z-[1]">
+                    <tr class="text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                      <th class="py-3 px-3">#</th>
+                      <th class="py-3 px-3">Thực tập sinh</th>
+                      <th class="py-3 px-3">Mã định danh</th>
+                      <th class="py-3 px-3">Loại</th>
+                      <th class="py-3 px-3">Thời gian</th>
+                      <th class="py-3 px-3">Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bangNhatKyChamCong">
+                    <tr>
+                      <td colspan="6" class="py-10 text-center text-xs text-slate-400">
+                        <span class="material-symbols-outlined text-4xl text-slate-300 block mb-2">pending</span>
+                        Chưa có bản ghi chấm công nào hôm nay.<br>Quét mã QR hoặc nhập mã thẻ để bắt đầu!
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div id="popupKetQua" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+      <div id="popupCard" class="relative w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 flex flex-col items-center text-center transform scale-95 transition-transform duration-200">
+        <button type="button" onclick="dongPopup()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+        <div id="popupIconWrap" class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-sm ring-4">
+          <span id="popupIcon" class="material-symbols-outlined text-[32px]">check_circle</span>
+        </div>
+        <h3 id="popupTieuDe" class="text-lg font-bold text-slate-900 mb-1">Chấm công thành công!</h3>
+        <p id="popupNoiDung" class="text-sm text-slate-600 leading-relaxed mb-5">Đã ghi nhận chấm công cho thực tập sinh.</p>
+
+        <div id="popupChiTiet" class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 text-left mb-5 space-y-2 hidden">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500">Họ tên:</span>
+            <span id="popupHoTen" class="font-bold text-slate-800">--</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500">Mã thẻ:</span>
+            <span id="popupMaThe" class="font-mono font-bold text-slate-800">--</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500">Thời gian:</span>
+            <span id="popupThoiGian" class="font-mono font-bold text-ictu-600">--:--:--</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500">Loại:</span>
+            <span id="popupLoai" class="font-bold">--</span>
+          </div>
+        </div>
+
+        <button type="button" onclick="dongPopup()" class="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold shadow-sm transition-all cursor-pointer">
+          Đã hiểu, đóng
+        </button>
+      </div>
+    </div>
+
+    <div id="toastContainer" class="fixed top-20 right-6 z-50 space-y-3 pointer-events-none"></div>
+
+    <style>
+      @keyframes scanMove {
+        0%, 100% { top: 8px; }
+        50% { top: calc(100% - 10px); }
+      }
+    </style>
+
+    <script src="../../js/quanly/quet_ma_cham_cong.js"></script>
+  </body>
+</html>

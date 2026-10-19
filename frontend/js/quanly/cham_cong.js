@@ -1565,11 +1565,17 @@ async function taoCaLamViecMoi() {
   }
 
   try {
+    const nguoiDungHienTai = layNguoiDungDangNhap();
+    const headersGui = {
+      "Content-Type": "application/json"
+    };
+    if (nguoiDungHienTai && nguoiDungHienTai.email) {
+      headersGui["X-User-Email"] = nguoiDungHienTai.email;
+      headersGui["Authorization"] = `Bearer ${nguoiDungHienTai.email}`;
+    }
     const res = await fetch(`${duongDanApi}/attendance/shifts`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: headersGui,
       body: JSON.stringify({
         ten_ca: tenCa,
         gio_bat_dau: bd,

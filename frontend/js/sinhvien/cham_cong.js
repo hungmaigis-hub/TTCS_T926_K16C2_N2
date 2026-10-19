@@ -111,6 +111,44 @@ function luuDanhSachLichSu(list) {
   } catch (e) {}
 }
 
+function layBadgeCa(item) {
+  const ghiChu = (item.ghiChu || "").toLowerCase();
+  if (ghiChu.includes("ca sáng") || ghiChu.includes("sáng")) {
+    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200"><span>🌅</span><span>Ca Sáng</span></span>`;
+  }
+  if (ghiChu.includes("ca chiều") || ghiChu.includes("chiều")) {
+    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200"><span>☀️</span><span>Ca Chiều</span></span>`;
+  }
+  if (ghiChu.includes("ca tối") || ghiChu.includes("tối")) {
+    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200"><span>🌙</span><span>Ca Tối</span></span>`;
+  }
+  if (item.ca === "Sáng") {
+    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200"><span>🌅</span><span>Ca Sáng</span></span>`;
+  }
+  if (item.ca === "Chiều") {
+    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200"><span>☀️</span><span>Ca Chiều</span></span>`;
+  }
+  if (item.ca === "Tối") {
+    return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200"><span>🌙</span><span>Ca Tối</span></span>`;
+  }
+
+  if (item.checkin && item.checkin !== "--:--:--" && item.checkin !== "--:--") {
+    const parts = item.checkin.split(":");
+    const gio = parseInt(parts[0], 10);
+    if (!isNaN(gio)) {
+      if (gio < 12) {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200"><span>🌅</span><span>Ca Sáng</span></span>`;
+      }
+      if (gio < 18) {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200"><span>☀️</span><span>Ca Chiều</span></span>`;
+      }
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200"><span>🌙</span><span>Ca Tối</span></span>`;
+    }
+  }
+
+  return `<span class="text-slate-400 font-mono text-[11px]">--</span>`;
+}
+
 function renderBangLichSu() {
   const tbody = document.getElementById("bangNhatKyChamCong");
   if (!tbody) return;
@@ -128,6 +166,7 @@ function renderBangLichSu() {
       return `
         <tr class="hover:bg-slate-50/60 transition-colors">
           <td class="py-3 px-4 font-mono font-semibold text-slate-900">${item.ngay}</td>
+          <td class="py-3 px-4">${layBadgeCa(item)}</td>
           <td class="py-3 px-4 font-mono text-emerald-700">${item.checkin || "--:--:--"}</td>
           <td class="py-3 px-4 font-mono text-rose-700">${item.checkout || "--:--:--"}</td>
           <td class="py-3 px-4 font-semibold text-slate-800">${item.tongGio || "--"}</td>
@@ -184,6 +223,7 @@ async function taiDanhSachLichSuTuApi() {
 
           return {
             ngay: it.ngay_iso || it.ngay,
+            ca: it.ca || it.ten_ca || it.buoi || "",
             checkin: it.vao && it.vao !== "--:--" ? (it.vao.length === 5 ? it.vao + ":00" : it.vao) : "--:--:--",
             checkout: it.ra && it.ra !== "--:--" ? (it.ra.length === 5 ? it.ra + ":00" : it.ra) : "--:--:--",
             tongGio: it.gio ? `${it.gio} giờ` : "--",
@@ -555,10 +595,63 @@ function dongBoThongTinNguoiDung() {
   } catch (e) {}
 }
 
+async function taiCaLamViecHomNay() {
+  const container = document.getElementById("danhSachCaHomNay");
+  const nhanTrangThai = document.getElementById("nhanTrangThaiCaHomNay");
+  if (!container) return;
+
+  const homNayStr = new Date().toISOString().split("T")[0];
+  try {
+    const res = await fetch(`${duongDanApi}/attendance/shifts?ngay=${homNayStr}`);
+    if (res.ok) {
+      const json = await res.json();
+      const ds = Array.isArray(json) ? json : (json.data || []);
+      if (Array.isArray(ds) && ds.length > 0) {
+        if (nhanTrangThai) nhanTrangThai.textContent = `${ds.length} ca được xếp`;
+        container.innerHTML = ds.map((ca) => {
+          const bd = String(ca.gio_bat_dau || "").slice(0, 5);
+          const kt = String(ca.gio_ket_thuc || "").slice(0, 5);
+          const gioNum = parseInt(bd.split(":")[0], 10);
+          let icon = "🌅";
+          let tagClass = "text-amber-300";
+          if (gioNum >= 12 && gioNum < 18) {
+            icon = "☀️";
+            tagClass = "text-emerald-300";
+          } else if (gioNum >= 18) {
+            icon = "🌙";
+            tagClass = "text-indigo-300";
+          }
+          return `
+            <div class="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/40 text-left flex items-center justify-between">
+              <div>
+                <p class="text-[10px] uppercase font-bold ${tagClass} flex items-center gap-1">
+                  <span>${icon}</span>
+                  <span>${ca.ten_ca || "Ca làm việc"}</span>
+                </p>
+                <p class="text-xs font-semibold text-slate-300 mt-0.5">${ca.lop ? `Lớp: ${ca.lop}` : (ca.chuyen_nganh || "Thực tập")}</p>
+              </div>
+              <p class="text-sm font-extrabold text-white font-mono">${bd} - ${kt}</p>
+            </div>
+          `;
+        }).join("");
+        return;
+      }
+    }
+  } catch (e) {}
+
+  if (nhanTrangThai) nhanTrangThai.textContent = "Không có ca";
+  container.innerHTML = `
+    <div class="col-span-full py-2.5 px-3 rounded-xl bg-slate-800/40 border border-slate-700/40 text-slate-400 text-xs">
+      Hôm nay chưa có ca thực tập nào được lên lịch
+    </div>
+  `;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   khoiTaoDongHoThoiGianThuc();
   dongBoThongTinNguoiDung();
   capNhatGiaoDienTrangThai();
   renderBangLichSu();
   taiDanhSachLichSuTuApi();
+  taiCaLamViecHomNay();
 });

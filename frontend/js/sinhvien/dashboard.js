@@ -544,7 +544,7 @@ function capNhatLoTrinh(hoSoData, contractData, evalResult, scheduleData) {
   } else if (biTuChoi) {
     card2Class = "p-4 rounded-2xl bg-rose-50 border border-rose-200 relative";
     card2Icon = "cancel";
-    card2Sub = "Hồ sơ không đạt chỉ tiêu";
+    card2Sub = hoSoData.ghi_chu ? `Lý do: ${hoSoData.ghi_chu}` : "Hồ sơ không đạt yêu cầu";
     card2Badge = `<span class="text-[11px] font-semibold text-rose-700">Đã từ chối</span>`;
   }
 

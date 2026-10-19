@@ -207,6 +207,11 @@ def update_role_permissions(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Tên vai trò không được để trống"
         )
+    if clean_role.lower() == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vai trò Quản trị viên (Admin) sở hữu quyền Superadmin tối cao toàn hệ thống và không thể bị chỉnh sửa hoặc tước bỏ quyền hạn."
+        )
 
     # Đảm bảo danh mục quyền đã có
     seed_default_permissions_and_roles(db)

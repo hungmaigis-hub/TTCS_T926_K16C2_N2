@@ -1201,8 +1201,44 @@ async function renderGiaoDienChoMentor(myMentor, containerCard) {
         badgeTrangThai = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">${sv.trang_thai_thuc_tap || "Chưa rõ"}</span>`;
       }
 
+      const isHoanThanh = sv.trang_thai_thuc_tap === "HoanThanh";
+      const actionHtml = isHoanThanh
+        ? `
+          <button type="button" disabled title="Sinh viên đã hoàn thành thực tập, không thể giao việc mới" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-400 cursor-not-allowed flex items-center gap-1 opacity-60">
+            <span class="material-symbols-outlined text-[13px]">lock</span>
+            <span>Giao việc</span>
+          </button>
+          <button type="button" onclick="moModalXemNhiemVuSv(${sv.ma_ho_so}, '${encodeURIComponent(hoTenSv)}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 transition-colors flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-[13px]">history</span>
+            <span>Lịch sử</span>
+          </button>
+          <span title="Đã kết thúc kỳ thực tập" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-400 select-none">
+            Đã chốt
+          </span>
+          <a href="danh_gia.html" title="Xem kết quả đánh giá cuối kỳ" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-ictu-50 hover:bg-ictu-100 text-ictu-700 transition-colors flex items-center gap-1">
+            <span class="material-symbols-outlined text-[13px]">verified</span>
+            <span>Kết quả</span>
+          </a>
+        `
+        : `
+          <button type="button" onclick="moModalGiaoViec(${sv.ma_ho_so}, '${encodeURIComponent(hoTenSv)}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-[13px]">add_task</span>
+            <span>Giao việc</span>
+          </button>
+          <button type="button" onclick="moModalXemNhiemVuSv(${sv.ma_ho_so}, '${encodeURIComponent(hoTenSv)}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 transition-colors flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-[13px]">checklist</span>
+            <span>Nhiệm vụ</span>
+          </button>
+          <a href="cham_cong.html" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+            Điểm danh
+          </a>
+          <a href="danh_gia.html" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-ictu-50 hover:bg-ictu-100 text-ictu-700 transition-colors">
+            Đánh giá
+          </a>
+        `;
+
       rows += `
-        <tr class="hover:bg-slate-50 transition-colors">
+        <tr class="hover:bg-slate-50 transition-colors ${isHoanThanh ? 'bg-slate-50/50' : ''}">
           <td class="py-3 px-4 text-slate-400 font-medium">${i + 1}</td>
           <td class="py-3 px-4">
             <div class="flex items-center gap-2.5">
@@ -1228,20 +1264,7 @@ async function renderGiaoDienChoMentor(myMentor, containerCard) {
           </td>
           <td class="py-3 px-4 text-right">
             <div class="inline-flex items-center gap-1.5">
-              <button type="button" onclick="moModalGiaoViec(${sv.ma_ho_so}, '${encodeURIComponent(hoTenSv)}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer">
-                <span class="material-symbols-outlined text-[13px]">add_task</span>
-                <span>Giao việc</span>
-              </button>
-              <button type="button" onclick="moModalXemNhiemVuSv(${sv.ma_ho_so}, '${encodeURIComponent(hoTenSv)}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 transition-colors flex items-center gap-1 cursor-pointer">
-                <span class="material-symbols-outlined text-[13px]">checklist</span>
-                <span>Nhiệm vụ</span>
-              </button>
-              <a href="cham_cong.html" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
-                Điểm danh
-              </a>
-              <a href="danh_gia.html" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-ictu-50 hover:bg-ictu-100 text-ictu-700 transition-colors">
-                Đánh giá
-              </a>
+              ${actionHtml}
             </div>
           </td>
         </tr>
@@ -1903,6 +1926,7 @@ function capNhatSelectSinhVienGiaoViec(maChon) {
     : (danhSachInternsFallback || []);
   let html = '<option value="">-- Chọn sinh viên --</option>';
   ds.forEach(sv => {
+    if (sv.trang_thai_thuc_tap === "HoanThanh") return;
     const isSelected = maChon && String(sv.ma_ho_so) === String(maChon);
     html += `<option value="${sv.ma_ho_so}" ${isSelected ? 'selected' : ''}>${sv.ho_ten} (${sv.lop || 'ICTU'} - #${sv.ma_ho_so})</option>`;
   });
@@ -2909,8 +2933,39 @@ async function xacNhanXuLyYeuCau() {
   }
 }
 
+function dongBoGiaoDienVaiTroSidebar() {
+  const user = layVaiTroNguoiDungHienTai();
+  const laMentor = user && (user.vai_tro === "Mentor" || user.vai_tro === "mentor");
+  const menuNhiemVu = document.getElementById("menuSidebarNhiemVuMentor");
+  if (menuNhiemVu) {
+    if (laMentor) {
+      menuNhiemVu.classList.remove("hidden");
+      menuNhiemVu.classList.add("flex");
+    } else {
+      menuNhiemVu.classList.add("hidden");
+      menuNhiemVu.classList.remove("flex");
+    }
+  }
+
+  const elName = document.getElementById("adminSidebarName");
+  const elEmail = document.getElementById("adminSidebarEmail");
+  const elRole = document.getElementById("adminSidebarRole");
+  const elAvatar = document.getElementById("adminAvatarInitials");
+
+  if (user) {
+    if (elName && user.ho_ten) elName.textContent = user.ho_ten;
+    if (elEmail && user.email) elEmail.textContent = user.email;
+    if (elRole && user.vai_tro) {
+      elRole.textContent = user.vai_tro === "Admin" ? "Quản trị viên" : (user.vai_tro === "HR" ? "Cán bộ HR" : (laMentor ? "Mentor" : user.vai_tro));
+    }
+    if (elAvatar && user.ho_ten) elAvatar.textContent = layTenVietTat(user.ho_ten);
+  }
+}
+
+dongBoGiaoDienVaiTroSidebar();
 napDuLieuCacheDashboard();
 window.addEventListener("DOMContentLoaded", () => {
+  dongBoGiaoDienVaiTroSidebar();
   napDuLieuCacheDashboard();
   taiDuLieuDashboard();
   taiDuLieuMentorWorkload();

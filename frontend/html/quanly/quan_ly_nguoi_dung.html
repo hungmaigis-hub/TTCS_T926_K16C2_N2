@@ -164,6 +164,20 @@
         </a>
 
         <a
+          href="nhat_ky_hoat_dong.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+              >history</span
+            >
+            <span>Nhật ký hoạt động</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-violet-100 text-violet-700">Audit</span>
+        </a>
+
+        <a
           href="../public/thamquan.html"
           class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
         >
@@ -241,11 +255,11 @@
           <div class="space-y-2">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-[11px] font-bold tracking-wider uppercase">
               <span class="material-symbols-outlined text-[16px]">manage_accounts</span>
-              <span>Quản Trị Người Dùng &amp; Phân Quyền</span>
+              <span>Quản Trị Người Dùng &amp; Hệ Thống</span>
             </div>
             <h1 class="text-2xl font-extrabold tracking-tight">Danh Sách Người Dùng &amp; Tài Khoản Hệ Thống</h1>
             <p class="text-sm text-sky-100 max-w-2xl leading-relaxed">
-              Theo dõi và quản lý tập trung toàn bộ tài khoản đăng nhập của Sinh viên thực tập, Mentor hướng dẫn, Cán bộ HR và Giảng viên trường. Hỗ trợ đặt lại mật khẩu và khóa bảo mật tài khoản.
+              Theo dõi và quản lý tập trung toàn bộ tài khoản đăng nhập của Sinh viên thực tập, Mentor hướng dẫn, Cán bộ HR và Giảng viên trường. Hỗ trợ phân quyền cố định theo vai trò, đặt lại mật khẩu và sao lưu hệ thống an toàn.
             </p>
           </div>
 
@@ -257,7 +271,38 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-2 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div class="flex items-center gap-2 p-1 bg-slate-100/80 rounded-xl">
+            <button
+              type="button"
+              id="btnTabTaiKhoan"
+              onclick="chuyenTabTrangChinh('tai_khoan')"
+              class="px-5 py-2.5 rounded-lg text-xs font-extrabold transition-all flex items-center gap-2 shadow-xs bg-white text-ictu-700 cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
+              <span>Danh Sách Tài Khoản</span>
+            </button>
+
+            <button
+              type="button"
+              id="btnTabSaoLuu"
+              onclick="chuyenTabTrangChinh('sao_luu')"
+              class="px-5 py-2.5 rounded-lg text-xs font-bold text-slate-600 hover:text-ictu-600 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-[18px]">database</span>
+              <span>Sao Lưu CSDL</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700">Auto</span>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2 px-3 text-xs text-slate-500 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Phân quyền cố định theo vai trò chuẩn ISO 27001</span>
+          </div>
+        </div>
+
+        <div id="khuVucQuanLyTaiKhoan" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-ictu-50 text-ictu-600 flex items-center justify-center shrink-0">
               <span class="material-symbols-outlined text-2xl">groups</span>
@@ -424,6 +469,144 @@
             </div>
           </div>
         </div>
+        </div>
+
+
+        <div id="khuVucSaoLuuHeThong" class="hidden space-y-6">
+          <div id="thongBaoLoiSaoLuu" class="hidden p-4 rounded-2xl border border-rose-200 bg-rose-50 text-rose-800 text-xs flex items-center justify-between gap-3 shadow-xs">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-rose-600 text-xl">error</span>
+              <span id="noiDungLoiSaoLuu" class="font-medium">Có lỗi xảy ra khi thao tác sao lưu</span>
+            </div>
+            <button type="button" onclick="document.getElementById('thongBaoLoiSaoLuu').classList.add('hidden')" class="text-rose-500 hover:text-rose-700">
+              <span class="material-symbols-outlined text-base">close</span>
+            </button>
+          </div>
+
+          <div id="thongBaoThanhCongSaoLuu" class="hidden p-4 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs flex items-center justify-between gap-3 shadow-xs">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-emerald-600 text-xl">check_circle</span>
+              <span id="noiDungThanhCongSaoLuu" class="font-bold">Tạo bản sao lưu thành công!</span>
+            </div>
+            <button type="button" onclick="document.getElementById('thongBaoThanhCongSaoLuu').classList.add('hidden')" class="text-emerald-500 hover:text-emerald-700">
+              <span class="material-symbols-outlined text-base">close</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">folder_zip</span>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-slate-400">Tổng Bản Sao Lưu</p>
+                <h3 id="kpiTongBanSaoLuu" class="text-2xl font-extrabold text-slate-900 mt-0.5">0</h3>
+                <p class="text-[10px] text-slate-400">Tệp nén .sql.gz</p>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">hard_drive</span>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-slate-400">Dung Lượng Lưu Trữ</p>
+                <h3 id="kpiTongDungLuongBackup" class="text-2xl font-extrabold text-emerald-700 mt-0.5">0 KB</h3>
+                <p class="text-[10px] text-emerald-600 font-medium">Bộ nhớ đã dùng</p>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">schedule</span>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-slate-400">Lịch Tự Động</p>
+                <h3 id="kpiTrangThaiLichBackup" class="text-base font-extrabold text-violet-700 mt-0.5">Mỗi 24 giờ</h3>
+                <p class="text-[10px] text-violet-600 font-medium">Chạy nền tự động</p>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-2xl">security</span>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-slate-400">Kiểm Tra Toàn Vẹn</p>
+                <h3 class="text-base font-extrabold text-amber-700 mt-0.5">SHA-256</h3>
+                <p class="text-[10px] text-amber-600 font-medium">Bảo mật chuẩn ISO</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/40">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-base font-extrabold text-slate-900">Danh Sách Tệp Sao Lưu Cơ Sở Dữ Liệu</h3>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">mysqldump</span>
+                </div>
+                <p class="text-xs text-slate-500">
+                  Tải xuống các bản sao lưu để lưu trữ an toàn ngoại vi hoặc phục hồi khi gặp sự cố máy chủ.
+                </p>
+              </div>
+
+              <div class="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onclick="taiDanhSachSaoLuu()"
+                  class="h-10 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-[17px] text-slate-500">refresh</span>
+                  <span>Làm mới</span>
+                </button>
+
+                <button
+                  type="button"
+                  id="btnKichHoatBackup"
+                  onclick="kichHoatSaoLuuThuCong()"
+                  class="h-10 px-5 rounded-xl bg-ictu-600 hover:bg-ictu-700 text-white text-xs font-bold transition-all shadow-md shadow-ictu-600/20 flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <span class="material-symbols-outlined text-[18px]" id="iconKichHoatBackup">backup</span>
+                  <span id="textKichHoatBackup">Tạo Bản Sao Lưu Ngay</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50/80 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                  <tr>
+                    <th class="py-3.5 px-6">Tên Tệp Sao Lưu (.sql.gz)</th>
+                    <th class="py-3.5 px-4">Thời Gian Tạo</th>
+                    <th class="py-3.5 px-4">Dung Lượng</th>
+                    <th class="py-3.5 px-4">Đối Soát SHA-256</th>
+                    <th class="py-3.5 px-6 text-right">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody id="bangSaoLuuTbody" class="divide-y divide-slate-100 font-medium">
+                  <tr>
+                    <td colspan="5" class="py-12 text-center text-slate-400">
+                      <div class="flex flex-col items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-4xl animate-spin text-slate-400">progress_activity</span>
+                        <p class="font-medium text-xs">Đang tải danh sách bản sao lưu...</p>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="p-5 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <span id="txtThongKeSaoLuu" class="text-xs text-slate-500 font-medium">Hiển thị 0 bản sao lưu</span>
+              <div class="flex items-center gap-2 text-xs text-slate-400">
+                <span class="material-symbols-outlined text-sm text-emerald-600">verified_user</span>
+                <span>Hệ thống tự động lưu trữ tối đa 30 bản sao lưu gần nhất</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </main>
     </div>
 
@@ -545,6 +728,128 @@
             >
               <span class="material-symbols-outlined text-[17px]" id="iconSubmitThem">person_add</span>
               <span id="textSubmitThem">Lưu tài khoản</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div
+      id="modalSuaNguoiDung"
+      class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-white rounded-3xl shadow-2xl max-w-lg w-full flex flex-col border border-slate-100 overflow-hidden"
+      >
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-2xl">edit_square</span>
+            </div>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900">Chỉnh Sửa Thông Tin Người Dùng</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Cập nhật hồ sơ tài khoản và phân bổ đơn vị</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="dongModalSuaNguoiDung()"
+            class="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+
+        <form id="formSuaNguoiDung" onsubmit="event.preventDefault(); guiSuaNguoiDung();" class="p-6 space-y-4">
+          <input type="hidden" id="suaMaNguoiDung" />
+
+          <div id="thongBaoLoiSua" class="hidden p-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-800 text-xs flex items-center gap-2">
+            <span class="material-symbols-outlined text-rose-600 text-[18px]">error</span>
+            <span id="noiDungLoiSua">Có lỗi xảy ra</span>
+          </div>
+
+          <div>
+            <label for="suaHoTen" class="block text-xs font-bold text-slate-700 mb-1.5">
+              Họ và tên người dùng <span class="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="suaHoTen"
+              required
+              class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="suaEmail" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Email đăng nhập <span class="text-rose-500">*</span>
+              </label>
+              <input
+                type="email"
+                id="suaEmail"
+                required
+                class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none"
+              />
+            </div>
+            <div>
+              <label for="suaSoDienThoai" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Số điện thoại
+              </label>
+              <input
+                type="tel"
+                id="suaSoDienThoai"
+                placeholder="0912345678"
+                class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none font-mono"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="suaVaiTro" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Vai trò hệ thống <span class="text-rose-500">*</span>
+              </label>
+              <select
+                id="suaVaiTro"
+                required
+                class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none bg-white cursor-pointer"
+              >
+                <option value="ThucTapSinh">Sinh viên (TTS)</option>
+                <option value="Mentor">Mentor hướng dẫn</option>
+                <option value="HR">Cán bộ HR</option>
+                <option value="Admin">Quản trị viên (Admin)</option>
+                <option value="NhaTruong">Giảng viên / Nhà trường</option>
+              </select>
+            </div>
+            <div>
+              <label for="suaPhongBan" class="block text-xs font-bold text-slate-700 mb-1.5">
+                Phòng ban trực thuộc
+              </label>
+              <select
+                id="suaPhongBan"
+                class="w-full h-10 px-3.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-ictu-500 focus:border-ictu-500 outline-none bg-white cursor-pointer"
+              >
+                <option value="">-- Không phân bổ --</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-100">
+            <button
+              type="button"
+              onclick="dongModalSuaNguoiDung()"
+              class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              id="btnSubmitSua"
+              class="px-5 py-2 rounded-xl bg-ictu-600 hover:bg-ictu-700 text-white font-bold text-xs shadow-md shadow-ictu-600/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50"
+            >
+              <span class="material-symbols-outlined text-[17px]" id="iconSubmitSua">save</span>
+              <span id="textSubmitSua">Cập nhật</span>
             </button>
           </div>
         </form>

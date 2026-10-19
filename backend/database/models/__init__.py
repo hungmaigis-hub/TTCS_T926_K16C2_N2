@@ -16,6 +16,7 @@ from database.models.phu_cap import PhuCap
 from database.models.yeu_cau_ho_tro import YeuCauHoTro
 from database.models.lich_hop import LichHop
 from database.models.quyen_han import QuyenHan, VaiTroQuyenHan
+from database.models.nhat_ky_hoat_dong import NhatKyHoatDong
 
 __all__ = [
     "PhongBan",
@@ -37,6 +38,7 @@ __all__ = [
     "LichHop",
     "QuyenHan",
     "VaiTroQuyenHan",
+    "NhatKyHoatDong",
 ]
 
 
