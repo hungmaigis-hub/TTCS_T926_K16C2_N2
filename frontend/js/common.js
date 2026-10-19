@@ -238,7 +238,7 @@ function dongBoThongTinNguoiDung() {
     }
 
     if (admin.vai_tro === "Mentor" || admin.vai_tro === "mentor") {
-      const hrOnlyPages = ["them_ho_so.html", "xet_duyet_ho_so.html", "lich_thuc_tap.html", "quan_ly_nguoi_dung.html"];
+      const hrOnlyPages = ["them_ho_so.html", "xet_duyet_ho_so.html", "lich_thuc_tap.html", "quan_ly_nguoi_dung.html", "nhat_ky_hoat_dong.html"];
       const currentFile = window.location.pathname.split("/").pop();
       if (hrOnlyPages.includes(currentFile)) {
         window.location.href = "dashboard.html";
@@ -261,13 +261,13 @@ function dongBoThongTinNguoiDung() {
       const btnPhanCong = document.getElementById("btnPhanCongWorkload");
       if (btnPhanCong) btnPhanCong.style.display = "none";
 
-      document.querySelectorAll("a[href*='them_ho_so'], a[href*='xet_duyet_ho_so'], a[href*='lich_thuc_tap'], a[href*='quan_ly_nguoi_dung']").forEach((link) => {
+      document.querySelectorAll("a[href*='them_ho_so'], a[href*='xet_duyet_ho_so'], a[href*='lich_thuc_tap'], a[href*='quan_ly_nguoi_dung'], a[href*='nhat_ky_hoat_dong']").forEach((link) => {
         link.style.display = "none";
       });
     }
 
     if (admin.vai_tro === "NhaTruong") {
-      const nonNhaTruongPages = ["them_ho_so.html", "xet_duyet_ho_so.html", "lich_thuc_tap.html", "quan_ly_nguoi_dung.html"];
+      const nonNhaTruongPages = ["them_ho_so.html", "xet_duyet_ho_so.html", "lich_thuc_tap.html", "quan_ly_nguoi_dung.html", "nhat_ky_hoat_dong.html"];
       const currentFile = window.location.pathname.split("/").pop();
       if (nonNhaTruongPages.includes(currentFile)) {
         window.location.href = "dashboard.html";
@@ -282,7 +282,7 @@ function dongBoThongTinNguoiDung() {
       const asideHeaderSub = document.querySelector("aside a span.text-\\[10px\\]");
       if (asideHeaderSub) asideHeaderSub.textContent = "Cổng Nhà Trường";
 
-      document.querySelectorAll("a[href*='them_ho_so'], a[href*='xet_duyet_ho_so'], a[href*='lich_thuc_tap'], a[href*='quan_ly_nguoi_dung']").forEach((link) => {
+      document.querySelectorAll("a[href*='them_ho_so'], a[href*='xet_duyet_ho_so'], a[href*='lich_thuc_tap'], a[href*='quan_ly_nguoi_dung'], a[href*='nhat_ky_hoat_dong']").forEach((link) => {
         link.style.display = "none";
       });
     }

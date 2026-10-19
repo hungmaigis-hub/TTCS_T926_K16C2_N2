@@ -315,6 +315,20 @@ def create_intern(intern_data: InternCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_ho_so)
 
+        try:
+            record_audit_log(
+                db=db,
+                hanh_dong="TIEP_NHAN_HO_SO",
+                endpoint="/api/v1/interns",
+                phuong_thuc="POST",
+                ma_nguoi_dung=new_user.ma_nguoi_dung,
+                dia_chi_ip="127.0.0.1",
+                mo_ta=f"Tiếp nhận hồ sơ thực tập sinh mới cho '{new_user.ho_ten}' ({new_user.email})",
+                trang_thai_http=201
+            )
+        except Exception:
+            pass
+
         # 8. Trả về phản hồi thành công HTTP 201 Created
         return {
             "status_code": 201,
@@ -1070,6 +1084,20 @@ def create_user_admin(payload: UserCreateRequest, db: Session = Depends(get_db))
     db.commit()
     db.refresh(new_user)
 
+    try:
+        record_audit_log(
+            db=db,
+            hanh_dong="TAO_NGUOI_DUNG",
+            endpoint="/api/v1/users",
+            phuong_thuc="POST",
+            ma_nguoi_dung=new_user.ma_nguoi_dung,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=f"Tạo mới tài khoản người dùng '{new_user.ho_ten}' ({new_user.email}) với vai trò '{new_user.vai_tro}'",
+            trang_thai_http=201
+        )
+    except Exception:
+        pass
+
     return {
         "status_code": 201,
         "message": "Tạo tài khoản người dùng thành công",
@@ -1096,6 +1124,20 @@ def update_user_status(id: int, payload: UserStatusUpdate, db: Session = Depends
     user.trang_thai = tt
     db.commit()
     db.refresh(user)
+
+    try:
+        record_audit_log(
+            db=db,
+            hanh_dong="CAP_NHAT_NGUOI_DUNG",
+            endpoint=f"/api/v1/users/{id}/status",
+            phuong_thuc="PATCH",
+            ma_nguoi_dung=user.ma_nguoi_dung,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=f"Cập nhật trạng thái tài khoản '{user.ho_ten}' ({user.email}) sang '{tt}'",
+            trang_thai_http=200
+        )
+    except Exception:
+        pass
 
     return {
         "status_code": 200,
@@ -1416,8 +1458,23 @@ def update_intern_approval_status(
     db.commit()
     db.refresh(ho_so)
 
-    # 4. Gửi email thông báo qua BackgroundTasks nếu thực tập sinh có email
     intern = ho_so.thuc_tap_sinh
+    try:
+        intern_name = intern.ho_ten if intern else f"ID {id}"
+        record_audit_log(
+            db=db,
+            hanh_dong="XET_DUYET_HO_SO",
+            endpoint=f"/api/v1/interns/{id}/approval",
+            phuong_thuc="PATCH",
+            ma_nguoi_dung=intern.ma_nguoi_dung if intern else None,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=f"Phê duyệt hồ sơ thực tập sinh '{intern_name}': Chuyển trạng thái xét duyệt sang '{new_status}'",
+            trang_thai_http=200
+        )
+    except Exception:
+        pass
+
+    # 4. Gửi email thông báo qua BackgroundTasks nếu thực tập sinh có email
     if intern and intern.email:
         prog_name = ho_so.chuong_trinh.ten_chuong_trinh if ho_so.chuong_trinh else None
         background_tasks.add_task(
@@ -1583,6 +1640,21 @@ def create_allowance(payload: AllowanceCreate, db: Session = Depends(get_db)):
     db.add(new_allowance)
     db.commit()
     db.refresh(new_allowance)
+
+    try:
+        intern_name = ho_so.thuc_tap_sinh.ho_ten if (ho_so and ho_so.thuc_tap_sinh) else f"Hồ sơ {payload.ma_ho_so}"
+        record_audit_log(
+            db=db,
+            hanh_dong="TAO_PHU_CAP",
+            endpoint="/api/v1/allowances",
+            phuong_thuc="POST",
+            ma_nguoi_dung=None,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=f"Khởi tạo khoản phụ cấp {payload.so_tien:,.0f} VNĐ (tháng {payload.thang}/{payload.nam}) cho sinh viên '{intern_name}'",
+            trang_thai_http=201
+        )
+    except Exception:
+        pass
 
     return {
         "status_code": 201,
@@ -1879,6 +1951,20 @@ def assign_mentor_to_intern(id: int, payload: AssignMentorRequest, db: Session =
     db.refresh(ho_so)
 
     ho_ten_sv = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else f"Hồ sơ {ho_so.ma_ho_so}"
+    try:
+        desc = f"Phân công Mentor '{mentor.ho_ten}' hướng dẫn cho thực tập sinh '{ho_ten_sv}'" if payload.ma_mentor else f"Hủy gán Mentor cho thực tập sinh '{ho_ten_sv}'"
+        record_audit_log(
+            db=db,
+            hanh_dong="PHAN_CONG_MENTOR",
+            endpoint=f"/api/v1/interns/{id}/mentor",
+            phuong_thuc="PATCH",
+            ma_nguoi_dung=payload.ma_mentor,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=desc,
+            trang_thai_http=200
+        )
+    except Exception:
+        pass
     email_sv = ho_so.thuc_tap_sinh.email if ho_so.thuc_tap_sinh else None
 
     return {
@@ -1999,8 +2085,23 @@ def confirm_contract(
     db.refresh(hop_dong)
     db.refresh(ho_so)
 
-    # 6. Gửi email thông báo qua BackgroundTasks nếu sinh viên có email
     intern = ho_so.thuc_tap_sinh
+    try:
+        intern_name = intern.ho_ten if intern else f"Hồ sơ {ho_so.ma_ho_so}"
+        record_audit_log(
+            db=db,
+            hanh_dong="XAC_NHAN_HOP_DONG",
+            endpoint=f"/api/v1/contracts/{id}/confirm",
+            phuong_thuc="PATCH",
+            ma_nguoi_dung=intern.ma_nguoi_dung if intern else None,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=f"Ký xác nhận hợp đồng thực tập điện tử #{id} cho sinh viên '{intern_name}'",
+            trang_thai_http=200
+        )
+    except Exception:
+        pass
+
+    # 6. Gửi email thông báo qua BackgroundTasks nếu sinh viên có email
     if intern and intern.email:
         background_tasks.add_task(
             send_contract_confirmed_email,
@@ -3287,6 +3388,19 @@ def scan_attendance_identifier(req: AttendanceScanRequest, db: Session = Depends
         db.refresh(new_record)
 
         sinh_vien_name = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None
+        try:
+            record_audit_log(
+                db=db,
+                hanh_dong="CHAM_CONG_QR",
+                endpoint="/api/v1/attendance/scan",
+                phuong_thuc="POST",
+                ma_nguoi_dung=ho_so.ma_nguoi_dung,
+                dia_chi_ip="127.0.0.1",
+                mo_ta=f"Quét mã điểm danh Check-in thành công cho sinh viên '{sinh_vien_name or ho_so.ma_ho_so}' ({trang_thai})",
+                trang_thai_http=200
+            )
+        except Exception:
+            pass
         return {
             "status_code": 200,
             "message": "Quét mã check-in thành công",
@@ -3359,6 +3473,19 @@ def scan_attendance_identifier(req: AttendanceScanRequest, db: Session = Depends
     db.refresh(attendance)
 
     sinh_vien_name = ho_so.thuc_tap_sinh.ho_ten if ho_so.thuc_tap_sinh else None
+    try:
+        record_audit_log(
+            db=db,
+            hanh_dong="CHAM_CONG_QR",
+            endpoint="/api/v1/attendance/scan",
+            phuong_thuc="POST",
+            ma_nguoi_dung=ho_so.ma_nguoi_dung,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=f"Quét mã điểm danh Check-out thành công cho sinh viên '{sinh_vien_name or ho_so.ma_ho_so}' ({attendance.trang_thai})",
+            trang_thai_http=200
+        )
+    except Exception:
+        pass
     return {
         "status_code": 200,
         "message": "Quét mã check-out thành công",
@@ -3911,6 +4038,21 @@ def create_leave_request(req: LeaveRequestCreate, db: Session = Depends(get_db))
     db.commit()
     db.refresh(new_request)
 
+    try:
+        intern_name = ho_so.thuc_tap_sinh.ho_ten if (ho_so and ho_so.thuc_tap_sinh) else f"Hồ sơ {req.ma_ho_so}"
+        record_audit_log(
+            db=db,
+            hanh_dong="TAO_DON_NGHI_PHEP",
+            endpoint="/api/v1/leave-requests",
+            phuong_thuc="POST",
+            ma_nguoi_dung=ho_so.ma_nguoi_dung,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=f"Sinh viên '{intern_name}' gửi đơn xin nghỉ phép ({req.tu_ngay} đến {req.den_ngay}, {so_ngay_xin} ngày)",
+            trang_thai_http=201
+        )
+    except Exception:
+        pass
+
     return {
         "status_code": 201,
         "message": "Tạo đơn xin nghỉ thành công",
@@ -4199,6 +4341,21 @@ def create_evaluation(eval_data: EvaluationCreate, db: Session = Depends(get_db)
     db.add(new_eval)
     db.commit()
     db.refresh(new_eval)
+
+    try:
+        intern_name = ho_so.thuc_tap_sinh.ho_ten if (ho_so and ho_so.thuc_tap_sinh) else f"Hồ sơ {eval_data.ma_ho_so}"
+        record_audit_log(
+            db=db,
+            hanh_dong="DANH_GIA_THUC_TAP",
+            endpoint="/api/v1/evaluations",
+            phuong_thuc="POST",
+            ma_nguoi_dung=eval_data.ma_nguoi_danh_gia,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=f"'{nguoi_danh_gia.ho_ten}' đánh giá {eval_data.loai_danh_gia} cho sinh viên '{intern_name}' (ĐTB: {new_eval.diem_trung_binh}, Xếp loại: {new_eval.xep_loai})",
+            trang_thai_http=201
+        )
+    except Exception:
+        pass
 
     # 6. Đảm bảo tên người đánh giá được nạp đầy đủ trong response
     result_dict = new_eval.to_dict()
@@ -4557,6 +4714,21 @@ def create_task(
     db.commit()
     db.refresh(new_task)
 
+    try:
+        intern_name = ho_so.thuc_tap_sinh.ho_ten if (ho_so and ho_so.thuc_tap_sinh) else f"Hồ sơ {task_data.ma_ho_so}"
+        record_audit_log(
+            db=db,
+            hanh_dong="GIAO_NHIEM_VU",
+            endpoint="/api/v1/tasks",
+            phuong_thuc="POST",
+            ma_nguoi_dung=None,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=f"Giao nhiệm vụ '{new_task.ten_nhiem_vu}' cho thực tập sinh '{intern_name}' (Hạn: {new_task.han_hoan_thanh})",
+            trang_thai_http=201
+        )
+    except Exception:
+        pass
+
     # 4. Trả về phản hồi thành công
     return {
         "status_code": 201,
@@ -4602,6 +4774,20 @@ def update_task_progress(
     # 5. Lưu vào CSDL
     db.commit()
     db.refresh(task)
+
+    try:
+        record_audit_log(
+            db=db,
+            hanh_dong="CAP_NHAT_TIEN_DO",
+            endpoint=f"/api/v1/tasks/{id}/progress",
+            phuong_thuc="PATCH",
+            ma_nguoi_dung=None,
+            dia_chi_ip="127.0.0.1",
+            mo_ta=f"Cập nhật tiến độ nhiệm vụ '{task.ten_nhiem_vu}' lên {task.tien_do_phantram}% ({task.trang_thai})",
+            trang_thai_http=200
+        )
+    except Exception:
+        pass
 
     # 6. Trả về phản hồi thành công
     return {
