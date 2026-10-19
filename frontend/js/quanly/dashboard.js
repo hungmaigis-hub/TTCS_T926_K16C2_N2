@@ -2949,6 +2949,12 @@ function dongBoGiaoDienVaiTroSidebar() {
     }
   }
 
+  if (laMentor || (user && user.vai_tro === "NhaTruong")) {
+    document.querySelectorAll("a[href*='nhat_ky_hoat_dong']").forEach((link) => {
+      link.style.display = "none";
+    });
+  }
+
   const elName = document.getElementById("adminSidebarName");
   const elEmail = document.getElementById("adminSidebarEmail");
   const elRole = document.getElementById("adminSidebarRole");
