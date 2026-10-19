@@ -2666,6 +2666,16 @@ function capNhatSoLuongYeuCauChoXuLy() {
       elLoiTatChoXuLy.className = "text-[10px] text-slate-400";
     }
   }
+
+  const badgeSidebar = document.getElementById("badgeSidebarYeuCauCho");
+  if (badgeSidebar) {
+    if (choXuLyCount > 0) {
+      badgeSidebar.textContent = choXuLyCount;
+      badgeSidebar.classList.remove("hidden");
+    } else {
+      badgeSidebar.classList.add("hidden");
+    }
+  }
 }
 
 function locYeuCauHoTroHR(trangThai) {
