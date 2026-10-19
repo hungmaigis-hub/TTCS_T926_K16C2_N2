@@ -35,7 +35,11 @@ function layDuongDanApi() {
       }
     }
     const saved = localStorage.getItem("ictu_api_override");
-    if (saved) return saved;
+    if (saved && saved.includes("ngrok") && window.__ENV__ && window.__ENV__.API_URL && !window.__ENV__.API_URL.includes("ngrok")) {
+      localStorage.removeItem("ictu_api_override");
+    } else if (saved) {
+      return saved;
+    }
     if (window.__ENV__ && window.__ENV__.API_URL) return window.__ENV__.API_URL;
   } catch {}
   return "http://127.0.0.1:8000/api/v1";

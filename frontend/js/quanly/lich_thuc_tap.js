@@ -168,6 +168,22 @@ async function taiDanhSachChuongTrinh() {
     if (elFooter) {
       elFooter.innerHTML = `Hiển thị <strong>${danhSachChuongTrinhGoc.length}</strong> trên tổng số <strong>${json.total || danhSachChuongTrinhGoc.length}</strong> chương trình thực tập`;
     }
+
+    const elSoDot = document.getElementById("soDotDangHoatDong");
+    if (elSoDot) {
+      elSoDot.textContent = `${String(danhSachChuongTrinhGoc.length).padStart(2, "0")} Chương trình`;
+    }
+
+    const elSoChiTieu = document.getElementById("soChiTieuTong");
+    if (elSoChiTieu) {
+      const tongChiTieu = danhSachChuongTrinhGoc.reduce((acc, p) => acc + (p.chi_tieu_sinh_vien || 50), 0);
+      elSoChiTieu.textContent = `${tongChiTieu} Sinh viên`;
+    }
+
+    const elBadgeTongSoDot = document.getElementById("badgeTongSoDot");
+    if (elBadgeTongSoDot) {
+      elBadgeTongSoDot.textContent = `${danhSachChuongTrinhGoc.length} Đợt`;
+    }
   } catch (err) {
     tbody.innerHTML = `
       <tr>

@@ -1572,6 +1572,15 @@ class UserCreateRequest(BaseModel):
     ma_phong_ban: Optional[int] = Field(None, description="Mã phòng ban nếu là Mentor hoặc Cán bộ")
 
 
+class UserUpdateRequest(BaseModel):
+    ho_ten: Optional[str] = Field(None, min_length=2, max_length=100, description="Họ và tên người dùng")
+    email: Optional[str] = Field(None, min_length=5, max_length=100, description="Email đăng nhập")
+    so_dien_thoai: Optional[str] = Field(None, max_length=20, description="Số điện thoại")
+    vai_tro: Optional[str] = Field(None, description="Vai trò: ThucTapSinh, Mentor, HR, Admin, NhaTruong")
+    ma_phong_ban: Optional[int] = Field(None, description="Mã phòng ban nếu là Mentor hoặc Cán bộ")
+
+
+
 # ==============================================================
 # SCHEMA CHO LỊCH HỌP (MEETINGS)
 # ==============================================================
@@ -1627,6 +1636,26 @@ class MeetingCreateResponse(BaseModel):
     code: int = 201
     message: str = "Tạo lịch họp thành công và đã gửi email mời tới thực tập sinh"
     data: MeetingResponseData
+
+
+class MeetingCheckinRequest(BaseModel):
+    """Schema yêu cầu điểm danh buổi họp qua mã QR"""
+    ma_dinh_danh: str = Field(..., min_length=1, description="Mã sinh viên, email, số điện thoại hoặc mã thẻ")
+    ghi_chu: Optional[str] = Field(None, description="Ghi chú khi điểm danh")
+
+    @field_validator('ma_dinh_danh')
+    def validate_identifier(cls, value: str):
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Mã định danh không được để trống hoặc chỉ chứa khoảng trắng")
+        return cleaned
+
+
+class MeetingCheckinResponse(BaseModel):
+    """Phản hồi sau khi điểm danh buổi họp thành công (HTTP 200)"""
+    code: int = 200
+    message: str = "Điểm danh buổi họp thành công"
+    data: dict
 
 
 # ==============================================================
@@ -1844,6 +1873,54 @@ class BackupCreateResponse(BaseModel):
     status_code: int = 201
     message: str = "Tạo bản sao lưu cơ sở dữ liệu thành công"
     backup: BackupItemResponse
+
+
+# ==============================================================
+# SCHEMA NHẬT KÝ HOẠT ĐỘNG HỆ THỐNG (AUDIT LOGS)
+# ==============================================================
+class AuditLogItemResponse(BaseModel):
+    ma_nhat_ky: int = Field(..., description="ID bản ghi nhật ký")
+    ma_nguoi_dung: Optional[int] = Field(None, description="ID người dùng thực hiện")
+    ho_ten: Optional[str] = Field(None, description="Họ và tên người thực hiện")
+    email: Optional[str] = Field(None, description="Email người thực hiện")
+    vai_tro: Optional[str] = Field(None, description="Vai trò (Admin, HR, Mentor, ThucTapSinh)")
+    hanh_dong: str = Field(..., description="Tên hành động nghiệp vụ")
+    endpoint: str = Field(..., description="URL endpoint API")
+    phuong_thuc: str = Field(..., description="Phương thức HTTP (GET, POST, PUT, DELETE, PATCH)")
+    dia_chi_ip: Optional[str] = Field(None, description="Địa chỉ IP client")
+    mo_ta: Optional[str] = Field(None, description="Chi tiết thao tác")
+    trang_thai_http: int = Field(default=200, description="Mã phản hồi HTTP")
+    thoi_gian: str = Field(..., description="Thời gian thực hiện hành động")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AuditLogStats(BaseModel):
+    total_logs: int = 0
+    today_logs: int = 0
+    success_rate: float = 100.0
+    unique_users: int = 0
+
+
+class AuditLogPaginatedResponse(BaseModel):
+    status_code: int = 200
+    message: str = "Lấy danh sách nhật ký hoạt động thành công"
+    total: int = 0
+    page: int = 1
+    page_size: int = 15
+    total_pages: int = 1
+    stats: AuditLogStats
+    items: List[AuditLogItemResponse] = []
+
+
+class AuditLogCreateRequest(BaseModel):
+    hanh_dong: str = Field(..., max_length=100, description="Tên hành động nghiệp vụ")
+    endpoint: str = Field(..., max_length=255, description="Đường dẫn endpoint")
+    phuong_thuc: str = Field(..., max_length=10, description="Phương thức HTTP")
+    dia_chi_ip: Optional[str] = Field(default=None, max_length=50, description="Địa chỉ IP")
+    mo_ta: Optional[str] = Field(default=None, description="Chi tiết thao tác")
+    trang_thai_http: Optional[int] = Field(default=200, description="HTTP status code")
+
 
 
 

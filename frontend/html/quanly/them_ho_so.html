@@ -179,6 +179,20 @@
         </a>
 
         <a
+          href="nhat_ky_hoat_dong.html"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
+        >
+          <div class="flex items-center gap-3">
+            <span
+              class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-ictu-600"
+              >history</span
+            >
+            <span>Nhật ký hoạt động</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-violet-100 text-violet-700">Audit</span>
+        </a>
+
+        <a
           href="../public/thamquan.html"
           class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-ictu-700 hover:bg-slate-50 transition-colors group"
         >
@@ -315,12 +329,11 @@
           <div class="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
+              onclick="moModalImport()"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-ictu-600 hover:bg-ictu-700 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer"
             >
-              <span class="material-symbols-outlined text-[18px] text-slate-500"
-                >file_upload</span
-              >
-              Nhập từ file Excel
+              <span class="material-symbols-outlined text-[18px]">upload_file</span>
+              Nhập từ file (Excel, Word, PDF)
             </button>
             <button
               type="button"
@@ -663,7 +676,7 @@
                     Người hướng dẫn / Mentor <span class="text-rose-500">*</span>
                   </label>
                   <span id="nhanChiTieuMentorTongQuan" class="text-[10px] font-semibold text-ictu-600 bg-ictu-50 px-2 py-0.5 rounded-full border border-ictu-100 whitespace-nowrap shrink-0">
-                    Tối đa 5 SV
+                    Tối đa 100 SV
                   </span>
                 </div>
 
@@ -750,7 +763,7 @@
                       </button>
                     </div>
                     <span class="text-[10px] text-slate-400 hidden sm:inline" id="ghiChuGioiHanMentor">
-                      Tối đa 5 SV
+                      Tối đa 100 SV
                     </span>
                   </div>
 
@@ -1045,36 +1058,50 @@
         </form>
 
         <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-ictu-600 text-[20px]"
-                >history</span
-              >
-              <h3 class="font-bold text-slate-900 text-sm">
-                Hồ Sơ Mới Tiếp Nhận Gần Đây
-              </h3>
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-xl bg-ictu-50 text-ictu-600 flex items-center justify-center font-bold shrink-0">
+                <span class="material-symbols-outlined text-[20px]">history</span>
+              </span>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="font-bold text-slate-900 text-sm">
+                    Hồ Sơ Mới Tiếp Nhận Gần Đây
+                  </h3>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-ictu-50 text-ictu-700 border border-ictu-200">
+                    6 hồ sơ mới nhất
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5" id="thoiGianCapNhatHoSo">
+                  Đang đồng bộ CSDL...
+                </p>
+              </div>
             </div>
-            <span class="text-xs text-slate-400" id="thoiGianCapNhatHoSo"
-              >Đang đồng bộ CSDL...</span
+            <a
+              href="lich_thuc_tap.html"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-ictu-300 bg-white hover:bg-ictu-50/50 text-xs font-semibold text-slate-700 hover:text-ictu-700 shadow-2xs transition-all"
             >
+              <span>Xem toàn bộ danh sách thực tập sinh</span>
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </a>
           </div>
 
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto max-h-[380px] overflow-y-auto rounded-xl border border-slate-100">
             <table class="w-full text-left text-xs">
-              <thead>
+              <thead class="sticky top-0 bg-slate-50/95 backdrop-blur-xs z-10 border-b border-slate-200">
                 <tr
-                  class="border-b border-slate-100 text-slate-400 font-semibold uppercase tracking-wider"
+                  class="text-slate-500 font-semibold uppercase tracking-wider text-[11px]"
                 >
-                  <th class="pb-2.5">Họ và tên</th>
-                  <th class="pb-2.5">Email</th>
-                  <th class="pb-2.5">Chuyên ngành</th>
-                  <th class="pb-2.5">Thời gian thực tập</th>
-                  <th class="pb-2.5 text-center">Trạng thái</th>
+                  <th class="py-2.5 px-3">Họ và tên</th>
+                  <th class="py-2.5 px-3">Email</th>
+                  <th class="py-2.5 px-3">Chuyên ngành</th>
+                  <th class="py-2.5 px-3">Thời gian thực tập</th>
+                  <th class="py-2.5 px-3 text-center">Trạng thái</th>
                 </tr>
               </thead>
               <tbody
                 id="bangHoSoGanDay"
-                class="divide-y divide-slate-100 font-medium text-slate-700"
+                class="divide-y divide-slate-100 font-medium text-slate-700 bg-white"
               >
                 <tr class="hover:bg-slate-50/60 transition-colors">
                   <td
@@ -1124,6 +1151,594 @@
         </div>
       </div>
     </main>
+
+    <div
+      id="modalImport"
+      class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      onclick="if(event.target === this) dongModalImport()"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-3xl w-full my-auto flex flex-col max-h-[92vh] overflow-hidden"
+      >
+        <div class="px-6 py-4.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-ictu-100 text-ictu-700 flex items-center justify-center font-bold">
+              <span class="material-symbols-outlined text-[22px]">upload_file</span>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">
+                Nhập Danh Sách Thực Tập Sinh Hàng Loạt
+              </h3>
+              <p class="text-xs text-slate-500">
+                Hỗ trợ định dạng .xlsx, .docx, .pdf, .csv với tính năng kiểm tra lỗi và chỉ tiêu
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="dongModalImport()"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto flex-1 space-y-5">
+          <div class="p-4 rounded-xl bg-blue-50/60 border border-blue-200/80 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[17px] text-blue-600">download</span>
+                Tải file mẫu quy chuẩn
+              </span>
+              <span class="text-[11px] text-blue-700 font-medium">8 cột theo đúng thứ tự</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Thứ tự cột dữ liệu yêu cầu: <b>STT</b> | <b>Mã SV (*)</b> | <b>Họ và tên (*)</b> | <b>Email (*)</b> | <b>Số điện thoại (*)</b> | <b>Lớp (*)</b> | <b>Chuyên ngành (*)</b> | <b>Trường Đại học</b>.
+            </p>
+            <div class="flex flex-wrap items-center gap-2 pt-1">
+              <button
+                type="button"
+                onclick="taiMauExcel()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors"
+              >
+                <span class="material-symbols-outlined text-[16px]">table_view</span>
+                Tải mẫu Excel (.xlsx)
+              </button>
+              <button
+                type="button"
+                onclick="taiMauWord()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+              >
+                <span class="material-symbols-outlined text-[16px]">description</span>
+                Tải mẫu Word (.docx)
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 relative z-30">
+            <div>
+              <label for="importMaChuongTrinh" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Chương trình thực tập <span class="text-rose-500">*</span>
+              </label>
+              <select
+                id="importMaChuongTrinh"
+                class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-ictu-600 focus:bg-white transition-all font-medium"
+              ></select>
+            </div>
+            <div>
+              <label for="importMaTruong" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Trường tiếp nhận <span class="text-rose-500">*</span>
+              </label>
+              <select
+                id="importMaTruong"
+                class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-ictu-600 focus:bg-white transition-all font-medium"
+              ></select>
+            </div>
+            <div class="flex flex-col gap-1.5 relative z-30" id="hopChonMentorImportContainer">
+              <div class="flex items-center justify-between gap-1">
+                <label for="importMaMentor" class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1 truncate">
+                  Người hướng dẫn (Mentor)
+                </label>
+                <span class="text-[10px] font-semibold text-ictu-600 bg-ictu-50 px-2 py-0.5 rounded-full border border-ictu-100 whitespace-nowrap shrink-0">
+                  Tối đa 100 SV
+                </span>
+              </div>
+
+              <input type="hidden" id="importMaMentor" value="" />
+
+              <button
+                type="button"
+                id="nutKichHoatChonMentorImport"
+                onclick="toggleDropdownMentorImport()"
+                class="w-full min-h-[38px] px-3 py-1.5 text-left bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ictu-500/20 focus:border-ictu-600 transition-all flex items-center justify-between gap-2 group shadow-2xs cursor-pointer"
+              >
+                <div id="hienThiMentorImportDaChon" class="flex items-center gap-2 min-w-0 flex-1">
+                  <span class="w-6 h-6 rounded-lg bg-slate-200/80 text-slate-400 flex items-center justify-center shrink-0 group-hover:text-ictu-600 transition-colors">
+                    <span class="material-symbols-outlined text-[16px]">supervisor_account</span>
+                  </span>
+                  <span class="text-xs text-slate-500 font-medium truncate">
+                    -- Không phân công Mentor --
+                  </span>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <span
+                    id="nutXoaChonMentorImport"
+                    onclick="event.stopPropagation(); boChonMentorImport();"
+                    class="hidden p-0.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    title="Bỏ chọn mentor"
+                  >
+                    <span class="material-symbols-outlined text-[15px]">close</span>
+                  </span>
+                  <span class="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-slate-600 transition-transform duration-200" id="iconMuiTenMentorImport">
+                    expand_more
+                  </span>
+                </div>
+              </button>
+
+              <div
+                id="hopDropdownMentorImport"
+                class="hidden absolute top-full right-0 left-0 sm:left-auto sm:right-0 sm:w-[420px] max-w-[92vw] mt-1.5 z-50 bg-white rounded-2xl border border-slate-200 shadow-[0_20px_50px_rgba(15,23,42,0.22)] p-3 space-y-2.5 backdrop-blur-md"
+                style="z-index: 1000;"
+              >
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[17px] text-slate-400">
+                    search
+                  </span>
+                  <input
+                    type="text"
+                    id="oTimKiemMentorImport"
+                    oninput="locDanhSachMentorImport(this.value)"
+                    placeholder="Tìm theo tên, ID, email, chức vụ..."
+                    class="w-full pl-9 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-ictu-500 focus:bg-white text-slate-800 transition-all font-medium"
+                  />
+                  <span
+                    id="nutXoaTimKiemMentorImport"
+                    onclick="xoaTimKiemMentorImport()"
+                    class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <span class="material-symbols-outlined text-[15px]">close</span>
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between gap-1 text-[11px] font-semibold border-b border-slate-100 pb-2">
+                  <div class="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onclick="locTabMentorImport('all')"
+                      id="tabMentorImportAll"
+                      class="px-2 py-0.5 rounded-lg bg-ictu-50 text-ictu-700 transition-colors font-bold cursor-pointer text-[11px]"
+                    >
+                      Tất cả (<span id="demMentorImportAll">0</span>)
+                    </button>
+                    <button
+                      type="button"
+                      onclick="locTabMentorImport('available')"
+                      id="tabMentorImportAvailable"
+                      class="px-2 py-0.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer font-medium text-[11px]"
+                    >
+                      Còn chỗ (<span id="demMentorImportAvailable">0</span>)
+                    </button>
+                    <button
+                      type="button"
+                      onclick="locTabMentorImport('full')"
+                      id="tabMentorImportFull"
+                      class="px-2 py-0.5 rounded-lg text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer font-medium text-[11px]"
+                    >
+                      Đã kín (<span id="demMentorImportFull">0</span>)
+                    </button>
+                  </div>
+                  <span class="text-[10px] text-slate-400 hidden sm:inline">
+                    Tối đa 100 SV
+                  </span>
+                </div>
+
+                <div
+                  id="danhSachMentorImportCuon"
+                  class="max-h-56 overflow-y-auto space-y-1 pr-1 text-xs"
+                >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative z-10">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Chế độ xử lý khi phát hiện sinh viên lỗi
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label
+                class="relative flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/80 cursor-pointer transition-colors shadow-2xs has-[:checked]:border-ictu-600 has-[:checked]:bg-ictu-50/30 has-[:checked]:ring-1 has-[:checked]:ring-ictu-600"
+              >
+                <input
+                  type="radio"
+                  name="cheDoImport"
+                  value="bo_qua_loi"
+                  checked
+                  class="mt-0.5 text-ictu-600 focus:ring-ictu-500 cursor-pointer"
+                />
+                <div class="text-xs">
+                  <span class="font-bold text-slate-900 block flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[17px] text-emerald-600">check_circle</span>
+                    Bỏ qua lỗi &amp; Tiếp tục nhập
+                  </span>
+                  <span class="text-slate-500 text-[11px] mt-0.5 block">
+                    Tiếp nhận ngay sinh viên hợp lệ, tổng hợp danh sách lỗi để xử lý riêng
+                  </span>
+                </div>
+              </label>
+
+              <label
+                class="relative flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50/80 cursor-pointer transition-colors shadow-2xs has-[:checked]:border-rose-600 has-[:checked]:bg-rose-50/30 has-[:checked]:ring-1 has-[:checked]:ring-rose-600"
+              >
+                <input
+                  type="radio"
+                  name="cheDoImport"
+                  value="dung_khi_co_loi"
+                  class="mt-0.5 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                />
+                <div class="text-xs">
+                  <span class="font-bold text-slate-900 block flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[17px] text-rose-600">gpp_bad</span>
+                    Dừng lại nếu có lỗi
+                  </span>
+                  <span class="text-slate-500 text-[11px] mt-0.5 block">
+                    Không lưu bất kỳ ai nếu có dòng lỗi để sửa file rồi import lại
+                  </span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Chọn hoặc kéo thả tệp tải lên <span class="text-rose-500">*</span>
+            </label>
+            <input
+              type="file"
+              id="tepImport"
+              accept=".xlsx,.xls,.docx,.pdf,.csv"
+              class="hidden"
+              onchange="xuLyChonTepImport(this)"
+            />
+            <div
+              id="vungThaTep"
+              onclick="document.getElementById('tepImport').click()"
+              class="border-2 border-dashed border-slate-300 hover:border-ictu-500 bg-slate-50/60 hover:bg-ictu-50/20 rounded-2xl p-6 text-center transition-all cursor-pointer group"
+            >
+              <div class="flex flex-col items-center justify-center gap-2">
+                <div class="w-12 h-12 rounded-2xl bg-white text-slate-400 group-hover:text-ictu-600 group-hover:scale-110 flex items-center justify-center shadow-xs border border-slate-200 transition-all">
+                  <span class="material-symbols-outlined text-[28px]">cloud_upload</span>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-800">
+                    Nhấp để duyệt tệp hoặc kéo thả vào đây
+                  </p>
+                  <p class="text-[11px] text-slate-400 mt-0.5">
+                    Chấp nhận file Excel (.xlsx, .xls), Word (.docx), PDF (.pdf) hoặc CSV (Tối đa 10MB)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              id="thongTinTepDaChon"
+              class="hidden mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <span id="iconLoaiTep" class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <span class="material-symbols-outlined text-[20px]">table_view</span>
+                </span>
+                <div class="min-w-0">
+                  <p id="tenTepDaChon" class="text-xs font-bold text-slate-800 truncate"></p>
+                  <p id="dungLuongTepDaChon" class="text-[11px] text-slate-400"></p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onclick="xoaTepDaChon()"
+                class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                title="Bỏ chọn tệp"
+              >
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="hopKetQuaImport" class="hidden space-y-3 pt-2 border-t border-slate-200/80">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[17px] text-ictu-600">analytics</span>
+                Kết quả kiểm tra &amp; xử lý dữ liệu
+              </span>
+              <div class="flex items-center gap-2" id="cacBadgeKetQua"></div>
+            </div>
+
+            <div id="thongBaoKetQuaImport" class="p-3.5 rounded-xl text-xs font-medium leading-relaxed"></div>
+
+            <button
+              type="button"
+              onclick="hienModalXemTruocDaCo()"
+              class="w-full py-2.5 px-4 rounded-xl bg-ictu-50 hover:bg-ictu-100 border border-ictu-200 text-ictu-700 text-xs font-bold inline-flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+            >
+              <span class="material-symbols-outlined text-[18px]">open_in_full</span>
+              Mở bảng xem trước chi tiết (Toàn màn hình &amp; Tìm kiếm sinh viên)
+            </button>
+
+            <div id="hopDanhSachLoi" class="hidden space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-rose-700 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[16px]">error</span>
+                  Chi tiết các dòng bị lỗi cần xử lý
+                </span>
+                <button
+                  type="button"
+                  id="nutXuatFileLoi"
+                  onclick="taiXuatDanhSachLoi()"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-rose-300 text-rose-700 hover:bg-rose-50 text-[11px] font-semibold transition-colors"
+                >
+                  <span class="material-symbols-outlined text-[15px]">file_download</span>
+                  Tải danh sách lỗi (.xlsx)
+                </button>
+              </div>
+              <div class="max-h-48 overflow-y-auto rounded-xl border border-rose-200 bg-white">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-rose-50 text-rose-900 font-semibold border-b border-rose-200 sticky top-0">
+                    <tr>
+                      <th class="py-2 px-3">Dòng</th>
+                      <th class="py-2 px-3">Mã SV</th>
+                      <th class="py-2 px-3">Họ và tên</th>
+                      <th class="py-2 px-3">Email</th>
+                      <th class="py-2 px-3">Lý do lỗi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bangThanDanhSachLoi" class="divide-y divide-rose-100 text-slate-700"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="hopXemTruocHopLe" class="hidden space-y-2">
+              <span class="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                Xem trước các sinh viên hợp lệ
+              </span>
+              <div class="max-h-44 overflow-y-auto rounded-xl border border-emerald-200 bg-white">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-emerald-50 text-emerald-900 font-semibold border-b border-emerald-200 sticky top-0">
+                    <tr>
+                      <th class="py-2 px-3">Dòng</th>
+                      <th class="py-2 px-3">Mã SV</th>
+                      <th class="py-2 px-3">Họ và tên</th>
+                      <th class="py-2 px-3">Email</th>
+                      <th class="py-2 px-3">Lớp</th>
+                      <th class="py-2 px-3">Chuyên ngành</th>
+                      <th class="py-2 px-3">Trường</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bangThanXemTruocHopLe" class="divide-y divide-emerald-100 text-slate-700"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex items-center justify-between gap-3 shrink-0">
+          <button
+            type="button"
+            onclick="dongModalImport()"
+            class="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors"
+          >
+            Đóng
+          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              id="nutKiemTraTruocImport"
+              onclick="thucHienImport('kiem_tra_truoc')"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-xs transition-colors"
+            >
+              <span class="material-symbols-outlined text-[17px]">manage_search</span>
+              Kiểm tra &amp; Xem trước
+            </button>
+            <button
+              type="button"
+              id="nutThucHienImport"
+              onclick="thucHienXacNhanImport()"
+              disabled
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-200 text-slate-400 text-xs font-bold shadow-xs cursor-not-allowed transition-all"
+            >
+              <span class="material-symbols-outlined text-[17px]">how_to_reg</span>
+              <span id="nhanNutThucHienImport">Xác nhận nhập &amp; Phân công</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="modalXemTruocImport"
+      class="fixed inset-0 z-[80] hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+      onclick="if(event.target === this) dongModalXemTruoc()"
+    >
+      <div
+        class="bg-white rounded-3xl shadow-2xl border border-slate-200/90 max-w-6xl w-full my-auto flex flex-col h-[88vh] max-h-[92vh] overflow-hidden"
+      >
+        <div class="px-6 py-4.5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-2xl bg-ictu-100 text-ictu-700 flex items-center justify-center font-bold shrink-0">
+              <span class="material-symbols-outlined text-[24px]">manage_search</span>
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-base font-bold text-slate-900 truncate">
+                Kết Quả Kiểm Tra &amp; Xem Trước Danh Sách Thực Tập Sinh
+              </h3>
+              <p class="text-xs text-slate-500 truncate flex items-center gap-2 mt-0.5">
+                <span>Tệp: <b id="previewTenTep" class="text-slate-700">--</b></span>
+                <span class="text-slate-300">•</span>
+                <span>Chương trình: <b id="previewTenChuongTrinh" class="text-slate-700">--</b></span>
+                <span class="text-slate-300">•</span>
+                <span>Mentor: <b id="previewTenMentor" class="text-slate-700">--</b></span>
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="dongModalXemTruoc()"
+            class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            title="Đóng cửa sổ xem trước"
+          >
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto flex-1 flex flex-col space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Tổng sinh viên trong file</p>
+                <p class="text-xl font-extrabold text-slate-900 mt-0.5" id="previewTongSo">0</p>
+              </div>
+              <span class="w-10 h-10 rounded-xl bg-slate-200/70 text-slate-600 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[22px]">format_list_numbered</span>
+              </span>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between">
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Hợp lệ sẵn sàng tiếp nhận</p>
+                <p class="text-xl font-extrabold text-emerald-700 mt-0.5" id="previewThanhCong">0</p>
+              </div>
+              <span class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[22px]">check_circle</span>
+              </span>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-200 flex items-center justify-between">
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider text-rose-800">Dòng phát hiện lỗi</p>
+                <p class="text-xl font-extrabold text-rose-700 mt-0.5" id="previewThatBai">0</p>
+              </div>
+              <span class="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[22px]">error</span>
+              </span>
+            </div>
+          </div>
+
+          <div id="previewThongBaoTrangThai" class="p-3.5 rounded-xl text-xs font-medium leading-relaxed"></div>
+
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+            <div class="relative flex-1 max-w-md">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">
+                search
+              </span>
+              <input
+                type="text"
+                id="oTimKiemXemTruoc"
+                oninput="locDanhSachXemTruoc(this.value)"
+                placeholder="Tìm theo mã SV, họ tên, email, lớp, chuyên ngành, lỗi..."
+                class="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-ictu-600 focus:bg-white text-slate-800 transition-all font-medium"
+              />
+              <span
+                id="nutXoaTimKiemXemTruoc"
+                onclick="xoaTimKiemXemTruoc()"
+                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-[16px]">close</span>
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  id="tabXemTruocAll"
+                  onclick="chuyenTabXemTruoc('all')"
+                  class="px-3 py-1 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-2xs transition-all cursor-pointer"
+                >
+                  Tất cả (<span id="demTabXemTruocAll">0</span>)
+                </button>
+                <button
+                  type="button"
+                  id="tabXemTruocHopLe"
+                  onclick="chuyenTabXemTruoc('hop_le')"
+                  class="px-3 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+                >
+                  Hợp lệ (<span id="demTabXemTruocHopLe">0</span>)
+                </button>
+                <button
+                  type="button"
+                  id="tabXemTruocLoi"
+                  onclick="chuyenTabXemTruoc('loi')"
+                  class="px-3 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+                >
+                  Có lỗi (<span id="demTabXemTruocLoi">0</span>)
+                </button>
+              </div>
+
+              <button
+                type="button"
+                id="nutXuatFileLoiTrongPreview"
+                onclick="taiXuatDanhSachLoi()"
+                class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+              >
+                <span class="material-symbols-outlined text-[16px]">file_download</span>
+                Tải file lỗi (.xlsx)
+              </button>
+            </div>
+          </div>
+
+          <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs flex-1 min-h-[300px] flex flex-col">
+            <div class="overflow-x-auto overflow-y-auto flex-1">
+              <table class="w-full text-left text-xs whitespace-nowrap">
+                <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 sticky top-0 z-10">
+                  <tr>
+                    <th class="py-2.5 px-3.5 text-center w-14">Dòng</th>
+                    <th class="py-2.5 px-3.5">Trạng thái</th>
+                    <th class="py-2.5 px-3.5">Mã SV</th>
+                    <th class="py-2.5 px-3.5">Họ và tên</th>
+                    <th class="py-2.5 px-3.5">Email</th>
+                    <th class="py-2.5 px-3.5">Lớp</th>
+                    <th class="py-2.5 px-3.5">Chuyên ngành</th>
+                    <th class="py-2.5 px-3.5">Trường</th>
+                    <th class="py-2.5 px-3.5">Chi tiết / Lý do lỗi</th>
+                  </tr>
+                </thead>
+                <tbody id="bangThanXemTruocTongHop" class="divide-y divide-slate-100 text-slate-700"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <button
+            type="button"
+            onclick="dongModalXemTruoc()"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 shadow-2xs transition-colors cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            Quay lại tệp &amp; cấu hình
+          </button>
+
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              onclick="dongTatCaModalImport()"
+              class="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+            >
+              Đóng tất cả
+            </button>
+            <button
+              type="button"
+              id="nutXacNhanTrongModalPreview"
+              onclick="thucHienXacNhanImportTuPreview()"
+              class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer hover:scale-102"
+            >
+              <span class="material-symbols-outlined text-[18px]">how_to_reg</span>
+              <span id="nhanNutXacNhanTrongModalPreview">Xác nhận nhập &amp; Phân công</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div id="khuVucToast" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2.5 pointer-events-none max-w-sm sm:max-w-md w-full px-4 sm:px-0"></div>
 

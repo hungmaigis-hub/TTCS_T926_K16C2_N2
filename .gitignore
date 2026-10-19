@@ -27,3 +27,8 @@ uploads/
 # IDEs
 .vscode/
 .idea/
+
+# Backups & Scratch
+backend/backups/*.sql.gz
+scratch/
+backend/scratch/

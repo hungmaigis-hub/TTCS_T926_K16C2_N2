@@ -152,3 +152,15 @@ def test_require_permissions_via_user_id():
         headers={"X-User-Id": "5"}
     )
     assert response.status_code == 200
+
+
+def test_prevent_admin_role_permission_modification():
+    """Kiểm tra hệ thống chặn không cho phép sửa đổi hoặc tước bỏ quyền hạn của vai trò Admin"""
+    response = client.put(
+        "/api/v1/admin/roles/Admin/permissions",
+        headers={"X-User-Email": "admin@example.com"},
+        json={"permissions": ["intern:read"]}
+    )
+    assert response.status_code == 400
+    assert "Superadmin tối cao" in response.json()["detail"]
+
