@@ -4797,7 +4797,7 @@ def get_mentors_workload(
             max_tts = cnt
             mentor_max_name = r.ho_ten
 
-        is_overloaded = cnt > 5
+        is_overloaded = cnt > MAX_INTERNS_PER_MENTOR
         workload_list.append(
             MentorWorkloadItem(
                 ma_mentor=r.ma_mentor,
@@ -4812,12 +4812,12 @@ def get_mentors_workload(
                 chuc_vu="Mentor Doanh nghiệp",
                 so_luong_thuc_tap_sinh=cnt,
                 so_sinh_vien_huong_dan=cnt,
-                chi_tieu_huong_dan=5,
-                ty_le_phan_tram=round((cnt / 5.0) * 100, 1),
-                trang_thai_tai="QuaTai" if is_overloaded else ("DaDu" if cnt == 5 else "BinhThuong"),
+                chi_tieu_huong_dan=MAX_INTERNS_PER_MENTOR,
+                ty_le_phan_tram=round((cnt / float(MAX_INTERNS_PER_MENTOR)) * 100, 1),
+                trang_thai_tai="QuaTai" if is_overloaded else ("DaDu" if cnt == MAX_INTERNS_PER_MENTOR else "BinhThuong"),
                 canh_bao_qua_tai=is_overloaded,
-                da_du_chi_tieu=cnt >= 5,
-                so_cho_trong=max(0, 5 - cnt)
+                da_du_chi_tieu=cnt >= MAX_INTERNS_PER_MENTOR,
+                so_cho_trong=max(0, MAX_INTERNS_PER_MENTOR - cnt)
             )
         )
 

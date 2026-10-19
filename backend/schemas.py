@@ -1328,12 +1328,12 @@ class MentorWorkloadItem(BaseModel):
     chuc_vu: Optional[str] = "Mentor Doanh nghiệp"
     so_luong_thuc_tap_sinh: int = 0
     so_sinh_vien_huong_dan: Optional[int] = 0
-    chi_tieu_huong_dan: Optional[int] = 5
+    chi_tieu_huong_dan: Optional[int] = 100
     ty_le_phan_tram: Optional[float] = 0.0
     trang_thai_tai: Optional[str] = "BinhThuong"
     canh_bao_qua_tai: Optional[bool] = False
     da_du_chi_tieu: Optional[bool] = False
-    so_cho_trong: Optional[int] = 5
+    so_cho_trong: Optional[int] = 100
 
 
 class MentorWorkloadSummary(BaseModel):
